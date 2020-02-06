@@ -1,3 +1,9 @@
+# Description:
+# This script takes 2 oclc concordance files, one old and one new.
+# Each is inflated, and records that say x->x are discarded.
+# A diff is then calculated, such that the diff could transform the
+# old file into the new file.
+
 function isodate {
   date +'%Y-%m-%d %H:%M:%S';
 }
@@ -23,8 +29,6 @@ fi
 
 echo "using $old_gz as old_file";
 echo "using $new_gz as new_file";
-
-exit ;
 
 logmsg "zcat + awk";
 
