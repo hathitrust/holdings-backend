@@ -9,20 +9,22 @@ function logmsg {
 data_dir="../data";
 logmsg "started";
 
-# Assume concordance files, old and new, are given as args
+# Assume concordance files, old and new, are given as args, full path.
 old_gz=$1;
 new_gz=$2;
 
 # If not given as args, get the 2 latest concordance files from data dir.
 if [[ -z "$old_gz" || -z "$new_gz" ]]; then
     cd $data_dir;
-    old_gz=`ls  -d -1 $PWD/{*,.*} | tail -2 | head -1`;
-    new_gz=`ls  -d -1 $PWD/{*,.*} | tail -1`;
+    old_gz=`ls -d -1 $PWD/*_concordance.txt.gz | tail -2 | head -1`;
+    new_gz=`ls -d -1 $PWD/*_concordance.txt.gz | tail -1`;
     cd -;
 fi
 
 echo "using $old_gz as old_file";
 echo "using $new_gz as new_file";
+
+exit ;
 
 logmsg "zcat + awk";
 
