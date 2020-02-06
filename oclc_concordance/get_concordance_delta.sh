@@ -4,6 +4,11 @@
 # A diff is then calculated, such that the diff could transform the
 # old file into the new file.
 
+# Call thus, if assuming the old and new concordance files are in ../data::
+# $ bash get_concordance_delta.sh
+# ... or thus if the location is elsewhere:
+# $ bash get_concordance_delta.sh <path_to_old> <path_to_new>
+
 function isodate {
   date +'%Y-%m-%d %H:%M:%S';
 }
@@ -32,14 +37,14 @@ echo "using $new_gz as new_file";
 
 logmsg "zcat + awk";
 
-# Remove all lines that say a->a, we don't care about those.
+# Remove all lines that say x->x, we don't care about those.
 zcat $old_gz |  awk -F'\t' '$1 != $2' > $data_dir/old.txt &
 zcat $new_gz |  awk -F'\t' '$1 != $2' > $data_dir/new.txt &
 wait; # running the 2 things above in parallel.
 
 logmsg "diffing";
 
-# straight up diff?
+# straight up diff? nope.
 perl mwSetDiff.pl $data_dir/old.txt $data_dir/new.txt > $data_dir/diff.txt;
 
 logmsg "counting diff";
@@ -49,7 +54,7 @@ echo 'In/out:';
 grep -Po '[<>]' $data_dir/diff.txt | sort | uniq -c
 
 # Cleanup.
-# rm --verbose old.txt new.txt;
+rm --verbose $data_dir/old.txt $data_dir/new.txt;
 
 #####
 logmsg "done";
