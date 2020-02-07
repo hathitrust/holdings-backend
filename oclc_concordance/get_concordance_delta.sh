@@ -53,7 +53,7 @@ logmsg "diffing";
 # This is a set diff, that turns each file into a hash of lines.
 # The hashes are then compared, a-b, b-a. Common lines ignored.
 # Diff printed to file.
-perl mwSetDiff.pl $data_dir/old.txt $data_dir/new.txt > $data_dir/diff.txt;
+perl setDiff.pl $data_dir/old.txt $data_dir/new.txt > $data_dir/diff.txt;
 
 logmsg "counting diff";
 
