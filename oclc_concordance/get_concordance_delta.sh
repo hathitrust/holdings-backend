@@ -14,7 +14,7 @@ function isodate {
 }
 
 function logmsg {
-    echo "`isodate` $1"
+    echo "`isodate` $1";
 }
 
 data_dir="../data";
@@ -48,7 +48,7 @@ zcat $old_gz |  awk -F'\t' '$1 != $2' > $data_dir/old.txt &
 zcat $new_gz |  awk -F'\t' '$1 != $2' > $data_dir/new.txt &
 wait; # running the 2 things above in parallel.
 
-logmsg "diffing";
+logmsg "diffing, writing results to $data_dir/diff.txt";
 
 # This is a set diff, that turns each file into a hash of lines.
 # The hashes are then compared, a-b, b-a. Common lines ignored.
@@ -62,9 +62,9 @@ logmsg "counting diff";
 
 # Count how many </> in the diff.
 echo 'In/out:';
-grep -Po '[<>]' $data_dir/diff.txt | sort | uniq -c
+grep -Po '[<>]' $data_dir/diff.txt | sort | uniq -c;
 
-# Cleanup.
+logmsg "Cleaning up.";
 rm --verbose $data_dir/old.txt $data_dir/new.txt;
 
 #####
