@@ -30,6 +30,12 @@ if [[ -z "$old_gz" || -z "$new_gz" ]]; then
     old_gz=`ls -d -1 $PWD/*_concordance.txt.gz | tail -2 | head -1`;
     new_gz=`ls -d -1 $PWD/*_concordance.txt.gz | tail -1`;
     cd -;
+
+    # OK did we actually get any files?
+    if [[ -z "$old_gz" || -z "$new_gz" ]]; then
+	echo "Could not find 2 concordance files in $data_dir";
+	exit 1;
+    fi
 fi
 
 echo "using $old_gz as old_file";
@@ -44,12 +50,14 @@ wait; # running the 2 things above in parallel.
 
 logmsg "diffing";
 
-# straight up diff? nope.
+# This is a set diff, that turns each file into a hash of lines.
+# The hashes are then compared, a-b, b-a. Common lines ignored.
+# Diff printed to file.
 perl mwSetDiff.pl $data_dir/old.txt $data_dir/new.txt > $data_dir/diff.txt;
 
 logmsg "counting diff";
 
-# Count how many </>
+# Count how many </> in the diff.
 echo 'In/out:';
 grep -Po '[<>]' $data_dir/diff.txt | sort | uniq -c
 
