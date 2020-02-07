@@ -53,6 +53,9 @@ logmsg "diffing";
 # This is a set diff, that turns each file into a hash of lines.
 # The hashes are then compared, a-b, b-a. Common lines ignored.
 # Diff printed to file.
+# setDiff allows threads, but either it's not done right, or
+# perl threads are garbage, either way there is no performance
+# gain with threads, so just don't.
 perl setDiff.pl $data_dir/old.txt $data_dir/new.txt > $data_dir/diff.txt;
 
 logmsg "counting diff";
