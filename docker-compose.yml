@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+
+  load:
+    build: .
+    volumes:
+      - .:/usr/src/app
+      - gem_cache:/gems
+
+  mongo:
+    image: mongo
+    volumes:
+      - data_db:/data/db
+
+volumes:
+  gem_cache:
+  data_db:
