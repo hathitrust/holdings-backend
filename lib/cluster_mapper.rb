@@ -8,34 +8,35 @@ require "set"
 # Use the [] operator to get the cluster for a given identifier, for example:
 # cluster = mapper[12345]
 class ClusterMapper
-  extend Forwardable
-
-  def_delegators :clusters, :[]
-
   # Creates a ClusterMapper
   #
-  # @param clusters The back-end to use for storing the clusters. By default
-  # uses an in-memory hash. Must respond to [] and auto-vivify new clusters.
-  def initialize(clusters = Hash.new {|hash, id| hash[id] = Cluster.new(id) })
+  # @param clusters The class to use for storing the clusters.
+  def initialize(clusters)
     @clusters = clusters
   end
 
   # Add a member to a cluster. If member is already in another cluster, the two
   # clusters will be merged.
   #
-  # @param id The identifier of the cluster to add to
-  # @param member The identifier of the item to add to the cluster
-  def add(id, member)
-    new_cluster = self[id]
-    old_cluster = self[member]
-
-    new_cluster.merge(old_cluster)
-    old_cluster.each do |old_member|
-      @clusters[old_member] = new_cluster
+  # @param id1, id2 The identifiers to associate together in the same cluster
+  def add(id1, id2)
+    if (old_cluster = clusters.find_by_member(id1))
+      merge(self[id2], old_cluster)
+    else
+      self[id1].add(id2).save
     end
   end
 
+  def [](id)
+    clusters.find_by_member(id) || clusters.new(id)
+  end
+
   private
+
+  def merge(new, old)
+    new.merge(old).save
+    old.delete
+  end
 
   attr_reader :clusters
 end

@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "dotenv"
+Dotenv.load(".env.test")
+
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
 require "bundler/setup"

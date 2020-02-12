@@ -26,6 +26,7 @@ Naming/FileName:
     - 'lib/*/version.rb'
     - 'db/**/*'
     - 'config.ru'
+    - 'lib/services.rb'
   AllowedAcronyms:
     - OCLC
 

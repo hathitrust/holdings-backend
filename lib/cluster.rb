@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier.
+# A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier
 class Cluster
   attr_reader :id, :members
 
@@ -8,35 +8,42 @@ class Cluster
 
   def_delegators :members, :include?, :to_a, :each
 
-  # Create a new cluster.
+  # Creates a new cluster from a hash (or MongoDB document)
   #
-  # @param id The primary identifier for the cluster
-  #
-  # @param members An array of identifiers that are equivalent to the primary
-  # identifier
-  #
-  # @param members_set The backing store for this cluster, by default an
-  # in-memory Set.
-  def initialize(id, members = nil, members_set = Set.new(members))
-    @id = id
-    @members = members_set.add(id)
+  # @param hash The hash or document from which to create the cluster.
+  #    It should have an _id and members key.
+  def self.from_hash(hash)
+    new(*hash[:members])
   end
 
-  # Add an item to the cluster
+  # Create a new cluster.
   #
-  # @param item The identifier to treat as equivalent to the primary identifier
-  # for this cluster
-  def add(item)
-    members.add(item)
+  # @param members An array of identifiers that belong in this cluster.
+  def initialize(*members)
+    @members = Set.new(members)
+  end
+
+  # Adds the given identifier to this cluster.
+  #
+  # @param id The identifier to add as a member of this cluster
+  # @return This cluster
+  def add(id)
+    members.add(id)
     self
   end
 
-  # Merge two clusters together. All members in the other cluster will be added
-  # to this cluster.
+  # Adds the members of the given cluster to this cluster.
   #
-  # @param other The cluster whose members to add to this cluster.
+  # @param other The cluster whose members to merge with this cluster.
+  # @return This cluster
   def merge(other)
     members.merge(other.members)
     self
   end
+
+  # Serialize this cluster to a hash suitable for conversion to JSON etc
+  def to_hash
+    { members: members.to_a }
+  end
+
 end
