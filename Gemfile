@@ -10,7 +10,7 @@ group :development, :test do
 end
 
 group :test do
-  gem "coveralls", require: false
+  gem "simplecov"
   gem "rspec"
 end
 
@@ -20,4 +20,3 @@ group :development do
   gem "rubocop-rspec"
   gem "yard"
 end
-
