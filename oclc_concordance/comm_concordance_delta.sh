@@ -47,11 +47,11 @@ logmsg "zcat + awk";
 # This might become part of the validation step that happens before
 # this, so it might soon be obsolete and can then be excised.
 # Also sort now in preparation for comm -3 below.
-zcat $old_gz |  awk -F'\t' '$1 != $2' | sort > $data_dir/old_pruned.txt &
-zcat $new_gz |  awk -F'\t' '$1 != $2' | sort > $data_dir/new_pruned.txt &
+zcat -f $old_gz | awk -F'\t' '$1 != $2' | sort > $data_dir/old_pruned.txt &
+zcat -f $new_gz | awk -F'\t' '$1 != $2' | sort > $data_dir/new_pruned.txt &
 wait; # running the 2 things above in parallel.
 
-logmsg "diffing, writing results to $data_dir/diff.txt";
+logmsg "diffing, writing results to $data_dir/comm_diff.txt";
 
 # Get the lines unique to either file.
 # The awk business is just to get it into
