@@ -18,6 +18,7 @@ It makes no attempt at being performant or to limit its resource constraints, i.
 Code for generating a delta file based on an old and a new concordance.
 
 `cd get_delta`
+
 `bash comm_concordance_delta.sh <old_concordance> <new_concordance>`
 
 Output written to data/comm_diff.txt
