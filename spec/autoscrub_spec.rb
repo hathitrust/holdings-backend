@@ -1,0 +1,46 @@
+require 'autoscrub'
+
+RSpec.describe Autoscrub do
+    let(:member_id) {:haverford}
+    let(:autoscrub) {described_class.new(member_id)}
+    let(:data_dir) {__dir__ + '../testdata'}
+
+    it "is an existing member" do
+      expect(autoscrub.valid_member_id?(member_id)).to be(true)
+      # Add negative test when you figure out how best to mock that.
+    end
+
+    it "knows a valid filename" do
+      expect(autoscrub.valid_filename?("haverford_mono_full_20200101_headerless.tsv")).to be(true)
+      expect(autoscrub.valid_filename?("haverford_mono_full_20200101_headerless.tsv.gz")).to be(true)
+      expect(autoscrub.valid_filename?("haverford_mono_full_20200101.tsv")).to be(true)
+      expect(autoscrub.valid_filename?("1234rford_mono_full_55556677.tsv")).to be(false) # bad member_id
+      expect(autoscrub.valid_filename?("haverford_yolo_full_55556677.tsv")).to be(false) # bad item_type
+      expect(autoscrub.valid_filename?("haverford_mono_half_55556677.tsv")).to be(false) # bad update_type
+      expect(autoscrub.valid_filename?("haverford_mono_full_July4-1776.tsv")).to be(false) # bad date_str
+      expect(autoscrub.valid_filename?("haverford_mono_full_55556677.txt")).to be(false) # bad rest
+      expect(autoscrub.valid_filename?("haverford_mono_full_55556677.la.la.la.la.la.la.la.la.la.la.tsv.gz")).to be(false) # bad rest
+    end
+
+    it "rejects malformed header lines" do
+      expect(autoscrub.well_formed_header?(%w<mmsid>, 'multi')).to be(false)
+      expect(autoscrub.well_formed_header?(%w<oclc local_id enumchron>, 'mono')).to be(false)
+      expect(autoscrub.well_formed_header?(%w<oclc local_id enumchron>, 'multi')).to be(true)
+      expect(autoscrub.well_formed_header?(%w<oclc local_id enumchron>, 'serial')).to be(false)      
+    end
+
+    it "rejects lines that are too long or too short" do
+      expect(autoscrub.number_of_cols([1] * 1)).to be(false)
+      expect(autoscrub.number_of_cols([1] * 2)).to be(true)
+      expect(autoscrub.number_of_cols([1] * 6)).to be(true)
+      expect(autoscrub.number_of_cols([1] * 10)).to be(false)
+    end
+
+    # TODO: more tests of low-ish level functions here
+    
+    # Now testing that all the parts fit together.
+    it "has a well formed file" do
+      expect(autoscrub.well_formed_file?('haverford_mono_full_20200101_headerless.tsv')).to be(false)
+    end
+
+end
