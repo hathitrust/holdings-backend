@@ -101,7 +101,7 @@ module ConcordanceValidation
     # Find the terminal ocn for a given ocn
     # Will fail endlessly if there are cycles.
     def terminal_ocn(ocn)
-      resolved = @raw_to_resolved[ocn]
+      resolved = @raw_to_resolved[ocn].clone
       loop do
         # only one ocn and it is a terminal
         if (resolved.count == 1) && terminal_ocn?(resolved.first)
