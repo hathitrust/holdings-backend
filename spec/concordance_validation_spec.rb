@@ -5,38 +5,17 @@ include ConcordanceValidation
 
 describe 'numbers_tab_numbers' do
   it 'raises an error if it isn\'t numbers-tab-numbers throughout' do
-    expect { Concordance.numbers_tab_numbers('spec/data/letters_tab_letters.tsv') }.to \
+    expect do
+      Concordance.numbers_tab_numbers(
+        'spec/data/letters_tab_letters.tsv'
+      )
+    end .to \
       raise_error('Invalid format. 2 line(s) are malformed.')
   end
 
   it 'raises an error if it isn\'t numbers-tab-numbers throughout' do
     expect { Concordance.numbers_tab_numbers('spec/data/cycles.tsv') }.not_to \
       raise_error
-  end
-end
-
-describe 'detect_cycles' do
-  it 'detects cycles' do
-    cycles = Concordance.new('spec/data/cycles.tsv')
-    expect { cycles.detect_cycles }.to \
-      raise_error('Cycles: 1, 2, 3')
-  end
-
-  it 'detects more indirect cycles' do
-    indirect_cycles = Concordance.new('spec/data/indirect_cycles.tsv')
-    expect { indirect_cycles.detect_cycles }.to \
-      raise_error('Cycles: 2, 3')
-  end
-
-  it 'detects cycles in noncontiguous graphs' do
-    cycles = Concordance.new('spec/data/noncontiguous_cycle_graph.tsv')
-    expect { cycles.detect_cycles }.to \
-      raise_error('Cycles: 2, 3, 4, 5')
-  end
-
-  it 'returns a long list of ocns if no cycles found' do
-    noncycles = Concordance.new('spec/data/not_cycle_graph.tsv')
-    expect(noncycles.detect_cycles).to eq([1, 2, 3, 4, 5, 7, 17, 26])
   end
 end
 
@@ -63,9 +42,42 @@ describe 'Concordance.new' do
     expect(Concordance.new('spec/data/chained.tsv.gz').raw_to_resolved).to \
       eq(1 => [2], 2 => [3])
   end
+end
 
-  it 'validates on instantiation if flag set' do
-    expect { Concordance.new('spec/data/cycles.tsv', validate: true) }.to \
+describe 'compile_sub_graph' do
+  it 'compiles a list of all edges when given an ocn' do
+    disconnected = Concordance.new('spec/data/disconnected.tsv')
+    expect(disconnected.compile_sub_graph(2)).to eq([{ 1 => [2, 3], 2 => [3] },
+                                                     { 2 => [1], 3 => [1, 2] }])
+  end
+end
+
+describe 'detect_cycles' do
+  it 'detects cycles' do
+    cycles = Concordance.new('spec/data/cycles.tsv')
+    sub = cycles.compile_sub_graph(1)
+    expect { cycles.detect_cycles(*sub) }.to \
       raise_error('Cycles: 1, 2, 3')
+  end
+
+  it 'detects more indirect cycles' do
+    indirect_cycles = Concordance.new('spec/data/indirect_cycles.tsv')
+    sub = indirect_cycles.compile_sub_graph(2)
+    expect { indirect_cycles.detect_cycles(*sub) }.to \
+      raise_error('Cycles: 2, 3')
+  end
+
+  it 'detects cycles in noncontiguous graphs' do
+    cycles = Concordance.new('spec/data/noncontiguous_cycle_graph.tsv')
+    sub = cycles.compile_sub_graph(1)
+    expect { cycles.detect_cycles(*sub) }.to \
+      raise_error('Cycles: 2, 3, 4, 5')
+  end
+
+  it 'returns a long list of ocns if no cycles found' do
+    noncycles = Concordance.new('spec/data/not_cycle_graph.tsv')
+    sub = noncycles.compile_sub_graph(2)
+    expect { noncycles.detect_cycles(*sub) }.to_not \
+      raise_error
   end
 end
