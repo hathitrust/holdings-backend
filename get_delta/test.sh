@@ -1,3 +1,7 @@
+# Basic tests for comm_concordance_delta.sh.
+# Run thus:
+# $ bash test.sh
+
 data_dir="../data";
 
 function beep {
@@ -6,9 +10,9 @@ function beep {
 
 function test_pass_fail {
     if [ "$1" = "$2" ]; then
-	echo "Test pass"
+	echo "Test pass";
     else
-	echo "Test fail"
+	echo "Test fail";
 	beep;
     fi
 }
@@ -18,7 +22,7 @@ function run_diff {
 }
 
 # Test 1, compare file 1 against itself should make an empty diff.
-run_diff $data_dir/delta_test_new.tsv $data_dir/delta_test_new.tsv
+run_diff $data_dir/delta_test_new.tsv $data_dir/delta_test_new.tsv;
 wc -l $data_dir/comm_diff.txt > test.log;
 line_count_res=`egrep -c '^[<]' $data_dir/comm_diff.txt`;
 test_pass_fail 0 $line_count_res;
@@ -45,14 +49,14 @@ test_pass_fail 0 $line_count_res;
 
 # Test 5, enough mucking about, actual diff between 2 "real" files
 run_diff $data_dir/delta_test_old.tsv $data_dir/delta_test_new.tsv;
-diff_add=`grep -c '^>' $data_dir/comm_diff.txt`
-diff_del=`grep -c '^<' $data_dir/comm_diff.txt`
-test_pass_fail 5 $diff_add
-test_pass_fail 4 $diff_del
+diff_add=`grep -c '^>' $data_dir/comm_diff.txt`;
+diff_del=`grep -c '^<' $data_dir/comm_diff.txt`;
+test_pass_fail 5 $diff_add;
+test_pass_fail 4 $diff_del;
 
 # Test 6, same as test 5 but flipped file order
 run_diff $data_dir/delta_test_new.tsv $data_dir/delta_test_old.tsv;
-diff_add=`grep -c '^>' $data_dir/comm_diff.txt`
-diff_del=`grep -c '^<' $data_dir/comm_diff.txt`
-test_pass_fail 4 $diff_add
-test_pass_fail 5 $diff_del
+diff_add=`grep -c '^>' $data_dir/comm_diff.txt`;
+diff_del=`grep -c '^<' $data_dir/comm_diff.txt`;
+test_pass_fail 4 $diff_add;
+test_pass_fail 5 $diff_del;
