@@ -48,7 +48,8 @@ class Autoscrub
       return true
     end
 
-    (member_id, item_type, update_type, date_str, *rest) = filename.split(/[_\.]/)
+    (member_id, item_type, update_type, date_str, *rest) =
+      filename.split(/[_\.]/)
 
     STDERR.puts(
       [
@@ -71,12 +72,14 @@ class Autoscrub
 
   def analyze_item_type (str)
     return 'must not be empty' if str.nil?
-    !!str.match(/^(mono|multi|serial)$/) ? 'ok' : 'not ok, must be mono|multi|serial'
+    !!str.match(/^(mono|multi|serial)$/) ?
+      'ok' : 'not ok, must be mono|multi|serial'
   end
 
   def analyze_update_type (str)
     return 'must not be empty' if str.nil?
-    !!str.match(/^(full|partial)$/) ? 'ok' : 'not ok, must be full|partial'
+    !!str.match(/^(full|partial)$/) ?
+      'ok' : 'not ok, must be full|partial'
   end
 
   def analyze_date_str (str)
@@ -127,19 +130,74 @@ class Autoscrub
   # Check that a file has a header line, consistent number
   # of cols, lines that are not too long.
   def well_formed_file? (filename)
+    STDERR.puts "Checking well-formedness of #{filename}"
+
+    # mono/multi/serial
     item_type = get_item_type(filename)
+
+    # Stores which col is where, based on header line.
+    col_map = {}
+
     read_file(filename) do |line, line_no|
       line.chomp!
+      puts line
       cols = line.split("\t")
+      
+      # Check header line.
       if line_no == 1 then
         if !well_formed_header?(cols, item_type) then
           return false
         end
+        col_map = get_col_map(cols, item_type)
+      else
+        if !well_formed_line?(cols, item_type, col_map) then
+          return false
+        end
       end
-      puts line
+      
+    end
+
+    return true
+  end
+
+
+  def well_formed_line? (cols, item_type, col_map)
+    puts "col map: #{col_map}"
+    puts "cols #{cols.join(',')}"
+    col_map.each do |col_type, i|
+      puts "check that col #{i} (#{col_type}) has an OK value #{cols[i]}"
+      check_col_val(col_type, cols[i])
+    end
+
+    false
+  end
+
+  # Based on col type, check if col val makes sense
+  def check_col_val (col_type, col_val)
+    case col_type
+    when "oclc"
+      not_implemented(col_val)
+    when "local_id"
+      not_implemented(col_val)
+    when "status"
+      not_implemented(col_val)
+    when "condition"
+      not_implemented(col_val)
+    when "govdoc"
+      not_implemented(col_val)
+    when "enumchron"
+      not_implemented(col_val)
+    when "issn"
+      not_implemented(col_val)
+    else
+      raise "not covered this case: #{col_type} : #{col_val}"
     end
   end
 
+  def not_implemented (*x)
+    puts "not implemented"
+  end
+  
   # Check that the header line is present,
   # contains all required fields, optionally optional fields,
   # and nothing else.
@@ -148,7 +206,8 @@ class Autoscrub
 
     # Check that all required cols are present
     if @@req_header_cols & header_cols != @@req_header_cols then
-      STDERR.puts "Missing required header cols:" + (@@req_header_cols - header_cols).join(', ')
+      STDERR.puts "Missing required header cols:" +
+                  (@@req_header_cols - header_cols).join(', ')
       pass = false
     end
 
@@ -164,6 +223,24 @@ class Autoscrub
     return pass
   end
 
+  # Given a split header line like [a,b,c]
+  # returns a hash {a=>1, b=>2, c=>3}
+  def get_col_map (cols, item_type)
+    puts "getting col map"
+    col_map = {}
+    possible_cols = @@req_header_cols + @@opt_header_cols[item_type]
+
+    cols.each_with_index do |col, i|
+      if possible_cols.include?(col) then
+        col_map[col] = i
+      else
+        raise Error.new("illegal col #{col} on pos #{i} in header")
+      end
+    end
+    
+    return col_map
+  end
+  
   # Check that the line has a decent number of cols.
   def number_of_cols (cols)
     if cols.size < @@min_file_cols then
