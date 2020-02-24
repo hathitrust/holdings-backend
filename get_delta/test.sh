@@ -4,17 +4,12 @@
 
 data_dir="../data";
 
-function beep {
-    echo -ne '\007';
-}
-
 function test_pass_fail {
     echo -ne "$1:\t";
     if [ "$2" = "$3" ]; then
 	echo "Test pass";
     else
-	echo "Test fail";
-	beep;
+	echo "Test fail (expected $1, got $2)";
     fi
 }
 
