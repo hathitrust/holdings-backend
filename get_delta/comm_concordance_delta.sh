@@ -9,6 +9,7 @@
 # ... or thus if the location is elsewhere:
 # $ bash comm_concordance_delta.sh <path_to_old> <path_to_new>
 
+
 function isodate {
   date +'%Y-%m-%d %H:%M:%S';
 }
@@ -17,8 +18,9 @@ function logmsg {
     echo "`isodate` $1";
 }
 
-data_dir="../data";
 logmsg "started";
+
+data_dir="../data";
 
 # Assume concordance files, old and new, are given as args, full path.
 old_gz=$1;
@@ -51,14 +53,15 @@ zcat -f $old_gz | awk -F'\t' '$1 != $2' | sort > $data_dir/old_pruned.txt &
 zcat -f $new_gz | awk -F'\t' '$1 != $2' | sort > $data_dir/new_pruned.txt &
 wait; # running the 2 things above in parallel.
 
-logmsg "diffing, writing results to $data_dir/comm_diff.txt";
+output="$data_dir/comm_diff.txt"
+logmsg "diffing, writing results to $output";
 
 # Get the lines unique to either file.
 # The awk business is just to get it into
 # > a b
 # < c d
 # format which I think is neater..
-comm -3 $data_dir/old_pruned.txt $data_dir/new_pruned.txt | awk -F'\t' '{if ($1 == ""){ print ">\t" $2 "\t" $3 }else{ print "<\t" $1 "\t" $2} }' > $data_dir/comm_diff.txt;
+comm -3 $data_dir/old_pruned.txt $data_dir/new_pruned.txt | awk -F'\t' '{if ($1 == ""){ print ">\t" $2 "\t" $3 }else{ print "<\t" $1 "\t" $2} }' > $output;
 
 # Clean up intermediate files.
 rm $data_dir/old_pruned.txt $data_dir/new_pruned.txt;
