@@ -37,13 +37,12 @@ test_pass_fail $line_count_key $line_count_res;
 # Test 3, compare empty file against file 2, diff should equal file 2
 line_count_key=`wc -l $data_dir/delta_test_new.tsv | grep -Po '^\d+'`;
 run_diff /dev/null $data_dir/delta_test_new.tsv;
-# The number of <'s should equal number of lines in file 1
+# The number of >'s should equal number of lines in file 2
 line_count_res=`egrep -c '^[>]' $data_dir/comm_diff.txt`;
 test_pass_fail $line_count_key $line_count_res;
 
 # Test 4, compare 2 empty files, diff should be empty
 run_diff /dev/null /dev/null;
-# The number of <'s should equal number of lines in file 1
 line_count_res=`grep -c . $data_dir/comm_diff.txt`;
 test_pass_fail 0 $line_count_res;
 
