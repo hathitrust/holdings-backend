@@ -25,7 +25,7 @@ function run_diff {
 # Test 1, compare file 1 against itself should make an empty diff.
 run_diff $data_dir/delta_test_new.tsv $data_dir/delta_test_new.tsv;
 wc -l $data_dir/comm_diff.txt > test.log;
-line_count_res=`egrep -c '^[<]' $data_dir/comm_diff.txt`;
+line_count_res=`grep -c . $data_dir/comm_diff.txt`;
 test_pass_fail "same vs same" 0 $line_count_res;
 
 # Test 2, compare file 1 against empty file, diff should equal file 1
