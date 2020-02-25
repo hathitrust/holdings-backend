@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "forwardable"
+
 # An OCLCNumber. Treated as an immutable identifier that can be compared to
 # other OCLCNumbers and used as a hash key, but that does not support
 # arithmetic operations.

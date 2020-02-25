@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "services"
+require "cluster"
 
 # A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier,
 # suitable for serializing & deserializing from MongoDB
