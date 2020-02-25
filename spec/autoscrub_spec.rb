@@ -81,4 +81,21 @@ RSpec.describe Autoscrub do
       )).to be(true)
     end
 
+    it "can tell a good ocn from a bad one" do
+      expect(autoscrub.check_col_val('oclc', "xyz")).to eq([])
+      expect(autoscrub.check_col_val('oclc', "1.234E+56")).to eq([])
+      expect(autoscrub.check_col_val('oclc', "123new456")).to eq([])
+      expect(autoscrub.check_col_val('oclc', "99999999999")).to eq([])
+      expect(autoscrub.check_col_val('oclc', "")).to eq([])      
+      expect(autoscrub.check_col_val('oclc', "555")).to eq([555])
+      expect(autoscrub.check_col_val('oclc', "555;555")).to eq([555])
+      expect(autoscrub.check_col_val('oclc', "555 555")).to eq([555])
+      expect(autoscrub.check_col_val('oclc', "555; 555")).to eq([555])
+      expect(autoscrub.check_col_val('oclc', "555 ;555")).to eq([555])
+      expect(autoscrub.check_col_val('oclc', "123; 456")).to eq([123,456])
+      expect(autoscrub.check_col_val('oclc', "000123; 123")).to eq([123])
+      
+      
+    end
+    
 end

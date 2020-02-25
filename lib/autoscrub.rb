@@ -1,5 +1,6 @@
 require 'ht_members'
 require 'zlib'
+require 'scrub_fields'
 
 class Autoscrub
   @@data_dir = __dir__ + "/../testdata"
@@ -176,7 +177,7 @@ class Autoscrub
   def check_col_val (col_type, col_val)
     case col_type
     when "oclc"
-      not_implemented(col_val)
+      ScrubFields.ocn(col_val)
     when "local_id"
       not_implemented(col_val)
     when "status"
@@ -196,6 +197,7 @@ class Autoscrub
 
   def not_implemented (*x)
     puts "not implemented"
+    return false
   end
   
   # Check that the header line is present,
