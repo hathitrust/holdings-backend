@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "forwardable"
+
 # A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier
 class Cluster
   attr_reader :id, :members
