@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
-require 'mongoid'
+require "mongoid"
 
 # A commitment
 class Commitment
   include Mongoid::Document
-  field :ocn, type: Integer#, type: OCLCNumber
+  field :ocn, type: Integer # , type: OCLCNumber
+  field :organization, type: String
 
-  belongs_to :cluster
+  embedded_in :cluster
 
-end 
+  def move(new_parent)
+    unless new_parent.id == _parent.id
+      new_parent.commitments << dup
+      delete
+    end
+  end
+
+end

@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require 'mongoid'
+require "mongoid"
 
 # A member holding
 class Holding
   include Mongoid::Document
-  field :ocn, type: Integer#, type: OCLCNumber
+  field :ocn, type: Integer # , type: OCLCNumber
   field :organization, type: String
   field :local_id, type: String
   field :enum_chron, type: String
@@ -15,6 +15,12 @@ class Holding
   field :mono_multi_serial, type: String
   field :date_received, type: DateTime
 
-  belongs_to :cluster
+  embedded_in :cluster
 
-end 
+  def move(new_parent)
+    unless new_parent.id == _parent.id
+      new_parent.holdings << dup
+      delete
+    end
+  end
+end

@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
-require 'mongoid'
+require "mongoid"
 
-# An HT Item 
-class HTItem
+# An HT Item
+class HtItem
   include Mongoid::Document
-  field :ocns, type: Array 
+  field :ocns, type: Array
   field :item_id, type: String
 
-  belongs_to :cluster
+  embedded_in :cluster
 
-end 
+  def move(new_parent)
+    unless new_parent.id == _parent.id
+      new_parent.ht_items << dup
+      delete
+    end
+  end
+
+end
