@@ -7,6 +7,7 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 gem "canister"
 gem "dotenv"
 gem "mongo"
+gem "mongoid"
 
 group :development, :test do
   gem "pry"
