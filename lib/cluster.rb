@@ -1,37 +1,47 @@
 # frozen_string_literal: true
 
-require "forwardable"
+require 'forwardable'
+require 'mongoid'
+require 'holding'
+require 'htitem'
+require 'commitment'
+require 'services'
 
-# A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier
+# A set of identifiers (e.g. OCLC numbers),
+# - ocns
+# - holdings
+# - htitems
+# - commitments
 class Cluster
-  attr_reader :id, :members
+  include Mongoid::Document
+  store_in collection: "clusters", database: "test", client: "default"
+  field :ocns, type: Array
+  embeds_many :holdings
+  embeds_many :h_t_items
+  embeds_many :commitments 
 
-  extend Forwardable
+  attr_writer :holdings
 
-  def_delegators :members, :include?, :to_a, :each
-
-  # Creates a new cluster from a hash (or MongoDB document)
-  #
-  # @param hash The hash or document from which to create the cluster.
-  #    It should have an _id and members key.
-  def self.from_hash(hash)
-    new(*hash[:members])
+  # Returns an empty array if no documents are embedded
+  def embedded_field(field = __callee__)
+    if instance_variable_get("@#{field}").nil? 
+      []
+    else
+      instance_variable_get("@#{field}")
+    end
   end
+  alias holdings embedded_field
+  alias h_t_items embedded_field
+  alias commitments embedded_field
 
-  # Create a new cluster.
+  # Combines two clusters into one
   #
-  # @param members An array of identifiers that belong in this cluster.
-  def initialize(*members)
-    @members = Set.new(members)
-  end
-
-  # Adds the given identifier to this cluster.
-  #
-  # @param id The identifier to add as a member of this cluster
-  # @return This cluster
-  def add(id)
-    members.add(id)
-    self
+  # @param first, second cluster documents
+  def +(second)
+    Cluster.new(ocns: (self.ocns + second.ocns).uniq,
+                holdings: (self.holdings + second.holdings).uniq,
+                h_t_items: (self.h_t_items + second.h_t_items).uniq,
+                commitments: (self.commitments + second.commitments).uniq)
   end
 
   # Adds the members of the given cluster to this cluster.
@@ -39,13 +49,16 @@ class Cluster
   # @param other The cluster whose members to merge with this cluster.
   # @return This cluster
   def merge(other)
-    members.merge(other.members)
+    @ocns = (ocns + other.ocns).uniq
+    @holdings = holdings + other.holdings
+    @h_t_items = h_t_items + other.h_t_items
+    @commitments = commitments + other.commitments
+    #ocns = (ocns + other.ocns).uniq
     self
   end
 
-  # Serialize this cluster to a hash suitable for conversion to JSON etc
-  def to_hash
-    { members: members.to_a }
+  def save
+    super
   end
 
 end
