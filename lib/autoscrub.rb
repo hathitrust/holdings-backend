@@ -184,9 +184,9 @@ class Autoscrub
     when "local_id"
       not_implemented(col_val)
     when "status"
-      not_implemented(col_val)
+      ScrubFields.status(col_val)
     when "condition"
-      not_implemented(col_val)
+      ScrubFields.condition(col_val)
     when "govdoc"
       not_implemented(col_val)
     when "enumchron"
