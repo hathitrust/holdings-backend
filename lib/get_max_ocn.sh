@@ -13,8 +13,8 @@ too_old=86400 # one day in seconds
 function make_curl_call {
     echo "Calling oclc..."
     curl -s "https://www.oclc.org/apps/oclc/wwg" |
-	egrep -o '"oclcNumber":"[0-9]+"' |
-	egrep -o '[0-9]+' > "$memo_dir/$memo_template"_"$epoch".txt;
+	grep -Po '"oclcNumber":"\d+"' |
+	grep -Po '\d+' > "$memo_dir/$memo_template"_"$epoch".txt;
     cat "$memo_dir/$memo_template"_"$epoch".txt;
 }
 
@@ -32,9 +32,9 @@ else
     epoch_diff=`expr $epoch - $memoized_epoch`;
     echo "Age diff $epoch_diff seconds.";
 
-    # check if cache hit is too old
+    # check if cache hit is stale
     if [ "$epoch_diff" -gt "$too_old" ]; then
-	# too old, remove & make fresh
+	# stale, remove & make fresh
 	echo "Cache expired.";
 	rm --verbose "$memo_dir/$memoized";
 	make_curl_call;
