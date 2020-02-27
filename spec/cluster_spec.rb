@@ -11,6 +11,7 @@ RSpec.describe Cluster do
 
   describe "#merge" do
     before(:each) do
+      described_class.each(&:delete)
       @cluster1 = described_class.new(ocns: [5])
       @cluster1.save
       @cluster2 = described_class.new(ocns: [7])
@@ -42,7 +43,7 @@ RSpec.describe Cluster do
       expect(@cluster1.merge(@cluster2).h_t_items.count).to eq(2)
     end
 
-    it "dedupes holdings" do
+    it "does not dedupe holdings" do
       @cluster1.holdings.create(organization: "loc")
       @cluster1.holdings.create(organization: "miu")
       @cluster2.holdings.create(organization: "miu")
