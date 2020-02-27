@@ -3,8 +3,9 @@
 require "forwardable"
 require "mongoid"
 require "holding"
-require "htitem"
+require "ht_item"
 require "commitment"
+require "oclc_cluster"
 require "services"
 
 # A set of identifiers (e.g. OCLC numbers),
@@ -15,14 +16,10 @@ require "services"
 class Cluster
   include Mongoid::Document
   store_in collection: "clusters", database: "test", client: "default"
-  field :ocns, type: Array
+  field :ocns, type: OCLCCluster
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items
   embeds_many :commitments
-
-  def initialize(*args)
-    super
-  end
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
@@ -39,7 +36,7 @@ class Cluster
   end
 
   def save
-    Cluster.where(ocns: { "$in": ocns }).each do |c|
+    Cluster.where(ocns: { "$in": ocns.mongoize }).each do |c|
       unless c._id == _id
         merge(c)
       end

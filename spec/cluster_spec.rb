@@ -3,18 +3,32 @@
 require "cluster"
 Mongoid.load!("mongoid.yml", :test)
 RSpec.describe Cluster do
+  let(:ocn1) { OCLCNumber.new(5) }
+  let(:ocn2) { OCLCNumber.new(7) }
+  let(:occ1) { OCLCCluster.new([5]) }
+  let(:occ2) { OCLCCluster.new([7]) }
+  let(:occ3) { OCLCCluster.new([5, 7]) }
+
   describe "#initialize" do
     it "creates a new cluster" do
-      expect(described_class.new(ocns: [5]).class).to eq(described_class)
+      expect(described_class.new(ocns: occ1).class).to eq(described_class)
+    end
+
+    it "has an ocns field that is OCLCCluster" do
+      expect(described_class.new(ocns: occ1).ocns.class).to eq(OCLCCluster)
+    end
+
+    it "has an ocns field with members that are OCLCNumbers" do
+      expect(described_class.new(ocns: occ1).ocns.first.class).to eq(OCLCNumber)
     end
   end
 
   describe "#merge" do
     before(:each) do
       described_class.each(&:delete)
-      @cluster1 = described_class.new(ocns: [5])
+      @cluster1 = described_class.new(ocns: occ1)
       @cluster1.save
-      @cluster2 = described_class.new(ocns: [7])
+      @cluster2 = described_class.new(ocns: occ2)
       @cluster2.save
     end
 
@@ -27,7 +41,7 @@ RSpec.describe Cluster do
     end
 
     it "combines ocns sets" do
-      expect(@cluster1.merge(@cluster2).ocns).to eq([5, 7])
+      expect(@cluster1.merge(@cluster2).ocns).to eq(occ3)
     end
 
     it "combines holdings" do
@@ -60,8 +74,9 @@ RSpec.describe Cluster do
 
   describe "#save" do
     before(:each) do
-      @cluster1 = described_class.new(ocns: [5, 7])
-      @cluster2 = described_class.new(ocns: [7])
+      described_class.each(&:delete)
+      @cluster1 = described_class.new(ocns: occ3)
+      @cluster2 = described_class.new(ocns: occ2)
     end
 
     after(:each) do
@@ -71,14 +86,14 @@ RSpec.describe Cluster do
     it "saves to the database" do
       @cluster1.save
       expect(described_class.count).to eq(1)
-      expect(described_class.where(ocns: 5).count).to eq(1)
+      expect(described_class.where(ocns: ocn1).count).to eq(1)
     end
 
     it "merges conflicting clusters to maintain validity" do
       @cluster1.save
       @cluster2.save
       expect(described_class.count).to eq(1)
-      expect(@cluster2.ocns).to eq([5, 7])
+      expect(@cluster2.ocns).to eq(occ3)
     end
   end
 end

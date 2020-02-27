@@ -15,4 +15,5 @@ class OCLCNumber
   def initialize(ocn)
     @ocn = ocn
   end
+
 end
