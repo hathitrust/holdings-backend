@@ -52,20 +52,6 @@ RSpec.describe Autoscrub do
       expect(autoscrub.number_of_cols([1] * 7)).to be(false)
     end
 
-    # Now testing that all the parts fit together.
-    it "rejects files that are not well formed" do
-      expect(
-        autoscrub.well_formed_file?(
-        'haverford_mono_full_20200101_headerless.tsv'
-      )).to be(false)
-
-      # Not ready to test yet
-      # expect(
-      #   autoscrub.well_formed_file?(
-      #   'haverford_mono_full_20200101_header.tsv'
-      # )).to be(true)
-    end
-
     it "rejects ocns with no numbers in them" do
       expect(autoscrub.check_col_val('oclc', "xyz")).to eq([])
       expect(autoscrub.check_col_val('oclc', "")).to eq([])
@@ -213,4 +199,29 @@ RSpec.describe Autoscrub do
         expect(autoscrub.check_col_val('issn', issn)).to eq(["1234-1234"])
       end
     end
+
+    it "currently allows anything in enumchron" do
+      expect(autoscrub.check_col_val(
+              'enumchron',
+              "vol 1"
+            )).to eq(["vol 1"])
+    end
+
+    it "allows well formed files" do
+      expect(
+        autoscrub.well_formed_file?(
+        'haverford_mono_full_20200101_header.tsv'
+      )).to be(true)
+    end
+
+    # Now testing that all the parts fit together.
+    it "rejects files that are not well formed" do
+      ['haverford_mono_full_20200101_headerless.tsv',
+       'haverford_mono_full_20200101_notab.tsv',
+       'haverford_mono_full_20200101_badocn.tsv'
+      ].each do |f|
+        expect(autoscrub.well_formed_file?(f)).to be(false)
+      end
+    end
+
 end
