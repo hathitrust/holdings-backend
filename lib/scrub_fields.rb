@@ -3,8 +3,10 @@
 class ScrubFields
 
   # "444; 555; 666" -> %w[444,555,666]
-  SPLIT_DELIM = Regexp.new(/[,:;\|\/ ]+/)
-
+  OCN_SPLIT_DELIM      = Regexp.new(/[,:;\|\/ ]+/)
+  LOCAL_ID_SPLIT_DELIM = Regexp.new(/[,; ]+/)
+  ISSN_DELIM           = LOCAL_ID_SPLIT_DELIM
+  
   # (ocolc)555 / (abc)555
   PAREN_PREFIX    = Regexp.new(/^\(.+?\)/)
   OK_PAREN_PREFIX = Regexp.new(/\((oclc|ocm|ocn|ocolc)\)/i)
@@ -44,16 +46,27 @@ class ScrubFields
     raise "failed to set CURRENT_MAX_OCN"
   end
 
+  LOCAL_ID_MAX_LEN = 50
+  MAX_NUM_ITEMS    = 10 # rather arbitrary
+  
   STATUS    = Regexp.new(/CH|LM|WD/)
   CONDITION = Regexp.new(/BRT/)
+  GOVDOC    = Regexp.new(/^[01]$/)
+  ISSN      = Regexp.new(/^\d{4}-?\d{3}[0-9Xx]$/)
   
   # Given a string, determines which valid ocns are in it,
   # and returns them as an array of Integers.
   def self.ocn(str)
     output = []
-    str.strip!
-    candidates = str.split(SPLIT_DELIM)
+    return output if str.nil?
 
+    str.strip!
+    candidates = str.split(OCN_SPLIT_DELIM)
+
+    if candidates.size > MAX_NUM_ITEMS then
+      warn "lots of items #{candidates.size} in ocn #{str}";
+    end
+    
     # DO WHILE MAYBE COMEFROM reject_reason
     candidates.each do |candidate|
       catch(:rejected) do
@@ -103,22 +116,80 @@ class ScrubFields
     return output
   end
 
-  def self.status(str)
+  def self.local_id(str)
     output = []
-    STATUS.match(str) &&
-      output << Regexp.last_match(0)
+    return output if str.nil?
+    
+    str.strip!
+    candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
+    if candidates.size > 1 then
+      warn "there are #{candidates.size} candidates in this local_id"
+      # maybe throw something??
+    end
+    
+    if candidates.size > MAX_NUM_ITEMS then
+      warn "in fact lots of items #{candidates.size} in local_id #{str}";
+      # maybe definitely throw something??
+    end
+
+    candidates.each do |candidate|
+      catch(:rejected) do
+        puts "looking at local_id #{candidate}"
+
+        candidate.size > LOCAL_ID_MAX_LEN &&
+          reject_reason(
+            "local_id too long (%i > max %i)" %
+            [candidate.size, LOCAL_ID_MAX_LEN],
+            candidate
+          )
+
+        output << candidate
+      end
+    end
+    output.uniq!
+    
     return output
+  end
+
+  def self.issn(str)
+    candidates = str.split(ISSN_DELIM)
+    ok_issns   = []
+    
+    candidates.each do |candidate|
+      catch(:rejected) do
+        ISSN.match?(candidate) ||
+          reject_reason("not an OK issn", candidate)
+        
+        ok_issns << candidate
+      end
+    end
+    
+    output = ok_issns.join(";")
+    return [output]
+  end
+  
+  def self.status(str)
+    simple_matcher(STATUS, str)
   end
 
   def self.condition(str)
-    output = []
-    CONDITION.match(str) &&
-      output << Regexp.last_match(0)
-
-    return output
+    simple_matcher(CONDITION, str)
   end
 
+  def self.govdoc(str)
+    simple_matcher(GOVDOC, str)
+  end
+
+  def self.simple_matcher(rx, str)
+    output = []
+    str.strip!
+    rx.match(str) &&
+      output << Regexp.last_match(0)
+    
+    return output
+  end
+  
   def self.reject_reason(reason, val)
     warn [reason, val].join(":")
     throw :rejected

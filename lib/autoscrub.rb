@@ -182,19 +182,19 @@ class Autoscrub
     when "oclc"
       ScrubFields.ocn(col_val)
     when "local_id"
-      not_implemented(col_val)
+      ScrubFields.local_id(col_val)
     when "status"
       ScrubFields.status(col_val)
     when "condition"
       ScrubFields.condition(col_val)
     when "govdoc"
-      not_implemented(col_val)
+      ScrubFields.govdoc(col_val)
     when "enumchron"
       not_implemented(col_val)
     when "issn"
-      not_implemented(col_val)
+      ScrubFields.issn(col_val)
     else
-      raise "not covered this case: #{col_type} : #{col_val}"
+      raise "check_col_val cannot handle #{col_type}, #{col_val}"
     end
   end
 
