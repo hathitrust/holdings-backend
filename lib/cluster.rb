@@ -17,7 +17,7 @@ class Cluster
   store_in collection: "clusters", database: "test", client: "default"
   field :ocns, type: Array
   embeds_many :holdings, class_name: "Holding"
-  embeds_many :h_t_items
+  embeds_many :ht_items
   embeds_many :commitments
 
   def initialize(*args)
@@ -32,7 +32,7 @@ class Cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
     other.holdings.each {|h| h.move(self) }
-    other.h_t_items.each {|ht| ht.move(self) }
+    other.ht_items.each {|ht| ht.move(self) }
     other.commitments.each {|c| c.move(self) }
     other.delete
     self

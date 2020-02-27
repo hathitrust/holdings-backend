@@ -37,17 +37,17 @@ RSpec.describe Cluster do
       expect(@cluster1.merge(@cluster2).holdings.count).to eq(3)
     end
 
-    it "combines h_t_items" do
-      @cluster1.h_t_items.create(item_id: "miu5")
-      @cluster2.h_t_items.create(item_id: "uc6")
-      expect(@cluster1.merge(@cluster2).h_t_items.count).to eq(2)
+    it "combines ht_items" do
+      @cluster1.ht_items.create(item_id: "miu5")
+      @cluster2.ht_items.create(item_id: "uc6")
+      expect(@cluster1.merge(@cluster2).ht_items.count).to eq(2)
     end
 
     it "does not dedupe holdings" do
       @cluster1.holdings.create(organization: "loc")
       @cluster1.holdings.create(organization: "miu")
       @cluster2.holdings.create(organization: "miu")
-      expect(@cluster1.merge(@cluster2).holdings.count).to eq(2)
+      expect(@cluster1.merge(@cluster2).holdings.count).to eq(3)
     end
 
     it "combines commitments" do
