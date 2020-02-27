@@ -6,12 +6,28 @@ require 'scrub_fields'
 
 class Autoscrub
   DATA_DIR = __dir__ + '/../testdata'
+
+  # A single regex for file name pass/fail.
   FILENAME_REGEXP = Regexp.new(
-    /^[a-z\-]+_(mono|multi|serial)_(full|partial)_\d{8}(_.+)?.tsv(.gz)?$/
+    /^
+    [a-z\-]+              # member_id
+    _(mono|multi|serial)  # item_type
+    _(full|partial)       # update_type
+    _\d{8}                # date_str
+    (_.+)?                # optional "rest" part
+    .tsv                  # must be a tsv
+    (.gz)?                # may be gzipped
+    $/x
   )
+
+  # If filename fail, further regexes to discover why.
   MEMBER_ID_REGEXP   = Regexp.new(/^[a-z\_]+$/)
   ITEM_TYPE_REGEXP   = Regexp.new(/^(mono|multi|serial)$/)
   UPDATE_TYPE_REGEXP = Regexp.new(/^(full|partial)$/)
+
+  # A YYYYMMDD date string is expected,
+  # and of course this regex is overly permissive
+  # but let's leave it like that.
   DATE_REGEXP        = Regexp.new(/^\d{8}$/)
 
   REQ_HEADER_COLS = %w[oclc local_id].freeze
@@ -100,6 +116,7 @@ class Autoscrub
   def analyze_rest(arr)
     return 'must not be empty' if arr.empty?
 
+    # magic numbers abound
     if arr.size > 10 || arr.join().length > 100 then
       return 'not ok, too long'
     end
@@ -147,7 +164,6 @@ class Autoscrub
     col_map = {}
 
     read_file(filename) do |line, line_no|
-      line.chomp!
       puts line
       cols = line.split("\t")
 
@@ -158,7 +174,7 @@ class Autoscrub
         end
         col_map = get_col_map(cols, item_type)
       elsif !well_formed_line?(cols, item_type, col_map) then
-        return false
+        warn "problem at line #{line_no}"
       end
     end
 
@@ -168,15 +184,22 @@ class Autoscrub
   def well_formed_line?(cols, item_type, col_map)
     puts "col map: #{col_map}"
     puts "cols #{cols.join(',')}"
+    line_hash = {}
+
     col_map.each do |col_type, i|
       puts "check that col #{i} (#{col_type}) has an OK value #{cols[i]}"
-      check_col_val(col_type, cols[i])
+      validated_val = check_col_val(col_type, cols[i])
+      line_hash[col_type] = validated_val
     end
 
-    false
+    puts line_hash # todo: write to file that can be loaded into data store
+
+    return true
+
   end
 
-  # Based on col type, check if col val makes sense
+  # Based on col type, pass on to the right method
+  # to check if col val makes sense
   def check_col_val(col_type, col_val)
     case col_type
     when "oclc"
@@ -190,7 +213,7 @@ class Autoscrub
     when "govdoc"
       ScrubFields.govdoc(col_val)
     when "enumchron"
-      not_implemented(col_val)
+      ScrubFields.enumchron(col_val)
     when "issn"
       ScrubFields.issn(col_val)
     else

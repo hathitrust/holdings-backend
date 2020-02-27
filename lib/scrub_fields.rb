@@ -6,7 +6,7 @@ class ScrubFields
   OCN_SPLIT_DELIM      = Regexp.new(/[,:;\|\/ ]+/)
   LOCAL_ID_SPLIT_DELIM = Regexp.new(/[,; ]+/)
   ISSN_DELIM           = LOCAL_ID_SPLIT_DELIM
-  
+
   # (ocolc)555 / (abc)555
   PAREN_PREFIX    = Regexp.new(/^\(.+?\)/)
   OK_PAREN_PREFIX = Regexp.new(/\((oclc|ocm|ocn|ocolc)\)/i)
@@ -14,7 +14,7 @@ class ScrubFields
   # ocn555
   PREFIX = Regexp.new(/^\D+/)
   OK_PREFIX = Regexp.new(/(oclc|ocm|ocn|ocolc)/i)
-  
+
   # No prefix, just "555", could be an ocn so we assume it is
   JUST_DIGITS = Regexp.new(/^\d+$/)
 
@@ -48,12 +48,12 @@ class ScrubFields
 
   LOCAL_ID_MAX_LEN = 50
   MAX_NUM_ITEMS    = 10 # rather arbitrary
-  
+
   STATUS    = Regexp.new(/CH|LM|WD/)
   CONDITION = Regexp.new(/BRT/)
   GOVDOC    = Regexp.new(/^[01]$/)
   ISSN      = Regexp.new(/^\d{4}-?\d{3}[0-9Xx]$/)
-  
+
   # Given a string, determines which valid ocns are in it,
   # and returns them as an array of Integers.
   def self.ocn(str)
@@ -66,46 +66,46 @@ class ScrubFields
     if candidates.size > MAX_NUM_ITEMS then
       warn "lots of items #{candidates.size} in ocn #{str}";
     end
-    
-    # DO WHILE MAYBE COMEFROM reject_reason
+
+    # DO WHILE MAYBE COMEFROM reject_value
     candidates.each do |candidate|
-      catch(:rejected) do
+      catch(:rejected_value) do
         numeric_part = capture_numeric(candidate)
         candidate.strip!
 
         # Try to find a reason to reject the candidate ocn
-        # Any time reject_reason triggers, go ^^ to the catch.
+        # Any time reject_value triggers, go ^^ to the catch.
         candidate.nil? &&
-          reject_reason("ocn is nil", "")
+          reject_value("ocn is nil", "")
 
         candidate.empty? &&
-          reject_reason("ocn is empty", "")
+          reject_value("ocn is empty", "")
 
         EXPONENTIAL.match?(candidate) &&
-          reject_reason("ocn is in exponential format", candidate)
+          reject_value("ocn is in exponential format", candidate)
 
         DIGIT_MIX.match?(candidate) &&
-          reject_reason("ocn is mix of digits and non-digits", candidate)
+          reject_value("ocn is mix of digits and non-digits", candidate)
 
         # Check prefixes, with / without parens
         if PAREN_PREFIX.match(candidate) then
           paren_expr = Regexp.last_match(0)
           OK_PAREN_PREFIX.match?(paren_expr) ||
-            reject_reason("ocn has an invalid paren prefix", candidate)
+            reject_value("ocn has an invalid paren prefix", candidate)
         elsif PREFIX.match(candidate) then
           prefix_expr = Regexp.last_match(0)
           OK_PREFIX.match?(prefix_expr) ||
-            reject_reason("ocn has an invalid prefix", candidate)
+            reject_value("ocn has an invalid prefix", candidate)
         end
 
         # As far as the numeric part goes, the only thing we can say
         # about it is that it should be smaller than the current max ocn.
         numeric_part > CURRENT_MAX_OCN &&
-          reject_reason("number is too large for an ocn", numeric_part)
+          reject_value("number is too large for an ocn", numeric_part)
 
         numeric_part == 0 &&
-          reject_reason("ocn is zero", candidate)
-        
+          reject_value("ocn is zero", candidate)
+
         # If we made it this far, we assume candidate is OK.
         output << numeric_part
       end
@@ -119,7 +119,7 @@ class ScrubFields
   def self.local_id(str)
     output = []
     return output if str.nil?
-    
+
     str.strip!
     candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
@@ -127,18 +127,18 @@ class ScrubFields
       warn "there are #{candidates.size} candidates in this local_id"
       # maybe throw something??
     end
-    
+
     if candidates.size > MAX_NUM_ITEMS then
       warn "in fact lots of items #{candidates.size} in local_id #{str}";
       # maybe definitely throw something??
     end
 
     candidates.each do |candidate|
-      catch(:rejected) do
+      catch(:rejected_value) do
         puts "looking at local_id #{candidate}"
 
         candidate.size > LOCAL_ID_MAX_LEN &&
-          reject_reason(
+          reject_value(
             "local_id too long (%i > max %i)" %
             [candidate.size, LOCAL_ID_MAX_LEN],
             candidate
@@ -148,27 +148,32 @@ class ScrubFields
       end
     end
     output.uniq!
-    
+
     return output
   end
 
   def self.issn(str)
     candidates = str.split(ISSN_DELIM)
     ok_issns   = []
-    
+
     candidates.each do |candidate|
-      catch(:rejected) do
+      catch(:rejected_value) do
         ISSN.match?(candidate) ||
-          reject_reason("not an OK issn", candidate)
-        
+          reject_value("not an OK issn", candidate)
+
         ok_issns << candidate
       end
     end
-    
+
     output = ok_issns.join(";")
     return [output]
   end
-  
+
+  def self.enumchron(str)
+    # anything goes at the moment
+    return [str]
+  end
+
   def self.status(str)
     simple_matcher(STATUS, str)
   end
@@ -186,13 +191,13 @@ class ScrubFields
     str.strip!
     rx.match(str) &&
       output << Regexp.last_match(0)
-    
+
     return output
   end
-  
-  def self.reject_reason(reason, val)
+
+  def self.reject_value(reason, val)
     warn [reason, val].join(":")
-    throw :rejected
+    throw :rejected_value
   end
 
   def self.capture_numeric(str)
@@ -200,7 +205,7 @@ class ScrubFields
     if !md.nil? then
       return md[0].to_i
     else
-      reject_reason("could not extract numeric part", str)
+      reject_value("could not extract numeric part", str)
     end
   end
 
