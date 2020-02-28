@@ -16,4 +16,21 @@ class OCLCNumber
     @ocn = ocn
   end
 
+  def mongoize
+    ocn.to_i
+  end
+
+  class << self
+    def demongoize(object)
+      OCLCNumber.new(object)
+    end
+
+    def mongoize(object)
+      case object
+      when OCLCNumber then object.to_i
+      else object
+      end
+    end
+    alias_method :evolve, :mongoize
+  end
 end
