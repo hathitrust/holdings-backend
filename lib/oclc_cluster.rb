@@ -12,7 +12,7 @@ class OCLCCluster < Array
   attr_reader :ocns
 
   def initialize(ocns)
-    @ocns = ocns.map {|o| OCLCNumber.new(o) }
+    @ocns = ocns.map {|o| OCLCNumber.new(o.to_i) }
   end
 
   # Convert to a Mongo friendly type

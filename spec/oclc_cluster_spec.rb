@@ -8,6 +8,14 @@ RSpec.describe OCLCCluster do
 
   it "can be created" do
     expect(described_class.new([ocn1, ocn2])).to be_a(described_class)
+    expect(described_class.new([ocn1, ocn2]).first).to be_a(OCLCNumber)
+    expect(described_class.new([ocn1, ocn2]).first.ocn).to be(ocn1)
+  end
+
+  it "can be created from an OCLCNumber" do
+    expect(described_class.new([OCLCNumber.new(5)])).to be_a(described_class)
+    expect(described_class.new([OCLCNumber.new(5)]).first).to be_a(OCLCNumber)
+    expect(described_class.new([OCLCNumber.new(5)]).first.ocn).to be(5)
   end
 
   it "returns ocns as array of OCLCNumber" do
