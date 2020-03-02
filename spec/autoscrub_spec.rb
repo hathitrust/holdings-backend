@@ -42,12 +42,12 @@ RSpec.describe Autoscrub do
               %w<oclc local_id enumchron>, 'serial')).to be(false)
     end
 
-    it "acceptss lines inside lenght requirements" do
+    it "acceptss lines inside length requirements" do
       expect(autoscrub.number_of_cols([1] * 2)).to be(true)
       expect(autoscrub.number_of_cols([1] * 6)).to be(true)
     end
 
-    it "rejects lines outside lenght requirements" do
+    it "rejects lines outside length requirements" do
       expect(autoscrub.number_of_cols([1] * 1)).to be(false)
       expect(autoscrub.number_of_cols([1] * 7)).to be(false)
     end
@@ -207,6 +207,74 @@ RSpec.describe Autoscrub do
             )).to eq(["vol 1"])
     end
 
+    it "rejects malformed lines" do
+      expect(autoscrub.well_formed_line?(
+              [],
+              'mono',
+              {
+                "oclc"=>0,
+                "local_id"=>1
+              })).to be(false)
+      expect(autoscrub.well_formed_line?(
+              ['',''],
+              'mono',
+              {
+                "oclc"=>0,
+                "local_id"=>1
+              })).to be(false)
+      expect(autoscrub.well_formed_line?(
+              ['','i789'],
+              'mono',
+              {
+                "oclc"=>0,
+                "local_id"=>1
+              })).to be(false)      
+    end
+    
+    it "allows well formed lines" do
+      expect(autoscrub.well_formed_line?(
+              %w[123 i789],
+              'mono',
+              {
+                "oclc"=>0,
+                "local_id"=>1
+              })).to be(true)
+
+      expect(autoscrub.well_formed_line?(
+              %w[123 i789 CH BRT 1],
+              'mono',
+              {
+                "oclc"=>0,
+                "local_id"=>1,
+                "status"=>2,
+                "condition"=>3,
+                "govdoc"=>4
+              })).to be(true)
+
+      expect(autoscrub.well_formed_line?(
+              %w[123 i789 CH v.1 BRT 1],
+              'multi',
+              {
+                "oclc"=>0,
+                "local_id"=>1,
+                "status"=>2,
+                "enumchron"=>3,
+                "condition"=>4,
+                "govdoc"=>5
+              })).to be(true)
+
+      expect(autoscrub.well_formed_line?(
+              %w[123 i789 1234-567X],
+              'serial',
+              {
+                "oclc"=>0,
+                "local_id"=>1,
+                "issn"=>2
+              })).to be(true)
+      
+
+    end
+    
     it "allows well formed files" do
       expect(
         autoscrub.well_formed_file?(
@@ -218,7 +286,6 @@ RSpec.describe Autoscrub do
     it "rejects files that are not well formed" do
       ['haverford_mono_full_20200101_headerless.tsv',
        'haverford_mono_full_20200101_notab.tsv',
-       'haverford_mono_full_20200101_badocn.tsv'
       ].each do |f|
         expect(autoscrub.well_formed_file?(f)).to be(false)
       end
