@@ -5,7 +5,6 @@ require "mongoid"
 require "holding"
 require "ht_item"
 require "commitment"
-require "oclc_cluster"
 require "services"
 
 # A set of identifiers (e.g. OCLC numbers),
@@ -16,11 +15,12 @@ require "services"
 class Cluster
   include Mongoid::Document
   store_in collection: "clusters", database: "test", client: "default"
-  field :ocns, type: OCLCCluster
+  field :ocns 
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items
   embeds_many :commitments
-
+  index({ocns: 1}, {unique:true}) 
+ 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
   #
@@ -33,15 +33,6 @@ class Cluster
     other.commitments.each {|c| c.move(self) }
     other.delete
     self
-  end
-
-  def save
-    Cluster.where(ocns: { "$in": ocns.mongoize }).each do |c|
-      unless c._id == _id
-        merge(c)
-      end
-    end
-    super
   end
 
 end
