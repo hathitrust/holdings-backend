@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env.test")
-
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
 require "bundler/setup"
 
 require "simplecov"
+require "mongoid"
 SimpleCov.start
+
+Mongoid.load!("mongoid.yml", :test)
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"

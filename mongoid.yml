@@ -4,9 +4,14 @@ development:
       database: development
       hosts:
         - mongo:27017
+  options:
+    raise_not_found_error: false
+
 test:
   clients:
     default:
       database: test
       hosts:
         - mongo:27017
+  options:
+    raise_not_found_error: false
