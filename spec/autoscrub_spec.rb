@@ -201,36 +201,45 @@ RSpec.describe Autoscrub do
     end
 
     it "currently allows anything in enumchron" do
-      expect(autoscrub.check_col_val(
-              'enumchron',
-              "vol 1"
-            )).to eq(["vol 1"])
+      ec = 'enumchron'
+      expect(autoscrub.check_col_val(ec, "vol 1")).to eq(["vol:1", nil])
+      expect(autoscrub.check_col_val(ec, "1")).to eq(["1", nil])
+      expect(autoscrub.check_col_val(ec, "")).to eq([nil, nil])
+      expect(autoscrub.check_col_val(ec, "pt.1 1970")).to eq(["1","1970"])
+      expect(autoscrub.check_col_val(ec, "01 (v. 1)")).to eq(["01:1",nil])
+      expect(autoscrub.check_col_val(ec, "1970")).to eq([nil,"1970"])
+      expect(autoscrub.check_col_val(ec, "1970-1971")).to eq([nil,"1970-1971"])
+      expect(autoscrub.check_col_val(ec, "1970-1971 (no.20)")).to eq(["20","1970-1971"])
+      expect(autoscrub.check_col_val(ec, "1970, spring")).to eq([nil, "1970 spring"])
+      expect(autoscrub.check_col_val(ec, "1970, suppl")).to eq(["suppl", "1970"])
+      expect(autoscrub.check_col_val(ec, "v.6a pt.2")).to eq(["6a:2", nil])
+      expect(autoscrub.check_col_val(ec, "1970 v.1")).to  eq(["1", "1970"])
+      expect(autoscrub.check_col_val(ec, "1970,v.1")).to  eq(["1", "1970"])
+      expect(autoscrub.check_col_val(ec, "1970, v.1")).to eq(["1", "1970"])
+      expect(autoscrub.check_col_val(ec, "V.8 How to Price Meats")
+            ).to eq(["8:How:to:Price:Meats", nil])
+
+      # buggy ones (i.e. ecparser could do a better job here, but tests are controlling
+      # that behavior hasn't changed):
+      expect(autoscrub.check_col_val(ec, "1970;v.1")).to  eq(["1", nil])
+      expect(autoscrub.check_col_val(ec, "v.7 (2201-5600)")).to eq(["7", "2201-5600"])
+      expect(autoscrub.check_col_val(ec, "1970;no.4")).to eq([nil, "1970no.4"])
+      expect(autoscrub.check_col_val(ec, "1970;nos.4-5")).to eq([nil, "1970nos.4-5"])
+      expect(autoscrub.check_col_val(ec, "Lev25-30;Rdr")).to eq(["25", nil])
+      # Makes sense, ish:
+      expect(autoscrub.check_col_val(ec, "v.3, Gr.8")).to  eq(["3:8", nil])
+      expect(autoscrub.check_col_val(ec, "v.3, SEC.8")).to eq(["3:8", nil])
+      # ... but then:
+      expect(autoscrub.check_col_val(ec, "v.3/SEC.8")).to eq(["8", nil])
     end
 
     it "rejects malformed lines" do
-      expect(autoscrub.well_formed_line?(
-              [],
-              'mono',
-              {
-                "oclc"=>0,
-                "local_id"=>1
-              })).to be(false)
-      expect(autoscrub.well_formed_line?(
-              ['',''],
-              'mono',
-              {
-                "oclc"=>0,
-                "local_id"=>1
-              })).to be(false)
-      expect(autoscrub.well_formed_line?(
-              ['','i789'],
-              'mono',
-              {
-                "oclc"=>0,
-                "local_id"=>1
-              })).to be(false)      
+      h = {"oclc"=>0,"local_id"=>1}
+      expect(autoscrub.well_formed_line?([], 'mono', h)).to be(false)
+      expect(autoscrub.well_formed_line?(['',''],'mono', h)).to be(false)
+      expect(autoscrub.well_formed_line?(['','i789'],'mono', h)).to be(false)
     end
-    
+
     it "allows well formed lines" do
       expect(autoscrub.well_formed_line?(
               %w[123 i789],
@@ -270,11 +279,10 @@ RSpec.describe Autoscrub do
                 "oclc"=>0,
                 "local_id"=>1,
                 "issn"=>2
-              })).to be(true)
-      
-
+              }
+            )).to be(true)
     end
-    
+
     it "allows well formed files" do
       expect(
         autoscrub.well_formed_file?(
