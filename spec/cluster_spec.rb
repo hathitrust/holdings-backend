@@ -7,6 +7,11 @@ RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
 
+  before(:each) do
+    described_class.create_indexes
+    described_class.collection.find.delete_many
+  end
+
   describe "#initialize" do
     it "creates a new cluster" do
       expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
@@ -30,8 +35,6 @@ RSpec.describe Cluster do
     let(:c2) { described_class.new(ocns: [ocn2]) }
 
     before(:each) do
-      described_class.collection.drop
-      described_class.create_indexes
       c1.save
       c2.save
     end
@@ -68,14 +71,6 @@ RSpec.describe Cluster do
   describe "#save" do
     let(:c1) { described_class.new(ocns: [ocn1, ocn2]) }
     let(:c2) { described_class.new(ocns: [ocn2]) }
-
-    before(:each) do
-      described_class.each(&:delete)
-    end
-
-    after(:each) do
-      described_class.each(&:delete)
-    end
 
     it "can't save them both" do
       c1.save

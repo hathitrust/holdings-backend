@@ -7,8 +7,8 @@ require "cluster"
 
 RSpec.describe "ClusterMapper with MongoDB", :integration do
   before(:each) do
-    Cluster.collection.drop
     Cluster.create_indexes
+    Cluster.collection.find.delete_many
   end
 
   def mapper
