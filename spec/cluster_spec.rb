@@ -1,67 +1,92 @@
 # frozen_string_literal: true
 
+require "pp"
 require "cluster"
 
 RSpec.describe Cluster do
-  let(:id1) { double("id1") }
-  let(:id2) { double("id2") }
-  let(:id3) { double("id3") }
-  let(:members) { [id1, id2, id3] }
+  let(:ocn1) { 5 }
+  let(:ocn2) { 6 }
 
-  context "with a cluster with only one member" do
-    let(:cluster) { described_class.new(id1) }
-
-    it "can be created" do
-      expect(cluster).not_to be(nil)
+  describe "#initialize" do
+    it "creates a new cluster" do
+      expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
     end
 
-    it "includes that member" do
-      expect(cluster.include?(id1)).to be(true)
-    end
-  end
-
-  context "with a cluster with multiple members" do
-    let(:cluster) { described_class.new(id1, id2) }
-
-    it "can be created" do
-      expect(cluster).not_to be(nil)
+    it "has an ocns field that is Array" do
+      expect(described_class.new(ocns: [ocn1]).ocns.class).to eq(Array)
     end
 
-    it "can tell whether a member is included in the cluster" do
-      expect(cluster.include?(id1)).to be(true)
+    it "has an ocns field with members that are OCLCNumbers" do
+      expect(described_class.new(ocns: [ocn1]).ocns.first.class).to eq(Integer)
+    end
+
+    xit "validates the ocns field is numeric" do
+      expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
   end
 
   describe "#merge" do
-    let(:cluster1) { described_class.new(id1) }
-    let(:cluster2) { described_class.new(id2) }
+    let(:c1) { described_class.new(ocns: [ocn1]) }
+    let(:c2) { described_class.new(ocns: [ocn2]) }
 
-    it "includes both members after merge" do
-      expect(cluster1.merge(cluster2).members).to\
-        contain_exactly(id1, id2)
+    before(:each) do
+      described_class.collection.drop
+      described_class.create_indexes
+      c1.save
+      c2.save
+    end
+
+    it "still a cluster" do
+      expect(c1.merge(c2).class).to eq(described_class)
+    end
+
+    it "combines ocns sets" do
+      expect(c1.merge(c2).ocns).to eq([ocn1, ocn2])
+    end
+
+    it "combines holdings but does not dedupe" do
+      c1.holdings.create(organization: "loc")
+      c1.holdings.create(organization: "miu")
+      c2.holdings.create(organization: "miu")
+      expect(c1.merge(c2).holdings.count).to eq(3)
+    end
+
+    it "combines ht_items" do
+      c1.ht_items.create(item_id: "miu5")
+      c2.ht_items.create(item_id: "uc6")
+      expect(c1.merge(c2).ht_items.count).to eq(2)
+    end
+
+    it "combines and dedupes commitments" do
+      c1.commitments.create(organization: "nypl")
+      c2.commitments.create(organization: "nypl")
+      c2.commitments.create(organization: "miu")
+      expect(c1.merge(c2).commitments.count).to eq(2)
     end
   end
 
-  describe "#from_hash" do
-    let(:hash) { { members: [id1, id2, id3] } }
-    let(:cluster_from_hash) { described_class.from_hash(hash) }
+  describe "#save" do
+    let(:c1) { described_class.new(ocns: [ocn1, ocn2]) }
+    let(:c2) { described_class.new(ocns: [ocn2]) }
 
-    it "maps members" do
-      expect(cluster_from_hash.members).to contain_exactly(id1, id2, id3)
+    before(:each) do
+      described_class.each(&:delete)
     end
-  end
 
-  describe "#add" do
-    it "returns a cluster with the new id as a member" do
-      expect(described_class.new(id1).add(id2)).to include(id2)
+    after(:each) do
+      described_class.each(&:delete)
     end
-  end
 
-  describe "#to_hash" do
-    let(:cluster) { described_class.new(*members) }
+    it "can't save them both" do
+      c1.save
+      expect { c2.save }.to \
+        raise_error(Mongo::Error::OperationFailure, /duplicate key error/)
+    end
 
-    it "converts to hash" do
-      expect(cluster.to_hash).to eq(members: members)
+    it "saves to the database" do
+      c1.save
+      expect(described_class.count).to eq(1)
+      expect(described_class.where(ocns: ocn1).count).to eq(1)
     end
   end
 end

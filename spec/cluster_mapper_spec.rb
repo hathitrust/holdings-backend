@@ -4,7 +4,13 @@ require "cluster_mapper"
 
 RSpec.describe ClusterMapper do
   let(:memory_clusters) do
-    Class.new(Cluster) do
+    Class.new do
+      attr_reader :ocns
+
+      def initialize(ocns:)
+        @ocns = ocns
+      end
+
       def self.clusters
         @clusters ||= []
       end
@@ -17,12 +23,17 @@ RSpec.describe ClusterMapper do
         @clusters = []
       end
 
-      def self.find_by_member(id)
-        clusters.find {|cluster| cluster.members.include?(id) }
+      def self.where(ocns:)
+        clusters.select {|cluster| cluster.ocns.include?(ocns) }
       end
 
       def save
         clusters.append(self) unless clusters.include?(self)
+      end
+
+      def merge(other)
+        @ocns = ocns + other.ocns
+        other.delete
       end
 
       def delete
@@ -33,56 +44,58 @@ RSpec.describe ClusterMapper do
 
   let(:mapper) { described_class.new(memory_clusters) }
 
-  before(:each) { memory_clusters.reset }
+  before(:each) do
+    memory_clusters.reset
+  end
 
   describe "#[]" do
     let(:new_id) { double("new_id") }
 
     it "returns a new cluster when a cluster with the id doesn't exist" do
-      expect(mapper[new_id]).to contain_exactly(new_id)
+      expect(mapper[new_id].ocns).to contain_exactly(new_id)
     end
   end
 
   describe "#add" do
-    let(:id1) { double("id1") }
-    let(:id2) { double("id2") }
-    let(:id3) { double("id3") }
-    let(:id4) { double("id4") }
+    let(:ocn1) { double("ocn1") }
+    let(:ocn2) { double("ocn2") }
+    let(:ocn3) { double("ocn3") }
+    let(:ocn4) { double("ocn4") }
 
-    it "can create a new cluster with two members" do
-      mapper.add(id1, id2)
+    it "can create a new cluster with two ocns" do
+      mapper.add(ocn2, ocn1)
 
-      expect(mapper[id1]).to contain_exactly(id1, id2)
+      expect(mapper[ocn1].ocns).to contain_exactly(ocn1, ocn2)
     end
 
-    context "with three members" do
+    context "with three ocns" do
       before(:each) do
-        mapper.add(id1, id2)
-        mapper.add(id1, id3)
+        mapper.add(ocn2, ocn1)
+        mapper.add(ocn3, ocn1)
       end
 
-      it "contains a cluster with all members" do
-        expect(mapper[id1]).to contain_exactly(id1, id2, id3)
+      it "contains a cluster with all ocns" do
+        expect(mapper[ocn1].ocns).to contain_exactly(ocn1, ocn2, ocn3)
       end
 
-      it "maps id2 and id3 to the same cluster" do
-        expect(mapper[id2]).to eq(mapper[id3])
+      it "maps ocn2 and ocn3 to the same cluster" do
+        expect(mapper[ocn2]).to eq(mapper[ocn3])
       end
     end
 
     context "with two clusters that get merged" do
       before(:each) do
-        mapper.add(id1, id2)
-        mapper.add(id3, id4)
-        mapper.add(id1, id3)
+        mapper.add(ocn1, ocn2)
+        mapper.add(ocn3, ocn4)
+        mapper.add(ocn1, ocn3)
       end
 
       it "can merge existing clusters" do
-        expect(mapper[id1]).to contain_exactly(id1, id2, id3, id4)
+        expect(mapper[ocn1].ocns).to contain_exactly(ocn1, ocn2, ocn3, ocn4)
       end
 
-      it "maps members to the merged cluster" do
-        expect(mapper[id3]).to eq(mapper[id1])
+      it "maps ocns to the merged cluster" do
+        expect(mapper[ocn3]).to eq(mapper[ocn1])
       end
 
       it "deletes the old cluster after merging" do

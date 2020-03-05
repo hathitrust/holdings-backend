@@ -1,51 +1,42 @@
 # frozen_string_literal: true
 
-require "forwardable"
+require "mongoid"
+require "holding"
+require "ht_item"
+require "commitment"
 
-# A set of identifiers (e.g. OCLC numbers) with a single "primary" identifier
+# A set of identifiers (e.g. OCLC numbers),
+# - ocns
+# - holdings
+# - htitems
+# - commitments
 class Cluster
-  attr_reader :id, :members
-
-  extend Forwardable
-
-  def_delegators :members, :include?, :to_a, :each
-
-  # Creates a new cluster from a hash (or MongoDB document)
-  #
-  # @param hash The hash or document from which to create the cluster.
-  #    It should have an _id and members key.
-  def self.from_hash(hash)
-    new(*hash[:members])
-  end
-
-  # Create a new cluster.
-  #
-  # @param members An array of identifiers that belong in this cluster.
-  def initialize(*members)
-    @members = Set.new(members)
-  end
-
-  # Adds the given identifier to this cluster.
-  #
-  # @param id The identifier to add as a member of this cluster
-  # @return This cluster
-  def add(id)
-    members.add(id)
-    self
-  end
+  include Mongoid::Document
+  store_in collection: "clusters", database: "test", client: "default"
+  field :ocns
+  embeds_many :holdings, class_name: "Holding"
+  embeds_many :ht_items
+  embeds_many :commitments
+  index({ ocns: 1 }, unique: true)
 
   # Adds the members of the given cluster to this cluster.
+  # Deletes the other cluster.
   #
   # @param other The cluster whose members to merge with this cluster.
   # @return This cluster
   def merge(other)
-    members.merge(other.members)
+    self.ocns = (ocns + other.ocns).sort.uniq
+    move_members_to_self(other)
+    other.delete
     self
   end
 
-  # Serialize this cluster to a hash suitable for conversion to JSON etc
-  def to_hash
-    { members: members.to_a }
+  private
+
+  def move_members_to_self(other)
+    other.holdings.each {|h| h.move(self) }
+    other.ht_items.each {|ht| ht.move(self) }
+    other.commitments.each {|c| c.move(self) }
   end
 
 end

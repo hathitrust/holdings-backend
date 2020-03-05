@@ -11,32 +11,53 @@ class ClusterMapper
   # Creates a ClusterMapper
   #
   # @param clusters The class to use for storing the clusters.
-  def initialize(clusters)
+  def initialize(clusters = Cluster)
     @clusters = clusters
   end
 
-  # Add a member to a cluster. If member is already in another cluster, the two
-  # clusters will be merged.
+  # Add an OCN resolution table entry
   #
-  # @param id1, id2 The identifiers to associate together in the same cluster
-  def add(id1, id2)
-    if (old_cluster = clusters.find_by_member(id1))
-      merge(self[id2], old_cluster)
+  # @param ocn The deprecated OCN. If this OCN is already in
+  # another cluster, the two clusters will be merged.
+  #
+  # @param resolved_ocn The resolved (a.k.a. master, current, terminal) OCN
+  def add(ocn, resolved_ocn)
+    resolved_cluster = find_or_make_cluster(resolved_ocn)
+
+    if (old_cluster = find_cluster(ocn))
+      resolved_cluster.merge(old_cluster)
     else
-      self[id1].add(id2).save
+      resolved_cluster.ocns.append(ocn)
     end
+
+    resolved_cluster.save
   end
 
-  def [](id)
-    clusters.find_by_member(id) || clusters.new(id)
+  # Remove an OCN resolution table entry. After removing the resolution entry,
+  # all resolution entries are examined to determine if the cluster should be
+  # split, and if so, what OCNs belong in which new cluster.
+  #
+  # @param ocn The old deprecated OCN
+  # @param resolved_ocn The old resolved (master, current, terminal) OCN
+  #  def delete(ocn, resolved_ocn)
+  #    resolution.find(ocn, resolved_ocn).delete
+  #  end
+
+  # Finds a cluster with the given id or makes a new cluster
+  # if one does not exist.
+  def [](ocn)
+    find_or_make_cluster(ocn)
   end
 
   private
 
-  def merge(new, old)
-    new.merge(old).save
-    old.delete
+  def find_cluster(ocn)
+    clusters.where(ocns: ocn).first
   end
 
-  attr_reader :clusters
+  def find_or_make_cluster(ocn)
+    find_cluster(ocn) || clusters.new(ocns: [ocn])
+  end
+
+  attr_reader :clusters, :resolution
 end
