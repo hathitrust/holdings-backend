@@ -91,15 +91,15 @@ RSpec.describe ClusterMapper do
     let(:ocn4) { double("ocn4") }
 
     it "can create a new cluster with two ocns" do
-      mapper.add(ocn2, ocn1)
+      mapper.add(resolution.new(deprecated: ocn2, resolved: ocn1))
 
       expect(mapper[ocn1].ocns).to contain_exactly(ocn1, ocn2)
     end
 
     context "with three ocns" do
       before(:each) do
-        mapper.add(ocn2, ocn1)
-        mapper.add(ocn3, ocn1)
+        mapper.add(resolution.new(deprecated: ocn2, resolved: ocn1))
+        mapper.add(resolution.new(deprecated: ocn3, resolved: ocn1))
       end
 
       it "contains a cluster with all ocns" do
@@ -112,20 +112,27 @@ RSpec.describe ClusterMapper do
 
       it "saves the resolution rules" do
         expect(resolution.resolutions.length).to eq(2)
-        expect(resolution.resolutions.find { |r| r.deprecated == ocn2 && r.resolved == ocn1 }).to be_truthy
-        expect(resolution.resolutions.find { |r| r.deprecated == ocn3 && r.resolved == ocn1 }).to be_truthy
+
+        expect(resolution.resolutions
+          .find {|r| r.deprecated == ocn2 && r.resolved == ocn1 })
+          .to be_truthy
+
+        expect(resolution.resolutions
+          .find {|r| r.deprecated == ocn3 && r.resolved == ocn1 })
+          .to be_truthy
       end
     end
 
     context "with two clusters that get merged" do
       before(:each) do
-        mapper.add(ocn1, ocn2)
-        mapper.add(ocn3, ocn4)
-        mapper.add(ocn1, ocn3)
+        mapper.add(resolution.new(deprecated: ocn1, resolved: ocn2))
+        mapper.add(resolution.new(deprecated: ocn3, resolved: ocn4))
+        mapper.add(resolution.new(deprecated: ocn1, resolved: ocn3))
       end
 
       it "can merge existing clusters" do
-        expect(mapper[ocn1].ocns).to contain_exactly(ocn1, ocn2, ocn3, ocn4)
+        expect(mapper[ocn1].ocns).to \
+          contain_exactly(ocn1, ocn2, ocn3, ocn4)
       end
 
       it "maps ocns to the merged cluster" do

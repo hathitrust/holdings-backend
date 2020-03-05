@@ -10,12 +10,11 @@ class OCNResolution
   field :deprecated
   field :resolved
 
-  index({ deprecated: 1}, unique: true )
-  index({ resolved: 1 })
+  index({ deprecated: 1 }, unique: true)
+  index(resolved: 1)
 
-  def same_rule?(other)
-    self.deprecated == other.deprecated &&
-      self.resolved == other.resolved
-  end
-
+  scope :for_cluster, lambda {|cluster|
+    where(:$or => [:deprecated.in => cluster.ocns,
+                   :resolved.in   => cluster.ocns])
+  }
 end

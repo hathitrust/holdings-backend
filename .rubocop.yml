@@ -29,6 +29,7 @@ Naming/FileName:
     - 'lib/services.rb'
   AllowedAcronyms:
     - OCLC
+    - OCN
 
 Style/Documentation:
   Exclude:
