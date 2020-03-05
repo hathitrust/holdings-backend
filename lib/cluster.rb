@@ -19,12 +19,16 @@ class Cluster
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
 
+  scope :for_resolution, lambda {|resolution|
+    where(:ocns.in => [resolution.deprecated, resolution.resolved])
+  }
+
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
-      record.errors.add attr, "must be an integer" unless (ocn.to_i if ocn.to_s =~ /\A[+-]?\d+\Z/)
+      record.errors.add attr, "must be an integer" \
+        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
     end
   end
-
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
