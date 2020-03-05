@@ -32,6 +32,25 @@ RSpec.describe Cluster do
   describe "#merge" do
     let(:c1) { described_class.new(ocns: [ocn1]) }
     let(:c2) { described_class.new(ocns: [ocn2]) }
+    let(:h1) do
+      { ocn:               ocn1,
+        organization:      "loc",
+        local_id:          rand(1_000_000).to_s,
+        mono_multi_serial: "mono" }
+    end
+
+    let(:h2) do
+      { ocn:               ocn1,
+        organization:      "miu",
+        local_id:          rand(1_000_000).to_s,
+        mono_multi_serial: "mono" }
+    end
+    let(:h3) do
+      { ocn:               ocn2,
+        organization:      "miu",
+        local_id:          rand(1_000_000).to_s,
+        mono_multi_serial: "mono" }
+    end
 
     before(:each) do
       c1.save
@@ -47,9 +66,9 @@ RSpec.describe Cluster do
     end
 
     it "combines holdings but does not dedupe" do
-      c1.holdings.create(organization: "loc")
-      c1.holdings.create(organization: "miu")
-      c2.holdings.create(organization: "miu")
+      c1.holdings.create(h1)
+      c1.holdings.create(h2)
+      c2.holdings.create(h3)
       expect(c1.merge(c2).holdings.count).to eq(3)
     end
 
