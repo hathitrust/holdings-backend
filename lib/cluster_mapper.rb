@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require "set"
+require "cluster"
+require "ocn_resolution"
 
 # Map from identifiers (e.g. OCLC numbers) to a cluster of items identified as
 # the same.
@@ -11,8 +12,9 @@ class ClusterMapper
   # Creates a ClusterMapper
   #
   # @param clusters The class to use for storing the clusters.
-  def initialize(clusters = Cluster)
+  def initialize(clusters = Cluster, resolution = OCNResolution)
     @clusters = clusters
+    @resolution = resolution
   end
 
   # Add an OCN resolution table entry
@@ -31,6 +33,8 @@ class ClusterMapper
     end
 
     resolved_cluster.save
+
+    resolution.new(deprecated: ocn, resolved: resolved_ocn).save
   end
 
   # Remove an OCN resolution table entry. After removing the resolution entry,

@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "pp"
 require "cluster"
 
 RSpec.describe Cluster do
@@ -25,7 +24,7 @@ RSpec.describe Cluster do
       expect(described_class.new(ocns: [ocn1]).ocns.first.class).to eq(Integer)
     end
 
-    xit "validates the ocns field is numeric" do
+    it "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
   end
