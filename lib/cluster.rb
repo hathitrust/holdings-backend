@@ -26,11 +26,17 @@ class Cluster
   # @return This cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
+    move_members_to_self(other)
+    other.delete
+    self
+  end
+
+  private
+
+  def move_members_to_self(other)
     other.holdings.each {|h| h.move(self) }
     other.ht_items.each {|ht| ht.move(self) }
     other.commitments.each {|c| c.move(self) }
-    other.delete
-    self
   end
 
 end

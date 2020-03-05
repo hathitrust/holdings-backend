@@ -2,7 +2,7 @@
 
 require "pp"
 require "cluster"
-Cluster.create_indexes
+
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
@@ -30,13 +30,10 @@ RSpec.describe Cluster do
     let(:c2) { described_class.new(ocns: [ocn2]) }
 
     before(:each) do
-      described_class.each(&:delete)
+      described_class.collection.drop
+      described_class.create_indexes
       c1.save
       c2.save
-    end
-
-    after(:all) do
-      described_class.each(&:delete)
     end
 
     it "still a cluster" do
@@ -81,8 +78,9 @@ RSpec.describe Cluster do
     end
 
     it "can't save them both" do
-      r1 = c1.save
-      expect { c2.save }.to raise_error(Mongo::Error::OperationFailure, /duplicate key error/)
+      c1.save
+      expect { c2.save }.to \
+        raise_error(Mongo::Error::OperationFailure, /duplicate key error/)
     end
 
     it "saves to the database" do
