@@ -19,6 +19,13 @@ class Cluster
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
 
+  validates_each :ocns do |record, attr, value|
+    value.each do |ocn|
+      record.errors.add attr, "must be an integer" unless (ocn.to_i if ocn.to_s =~ /\A[+-]?\d+\Z/)
+    end
+  end
+
+
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
   #
