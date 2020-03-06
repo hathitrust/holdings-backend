@@ -8,16 +8,15 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster"
 require "holding"
-require "json"
-require "optparse"
+require 'json'
+require 'optparse'
 
 options = {}
 OptionParser.new do |opts|
-  opts.on("-m",
-          "--member MEMBER",
-          "Member whose holdings are being added") do |m|
-            options[:member] = m
-          end
+  opts.on("-m", "--member MEMBER", "Member whose holdings are being added") do |m|
+    options[:member] = m
+  end
+>>>>>>> 693d94f... Basic add and update holdings bins
   opts.on("-d", "--delete", "Delete member holdings before adding") do |d|
     options[:delete] = d
   end
