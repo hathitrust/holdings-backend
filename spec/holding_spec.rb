@@ -6,7 +6,7 @@ require "pp"
 RSpec.describe Holding do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:holding_hash) do
-    { ocn:               ocn_rand,
+    { ocns:              [ocn_rand],
       organization:      "miu",
       local_id:          "abc",
       mono_multi_serial: "mono" }
@@ -17,8 +17,8 @@ RSpec.describe Holding do
     expect(described_class.new(holding_hash)).to be_a(described_class)
   end
 
-  it "has an ocn" do
-    expect(h.ocn).to be_a(Integer)
+  it "has at least 1 ocn" do
+    expect(h.ocns.first).to be_a(Integer)
   end
 
   it "has an organization" do
@@ -52,9 +52,9 @@ RSpec.describe Holding do
       Cluster.each(&:delete)
     end
 
-    let(:c) { Cluster.new(ocns: [5, 7, holding_hash[:ocn]]) }
+    let(:c) { Cluster.new(ocns: [5, 7, holding_hash[:ocns]]) }
     let(:hold_hash_multi_ocn) do
-      { ocn:               [7, 8],
+      { ocns:              [7, 8],
         organization:      "miu",
         local_id:          "abc",
         mono_multi_serial: "mono" }
@@ -100,7 +100,7 @@ RSpec.describe Holding do
     before(:each) do
       Cluster.each(&:delete)
       c.save
-      h[:ocn] = c.ocns.first
+      h[:ocns] = [c.ocns.first]
       c.holdings.create(h)
     end
 
@@ -110,16 +110,16 @@ RSpec.describe Holding do
     end
 
     it "destroys previous holdings if it HAS NOT seen the ocn" do
-      expect(described_class.ocns_updated).not_to include(h[:ocn])
+      expect(described_class.ocns_updated).not_to include(h[:ocns].first)
       c = described_class.update(h.clone)
       expect(c.holdings.count).to eq(1)
-      expect(described_class.ocns_updated).to include(h[:ocn])
+      expect(described_class.ocns_updated).to include(h[:ocns].first)
     end
 
     it "adds to the cluster if it HAS seen the ocn" do
       c = described_class.update(h.clone)
       expect(c.holdings.count).to eq(1)
-      expect(described_class.ocns_updated).to include(h[:ocn])
+      expect(described_class.ocns_updated).to include(h[:ocns].first)
       c = described_class.update(h.clone)
       expect(c.holdings.count).to eq(2)
     end

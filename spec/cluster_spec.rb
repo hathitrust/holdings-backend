@@ -33,20 +33,20 @@ RSpec.describe Cluster do
     let(:c1) { described_class.new(ocns: [ocn1]) }
     let(:c2) { described_class.new(ocns: [ocn2]) }
     let(:h1) do
-      { ocn:               ocn1,
+      { ocns:              [ocn1],
         organization:      "loc",
         local_id:          rand(1_000_000).to_s,
         mono_multi_serial: "mono" }
     end
 
     let(:h2) do
-      { ocn:               ocn1,
+      { ocns:              [ocn1],
         organization:      "miu",
         local_id:          rand(1_000_000).to_s,
         mono_multi_serial: "mono" }
     end
     let(:h3) do
-      { ocn:               ocn2,
+      { ocns:              [ocn2],
         organization:      "miu",
         local_id:          rand(1_000_000).to_s,
         mono_multi_serial: "mono" }

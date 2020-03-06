@@ -4,13 +4,22 @@ require "mongoid"
 require "set"
 
 # A member holding
+# - ocns
+# - organization
+# - local_id
+# - enum_chron
+# - status
+# - condition
+# - gov_doc_flag
+# - mono_multi_serial
+# - date_received
 class Holding
   include Mongoid::Document
 
   # OCNS processed when performing updates
   @ocns_updated = Set.new
 
-  field :ocn, type: Integer
+  field :ocns, type: Array
   field :organization, type: String
   field :local_id, type: String
   field :enum_chron, type: String
@@ -22,8 +31,14 @@ class Holding
 
   embedded_in :cluster
 
-  validates_presence_of :ocn, :organization, :local_id, :mono_multi_serial
+  validates_presence_of :ocns, :organization, :local_id, :mono_multi_serial
   validates :mono_multi_serial, inclusion: { in: ["mono", "multi", "serial"] }
+  validates_each :ocns do |record, attr, value|
+    value.each do |ocn|
+      record.errors.add attr, "must be an integer" \
+        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+    end
+  end
 
   # Attach this embedded document to another parent
   #
@@ -41,7 +56,7 @@ class Holding
   #
   # @param holding_hash is a hash of values for a single holding
   def self.add(holding_hash)
-    ocns = [holding_hash[:ocn]].flatten
+    ocns = [holding_hash[:ocns]].flatten
     Cluster.where(ocns: { "$in": ocns }).each do |cluster|
       cluster.holdings.create(holding_hash)
       return cluster
@@ -60,11 +75,13 @@ class Holding
   # @param holding_hash is a hash of values for a single holding
   def self.update(holding_hash)
     # blow away the holdings for the cluster if we haven't seen the ocn
-    unless ocns_updated.include? holding_hash[:ocn].to_i
-      Cluster.where(ocns: holding_hash[:ocn]).each do |cluster|
-        cluster.holdings.where(organization: holding_hash[:organization]).delete
-        cluster.ocns.each {|o| @ocns_updated << o.to_i }
-      end
+    unless (ocns_updated & holding_hash[:ocns].map(&:to_i)).any?
+      Cluster.where(ocns:
+        { "$in": holding_hash[:ocns].map(&:to_i) }).each do |cluster|
+          cluster.holdings.where(organization: holding_hash[:organization])
+            .delete
+          cluster.ocns.each {|o| @ocns_updated << o.to_i }
+        end
     end
     add(holding_hash)
   end

@@ -6,10 +6,9 @@ Dotenv.load(".env")
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
-require 'json'
+require "json"
 require "holding"
 
-member = ARGV.shift 
 holdings = ARGV.shift
 
 File.open(holdings).each do |h|
