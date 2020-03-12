@@ -76,14 +76,25 @@ class Holding
   def self.update(holding_hash)
     # blow away the holdings for the cluster if we haven't seen the ocn
     unless (ocns_updated & holding_hash[:ocns].map(&:to_i)).any?
-      Cluster.where(ocns:
-        { "$in": holding_hash[:ocns].map(&:to_i) }).each do |cluster|
-          cluster.holdings.where(organization: holding_hash[:organization])
-            .delete
-          cluster.ocns.each {|o| @ocns_updated << o.to_i }
-        end
+      delete(holding_hash[:organization], holding_hash[:ocns])
+        .each {|o| @ocns_updated << o.to_i }
     end
     add(holding_hash)
+  end
+
+  # Delete holding records when they match a member/ocn pair
+  #
+  # @param organization is the member organization
+  # @param ocns is the ocns this applies to
+  def self.delete(organization, ocns)
+    ocns_found = []
+    Cluster.where(ocns:
+      { "$in": ocns.map(&:to_i) }).each do |cluster|
+        cluster.holdings.where(organization: organization)
+          .delete
+        ocns_found << cluster.ocns
+      end
+    ocns_found.flatten.uniq
   end
 
   class << self

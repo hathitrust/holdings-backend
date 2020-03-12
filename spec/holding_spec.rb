@@ -52,7 +52,8 @@ RSpec.describe Holding do
       Cluster.each(&:delete)
     end
 
-    let(:c) { Cluster.new(ocns: [5, 7, holding_hash[:ocns]]) }
+    let(:c) { Cluster.new(ocns: [5, 7, holding_hash[:ocns]].flatten) }
+    let(:c2) { Cluster.new(ocns: [8, 999]) }
     let(:hold_hash_multi_ocn) do
       { ocns:              [7, 8],
         organization:      "miu",
@@ -91,6 +92,14 @@ RSpec.describe Holding do
       expect(cluster.ocns.count).to eq(1)
       expect(cluster.holdings.first.local_id).to eq("abc")
     end
+
+    it "only adds to first cluster it finds if it has multiple OCNS" do
+      c.save
+      c2.save
+      described_class.add(hold_hash_multi_ocn)
+      expect(Cluster.where(_id: c._id).first.holdings.count).to eq(1)
+      expect(Cluster.where(_id: c2._id).first.holdings.count).to eq(0)
+    end
   end
 
   describe "#self.update" do
@@ -122,6 +131,31 @@ RSpec.describe Holding do
       expect(described_class.ocns_updated).to include(h[:ocns].first)
       c = described_class.update(h.clone)
       expect(c.holdings.count).to eq(2)
+    end
+  end
+
+  describe "#self.delete_holdings" do
+    let(:c) { Cluster.new(ocns: [ocn_rand]) }
+    let(:h) { holding_hash }
+
+    before(:each) do
+      c.save
+      c.holdings.create(h)
+    end
+
+    after(:each) do
+      described_class.ocns_updated = Set.new
+      Cluster.each(&:delete)
+    end
+
+    it "destroys all holdings for a particular member/ocn pair" do
+      expect(c.holdings.count).to eq(1)
+      described_class.delete(h[:organization], c.ocns)
+      expect(Cluster.where(_id: c._id).first.holdings.count).to eq(0)
+    end
+
+    it "returns the OCNs in the clusters affected" do
+      expect(described_class.delete(h[:organization], c.ocns)).to eq(c.ocns)
     end
   end
 end
