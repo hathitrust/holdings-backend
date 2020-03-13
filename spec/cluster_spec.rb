@@ -51,6 +51,22 @@ RSpec.describe Cluster do
         local_id:          rand(1_000_000).to_s,
         mono_multi_serial: "mono" }
     end
+    let(:htitem1) do
+      { ocns: c1.ocns,
+        item_id:  rand(1_000_000).to_s,
+        ht_bib_key: rand(1_000_000).to_i,
+        rights: rand(10).to_s,
+        bib_fmt: rand(10).to_s
+      }
+    end
+    let(:htitem2) do
+      { ocns: c2.ocns,
+        item_id:  rand(1_000_000).to_s,
+        ht_bib_key: rand(1_000_000).to_i,
+        rights: rand(10).to_s,
+        bib_fmt: rand(10).to_s
+      }
+    end
 
     before(:each) do
       c1.save
@@ -73,8 +89,8 @@ RSpec.describe Cluster do
     end
 
     it "combines ht_items" do
-      c1.ht_items.create(item_id: "miu5")
-      c2.ht_items.create(item_id: "uc6")
+      c1.ht_items.create(htitem1)
+      c2.ht_items.create(htitem2)
       expect(c1.merge(c2).ht_items.count).to eq(2)
     end
 
