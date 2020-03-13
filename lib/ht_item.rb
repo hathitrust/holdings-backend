@@ -17,12 +17,24 @@ class HtItem
   field :bib_fmt, type: String
 
   embedded_in :cluster
+  index({ item_id: 1 }, unique: true)
   validates_presence_of :ocns, :item_id, :ht_bib_key, :rights, :bib_fmt
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
       record.errors.add attr, "must be an integer" \
         unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
     end
+  end
+
+  # Prevent creation of duplicates
+  #
+  # @param record, a hash of values
+  def initialize(record)
+    raise Mongo::Error::OperationFailure, "Duplicate HT Item" if Cluster.where(
+      "ht_items.item_id": record[:item_id]
+    ).any?
+
+    super
   end
 
   # Attach this embedded document to another parent
@@ -33,6 +45,15 @@ class HtItem
       new_parent.ht_items << dup
       delete
     end
+  end
+
+  def self.hathifile_to_record(hathifile_line)
+    fields = hathifile_line.split(/\t/)
+    { item_id:    fields[0],
+      ocns:       fields[7].split(",").map(&:to_i),
+      ht_bib_key: fields[3].to_i,
+      rights:     fields[2],
+      bib_fmt:    fields[19] }
   end
 
 end
