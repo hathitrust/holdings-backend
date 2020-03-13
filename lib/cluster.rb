@@ -15,7 +15,7 @@ class Cluster
   store_in collection: "clusters", database: "test", client: "default"
   field :ocns
   embeds_many :holdings, class_name: "Holding"
-  embeds_many :ht_items
+  embeds_many :ht_items, class_name: "HtItem"
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
 
