@@ -52,20 +52,18 @@ RSpec.describe Cluster do
         mono_multi_serial: "mono" }
     end
     let(:htitem1) do
-      { ocns: c1.ocns,
-        item_id:  rand(1_000_000).to_s,
+      { ocns:       c1.ocns,
+        item_id:    rand(1_000_000).to_s,
         ht_bib_key: rand(1_000_000).to_i,
-        rights: rand(10).to_s,
-        bib_fmt: rand(10).to_s
-      }
+        rights:     rand(10).to_s,
+        bib_fmt:    rand(10).to_s }
     end
     let(:htitem2) do
-      { ocns: c2.ocns,
-        item_id:  rand(1_000_000).to_s,
+      { ocns:       c2.ocns,
+        item_id:    rand(1_000_000).to_s,
         ht_bib_key: rand(1_000_000).to_i,
-        rights: rand(10).to_s,
-        bib_fmt: rand(10).to_s
-      }
+        rights:     rand(10).to_s,
+        bib_fmt:    rand(10).to_s }
     end
 
     before(:each) do
