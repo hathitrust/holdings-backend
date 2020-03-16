@@ -1,10 +1,16 @@
 # frozen_string_literal: true
 
 require "cluster"
-
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
+  let(:ht) do
+    { ocns:       [rand(1_000_000).to_i],
+      item_id:    rand(1_000_000).to_s,
+      ht_bib_key: rand(1_000_000).to_s,
+      rights:     rand(10).to_s,
+      bib_fmt:    rand(10).to_s }
+  end
 
   before(:each) do
     described_class.create_indexes
@@ -26,6 +32,15 @@ RSpec.describe Cluster do
 
     it "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
+    end
+
+    it "validates that it has all HT Item ocns" do
+      c = described_class.new(ocns: [ocn1])
+      c.save
+      c.ht_items.create(ht)
+      c.ht_items.first.ocns << rand(1_000_000)
+      c.save
+      expect(c.errors.messages[:ocns]).to include("must contain all ocns")
     end
   end
 
