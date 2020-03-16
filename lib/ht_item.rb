@@ -47,6 +47,9 @@ class HtItem
     end
   end
 
+  # Convert a tsv line from the hathifile into a record like hash
+  #
+  # @param hathifile_line, a tsv line
   def self.hathifile_to_record(hathifile_line)
     fields = hathifile_line.split(/\t/)
     { item_id:    fields[0],
@@ -54,6 +57,18 @@ class HtItem
       ht_bib_key: fields[3].to_i,
       rights:     fields[2],
       bib_fmt:    fields[19] }
+  end
+
+  # Add htitem to the clusters, merging if necessary
+  #
+  # @param record
+  def self.add(record)
+    c = Cluster.merge_many(Cluster.where(ocns: { "$in": record[:ocns] }))
+    if c.nil?
+      c = Cluster.new(ocns: record[:ocns])
+      c.save
+    end
+    c.ht_items.create(record)
   end
 
 end

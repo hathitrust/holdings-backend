@@ -100,6 +100,19 @@ RSpec.describe Cluster do
     end
   end
 
+  describe "#merge_many" do
+    let(:c1) { described_class.new(ocns: [ocn1]) }
+    let(:c2) { described_class.new(ocns: [ocn2]) }
+
+    it "combines multiple clusters" do
+      c1.save
+      c2.save
+      expect(described_class.count).to eq(2)
+      expect(described_class.merge_many([c1, c2]).ocns).to eq([ocn1, ocn2])
+      expect(described_class.count).to eq(1)
+    end
+  end
+
   describe "#save" do
     let(:c1) { described_class.new(ocns: [ocn1, ocn2]) }
     let(:c2) { described_class.new(ocns: [ocn2]) }

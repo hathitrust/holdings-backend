@@ -13,6 +13,5 @@ require "optparse"
 
 File.open(ARGV.shift) do |line|
   rec = HtItem.hathifile_to_record(line)
-  Cluster.where(ocns: { "$in": rec.ocns })
-  # todo: merge them? or should this taken care of in HtItem.add or somewhere else?
+  HtItem.add(rec)
 end
