@@ -28,6 +28,9 @@ class Cluster
       record.errors.add attr, "must be an integer" \
         unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
     end
+    # ocns are a superset of ht_items.ocns
+    record.errors.add attr, "must contain all ocns" \
+      if (record.ht_items.collect(&:ocns).flatten - value).any?
   end
 
   # Adds the members of the given cluster to this cluster.
