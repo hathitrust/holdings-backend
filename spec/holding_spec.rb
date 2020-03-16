@@ -2,7 +2,7 @@
 
 require "holding"
 require "cluster"
-require "pp"
+
 RSpec.describe Holding do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:holding_hash) do

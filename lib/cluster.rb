@@ -42,6 +42,19 @@ class Cluster
     self
   end
 
+  # Merges multiple clusters together
+  #
+  # @param clusters All the clusters we need to merge
+  # @return a cluster or nil if nil set
+  def self.merge_many(clusters)
+    c = clusters.shift
+    clusters.each do |c2|
+      c.merge(c2) unless c._id == c2._id
+    end
+    c&.save
+    c
+  end
+
   private
 
   def move_members_to_self(other)
