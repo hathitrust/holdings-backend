@@ -71,4 +71,10 @@ class HtItem
     c.ht_items.create(record)
   end
 
+  # Adds its own OCNs to its parent's
+  def save
+    _parent.ocns = (_parent.ocns + ocns).uniq
+    super
+  end
+
 end

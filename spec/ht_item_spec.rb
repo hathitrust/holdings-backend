@@ -25,12 +25,30 @@ RSpec.describe HtItem do
     expect(described_class.new(htitem_hash)).to be_a(described_class)
   end
 
+  it "does not have a parent" do
+    expect(described_class.new(htitem_hash)._parent).to be_nil
+  end
+
+  it "has a parent" do
+    c.save
+    c.ht_items.create(htitem_hash)
+    expect(c.ht_items.first._parent).to be(c)
+  end
+
   it "prevents duplicates from being created" do
     c.save
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone
     expect { c.ht_items.create(cloned) }.to \
       raise_error(Mongo::Error::OperationFailure, /Duplicate HT Item/)
+  end
+
+  it "provides its parent cluster with its ocns" do
+    c.save
+    ht_multi_ocns = htitem_hash.clone
+    ht_multi_ocns[:ocns] << rand(1_000_000).to_i
+    c.ht_items.create(ht_multi_ocns)
+    expect(c.ocns.count).to eq(2)
   end
 
   describe "#add" do
