@@ -33,7 +33,6 @@ class HtItem
     raise Mongo::Error::OperationFailure, "Duplicate HT Item" if Cluster.where(
       "ht_items.item_id": record[:item_id]
     ).any?
-
     super
   end
 

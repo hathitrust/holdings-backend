@@ -87,5 +87,4 @@ RSpec.describe HtItem do
         raise_error(Mongo::Error::OperationFailure, /Duplicate HT Item/)
     end
   end
-
 end

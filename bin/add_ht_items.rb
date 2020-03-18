@@ -11,8 +11,6 @@ require "ht_item"
 require "json"
 require "optparse"
 
-
-
 # Convert a tsv line from the hathifile into a record like hash
 #
 # @param hathifile_line, a tsv line
