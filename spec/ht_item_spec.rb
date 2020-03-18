@@ -88,23 +88,4 @@ RSpec.describe HtItem do
     end
   end
 
-  describe "#hathifile_to_record" do
-    let(:line) do
-      File.open(File.dirname(__FILE__) + "/data/hathifile_line.tsv").read
-    end
-
-    it "extracts the fields we want" do
-      rec = described_class.hathifile_to_record(line)
-      expect(rec).to eq(item_id: "mdp.39015006324134",
-        ocns: [1728],
-        ht_bib_key: 40,
-        rights: "ic",
-        bib_fmt: "BK")
-    end
-
-    it "creates a record suitable for HTItem creation" do
-      rec = described_class.hathifile_to_record(line)
-      expect(described_class.new(rec).item_id).to eq("mdp.39015006324134")
-    end
-  end
 end
