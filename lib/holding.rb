@@ -109,4 +109,16 @@ class Holding
     self.class.ocns_updated
   end
 
+  def to_hash
+    { ocns:              ocns,
+      organization:      organization,
+      local_id:          local_id,
+      enum_chron:        enum_chron,
+      status:            status,
+      condition:         condition,
+      gov_doc_flag:      gov_doc_flag,
+      mono_multi_serial: mono_multi_serial,
+      date_received:     date_received }
+  end
+
 end

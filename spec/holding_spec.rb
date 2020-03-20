@@ -52,8 +52,8 @@ RSpec.describe Holding do
       Cluster.each(&:delete)
     end
 
-    let(:c) { Cluster.new(ocns: [5, 7, holding_hash[:ocns]].flatten) }
-    let(:c2) { Cluster.new(ocns: [8, 999]) }
+    let(:c) { create(:cluster, ocns: [5, 7, holding_hash[:ocns]].flatten) }
+    let(:c2) { create(:cluster, ocns: [8, 999]) }
     let(:hold_hash_multi_ocn) do
       { ocns:              [7, 8],
         organization:      "miu",
@@ -66,7 +66,6 @@ RSpec.describe Holding do
     end
 
     it "adds a holding with one OCN to the appropriate cluster" do
-      c.save
       cluster = described_class.add(holding_hash)
       expect(cluster.holdings.count).to eq(1)
       expect(cluster.holdings.first.local_id).to eq("abc")
@@ -76,11 +75,11 @@ RSpec.describe Holding do
       expect(Cluster.count).to eq(0)
       described_class.add(holding_hash)
       expect(Cluster.count).to eq(1)
-      expect(Cluster.first.holdings.first.local_id).to eq("abc")
+      expect(Cluster.first.holdings.first.local_id).to \
+        eq(holding_hash[:local_id])
     end
 
     it "adds a holding with multi OCNs to the appropriate cluster" do
-      c.save
       cluster = described_class.add(hold_hash_multi_ocn)
       expect(cluster.holdings.count).to eq(1)
       expect(cluster.holdings.first.local_id).to eq("abc")
@@ -94,8 +93,8 @@ RSpec.describe Holding do
     end
 
     it "only adds to first cluster it finds if it has multiple OCNS" do
-      c.save
-      c2.save
+      c
+      c2
       described_class.add(hold_hash_multi_ocn)
       expect(Cluster.where(_id: c._id).first.holdings.count).to eq(1)
       expect(Cluster.where(_id: c2._id).first.holdings.count).to eq(0)
@@ -103,12 +102,12 @@ RSpec.describe Holding do
   end
 
   describe "#self.update" do
-    let(:c) { Cluster.new(ocns: [ocn_rand]) }
+    let(:c) { create(:cluster) }
     let(:h) { holding_hash }
 
     before(:each) do
       Cluster.each(&:delete)
-      c.save
+      c
       h[:ocns] = [c.ocns.first]
       c.holdings.create(h)
     end
@@ -120,26 +119,26 @@ RSpec.describe Holding do
 
     it "destroys previous holdings if it HAS NOT seen the ocn" do
       expect(described_class.ocns_updated).not_to include(h[:ocns].first)
-      c = described_class.update(h.clone)
-      expect(c.holdings.count).to eq(1)
+      cluster = described_class.update(h.clone)
+      expect(cluster.holdings.count).to eq(1)
       expect(described_class.ocns_updated).to include(h[:ocns].first)
     end
 
     it "adds to the cluster if it HAS seen the ocn" do
-      c = described_class.update(h.clone)
-      expect(c.holdings.count).to eq(1)
+      cluster = described_class.update(h.clone)
+      expect(cluster.holdings.count).to eq(1)
       expect(described_class.ocns_updated).to include(h[:ocns].first)
-      c = described_class.update(h.clone)
-      expect(c.holdings.count).to eq(2)
+      cluster = described_class.update(h.clone)
+      expect(cluster.holdings.count).to eq(2)
     end
   end
 
   describe "#self.delete_holdings" do
-    let(:c) { Cluster.new(ocns: [ocn_rand]) }
+    let(:c) { create(:cluster) }
     let(:h) { holding_hash }
 
     before(:each) do
-      c.save
+      c
       c.holdings.create(h)
     end
 

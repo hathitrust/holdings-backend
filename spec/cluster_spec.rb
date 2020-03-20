@@ -4,13 +4,7 @@ require "cluster"
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
-  let(:ht) do
-    { ocns:       [rand(1_000_000).to_i],
-      item_id:    rand(1_000_000).to_s,
-      ht_bib_key: rand(1_000_000).to_s,
-      rights:     rand(10).to_s,
-      bib_fmt:    rand(10).to_s }
-  end
+  let(:ht) { build(:ht_item).to_hash }
 
   before(:each) do
     described_class.create_indexes
@@ -45,46 +39,13 @@ RSpec.describe Cluster do
   end
 
   describe "#merge" do
-    let(:c1) { described_class.new(ocns: [ocn1]) }
-    let(:c2) { described_class.new(ocns: [ocn2]) }
-    let(:h1) do
-      { ocns:              [ocn1],
-        organization:      "loc",
-        local_id:          rand(1_000_000).to_s,
-        mono_multi_serial: "mono" }
-    end
-
-    let(:h2) do
-      { ocns:              [ocn1],
-        organization:      "miu",
-        local_id:          rand(1_000_000).to_s,
-        mono_multi_serial: "mono" }
-    end
-    let(:h3) do
-      { ocns:              [ocn2],
-        organization:      "miu",
-        local_id:          rand(1_000_000).to_s,
-        mono_multi_serial: "mono" }
-    end
-    let(:htitem1) do
-      { ocns:       c1.ocns,
-        item_id:    rand(1_000_000).to_s,
-        ht_bib_key: rand(1_000_000).to_i,
-        rights:     rand(10).to_s,
-        bib_fmt:    rand(10).to_s }
-    end
-    let(:htitem2) do
-      { ocns:       c2.ocns,
-        item_id:    rand(1_000_000).to_s,
-        ht_bib_key: rand(1_000_000).to_i,
-        rights:     rand(10).to_s,
-        bib_fmt:    rand(10).to_s }
-    end
-
-    before(:each) do
-      c1.save
-      c2.save
-    end
+    let(:c1) { create(:cluster, ocns: [ocn1]) }
+    let(:c2) { create(:cluster, ocns: [ocn2]) }
+    let(:h1) { build(:holding, ocns: [ocn1], organization: "loc").to_hash }
+    let(:h2) { build(:holding, ocns: [ocn1], organization: "miu").to_hash }
+    let(:h3) { build(:holding, ocns: [ocn2], organization: "miu").to_hash }
+    let(:htitem1) { build(:ht_item, ocns: [ocn1]).to_hash }
+    let(:htitem2) { build(:ht_item, ocns: [ocn2]).to_hash }
 
     it "still a cluster" do
       expect(c1.merge(c2).class).to eq(described_class)
@@ -116,12 +77,12 @@ RSpec.describe Cluster do
   end
 
   describe "#merge_many" do
-    let(:c1) { described_class.new(ocns: [ocn1]) }
-    let(:c2) { described_class.new(ocns: [ocn2]) }
+    let(:c1) { create(:cluster, ocns: [ocn1]) }
+    let(:c2) { create(:cluster, ocns: [ocn2]) }
 
     it "combines multiple clusters" do
-      c1.save
-      c2.save
+      c1
+      c2
       expect(described_class.count).to eq(2)
       expect(described_class.merge_many([c1, c2]).ocns).to eq([ocn1, ocn2])
       expect(described_class.count).to eq(1)
@@ -129,8 +90,8 @@ RSpec.describe Cluster do
   end
 
   describe "#save" do
-    let(:c1) { described_class.new(ocns: [ocn1, ocn2]) }
-    let(:c2) { described_class.new(ocns: [ocn2]) }
+    let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
+    let(:c2) { build(:cluster, ocns: [ocn2]) }
 
     it "can't save them both" do
       c1.save

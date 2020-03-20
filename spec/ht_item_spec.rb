@@ -13,7 +13,7 @@ RSpec.describe HtItem do
       rights:     rand(10).to_s,
       bib_fmt:    rand(10).to_s }
   end
-  let(:c) { Cluster.new(ocns: htitem_hash[:ocns]) }
+  let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
   before(:each) do
     described_class.create_indexes
@@ -30,13 +30,11 @@ RSpec.describe HtItem do
   end
 
   it "has a parent" do
-    c.save
     c.ht_items.create(htitem_hash)
     expect(c.ht_items.first._parent).to be(c)
   end
 
   it "prevents duplicates from being created" do
-    c.save
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone
     expect { c.ht_items.create(cloned) }.to \
@@ -44,7 +42,6 @@ RSpec.describe HtItem do
   end
 
   it "provides its parent cluster with its ocns" do
-    c.save
     ht_multi_ocns = htitem_hash.clone
     ht_multi_ocns[:ocns] << rand(1_000_000).to_i
     c.ht_items.create(ht_multi_ocns)
@@ -59,7 +56,7 @@ RSpec.describe HtItem do
         rights:     rand(10).to_s,
         bib_fmt:    rand(10).to_s }
     end
-    let(:c2) { Cluster.new(ocns: [htitem2[:ocns].first]) }
+    let(:c2) { create(:cluster, ocns: [htitem2[:ocns].first]) }
 
     it "creates a cluster if it doesn't exist" do
       expect(Cluster.count).to eq(0)
@@ -69,8 +66,8 @@ RSpec.describe HtItem do
     end
 
     it "merges 2 clusters based on ocns" do
-      c.save
-      c2.save
+      c
+      c2
       expect(Cluster.count).to eq(2)
       described_class.add(htitem2)
       expect(Cluster.count).to eq(1)
@@ -78,8 +75,8 @@ RSpec.describe HtItem do
     end
 
     it "won't add a duplicate entry" do
-      c.save
-      c2.save
+      c
+      c2
       h3 = htitem2.clone
       h3[:rights] = "pd"
       described_class.add(htitem2)

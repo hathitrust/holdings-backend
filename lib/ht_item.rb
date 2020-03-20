@@ -29,10 +29,12 @@ class HtItem
   # Prevent creation of duplicates
   #
   # @param record, a hash of values
-  def initialize(record)
-    raise Mongo::Error::OperationFailure, "Duplicate HT Item" if Cluster.where(
-      "ht_items.item_id": record[:item_id]
+  def initialize(record = nil)
+    raise Mongo::Error::OperationFailure, "Duplicate HT Item" if !record.nil? \
+      && Cluster.where(
+        "ht_items.item_id": record[:item_id]
     ).any?
+
     super
   end
 
@@ -62,6 +64,16 @@ class HtItem
   def save
     _parent.ocns = (_parent.ocns + ocns).uniq
     super
+  end
+
+  def to_hash
+    {
+      ocns:       ocns,
+      item_id:    item_id,
+      ht_bib_key: ht_bib_key,
+      rights:     rights,
+      bib_fmt:    bib_fmt
+    }
   end
 
 end
