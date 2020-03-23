@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "cluster"
-
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
+  let(:ht) { build(:ht_item).to_hash }
 
   before(:each) do
     described_class.create_indexes
@@ -27,16 +27,22 @@ RSpec.describe Cluster do
     it "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
+
+    it "validates that it has all HT Item ocns" do
+      c = described_class.new(ocns: [ocn1])
+      c.save
+      c.ht_items.create(ht)
+      c.ht_items.first.ocns << rand(1_000_000)
+      c.save
+      expect(c.errors.messages[:ocns]).to include("must contain all ocns")
+    end
   end
 
   describe "#merge" do
-    let(:c1) { described_class.new(ocns: [ocn1]) }
-    let(:c2) { described_class.new(ocns: [ocn2]) }
-
-    before(:each) do
-      c1.save
-      c2.save
-    end
+    let(:c1) { create(:cluster, ocns: [ocn1]) }
+    let(:c2) { create(:cluster, ocns: [ocn2]) }
+    let(:htitem1) { build(:ht_item, ocns: [ocn1]).to_hash }
+    let(:htitem2) { build(:ht_item, ocns: [ocn2]).to_hash }
 
     it "still a cluster" do
       expect(c1.merge(c2).class).to eq(described_class)
@@ -46,16 +52,9 @@ RSpec.describe Cluster do
       expect(c1.merge(c2).ocns).to eq([ocn1, ocn2])
     end
 
-    it "combines holdings but does not dedupe" do
-      c1.holdings.create(organization: "loc")
-      c1.holdings.create(organization: "miu")
-      c2.holdings.create(organization: "miu")
-      expect(c1.merge(c2).holdings.count).to eq(3)
-    end
-
     it "combines ht_items" do
-      c1.ht_items.create(item_id: "miu5")
-      c2.ht_items.create(item_id: "uc6")
+      c1.ht_items.create(htitem1)
+      c2.ht_items.create(htitem2)
       expect(c1.merge(c2).ht_items.count).to eq(2)
     end
 
@@ -67,9 +66,22 @@ RSpec.describe Cluster do
     end
   end
 
+  describe "#merge_many" do
+    let(:c1) { create(:cluster, ocns: [ocn1]) }
+    let(:c2) { create(:cluster, ocns: [ocn2]) }
+
+    it "combines multiple clusters" do
+      c1
+      c2
+      expect(described_class.count).to eq(2)
+      expect(described_class.merge_many([c1, c2]).ocns).to eq([ocn1, ocn2])
+      expect(described_class.count).to eq(1)
+    end
+  end
+
   describe "#save" do
-    let(:c1) { described_class.new(ocns: [ocn1, ocn2]) }
-    let(:c2) { described_class.new(ocns: [ocn2]) }
+    let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
+    let(:c2) { build(:cluster, ocns: [ocn2]) }
 
     it "can't save them both" do
       c1.save
