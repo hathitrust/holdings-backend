@@ -31,6 +31,15 @@ RSpec.describe Autoscrub do
       end
     end
 
+    it "fails well_formed_header? if given a bad item_type" do
+      expect(autoscrub.well_formed_header?(
+              %w<oclc local_id>, nil)).to be(false)
+      expect(autoscrub.well_formed_header?(
+              %w<oclc local_id>, "")).to be(false)
+      expect(autoscrub.well_formed_header?(
+              %w<oclc local_id>, "books")).to be(false)
+    end
+
     it "rejects header lines that are not well formed" do
       expect(autoscrub.well_formed_header?(
               %w<mmsid>, 'multi')).to be(false)
@@ -42,7 +51,7 @@ RSpec.describe Autoscrub do
               %w<oclc local_id enumchron>, 'serial')).to be(false)
     end
 
-    it "acceptss lines inside length requirements" do
+    it "accepts lines inside length requirements" do
       expect(autoscrub.number_of_cols([1] * 2)).to be(true)
       expect(autoscrub.number_of_cols([1] * 6)).to be(true)
     end
@@ -200,6 +209,7 @@ RSpec.describe Autoscrub do
       end
     end
 
+    # Sadly, needs more tests, or the code needs to be replaced completely.
     it "currently allows anything in enumchron" do
       ec = 'enumchron'
       expect(autoscrub.check_col_val(ec, "vol 1")).to eq(["vol:1", nil])
@@ -219,8 +229,8 @@ RSpec.describe Autoscrub do
       expect(autoscrub.check_col_val(ec, "V.8 How to Price Meats")
             ).to eq(["8:How:to:Price:Meats", nil])
 
-      # buggy ones (i.e. ecparser could do a better job here, but tests are controlling
-      # that behavior hasn't changed):
+      # buggy ones (i.e. ecparser could do a better job here,
+      # but tests are controlling that behavior hasn't changed):
       expect(autoscrub.check_col_val(ec, "1970;v.1")).to  eq(["1", nil])
       expect(autoscrub.check_col_val(ec, "v.7 (2201-5600)")).to eq(["7", "2201-5600"])
       expect(autoscrub.check_col_val(ec, "1970;no.4")).to eq([nil, "1970no.4"])
@@ -292,11 +302,26 @@ RSpec.describe Autoscrub do
 
     # Now testing that all the parts fit together.
     it "rejects files that are not well formed" do
-      ['haverford_mono_full_20200101_headerless.tsv',
-       'haverford_mono_full_20200101_notab.tsv',
-      ].each do |f|
-        expect(autoscrub.well_formed_file?(f)).to be(false)
+      [
+        "haverford_mono_full_20200101_headerless.tsv",
+        "haverford_mono_full_20200101_notab.tsv"     ,
+        "/dev/null"
+      ].each do |fn|
+        expect(autoscrub.well_formed_file?(fn)).to be(false)
       end
+
+    end
+
+    # final piece
+    it "puts the lotion in the basket" do
+      f1 = "haverford_mono_full_20200101_header.tsv"
+      # f1 = "/dev/null"
+      expect(
+        described_class.new(
+        member_id,
+        f1
+      ).scrub_files
+      ).to eq({f1 => true})
     end
 
 end

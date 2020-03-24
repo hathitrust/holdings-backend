@@ -1,15 +1,28 @@
 # frozen_string_literal: true
 
-require 'ht_members'
-require 'zlib'
-require 'scrub_fields'
+require "zlib"
+require_relative "scrub_fields"
+
+class FileNameError < StandardError
+
+end
+
+class WellFormedFileError < StandardError
+
+end
+
+class WellFormedHeaderError < StandardError
+
+end
 
 class Autoscrub
-  DATA_DIR = __dir__ + '/../testdata'
+  # Todo: read these dir paths from config/env?
+  DATA_DIR = __dir__ + "/../testdata"
+  LOG_DIR  = __dir__ + "/../testdata"
 
-  # A single regex for file name pass/fail.
-  FILENAME_REGEXP = Regexp.new(
-    /^
+  SPEC_REGEXP = {
+    # A single regex for file name pass/fail.
+    :FILENAME => /^
     [a-z\-]+              # member_id
     _(mono|multi|serial)  # item_type
     _(full|partial)       # update_type
@@ -17,137 +30,226 @@ class Autoscrub
     (_.+)?                # optional "rest" part
     .tsv                  # must have a .tsv extension
     (.gz)?                # may have a .gz extension
-    $/x
-  )
+    $/x.freeze,
+    # Split filename on these to get the individual parts.
+    :FILENAME_PART_DELIM => /[_\.]/.freeze,
+    # If filename fail, further regexes to discover why.
+    :MEMBER_ID => /^[a-z\_\-]+$/.freeze,
+    :ITEM_TYPE => /^(mono|multi|serial)$/.freeze,
+    :ITEM_TYPE_CONTEXT => /_(mono|multi|serial)_/.freeze,
+    :UPDATE_TYPE => /^(full|partial)$/.freeze,
+    # A YYYYMMDD date string is expected,
+    # and of course this regex is overly permissive
+    # but let's leave it like that.
+    :DATE => /^\d{8}$/.freeze,
+  }
 
-  # If filename fail, further regexes to discover why.
-  MEMBER_ID_REGEXP   = Regexp.new(/^[a-z\_]+$/)
-  ITEM_TYPE_REGEXP   = Regexp.new(/^(mono|multi|serial)$/)
-  UPDATE_TYPE_REGEXP = Regexp.new(/^(full|partial)$/)
-
-  # A YYYYMMDD date string is expected,
-  # and of course this regex is overly permissive
-  # but let's leave it like that.
-  DATE_REGEXP        = Regexp.new(/^\d{8}$/)
-
+  # Required header columns for all files
   REQ_HEADER_COLS = %w[oclc local_id].freeze
+
+  # Optional header columns per item_type
   OPT_HEADER_COLS = {
-    'mono'   => %w[status condition govdoc],
-    'multi'  => %w[status condition govdoc enumchron],
-    'serial' => %w[govdoc issn]
+    "mono"   => %w[status condition govdoc],
+    "multi"  => %w[status condition govdoc enumchron],
+    "serial" => %w[govdoc issn]
   }.freeze
+
   MIN_FILE_COLS = 2
   MAX_FILE_COLS = 6
 
+  # Give a member_id (will be checked to make sure is OK)
+  # ... and a list of files (will also be checked).
   def initialize(member_id, *files)
     if !valid_member_id?(member_id) then
-      raise ArgumentError.new("Bad member_id #{member_id}")
+      raise ArgumentError, "Bad member_id #{member_id}"
     end
 
-    @member_id = member_id
-
-    files.each do |f|
-      if !valid_filename?(f) then
-        raise ArgumentError.new("Bad file #{f}")
-      end
-    end
-    @files = files
-
-    @ht_members = Ht_members.new()
+    @member_id  = member_id
+    @files      = files
+    @out_file   = nil
+    @log_file   = nil
+    date        = Time.now.strftime('%Y%m%d')
+    master_log_name = "master_#{@member_id}_#{date}"
+    @master_log = get_log_file(master_log_name)
+    $stderr.puts "Logging to #{File.expand_path(@master_log.path)}"
   end
 
+  # DRY code for output, log, mlog
+  # Writes to handle if you can, otherwise to stdout
+  def p_file_or_stderr(handle, str)
+    caller_func = caller.first.split(' ').last
+    if handle.nil? then
+      puts "(#{caller_func}) #{str}"
+    else
+      handle.puts(str)
+    end
+  end
+  
+  # Writes string to @out_file, if defined, else to STDOUT.
+  def output (str)
+    p_file_or_stderr(@out_file, str)
+  end
+
+  # Writes string to @log_file, if defined, else to STDERR.
+  def log (str)
+    p_file_or_stderr(@log_file, str)
+  end
+
+  # Writes string to @master_log, if defined, else to STDERR.
+  def mlog (str)
+    p_file_or_stderr(@master_log, str)
+  end
+
+  # Goes through the files given to initialize
+  # Returns a hash of {f1=>BOOL, ..., fn=>BOOL}
+  # where key=file and BOOL=success.
+  def scrub_files
+    file_success = {}
+    @files.each do |f|
+      mlog("Scrubbing #{f}")
+      begin
+        raise FileNameError if !valid_filename?(File.basename(f))
+        @out_file = get_out_file(f)
+        @log_file = get_log_file(f)
+        raise WellFormedFileError if !well_formed_file?(f)
+        file_success[f] = true
+      rescue StandardError => e
+        mlog("Input file #{f} rejected, reason: #{e} #{e.message}")
+      rescue SystemCallError => e
+        mlog("something wrong with file?")
+      ensure
+        @out_file.close() if @out_file.methods.include?(:close)
+        @out_file = nil
+        @log_file.close() if @log_file.methods.include?(:close)
+        @log_file = nil
+      end
+    end
+    @master_log.close
+    return file_success
+  end
+
+  # Check that the member_id points to a member in the data store
   def valid_member_id?(member_id)
     # Tie in data store wrapper that checks for valid members
+    log("valid_member_id? not fully implemented, allows anything")
     true
   end
 
+  # Check that a filename conforms to spec.
   def valid_filename?(filename)
     # If it matches, perfect, we don't need to analyze or report.
-
-    # !!str.match(/regexp/) is the easiest (?!) way to get a bool
-    # regexp match in ruby.
-    if FILENAME_REGEXP.match?(filename) then
+    if SPEC_REGEXP[:FILENAME].match?(filename) then
       return true
     end
 
+    # If we made it here, the match failed, so break it down & return false.
     (member_id, item_type, update_type, date_str, *rest) =
-      filename.split(/[_\.]/)
+      filename.split(SPEC_REGEXP[:FILENAME_PART_DELIM])
 
-    warn(
-      [
-        "Filename #{filename} analyzed as:",
-        "member_id:#{member_id} #{analyze_member_id(member_id)}",
-        "item_type:#{item_type} #{analyze_item_type(item_type)}",
-        "update_type:#{update_type} #{analyze_update_type(update_type)}",
-        "date_str:#{date_str} #{analyze_date_str(date_str)}",
-        "rest:#{rest} #{analyze_rest(rest)}",
-      ]
-    )
+    mlog([
+          "Processing of #{filename} failed due to filename errors.",
+          "Filename must match the template:",
+          "<member_id>_<item_type>_<update_type>_<date_str>_<rest>",
+          "Filename was analyzed as:",
+          "member_id\t\"#{member_id}\"\t#{analyze_member_id(member_id)}",
+          "item_type\t\"#{item_type}\"\t#{analyze_item_type(item_type)}",
+          "update_type\t\"#{update_type}\"\t#{analyze_update_type(update_type)}",
+          "date_str\t\"#{date_str}\"\t#{analyze_date_str(date_str)}",
+          "rest\t\"#{rest.join(' ')}\"\t#{analyze_rest(rest)}"
+        ].join("\n"))
 
     return false
   end
 
   def analyze_member_id(str)
-    return 'must not be empty' if str.nil?
-
-    MEMBER_ID_REGEXP.match?(str) ? 'ok' : 'not ok, must be a-z+'
+    not_nil_and_match(str, SPEC_REGEXP[:MEMBER_ID], "must be all a-z+")
   end
 
   def analyze_item_type(str)
-    return 'must not be empty' if str.nil?
-
-    ITEM_TYPE_REGEXP.match?(str) ? 'ok' : 'not ok, must be mono|multi|serial'
+    not_nil_and_match(str, SPEC_REGEXP[:ITEM_TYPE], "must be mono|multi|serial")
   end
 
   def analyze_update_type(str)
-    return 'must not be empty' if str.nil?
-
-    UPDATE_TYPE_REGEXP.match?(str) ? 'ok' : 'not ok, must be full|partial'
+    not_nil_and_match(str, SPEC_REGEXP[:UPDATE_TYPE], "must be full|partial")
   end
 
   def analyze_date_str(str)
-    return 'must not be empty' if str.nil?
+    not_nil_and_match(str, SPEC_REGEXP[:DATE], "must be 8 digits")
+  end
 
-    DATE_REGEXP.match?(str) ? 'ok' : 'not ok, must be 8 digits'
+  # Shortcut for the analyze_x methods above.
+  # Checks that str is not nil, and matches regexp
+  # otherwise issues a warning.
+  def not_nil_and_match(str, regexp, warning)
+    if str.nil?
+      "must not be empty, and #{warning}"
+    elsif regexp.match?(str)
+      "ok"
+    else
+      "not ok: #{warning}"
+    end
   end
 
   # We allow the 'rest' to contain arbitrary labels, it just has to end
   # with our required file extension(s).
   def analyze_rest(arr)
-    return 'must not be empty' if arr.empty?
+    return "must not be empty" if arr.empty?
 
     # magic numbers abound
-    if arr.size > 10 || arr.join().length > 100 then
-      return 'not ok, too long'
+    if arr.size > 10 || arr.join.length > 100 then
+      return "not ok, too long"
+    end
+    
+    if arr[-1] == "tsv" || (arr[-2] == "tsv" && arr[-1] == "gz") then
+      return "ok"
     end
 
-    if arr[-1] == 'tsv' || (arr[-2] == 'tsv' && arr[-1] == 'gz') then
-      return 'ok'
-    end
+    return "not ok, must end in .tsv or .tsv.gz"
+  end
 
-    return 'not ok, must end in .tsv or .tsv.gz'
+  # Opens a new outfile in DATA_DIR with a name that resembles the infile
+  def get_out_file(filename)
+    out_filename = filename.gsub("\.gz", "")
+    out_filename.concat(".out.ndj")
+    return File.open("#{DATA_DIR}/#{out_filename}", "w")
+  end
+
+  # Opens a new logfile in LOG_DIR with a name that resembles the infile
+  def get_log_file(filename)
+    log_filename = filename.gsub("\.gz", "")
+    log_filename.concat(".log.txt")
+    return File.open("#{LOG_DIR}/#{log_filename}", "w")
   end
 
   # Opens a text file (optionally zipped) and yields one chomped
   # line at a time (together with line number)
+  # That's right, chomp not strip, since we care about empty cols too.
   def read_file(filename)
     line_no = 0
+
+    # Any filename or relative path will be relative to DATA_DIR
+    # but absolute paths are absolute.
+    file_path = "#{DATA_DIR}/#{filename}"
+    if filename.include?("/") then
+      file_path = filename
+    end
+
     (filename.end_with?(".gz") ? Zlib::GzipReader : File)
-      .open("#{DATA_DIR}/#{filename}").each_line do |line|
+      .open(file_path).each_line do |line|
       line_no += 1
       line.chomp!
       yield line, line_no
-    end
+    end    
   end
 
-  # Given filename, determine mono/multi/serial.
+  # Given filename, determine mono|multi|serial.
   # Returns empty string as failure.
   def get_item_type(filename)
     item_type = ""
-    if filename =~ /_(mono|multi|serial)_/ then
-      item_type = $1
+    if SPEC_REGEXP[:ITEM_TYPE_CONTEXT].match(filename) then
+      item_type = Regexp.last_match(1)
     else
-      STDERR.print "Did not find item_type in filename"
+      log("Did not find item_type in filename")
     end
     return item_type
   end
@@ -155,56 +257,50 @@ class Autoscrub
   # Check that a file has a header line, consistent number
   # of cols, lines that are not too long.
   def well_formed_file?(filename)
-    warn "Checking well-formedness of #{filename}"
-
-    # mono/multi/serial
+    # mono|multi|serial
     item_type = get_item_type(filename)
-
     # Stores which col is where, based on header line.
     col_map = {}
 
     read_file(filename) do |line, line_no|
-      puts line
       cols = line.split("\t")
-
-      # Check header line.
+      # Header line:
+      # Get col_map if valid
+      # use col map in checking the rest of the lines
       if line_no == 1 then
         if !well_formed_header?(cols, item_type) then
-          warn "malformed header line"
+          log("File rejected: header not OK.")
           return false
         end
+        # header was ok, set col_map
+        log("Header OK.")
         col_map = get_col_map(cols, item_type)
-      elsif !well_formed_line?(cols, item_type, col_map) then
-        warn "problem at line #{line_no}"
-        return false
+      else
+        # All other lines:
+        return false if !well_formed_line?(cols, item_type, col_map)
       end
     end
 
+    return false if col_map.empty?
+    
     return true
   end
 
+  # Check that a given line conforms with the header
+  # and that the values are OK given the column.
+  # Reject lines with no good OCN.
   def well_formed_line?(cols, item_type, col_map)
-    puts "col map: #{col_map}"
-    puts "cols #{cols.join(',')}"
     line_hash = {}
-
     col_map.each do |col_type, i|
-      puts "check that col #{i} (#{col_type}) has an OK value #{cols[i]}"
       validated_val = check_col_val(col_type, cols[i])
-
       if validated_val.empty? && col_type == "oclc" then
         # didn't get ANY usable ocns back, reject line
         return false
       end
-
       line_hash[col_type] = validated_val
     end
-
-    # todo: write to file that can be loaded into data store
-    puts line_hash
-
+    output(line_hash)
     return true
-
   end
 
   # Based on col type, pass on to the right method
@@ -226,7 +322,7 @@ class Autoscrub
     when "issn"
       ScrubFields.issn(col_val)
     else
-      raise "check_col_val cannot handle #{col_type}, #{col_val}"
+      raise StandardError, "check_col_val cannot handle column type #{col_type} (#{col_val})"
     end
   end
 
@@ -234,31 +330,41 @@ class Autoscrub
   # contains all required fields, optionally optional fields,
   # and nothing else.
   def well_formed_header?(header_cols, item_type)
-    pass = true
+    violations = 0
+
+    header_cols = header_cols.map{|x| x.downcase}
+    log("Header cols: #{header_cols.join(", ")}")
 
     # Check that all required cols are present
     if REQ_HEADER_COLS & header_cols != REQ_HEADER_COLS then
-      warn "Missing required header cols:" +
-                  (REQ_HEADER_COLS - header_cols).join(', ')
-      pass = false
+      log("Missing required header cols:" + \
+          (REQ_HEADER_COLS - header_cols).join(", "))
+      violations += 1
+    end
+
+    if !OPT_HEADER_COLS.key?(item_type) then
+      log("Invalid item_type #{item_type}")
+      violations += 1
     end
 
     # Note any cols that are not required/optional and ignore
     opt_for_type = OPT_HEADER_COLS[item_type] || []
-    warn "Optional fields for #{item_type}: #{opt_for_type.join(', ')}"
     illegal_cols = (header_cols - (REQ_HEADER_COLS + opt_for_type))
-    if illegal_cols.size > 0 then
-      warn "The following cols are not allowed: #{illegal_cols.join(',')}"
-      pass = false
+    if !illegal_cols.empty? then
+      log("The following cols are not allowed: #{illegal_cols.join(",")}")
+      violations += 1
     end
 
-    return pass
+    if violations.positive? then
+      log "#{violations} violations in well_formed_header?"
+    end
+
+    return violations.zero?
   end
 
   # Given a split header line like [a,b,c]
   # returns a hash {a=>1, b=>2, c=>3}
   def get_col_map(cols, item_type)
-    puts "getting col map"
     col_map = {}
     possible_cols = REQ_HEADER_COLS + OPT_HEADER_COLS[item_type]
 
@@ -266,25 +372,33 @@ class Autoscrub
       if possible_cols.include?(col) then
         col_map[col] = i
       else
-        raise Error.new("illegal col #{col} on pos #{i} in header")
+        raise WellFormedHeaderError, "illegal col #{col} on pos #{i} in header"
       end
     end
 
+    log("column_map: #{col_map}")
+    
     return col_map
   end
 
   # Check that the line has a decent number of cols.
-  def number_of_cols(cols)
+  def number_of_cols(cols)    
     if cols.size < MIN_FILE_COLS then
-      warn "Too few cols (#{cols.size} vs min #{MIN_FILE_COLS})"
+      log("Too few cols (#{cols.size} vs min #{MIN_FILE_COLS})")
       return false
     end
     if cols.size > MAX_FILE_COLS then
-      warn "Too many cols (#{cols.size} vs max #{MAX_FILE_COLS})"
+      log("Too many cols (#{cols.size} vs max #{MAX_FILE_COLS})")
       return false
     end
-
+    log("Number of cols: #{cols.size}")
     return true
   end
 
+end
+
+if $0 == __FILE__ then
+  member_id = ARGV.shift
+  as = Autoscrub.new(member_id, *ARGV)
+  as.scrub_files()
 end
