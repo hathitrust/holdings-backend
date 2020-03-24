@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'enum_chron_parser';
+require_relative 'enum_chron_parser';
                     
 class ScrubFields
 
@@ -120,6 +120,8 @@ class ScrubFields
     return output
   end
 
+  # Given a string, checks if there are any valid-looking local_ids
+  # and returns it/them as an array of strings.
   def self.local_id(str)
     output = []
     return output if str.nil?
@@ -139,7 +141,6 @@ class ScrubFields
 
     candidates.each do |candidate|
       catch(:rejected_value) do
-        puts "looking at local_id #{candidate}"
         candidate.size > LOCAL_ID_MAX_LEN &&
           reject_value(
             "local_id too long (%i > max %i)" %
@@ -154,6 +155,9 @@ class ScrubFields
     return output
   end
 
+  # Given a string, checks if there are any valid-looking issns,
+  # Returns a bit of a mess...
+  # ... a  single element array, where [0] is a ;-joined string.
   def self.issn(str)
     candidates = str.split(ISSN_DELIM)
     ok_issns   = []
@@ -178,18 +182,22 @@ class ScrubFields
     return [EC_PARSER.normalized_enum, EC_PARSER.normalized_chron]
   end
 
+  # checks that the given string contains an ok status
   def self.status(str)
     simple_matcher(STATUS, str)
   end
 
+  # checks that the given string contains an ok condition
   def self.condition(str)
     simple_matcher(CONDITION, str)
   end
 
+    # checks that the given string contains an ok govdoc
   def self.govdoc(str)
     simple_matcher(GOVDOC, str)
   end
 
+  # DRY code for the status, condition and govdoc functions
   def self.simple_matcher(rx, str)
     output = []
     str.strip!
@@ -199,13 +207,13 @@ class ScrubFields
     return output
   end
 
-  # Throws :rejected_value
+  # Directly throws :rejected_value
   def self.reject_value(reason, val)
     warn [reason, val].join(":")
     throw :rejected_value
   end
 
-  # Throws :rejected_value
+  # May indirectly throw :rejected_value
   def self.capture_numeric(str)
     md = str.match(NUMERIC_PART)
     if !md.nil? then
