@@ -17,7 +17,7 @@ class HtItem
   field :bib_fmt, type: String
 
   embedded_in :cluster
-  index({ item_id: 1 }, unique: true)
+  validates :item_id, uniqueness: true
   validates_presence_of :ocns, :item_id, :ht_bib_key, :rights, :bib_fmt
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -26,25 +26,14 @@ class HtItem
     end
   end
 
-  # Prevent creation of duplicates
-  #
-  # @param record, a hash of values
-  def initialize(record = nil)
-    raise Mongo::Error::OperationFailure, "Duplicate HT Item" if !record.nil? \
-      && Cluster.where(
-        "ht_items.item_id": record[:item_id]
-    ).any?
-
-    super
-  end
-
   # Attach this embedded document to another parent
   #
   # @param new_parent, the parent cluster to attach to
   def move(new_parent)
     unless new_parent.id == _parent.id
-      new_parent.ht_items << dup
+      h = to_hash
       delete
+      new_parent.ht_items.create(h)
     end
   end
 

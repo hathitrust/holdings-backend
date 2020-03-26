@@ -7,6 +7,7 @@ RSpec.describe Cluster do
   let(:ht) { build(:ht_item).to_hash }
 
   before(:each) do
+    described_class.remove_indexes
     described_class.create_indexes
     described_class.collection.find.delete_many
   end
@@ -35,6 +36,16 @@ RSpec.describe Cluster do
       c.ht_items.first.ocns << rand(1_000_000)
       c.save
       expect(c.errors.messages[:ocns]).to include("must contain all ocns")
+    end
+
+    it "prevents duplicate HT Items" do
+      c = described_class.new(ocns: [ocn1])
+      c.save
+      c.ht_items.create(ht)
+      c2 = described_class.new(ocns: [ocn2])
+      c2.save
+      expect { c2.ht_items.create(ht) }.to \
+        raise_error(Mongo::Error::OperationFailure, /ht_items.item_id_1 dup/)
     end
   end
 

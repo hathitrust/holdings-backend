@@ -16,7 +16,9 @@ RSpec.describe HtItem do
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
   before(:each) do
+    described_class.remove_indexes
     described_class.create_indexes
+    Cluster.create_indexes
     described_class.collection.find.delete_many
     Cluster.collection.find.delete_many
   end
@@ -37,8 +39,9 @@ RSpec.describe HtItem do
   it "prevents duplicates from being created" do
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone
-    expect { c.ht_items.create(cloned) }.to \
-      raise_error(Mongo::Error::OperationFailure, /Duplicate HT Item/)
+    c.ht_items.create(cloned)
+    expect { c.save! }.to \
+      raise_error(Mongoid::Errors::Validations, /Validation of Cluster failed./)
   end
 
   it "provides its parent cluster with its ocns" do
@@ -72,16 +75,6 @@ RSpec.describe HtItem do
       described_class.add(htitem2)
       expect(Cluster.count).to eq(1)
       expect(Cluster.first.ht_items.first.item_id).to eq(htitem2[:item_id])
-    end
-
-    it "won't add a duplicate entry" do
-      c
-      c2
-      h3 = htitem2.clone
-      h3[:rights] = "pd"
-      described_class.add(htitem2)
-      expect { described_class.add(h3) }.to \
-        raise_error(Mongo::Error::OperationFailure, /Duplicate HT Item/)
     end
   end
 end

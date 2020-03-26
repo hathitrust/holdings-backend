@@ -18,7 +18,7 @@ class Cluster
   embeds_many :ht_items, class_name: "HtItem"
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
-
+  index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
