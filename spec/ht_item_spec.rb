@@ -6,13 +6,7 @@ RSpec.describe HtItem do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
-  let(:htitem_hash) do
-    { ocns:       [ocn_rand],
-      item_id:    item_id_rand,
-      ht_bib_key: ht_bib_key_rand,
-      rights:     rand(10).to_s,
-      bib_fmt:    rand(10).to_s }
-  end
+  let(:htitem_hash) { build(:ht_item).to_hash }
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
   before(:each) do
@@ -28,7 +22,7 @@ RSpec.describe HtItem do
   end
 
   it "does not have a parent" do
-    expect(described_class.new(htitem_hash)._parent).to be_nil
+    expect(build(:ht_item)._parent).to be_nil
   end
 
   it "has a parent" do
