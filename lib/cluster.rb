@@ -15,10 +15,10 @@ class Cluster
   store_in collection: "clusters", database: "test", client: "default"
   field :ocns
   embeds_many :holdings, class_name: "Holding"
-  embeds_many :ht_items
+  embeds_many :ht_items, class_name: "HtItem"
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
-
+  index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
@@ -28,6 +28,9 @@ class Cluster
       record.errors.add attr, "must be an integer" \
         unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
     end
+    # ocns are a superset of ht_items.ocns
+    record.errors.add attr, "must contain all ocns" \
+      if (record.ht_items.collect(&:ocns).flatten - value).any?
   end
 
   # Adds the members of the given cluster to this cluster.
@@ -40,6 +43,19 @@ class Cluster
     move_members_to_self(other)
     other.delete
     self
+  end
+
+  # Merges multiple clusters together
+  #
+  # @param clusters All the clusters we need to merge
+  # @return a cluster or nil if nil set
+  def self.merge_many(clusters)
+    c = clusters.shift
+    clusters.each do |c2|
+      c.merge(c2) unless c._id == c2._id
+    end
+    c&.save
+    c
   end
 
   private
