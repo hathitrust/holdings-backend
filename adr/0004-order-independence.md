@@ -28,6 +28,13 @@ An option to avoid this would be to require that members submit only one OCN
 per holding, but there are sometimes valid reasons to submit multiple OCNs
 (e.g. bound-withs, deprecated OCNs, etc).
 
+The current holdings validation/normalization process also checks the current maximum
+OCN using an OCLC API:
+
+```bash
+curl -s "https://www.oclc.org/apps/oclc/wwg" | egrep -o '"oclcNumber":"[0-9]+"' | egrep -o '[0-9]+'
+```
+
 ## Decision
 
 The concrete state of the database should depend only on the data that was
@@ -43,8 +50,12 @@ consequences of breaking that must be documented and well-understood.
 ## Consequences
 
 Scrubbing and normalization processes should depend only on the data in the
-file, not on external sources of data that could cause different results based
-on the state of that data.
+file, not on the state of other data in the system that could cause different
+results based on the state of that data.
+
+Reliance on data truly external to the system is acceptable, but the state of that data 
+at the time of processing must be retained with the input data such that the process can
+be replicated later. (The reliance on the "current maximum OCN" falls in this category)
 
 There should be automated tests that ensure so far as feasible that:
 
