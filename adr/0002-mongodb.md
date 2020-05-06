@@ -37,4 +37,6 @@ will be more difficult to express. We are not aware of any such use cases
 currently.
 
 To produce a consistent data model, OCLC numbers and HathiTrust items must
-belong to exactly one cluster.
+belong to exactly one cluster. This implies that if a HathiTrust item has
+a Zephir record with more than one OCLC number, we will put those OCLC 
+numbers in the same cluster.
