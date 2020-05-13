@@ -61,7 +61,7 @@ class Cluster
   private
 
   def move_members_to_self(other)
-    other.holdings.each {|h| h.move(self) }
+    other.holdings.each {|h| ClusterHolding.new(h).move(self) }
     other.ht_items.each {|ht| ht.move(self) }
     other.commitments.each {|c| c.move(self) }
   end

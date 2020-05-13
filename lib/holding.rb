@@ -5,7 +5,7 @@ require "mongoid"
 # A member holding
 class Holding
   include Mongoid::Document
-  field :ocn, type: Integer # , type: OCLCNumber
+  field :ocn, type: Integer
   field :organization, type: String
   field :local_id, type: String
   field :enum_chron, type: String
@@ -17,10 +17,7 @@ class Holding
 
   embedded_in :cluster
 
-  def move(new_parent)
-    unless new_parent.id == _parent.id
-      new_parent.holdings << dup
-      delete
-    end
-  end
+  validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
+  validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
+
 end
