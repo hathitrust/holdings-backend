@@ -26,35 +26,6 @@ class HtItem
     end
   end
 
-  # Attach this embedded document to another parent
-  #
-  # @param new_parent, the parent cluster to attach to
-  def move(new_parent)
-    unless new_parent.id == _parent.id
-      h = to_hash
-      delete
-      new_parent.ht_items.create(h)
-    end
-  end
-
-  # Add htitem to the clusters, merging if necessary
-  #
-  # @param record
-  def self.add(record)
-    c = Cluster.merge_many(Cluster.where(ocns: { "$in": record[:ocns] }))
-    if c.nil?
-      c = Cluster.new(ocns: record[:ocns])
-      c.save
-    end
-    c.ht_items.create(record)
-  end
-
-  # Adds its own OCNs to its parent's
-  def save
-    _parent.ocns = (_parent.ocns + ocns).uniq
-    super
-  end
-
   def to_hash
     {
       ocns:       ocns,
