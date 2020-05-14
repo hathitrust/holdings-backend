@@ -64,7 +64,7 @@ class Cluster
   #
   # @param other - the other cluster
   def move_members_to_self(other)
-    other.holdings.each {|h| h.move(self) }
+    other.holdings.each {|h| ClusterHolding.new(h).move(self) }
     other.ht_items.each {|ht| ClusterHtItem.new(ht).move(self) }
     other.commitments.each {|c| c.move(self) }
   end
