@@ -3,10 +3,10 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
-require "cluster"
+require "cluster_ht_item"
 require "ht_item"
-require "json"
-require "optparse"
+
+Mongoid.load!("mongoid.yml", :test)
 
 # Convert a tsv line from the hathifile into a record like hash
 #
@@ -20,7 +20,9 @@ def hathifile_to_record(hathifile_line)
     bib_fmt:    fields[19] }
 end
 
-File.open(ARGV.shift) do |line|
+File.open(ARGV.shift, "r:UTF-8").each do |line|
   rec = hathifile_to_record(line)
-  HtItem.add(rec)
+  h = HtItem.new(rec)
+  c = ClusterHtItem.new(h).cluster
+  c.save
 end

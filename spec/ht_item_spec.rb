@@ -10,9 +10,6 @@ RSpec.describe HtItem do
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
   before(:each) do
-    described_class.remove_indexes
-    described_class.create_indexes
-    Cluster.create_indexes
     described_class.collection.find.delete_many
     Cluster.collection.find.delete_many
   end
@@ -43,32 +40,5 @@ RSpec.describe HtItem do
     ht_multi_ocns[:ocns] << rand(1_000_000).to_i
     c.ht_items.create(ht_multi_ocns)
     expect(c.ocns.count).to eq(2)
-  end
-
-  describe "#add" do
-    let(:htitem2) do
-      { ocns:       [rand(1_000_000).to_i, htitem_hash[:ocns]].flatten,
-        item_id:    item_id_rand,
-        ht_bib_key: ht_bib_key_rand,
-        rights:     rand(10).to_s,
-        bib_fmt:    rand(10).to_s }
-    end
-    let(:c2) { create(:cluster, ocns: [htitem2[:ocns].first]) }
-
-    it "creates a cluster if it doesn't exist" do
-      expect(Cluster.count).to eq(0)
-      described_class.add(htitem2)
-      expect(Cluster.count).to eq(1)
-      expect(Cluster.first.ht_items.first.item_id).to eq(htitem2[:item_id])
-    end
-
-    it "merges 2 clusters based on ocns" do
-      c
-      c2
-      expect(Cluster.count).to eq(2)
-      described_class.add(htitem2)
-      expect(Cluster.count).to eq(1)
-      expect(Cluster.first.ht_items.first.item_id).to eq(htitem2[:item_id])
-    end
   end
 end
