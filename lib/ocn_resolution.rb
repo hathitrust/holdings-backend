@@ -6,15 +6,23 @@ require "mongoid"
 class OCNResolution
   include Mongoid::Document
 
-  store_in collection: "resolutions", database: "test", client: "default"
+  # store_in collection: "resolutions", database: "test", client: "default"
   field :deprecated
   field :resolved
+  field :ocns, type: Array
 
-  index({ deprecated: 1 }, unique: true)
-  index(resolved: 1)
+  embedded_in :cluster
+  validates :deprecated, uniqueness: true
+  validates_presence_of :deprecated, :resolved, :ocns
+  index(ocns: 1)
 
-  scope :for_cluster, lambda {|cluster|
-    where(:$or => [:deprecated.in => cluster.ocns,
-                   :resolved.in   => cluster.ocns])
+  scope :for_cluster, lambda {|_cluster|
+    where(:$in => ocns)
   }
+
+  def initialize(params = nil)
+    super
+    self.ocns = [deprecated, resolved]
+  end
+
 end

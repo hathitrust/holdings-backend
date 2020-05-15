@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
+
 require "ht_item"
 require "cluster"
 RSpec.describe HtItem do

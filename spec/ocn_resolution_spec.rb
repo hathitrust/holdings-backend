@@ -22,4 +22,8 @@ RSpec.describe OCNResolution do
   it "returns the resolved ocn" do
     expect(resolution.resolved).to eq(resolved)
   end
+
+  it "returns both ocns" do
+    expect(resolution.ocns).to eq([deprecated, resolved])
+  end
 end
