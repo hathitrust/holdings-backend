@@ -16,9 +16,11 @@ class Cluster
   field :ocns
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
+  embeds_many :ocn_resolutions, class_name: "OCNResolution"
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
   index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
+  index({ "ocn_resolutions.ocns": 1 }, unique: true, sparse: true)
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
@@ -30,7 +32,8 @@ class Cluster
     end
     # ocns are a superset of ht_items.ocns
     record.errors.add attr, "must contain all ocns" \
-      if (record.ht_items.collect(&:ocns).flatten - value).any?
+      if (record.ht_items.collect(&:ocns).flatten +
+          record.ocn_resolutions.collect(&:ocns).flatten - value).any?
   end
 
   # Adds the members of the given cluster to this cluster.
@@ -57,6 +60,13 @@ class Cluster
     c&.save
     c
   end
+  
+  # Collects OCNs from embedded documents
+  def collect_ocns
+    (ocn_resolutions.collect(&:ocns).flatten +
+    ht_items.collect(&:ocns).flatten +
+    holdings.collect(&:ocn).flatten).uniq
+  end
 
   private
 
@@ -68,5 +78,6 @@ class Cluster
     other.ht_items.each {|ht| ClusterHtItem.new(ht).move(self) }
     other.commitments.each {|c| c.move(self) }
   end
+
 
 end

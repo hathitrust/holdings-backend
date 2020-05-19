@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
+
 require "cluster"
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
@@ -7,6 +9,7 @@ RSpec.describe Cluster do
   let(:ht) { build(:ht_item).to_hash }
 
   before(:each) do
+    described_class.create_indexes
     described_class.collection.find.delete_many
   end
 
@@ -19,7 +22,7 @@ RSpec.describe Cluster do
       expect(described_class.new(ocns: [ocn1]).ocns.class).to eq(Array)
     end
 
-    it "has an ocns field with members that are OCLCNumbers" do
+    it "has an ocns field with members that are Integers" do
       expect(described_class.new(ocns: [ocn1]).ocns.first.class).to eq(Integer)
     end
 
@@ -85,6 +88,24 @@ RSpec.describe Cluster do
       expect(described_class.count).to eq(2)
       expect(described_class.merge_many([c1, c2]).ocns).to eq([ocn1, ocn2])
       expect(described_class.count).to eq(1)
+    end
+  end
+
+  describe "#collect_ocns" do
+    let(:ht) { build(:ht_item) }
+    let(:holding) { build(:holding) }
+    let(:resolution) { build(:ocn_resolution) }
+    let(:cluster) { create(:cluster) }
+    before(:each) do
+      cluster.ht_items << ht
+      cluster.holdings << holding
+      cluster.ocn_resolutions << resolution
+    end
+ 
+    it "gathers all of the OCNs from it's embedded documents" do
+      expect(cluster.collect_ocns).to include(*ht.ocns)
+      expect(cluster.collect_ocns).to include(*holding.ocn)
+      expect(cluster.collect_ocns).to include(*resolution.ocns)
     end
   end
 
