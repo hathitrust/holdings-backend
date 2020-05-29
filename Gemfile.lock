@@ -73,6 +73,7 @@ GEM
     unicode-display_width (1.6.1)
     yard (0.9.24)
     zeitwerk (2.2.2)
+    zinzout (0.1.0)
 
 PLATFORMS
   ruby
@@ -90,6 +91,7 @@ DEPENDENCIES
   rubocop-rspec
   simplecov
   yard
+  zinzout
 
 BUNDLED WITH
    2.1.4
