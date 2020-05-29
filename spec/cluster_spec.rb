@@ -96,12 +96,13 @@ RSpec.describe Cluster do
     let(:holding) { build(:holding) }
     let(:resolution) { build(:ocn_resolution) }
     let(:cluster) { create(:cluster) }
+
     before(:each) do
       cluster.ht_items << ht
       cluster.holdings << holding
       cluster.ocn_resolutions << resolution
     end
- 
+
     it "gathers all of the OCNs from it's embedded documents" do
       expect(cluster.collect_ocns).to include(*ht.ocns)
       expect(cluster.collect_ocns).to include(*holding.ocn)

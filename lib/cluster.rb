@@ -4,11 +4,13 @@ require "mongoid"
 require "holding"
 require "ht_item"
 require "commitment"
+require "serial"
 
 # A set of identifiers (e.g. OCLC numbers),
 # - ocns
 # - holdings
 # - htitems
+# - serials
 # - commitments
 class Cluster
   include Mongoid::Document
@@ -17,6 +19,7 @@ class Cluster
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
   embeds_many :ocn_resolutions, class_name: "OCNResolution"
+  embeds_many :serials, class_name: "Serial"
   embeds_many :commitments
   index({ ocns: 1 }, unique: true)
   index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
@@ -60,7 +63,7 @@ class Cluster
     c&.save
     c
   end
-  
+
   # Collects OCNs from embedded documents
   def collect_ocns
     (ocn_resolutions.collect(&:ocns).flatten +
@@ -78,6 +81,5 @@ class Cluster
     other.ht_items.each {|ht| ClusterHtItem.new(ht).move(self) }
     other.commitments.each {|c| c.move(self) }
   end
-
 
 end
