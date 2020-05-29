@@ -16,6 +16,7 @@ AllCops:
     - '*.gemspec'
     - 'spec/support/fixtures/**/*'
     - 'db/schema.rb'
+    - 'lib/util/ppnum.rb'
 
 Naming/FileName:
   ExpectMatchingDefinition: true
