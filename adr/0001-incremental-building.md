@@ -37,6 +37,8 @@ In the old holdings system, we could consider only additions to the data. In
 the new system, we must figure out how to add, delete, and change each data
 type, and at what granularity we can accept changes.
 
+Consequence! ARgle blnkjsdjfklsjdf liosujefrok!!!
+
 If we have a single instance of the data store, we will be unable to make
 ad-hoc comparisons in the "before" and "after" state -- that is, we would need
 to do any analysis of the "before" state before we applied the changes. We may
