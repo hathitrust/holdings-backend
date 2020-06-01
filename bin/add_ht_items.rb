@@ -17,7 +17,8 @@ def hathifile_to_record(hathifile_line)
     ocns:       fields[7].split(",").map(&:to_i),
     ht_bib_key: fields[3].to_i,
     rights:     fields[2],
-    bib_fmt:    fields[19] }
+    bib_fmt:    fields[19],
+    enum_chron: fields[4] }
 end
 
 File.open(ARGV.shift, "r:UTF-8").each do |line|

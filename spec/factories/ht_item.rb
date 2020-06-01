@@ -7,5 +7,6 @@ FactoryBot.define do
     ht_bib_key { rand(1_000_000) }
     rights { ["pd", "ic", "icus", "cc", "pdus"].sample }
     bib_fmt { ["m", "s", "r"].sample }
+    enum_chron { ["", "V.1"].sample }
   end
 end

@@ -8,6 +8,7 @@ require "mongoid"
 # - ht_bib_key
 # - rights
 # - bib_fmt
+# - enum_chron
 class HtItem
   include Mongoid::Document
   field :ocns, type: Array
@@ -15,6 +16,7 @@ class HtItem
   field :ht_bib_key, type: Integer
   field :rights, type: String
   field :bib_fmt, type: String
+  field :enum_chron, type: String
 
   embedded_in :cluster
   validates :item_id, uniqueness: true
