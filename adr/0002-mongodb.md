@@ -36,7 +36,4 @@ Ad-hoc queries that involve computing something about multiple clusters at once
 will be more difficult to express. We are not aware of any such use cases
 currently.
 
-To produce a consistent data model, OCLC numbers and HathiTrust items must
-belong to exactly one cluster. This implies that if a HathiTrust item has
-a Zephir record with more than one OCLC number, we will put those OCLC 
-numbers in the same cluster.
+A:LKHIhsadofupsodiufp'as0idt mp;qa9sei tp9;asi ept[i!!!!!!!
