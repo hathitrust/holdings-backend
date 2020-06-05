@@ -5,6 +5,7 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster_ht_item"
 require "ht_item"
+require 'ocn_resolution'
 
 Mongoid.load!("mongoid.yml", :test)
 
@@ -24,6 +25,7 @@ end
 File.open(ARGV.shift, "r:UTF-8").each do |line|
   rec = hathifile_to_record(line)
   h = HtItem.new(rec)
+  next if h.ocns.empty?
   c = ClusterHtItem.new(h).cluster
   c.save
 end
