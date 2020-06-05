@@ -1,5 +1,8 @@
 # Print Holdings persistent data store
 
+[![Build Status](https://travis-ci.org/hathitrust/holdings-backend.svg?branch=master)](https://travis-ci.org/hathitrust/holdings-backend)
+
+
 ## Development/testing
 
 ### Prerequisites
