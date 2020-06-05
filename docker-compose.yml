@@ -8,12 +8,14 @@ services:
       - .:/usr/src/app
       - gem_cache:/gems
 
-  mongo:
+  mongo_dev:
     image: mongo
-    ports:
-      - '27017:27017'
     volumes:
       - data_db:/data/db
+
+  mongo_test:
+    image: mongo
+
 
 volumes:
   gem_cache:
