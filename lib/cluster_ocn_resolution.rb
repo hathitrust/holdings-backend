@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "cluster"
+require "reclusterer"
 
 # Services for clustering OCN Resolutions
 class ClusterOCNResolution
@@ -20,7 +21,7 @@ class ClusterOCNResolution
     c
   end
 
-  # Move an HTItem from one cluster to another
+  # Move an OCN resolution rule from one cluster to another
   #
   # @param new_cluster - the cluster to move to
   def move(new_cluster)
@@ -30,6 +31,22 @@ class ClusterOCNResolution
       new_cluster.ocn_resolutions << duped_resolution
       @resolution = duped_resolution
       new_cluster.ocns = new_cluster.collect_ocns
+    end
+  end
+
+  def delete
+    Cluster.where(ocns: { "$all": @resolution.ocns }).each do |c|
+      had_resolution = false
+
+      c.ocn_resolutions.delete_if do |candidate|
+        candidate.deprecated == @resolution.deprecated &&
+          candidate.resolved == @resolution.resolved &&
+          had_resolution = true
+      end
+
+      if had_resolution
+        Reclusterer.new(c).recluster
+      end
     end
   end
 
