@@ -1,13 +1,25 @@
 require 'autoscrub'
 
 RSpec.describe Autoscrub do
-    let(:member_id) {:haverford}
+    let(:member_id) {"haverford"}
     let(:autoscrub) {described_class.new(member_id)}
     let(:data_dir) {__dir__ + '../testdata'}
 
     it "is an existing member" do
       expect(autoscrub.valid_member_id?(member_id)).to be(true)
       # Add negative test when you figure out how best to mock that.
+    end
+
+    it "rejects a bad member_id" do
+      expect{Autoscrub.new("failme")}.to raise_error(MemberIdError)
+    end
+
+    it "rejects an empty member_id" do
+      expect{Autoscrub.new("")}.to raise_error(MemberIdError)
+    end
+
+    it "rejects a nil member_id" do
+      expect{Autoscrub.new(nil)}.to raise_error(MemberIdError)
     end
 
     it "accepts a valid filename" do
@@ -60,7 +72,7 @@ RSpec.describe Autoscrub do
       expect(autoscrub.number_of_cols([1] * 1)).to be(false)
       expect(autoscrub.number_of_cols([1] * 7)).to be(false)
     end
-
+    
     it "rejects ocns with no numbers in them" do
       expect(autoscrub.check_col_val('oclc', "xyz")).to eq([])
       expect(autoscrub.check_col_val('oclc', "")).to eq([])
@@ -243,13 +255,6 @@ RSpec.describe Autoscrub do
       expect(autoscrub.check_col_val(ec, "v.3/SEC.8")).to eq(["8", nil])
     end
 
-    it "rejects malformed lines" do
-      h = {"oclc"=>0,"local_id"=>1}
-      expect(autoscrub.well_formed_line?([], 'mono', h)).to be(false)
-      expect(autoscrub.well_formed_line?(['',''],'mono', h)).to be(false)
-      expect(autoscrub.well_formed_line?(['','i789'],'mono', h)).to be(false)
-    end
-
     it "allows well formed lines" do
       expect(autoscrub.well_formed_line?(
               %w[123 i789],
@@ -324,4 +329,17 @@ RSpec.describe Autoscrub do
       ).to eq({f1 => true})
     end
 
+    it "rejects malformed lines" do
+      h = {"oclc"=>0,"local_id"=>1}
+      expect(autoscrub.well_formed_line?([], 'mono', h)).to be(false)
+      expect(autoscrub.well_formed_line?(['',''],'mono', h)).to be(false)
+      expect(autoscrub.well_formed_line?(['','i789'],'mono', h)).to be(false)
+
+      # number of cols must match number of cols in header
+      expect(autoscrub.well_formed_line?(['123'],'mono', h)).to be(false)
+      expect(autoscrub.well_formed_line?(['123', 'b123'],'mono', h)).to be(true)
+      expect(autoscrub.well_formed_line?(['123', 'c123', 'c123'],'mono', h)).to be(false)
+    end
+
+    
 end
