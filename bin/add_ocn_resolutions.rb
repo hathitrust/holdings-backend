@@ -20,7 +20,9 @@ waypoint = Utils::Waypoint.new
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 # rubocop:enable Layout/LineLength
 
-Zinzout.zin(ARGV.shift).each_with_index do |line, count|
+count = 0
+Zinzout.zin(ARGV.shift).each do |line|
+  count += 1
   (deprecated, resolved) = line.split.map(&:to_i)
   r = OCNResolution.new(deprecated: deprecated, resolved: resolved)
   c = ClusterOCNResolution.new(r).cluster
@@ -28,8 +30,10 @@ Zinzout.zin(ARGV.shift).each_with_index do |line, count|
 
   if (count % BATCH_SIZE).zero? && !count.zero?
     waypoint.mark(count)
-    # rubocop:disable Layout/LineLength
-    logger.info "#{ppnum(count, 10)}. This batch #{ppnum(waypoint.batch_records, 5)} in #{ppnum(waypoint.batch_seconds, 4, 1)}s (#{waypoint.batch_rate_str} r/s). Overall #{waypoint.total_rate_str} r/s."
-    # rubocop:enable Layout/LineLength
+    logger.info waypoint.batch_line
   end
 end
+
+waypoint.mark(count)
+logger.info waypoint.final_line
+
