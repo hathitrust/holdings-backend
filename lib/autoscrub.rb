@@ -4,22 +4,25 @@ require "zlib"
 require_relative "scrub_fields"
 
 class FileNameError < StandardError
-
 end
 
 class WellFormedFileError < StandardError
-
 end
 
 class WellFormedHeaderError < StandardError
+end
 
+class MemberIdError < StandardError
+end
+
+class ColValError < StandardError
 end
 
 class Autoscrub
   # Todo: read these dir paths from config/env?
   DATA_DIR = __dir__ + "/../testdata"
   LOG_DIR  = __dir__ + "/../testdata"
-
+  
   SPEC_REGEXP = {
     # A single regex for file name pass/fail.
     :FILENAME => /^
@@ -31,13 +34,16 @@ class Autoscrub
     .tsv                  # must have a .tsv extension
     (.gz)?                # may have a .gz extension
     $/x.freeze,
+
     # Split filename on these to get the individual parts.
     :FILENAME_PART_DELIM => /[_\.]/.freeze,
+
     # If filename fail, further regexes to discover why.
-    :MEMBER_ID => /^[a-z\_\-]+$/.freeze,
-    :ITEM_TYPE => /^(mono|multi|serial)$/.freeze,
+    :MEMBER_ID         => /^[a-z\_\-]+$/.freeze,
+    :ITEM_TYPE         => /^(mono|multi|serial)$/.freeze,
     :ITEM_TYPE_CONTEXT => /_(mono|multi|serial)_/.freeze,
-    :UPDATE_TYPE => /^(full|partial)$/.freeze,
+    :UPDATE_TYPE       => /^(full|partial)$/.freeze,
+
     # A YYYYMMDD date string is expected,
     # and of course this regex is overly permissive
     # but let's leave it like that.
@@ -57,11 +63,11 @@ class Autoscrub
   MIN_FILE_COLS = 2
   MAX_FILE_COLS = 6
 
-  # Give a member_id (will be checked to make sure is OK)
-  # ... and a list of files (will also be checked).
+  # Give a member_id and a list of files.
   def initialize(member_id, *files)
+    # Check that member_id is valid
     if !valid_member_id?(member_id) then
-      raise ArgumentError, "Bad member_id #{member_id}"
+      raise MemberIdError, "Bad member_id #{member_id}"
     end
 
     @member_id  = member_id
@@ -72,6 +78,13 @@ class Autoscrub
     master_log_name = "master_#{@member_id}_#{date}"
     @master_log = get_log_file(master_log_name)
     $stderr.puts "Logging to #{File.expand_path(@master_log.path)}"
+
+    @scrubfields = ScrubFields.new
+    
+    mlog("Received #{@files.size} files")
+    @files.each do |f|
+      mlog(f)
+    end
   end
 
   # DRY code for output, log, mlog
@@ -91,11 +104,13 @@ class Autoscrub
   end
 
   # Writes string to @log_file, if defined, else to STDERR.
+  # TODO: real logger
   def log (str)
     p_file_or_stderr(@log_file, str)
   end
 
   # Writes string to @master_log, if defined, else to STDERR.
+    # TODO: real logger
   def mlog (str)
     p_file_or_stderr(@master_log, str)
   end
@@ -118,27 +133,44 @@ class Autoscrub
       rescue SystemCallError => e
         mlog("something wrong with file?")
       ensure
+
+        log(@scrubfields.stats_to_str)
+        @scrubfields.clear_stats
+        
         @out_file.close() if @out_file.methods.include?(:close)
         @out_file = nil
         @log_file.close() if @log_file.methods.include?(:close)
         @log_file = nil
       end
     end
-    @master_log.close
     return file_success
   end
 
   # Check that the member_id points to a member in the data store
   def valid_member_id?(member_id)
     # Tie in data store wrapper that checks for valid members
+    # Currently all values will be accepted except "failme"
     log("valid_member_id? not fully implemented, allows anything")
-    true
+    log("Checking member_id #{member_id}")
+    ret = case member_id
+        when nil
+          false
+        when "failme"
+          false
+        when SPEC_REGEXP[:MEMBER_ID]
+          true
+        else
+          false
+        end
+    log("returning #{ret}")
+    return ret
   end
 
   # Check that a filename conforms to spec.
   def valid_filename?(filename)
     # If it matches, perfect, we don't need to analyze or report.
-    if SPEC_REGEXP[:FILENAME].match?(filename) then
+    if filename.start_with?(@member_id) &&
+       SPEC_REGEXP[:FILENAME].match?(filename) then
       return true
     end
 
@@ -146,12 +178,14 @@ class Autoscrub
     (member_id, item_type, update_type, date_str, *rest) =
       filename.split(SPEC_REGEXP[:FILENAME_PART_DELIM])
 
+    # mlog because @log is not open when this is called
     mlog([
           "Processing of #{filename} failed due to filename errors.",
           "Filename must match the template:",
           "<member_id>_<item_type>_<update_type>_<date_str>_<rest>",
           "Filename was analyzed as:",
           "member_id\t\"#{member_id}\"\t#{analyze_member_id(member_id)}",
+          "member_id\t\"#{member_id}\"\t#{file_belong_to_member(member_id)}",
           "item_type\t\"#{item_type}\"\t#{analyze_item_type(item_type)}",
           "update_type\t\"#{update_type}\"\t#{analyze_update_type(update_type)}",
           "date_str\t\"#{date_str}\"\t#{analyze_date_str(date_str)}",
@@ -165,6 +199,10 @@ class Autoscrub
     not_nil_and_match(str, SPEC_REGEXP[:MEMBER_ID], "must be all a-z+")
   end
 
+  def file_belong_to_member(member_id)
+    not_nil_and_match(member_id, /^#{@member_id}$/, "must match @member_id (#{@member_id})")
+  end
+  
   def analyze_item_type(str)
     not_nil_and_match(str, SPEC_REGEXP[:ITEM_TYPE], "must be mono|multi|serial")
   end
@@ -207,17 +245,19 @@ class Autoscrub
     return "not ok, must end in .tsv or .tsv.gz"
   end
 
-  # Opens a new outfile in DATA_DIR with a name that resembles the infile
+  # Opens a new outfile in DATA_DIR with a name based on the infile
   def get_out_file(filename)
-    out_filename = filename.gsub("\.gz", "")
+    out_filename = filename.gsub(/^.+\//, "").gsub(/\.gz$/, "")
     out_filename.concat(".out.ndj")
+    mlog("Opening output file #{DATA_DIR}/#{out_filename}")
     return File.open("#{DATA_DIR}/#{out_filename}", "w")
   end
 
-  # Opens a new logfile in LOG_DIR with a name that resembles the infile
+  # Opens a new logfile in LOG_DIR with a name based on the infile
   def get_log_file(filename)
-    log_filename = filename.gsub("\.gz", "")
+    log_filename = filename.gsub(/^.+\//, "").gsub("\.gz", "")
     log_filename.concat(".log.txt")
+    mlog("Opening log file #{LOG_DIR}/#{log_filename}")
     return File.open("#{LOG_DIR}/#{log_filename}", "w")
   end
 
@@ -281,24 +321,34 @@ class Autoscrub
       end
     end
 
-    return false if col_map.empty?
-    
+    return false if col_map.empty?    
     return true
   end
 
   # Check that a given line conforms with the header
   # and that the values are OK given the column.
   # Reject lines with no good OCN.
+  # arg item_type not used and could/should be removed
   def well_formed_line?(cols, item_type, col_map)
     line_hash = {}
+
+    if cols.size != col_map.keys.size then
+      log("Wrong number of cols (expected #{col_map.keys.size}, got #{cols.size})")
+      return false
+    end
+
     col_map.each do |col_type, i|
       validated_val = check_col_val(col_type, cols[i])
+       ##################################
+      ## collect stats on col vals here ##
+       ##################################      
       if validated_val.empty? && col_type == "oclc" then
-        # didn't get ANY usable ocns back, reject line
+        log("No usable OCNs in #{cols[i]} reject line [#{cols.join("\t")}]")
         return false
       end
       line_hash[col_type] = validated_val
     end
+    
     output(line_hash)
     return true
   end
@@ -306,23 +356,24 @@ class Autoscrub
   # Based on col type, pass on to the right method
   # to check if col val makes sense
   def check_col_val(col_type, col_val)
+
     case col_type
     when "oclc"
-      ScrubFields.ocn(col_val)
+      @scrubfields.ocn(col_val)
     when "local_id"
-      ScrubFields.local_id(col_val)
+      @scrubfields.local_id(col_val)
     when "status"
-      ScrubFields.status(col_val)
+      @scrubfields.status(col_val)
     when "condition"
-      ScrubFields.condition(col_val)
+      @scrubfields.condition(col_val)
     when "govdoc"
-      ScrubFields.govdoc(col_val)
+      @scrubfields.govdoc(col_val)
     when "enumchron"
-      ScrubFields.enumchron(col_val)
+      @scrubfields.enumchron(col_val)
     when "issn"
-      ScrubFields.issn(col_val)
+      @scrubfields.issn(col_val)
     else
-      raise StandardError, "check_col_val cannot handle column type #{col_type} (#{col_val})"
+      raise ColValError, "check_col_val cannot handle column type #{col_type} (#{col_val})"
     end
   end
 
@@ -382,6 +433,7 @@ class Autoscrub
   end
 
   # Check that the line has a decent number of cols.
+  # This function is not used (yet) and may never be. Good axing candidate.
   def number_of_cols(cols)    
     if cols.size < MIN_FILE_COLS then
       log("Too few cols (#{cols.size} vs min #{MIN_FILE_COLS})")
@@ -391,6 +443,7 @@ class Autoscrub
       log("Too many cols (#{cols.size} vs max #{MAX_FILE_COLS})")
       return false
     end
+    # Aaah, just right.
     log("Number of cols: #{cols.size}")
     return true
   end

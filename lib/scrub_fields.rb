@@ -3,7 +3,7 @@
 require_relative 'enum_chron_parser';
                     
 class ScrubFields
-
+  
   # "444; 555; 666" -> %w[444,555,666]
   OCN_SPLIT_DELIM      = /[,:;\|\/ ]+/.freeze
   LOCAL_ID_SPLIT_DELIM = /[,; ]+/.freeze
@@ -57,10 +57,29 @@ class ScrubFields
   ISSN      = /^\d{4}-?\d{3}[0-9Xx]$/.freeze
 
   EC_PARSER = EnumChronParser.new
+
+  def initialize
+    @stats = {}    
+  end
+
+  def stats_to_str
+    @stats.keys.map { |k|
+      [k, @stats[k]].join(":")
+    }.join("\n")
+  end
+
+  def clear_stats
+    @stats = {}
+  end
+  
+  def count_x(x)
+    @stats[x] ||= 0
+    @stats[x]  += 1
+  end
   
   # Given a string, determines which valid ocns are in it,
   # and returns them as a uniq'd array of Integers.
-  def self.ocn(str)
+  def ocn(str)
     output = []
     return output if str.nil?
 
@@ -68,7 +87,8 @@ class ScrubFields
     candidates = str.split(OCN_SPLIT_DELIM)
 
     if candidates.size > MAX_NUM_ITEMS then
-      warn "Too many items (#{candidates.size}) in ocn #{str}";
+      count_x(:too_many_ocns)
+      warn "Too many items (#{candidates.size}) in ocn #{str}"
     end
 
     # DO WHILE MAYBE COMEFROM reject_value
@@ -122,7 +142,7 @@ class ScrubFields
 
   # Given a string, checks if there are any valid-looking local_ids
   # and returns it/them as an array of strings.
-  def self.local_id(str)
+  def local_id(str)
     output = []
     return output if str.nil?
 
@@ -158,7 +178,7 @@ class ScrubFields
   # Given a string, checks if there are any valid-looking issns,
   # Returns a bit of a mess...
   # ... a  single element array, where [0] is a ;-joined string.
-  def self.issn(str)
+  def issn(str)
     candidates = str.split(ISSN_DELIM)
     ok_issns   = []
 
@@ -177,44 +197,46 @@ class ScrubFields
 
   # Given an enumchron str, returns an array with a norm'd enum and norm'd chron
   # The enumchron parser is ancient, murky & probably not the best.
-  def self.enumchron(str)
+  def enumchron(str)
     EC_PARSER.parse(str)
     return [EC_PARSER.normalized_enum, EC_PARSER.normalized_chron]
   end
 
   # checks that the given string contains an ok status
-  def self.status(str)
+  def status(str)
     simple_matcher(STATUS, str)
   end
 
   # checks that the given string contains an ok condition
-  def self.condition(str)
+  def condition(str)
     simple_matcher(CONDITION, str)
   end
 
-    # checks that the given string contains an ok govdoc
-  def self.govdoc(str)
+  # checks that the given string contains an ok govdoc
+  def govdoc(str)
     simple_matcher(GOVDOC, str)
   end
 
   # DRY code for the status, condition and govdoc functions
-  def self.simple_matcher(rx, str)
+  def simple_matcher(rx, str)
     output = []
     str.strip!
-    rx.match(str) &&
-      output << Regexp.last_match(0)
+    m = rx.match(str)
+    output << m[0] unless m.nil?
 
+    count_x("#{str}")
     return output
   end
 
   # Directly throws :rejected_value
-  def self.reject_value(reason, val)
+  def reject_value(reason, val)
     warn [reason, val].join(":")
+    count_x("#{reason}_#{val}")
     throw :rejected_value
   end
 
   # May indirectly throw :rejected_value
-  def self.capture_numeric(str)
+  def capture_numeric(str)
     md = str.match(NUMERIC_PART)
     if !md.nil? then
       return md[0].to_i
