@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env.test")
-
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
 require "bundler/setup"
 
+require "factory_bot"
 require "simplecov"
+require "mongoid"
 SimpleCov.start
+
+Mongoid.load!("mongoid.yml", :test)
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"
@@ -32,4 +33,11 @@ RSpec.configure do |config|
   config.warnings = false
 
   config.default_formatter = "doc" if config.files_to_run.one?
+
+  # Factory Bot
+  config.include FactoryBot::Syntax::Methods
+
+  config.before(:suite) do
+    FactoryBot.find_definitions
+  end
 end

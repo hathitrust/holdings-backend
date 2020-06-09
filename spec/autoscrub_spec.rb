@@ -341,5 +341,51 @@ RSpec.describe Autoscrub do
       expect(autoscrub.well_formed_line?(['123', 'c123', 'c123'],'mono', h)).to be(false)
     end
 
-    
+    it "does not process holdings when member id does not match member id of file" do
+      cornell_file = "cornell_mono_full_20200324_head100.tsv"
+      expect(described_class.new("someone_else",
+                                 cornell_file)
+        .scrub_files).to eq({cornell_file => false})
+    end
+
+    describe "log file" do
+      # TODO: clean up to remove relative paths;
+      # consider putting some stuff in a temporary directory for testing e.g. w/ tmpdir
+
+      let(:testfile_id) { "cornell_mono_full_20200324_head100" }
+      let(:fixtures_path) { File.dirname(__FILE__) + "/../testdata" }
+      let(:master_log) { "#{fixtures_path}/master_cornell_#{today}.log.txt" }
+      let(:holdings_log) { "#{fixtures_path}/#{testfile_id}_#{today}.log.txt" }
+      let(:holdings_file) { "#{fixtures_path}/#{testfile_id}.tsv" }
+      let(:today) { Time.now.strftime("%Y%m%d") }
+
+      def scrub_testdata
+        FileUtils.rm_f(master_log)
+        FileUtils.rm_f(holdings_log)
+        Autoscrub.new("cornell",holdings_file).scrub_files
+      end
+
+      it "creates a log file named with the processed date" do
+        scrub_testdata
+
+        expect(File).to exist(holdings_file)
+      end
+
+      it "creates a master log file named with the institution id and the processed date" do
+        scrub_testdata
+
+        expect(File).to exist(master_log)
+      end
+
+      it "master log indicates whether or not the file was accepted or rejected" do
+        scrub_testdata
+
+        expect(File.read(master_log)).to match(/something/)
+      end
+
+      it "holdings log indicates whether or not the file was accepted or rejected"
+
+      it "contains stats on all the things that were right & wrong"
+    end
+
 end

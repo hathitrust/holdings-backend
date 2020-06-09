@@ -1,24 +1,12 @@
-# This is an example travis-ci config. It contains more than you need.
-# See the readme for how to enable travis-ci builds.
+language: minimal
 
-sudo: false
-language: ruby
-rvm:
-  - 2.5
-  - 2.6
+services:
+  - docker
 
-branches:
-  only:
-    - master
-    - develop
-
-before_install: gem install bundler
+before_install:
+  - docker-compose build
+  - docker-compose run --rm dev bundle install
+  - docker-compose up -d mongo_test
 
 script:
-  - bundle exec rspec
-
-# This adds an additional 'build' that is just the rubocop run
-matrix:
-  include:
-    - rvm: ruby-head
-      script: bin/rubocop
+  - docker-compose run --rm dev bundle exec rspec

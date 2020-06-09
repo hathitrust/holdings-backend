@@ -8,10 +8,14 @@ services:
       - .:/usr/src/app
       - gem_cache:/gems
 
-  mongo:
+  mongo_dev:
     image: mongo
     volumes:
       - data_db:/data/db
+
+  mongo_test:
+    image: mongo
+
 
 volumes:
   gem_cache:

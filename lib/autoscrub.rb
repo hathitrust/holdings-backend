@@ -115,6 +115,14 @@ class Autoscrub
     p_file_or_stderr(@master_log, str)
   end
 
+  def scrub_file(f)
+    # TODO: extract a single-file scrubber to a separate class
+    raise FileNameError if !valid_filename?(File.basename(f))
+    @out_file = get_out_file(f)
+    @log_file = get_log_file(f)
+    raise WellFormedFileError if !well_formed_file?(f)
+  end
+
   # Goes through the files given to initialize
   # Returns a hash of {f1=>BOOL, ..., fn=>BOOL}
   # where key=file and BOOL=success.
@@ -123,15 +131,14 @@ class Autoscrub
     @files.each do |f|
       mlog("Scrubbing #{f}")
       begin
-        raise FileNameError if !valid_filename?(File.basename(f))
-        @out_file = get_out_file(f)
-        @log_file = get_log_file(f)
-        raise WellFormedFileError if !well_formed_file?(f)
+        scrub_file(f)
         file_success[f] = true
       rescue StandardError => e
         mlog("Input file #{f} rejected, reason: #{e} #{e.message}")
+        file_success[f] = false
       rescue SystemCallError => e
-        mlog("something wrong with file?")
+        mlog("something wrong with file #{f}?")
+        file_success[f] = false
       ensure
 
         log(@scrubfields.stats_to_str)
@@ -255,8 +262,9 @@ class Autoscrub
 
   # Opens a new logfile in LOG_DIR with a name based on the infile
   def get_log_file(filename)
-    log_filename = filename.gsub(/^.+\//, "").gsub("\.gz", "")
-    log_filename.concat(".log.txt")
+    log_filename = filename.gsub(/^.+\//, "").gsub("\.gz", "").gsub("\.tsv","")
+    today = Time.now.strftime("%Y%m%d")
+    log_filename.concat("_#{today}.log.txt")
     mlog("Opening log file #{LOG_DIR}/#{log_filename}")
     return File.open("#{LOG_DIR}/#{log_filename}", "w")
   end
