@@ -14,7 +14,7 @@ class Reclusterer
   def recluster
     @cluster.delete
 
-    @cluster.ocn_resolutions.each { |r| ClusterOCNResolution.new(r).cluster.save }
+    @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r).cluster.save }
     @cluster.holdings.each {|h| ClusterHolding.new(h).cluster.save }
     @cluster.ht_items.each {|h| ClusterHtItem.new(h).cluster.save }
     @cluster.serials.each {|s| ClusterSerial.new(s).cluster.save }

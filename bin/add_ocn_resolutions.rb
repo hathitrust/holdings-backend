@@ -36,4 +36,3 @@ end
 
 waypoint.mark(count)
 logger.info waypoint.final_line
-

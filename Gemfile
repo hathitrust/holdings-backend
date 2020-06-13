@@ -8,7 +8,7 @@ gem "canister"
 gem "dotenv"
 gem "mongo"
 gem "mongoid"
-gem 'zinzout'
+gem "zinzout"
 
 group :development, :test do
   gem "pry"

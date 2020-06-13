@@ -34,7 +34,8 @@ class HtItem
       item_id:    item_id,
       ht_bib_key: ht_bib_key,
       rights:     rights,
-      bib_fmt:    bib_fmt
+      bib_fmt:    bib_fmt,
+      enum_chron: enum_chron
     }
   end
 
