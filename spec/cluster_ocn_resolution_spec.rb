@@ -106,7 +106,7 @@ RSpec.describe ClusterOCNResolution do
          resolution.resolved,
          resolution2.deprecated].each do |ocn|
            ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
-        end
+         end
       end
 
       it "creates a new cluster with the deprecated OCN from the deleted rule" do
@@ -121,17 +121,18 @@ RSpec.describe ClusterOCNResolution do
         described_class.new(resolution2).delete
 
         cluster_htitem_ocns = Cluster.where(ocns: resolution.resolved)
-          .first.ht_items.map { |h| h.ocns }
+          .first.ht_items.map(&:ocns)
 
         expect(cluster_htitem_ocns).to contain_exactly(
-          [resolution.deprecated],[resolution.resolved])
+          [resolution.deprecated], [resolution.resolved]
+)
       end
 
       it "cluster with deprecated OCN from deleted rule has correct HtItem" do
         described_class.new(resolution2).delete
 
         cluster_htitem_ocns = Cluster.where(ocns: resolution2.deprecated)
-          .first.ht_items.map { |h| h.ocns }
+          .first.ht_items.map(&:ocns)
 
         expect(cluster_htitem_ocns).to contain_exactly([resolution2.deprecated])
       end

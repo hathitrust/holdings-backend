@@ -5,14 +5,12 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster_ht_item"
 require "ht_item"
-require 'ocn_resolution'
-require 'zinzout'
-require 'utils/ppnum'
-require 'utils/waypoint'
+require "ocn_resolution"
+require "zinzout"
+require "utils/ppnum"
+require "utils/waypoint"
 
 Mongoid.load!("mongoid.yml", :test)
-
-
 
 # Convert a tsv line from the hathifile into a record like hash
 #
@@ -37,19 +35,32 @@ logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BAT
 # rubocop:enable Layout/LineLength
 
 count = 0
-Zinzout.zin(ARGV.shift).each do |line|
+update = ARGV[0] == "-u"
+if update
+  filename = ARGV[1]
+  logger.info "Updating HT Items."
+else
+  filename = ARGV[0]
+  logger.info "Adding HT Items."
+end
+
+Zinzout.zin(filename).each do |line|
   count += 1
   rec = hathifile_to_record(line)
   h = HtItem.new(rec)
   next if h.ocns.empty?
-  c = ClusterHtItem.new(h).cluster
-  c.save
+
+  c = if update
+    ClusterHtItem.new(h).update
+  else
+    ClusterHtItem.new(h).cluster
+  end
+  c.save!
 
   if (count % BATCH_SIZE).zero? && !count.zero?
     waypoint.mark(count)
     logger.info waypoint.batch_line
   end
-
 end
 
 waypoint.mark(count)

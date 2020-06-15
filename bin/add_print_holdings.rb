@@ -7,12 +7,11 @@ Dotenv.load(".env")
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster_holding"
-require 'ocn_resolution'
+require "ocn_resolution"
 require "holding"
-require 'utils/waypoint'
-require 'utils/ppnum'
-require 'zinzout'
-
+require "utils/waypoint"
+require "utils/ppnum"
+require "zinzout"
 
 Mongoid.load!("mongoid.yml", :test)
 

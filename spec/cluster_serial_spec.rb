@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "cluster_serial"
-require "pp"
+
 RSpec.describe ClusterSerial do
   let(:s) { build(:serial) }
   let(:c) { create(:cluster, ocns: s.ocns) }

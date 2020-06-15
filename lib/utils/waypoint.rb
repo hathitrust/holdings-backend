@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-#
-require_relative 'ppnum'
+
+require_relative "ppnum"
 
 module Utils
   # Naive waypoint class, to keep track of progress over time for long-running
@@ -63,9 +63,9 @@ module Utils
     end
 
     def seconds_to_time_string(sec)
-      hours, leftover =  sec.divmod(3600)
+      hours, leftover = sec.divmod(3600)
       minutes, secs = leftover.divmod(60)
-      format('%02dh %02dm %02ds', hours, minutes, secs)
+      format("%02dh %02dm %02ds", hours, minutes, secs)
     end
 
     def batch_line

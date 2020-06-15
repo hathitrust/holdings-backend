@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "cluster"
+require "reclusterer"
 
 # Services for clustering HT Items
 class ClusterHtItem
@@ -32,4 +33,27 @@ class ClusterHtItem
     end
   end
 
+  # Removes an HTItem
+  def delete
+    Cluster.where("ht_items.item_id": @ht_item.item_id).each do |c|
+      c.ht_items.delete_if {|h| h.item_id == @ht_item.item_id }
+      Reclusterer.new(c).recluster
+    end
+  end
+
+  # Deletes an HTItem, then re-adds it
+  def update
+    Cluster.where("ht_items.item_id": @ht_item.item_id).each do |c|
+      ht = c.ht_items.to_a.find {|h| h.item_id == @ht_item.item_id }
+      if ht.ocns != @ht_item.ocns
+        ht.delete
+        Reclusterer.new(c).recluster
+      else
+        ht.update_attributes(@ht_item.to_hash)
+        c.save
+        return c
+      end
+    end
+    cluster
+  end
 end
