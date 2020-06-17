@@ -4,6 +4,7 @@ require "cluster_ht_item"
 RSpec.describe ClusterHtItem do
   let(:ht) { build(:ht_item) }
   let(:c) { create(:cluster, ocns: ht.ocns) }
+  let(:no_ocn) { build(:ht_item, ocns: []) }
 
   describe "#cluster" do
     before(:each) do
@@ -42,6 +43,25 @@ RSpec.describe ClusterHtItem do
       ht.ocns << rand(1_000_000)
       cluster = described_class.new(ht).cluster
       expect(cluster.ocns).to eq(ht.ocns)
+    end
+
+    it "creates a new cluster for an OCNless Item" do
+      cluster = described_class.new(no_ocn).cluster
+      expect(cluster.ht_items.to_a.first.item_id).to eq(no_ocn.item_id)
+    end
+
+    it "cluster without OCN contains OCNless Item" do
+      cluster = described_class.new(no_ocn).cluster
+      expect(cluster.ht_items.to_a.first).to eq(no_ocn)
+      expect(Cluster.each.to_a.first.ht_items.to_a.first).to eq(no_ocn)
+    end
+
+    it "creates a new cluster for multiple OCNless Items" do
+      no_ocn2 = build(:ht_item, ocns: [])
+      cluster = described_class.new(no_ocn).cluster
+      cluster2 = described_class.new(no_ocn2).cluster
+      expect(cluster).not_to eq(cluster2)
+      expect(Cluster.each.to_a.size).to eq(2)
     end
   end
 
@@ -88,12 +108,12 @@ RSpec.describe ClusterHtItem do
   end
 
   describe "#update" do
+    before(:each) do
+      Cluster.each(&:delete)
+    end
+
     context "with HT2 as an update to HT" do
       let(:ht2) { build(:ht_item, item_id: ht.item_id) }
-
-      before(:each) do
-        Cluster.each(&:delete)
-      end
 
       it "removes the old cluster" do
         first = described_class.new(ht).cluster
@@ -108,10 +128,6 @@ RSpec.describe ClusterHtItem do
     context "with HT2 with the same OCNS as HT" do
       let(:ht2) { build(:ht_item, item_id: ht.item_id, ocns: ht.ocns) }
 
-      before(:each) do
-        Cluster.each(&:delete)
-      end
-
       it "only updates the HT Item" do
         first = described_class.new(ht).cluster
         updated = described_class.new(ht2).update
@@ -120,6 +136,16 @@ RSpec.describe ClusterHtItem do
           Cluster.each.to_a.first.ht_items.first.to_hash
         ).to eq(ht2.to_hash)
       end
+    end
+
+    it "reclusters an HTItem that gains an OCN" do
+      ocnless_cluster = described_class.new(no_ocn).cluster
+      ocnless_cluster.save
+      c.save
+      expect(Cluster.each.to_a.size).to eq(2)
+      updated_ht = build(:ht_item, item_id: no_ocn.item_id, ocns: c.ocns)
+      described_class.new(updated_ht).update
+      expect(Cluster.each.to_a.size).to eq(1)
     end
   end
 end

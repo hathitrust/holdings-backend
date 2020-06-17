@@ -48,7 +48,6 @@ Zinzout.zin(filename).each do |line|
   count += 1
   rec = hathifile_to_record(line)
   h = HtItem.new(rec)
-  next if h.ocns.empty?
 
   c = if update
     ClusterHtItem.new(h).update

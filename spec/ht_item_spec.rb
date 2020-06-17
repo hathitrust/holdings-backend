@@ -43,4 +43,8 @@ RSpec.describe HtItem do
     c.ht_items.create(ht_multi_ocns)
     expect(c.ocns.count).to eq(2)
   end
+
+  it "can have an empty ocns field" do
+    expect(build(:ht_item, ocns: []).valid?).to be true
+  end
 end
