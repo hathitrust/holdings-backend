@@ -3,6 +3,20 @@
 require "zlib"
 require_relative "scrub_fields"
 
+=begin
+
+"Scrubs", as in validates and extracts, member-submitted holdings files.
+Takes a member_id and a number of file paths:
+
+as = Autoscrub.new("xyz", "path/to/fi.tsv", ..., "path/to/fj.tsv")
+as.scrub_files()
+
+It should write one session log for the entire session,
+one log per input file
+and one output .ndj per input file
+
+=end
+
 class FileNameError < StandardError
 end
 
@@ -22,7 +36,7 @@ class Autoscrub
   # Todo: read these dir paths from config/env?
   DATA_DIR = __dir__ + "/../testdata"
   LOG_DIR  = __dir__ + "/../testdata"
-  
+
   SPEC_REGEXP = {
     # A single regex for file name pass/fail.
     :FILENAME => /^
@@ -59,10 +73,12 @@ class Autoscrub
     "multi"  => %w[status condition govdoc enumchron],
     "serial" => %w[govdoc issn]
   }.freeze
+  # Max number of optional cols:
+  MAX_OPT_COLS = OPT_HEADER_COLS.sort_by{|k,v| v.length}.last.last.size  
 
-  MIN_FILE_COLS = 2
-  MAX_FILE_COLS = 6
-
+  MIN_FILE_COLS = REQ_HEADER_COLS.size
+  MAX_FILE_COLS = MIN_FILE_COLS + MAX_OPT_COLS
+  
   # Give a member_id and a list of files.
   def initialize(member_id, *files)
     # Check that member_id is valid
@@ -75,44 +91,49 @@ class Autoscrub
     @out_file   = nil
     @log_file   = nil
     date        = Time.now.strftime('%Y%m%d')
-    master_log_name = "master_#{@member_id}_#{date}"
-    @master_log = get_log_file(master_log_name)
-    $stderr.puts "Logging to #{File.expand_path(@master_log.path)}"
+    session_log_name = "session_#{@member_id}_#{date}"
+    @session_log = get_log_file(session_log_name)
+    slog("Starting session log for member #{@member_id}")
+    $stderr.puts "Logging to #{File.expand_path(@session_log.path)}"
 
     @scrubfields = ScrubFields.new
-    
-    mlog("Received #{@files.size} files")
+
+    slog("Received #{@files.size} file(s)")
     @files.each do |f|
-      mlog(f)
+      slog(f)
     end
   end
 
-  # DRY code for output, log, mlog
+  # DRY code for output, log, slog
   # Writes to handle if you can, otherwise to stdout
   def p_file_or_stderr(handle, str)
-    caller_func = caller.first.split(' ').last
+    time        = Time.new.strftime("%Y-%m-%d %H:%M:%S")
+    caller_loc  = caller_locations[1]
+    caller_meth = caller_loc.label    
+    log_prefix  = "#{time} | .#{caller_meth} |"
+
     if handle.nil? then
-      puts "(#{caller_func}) #{str}"
+      puts "#{log_prefix} #{str}"
     else
-      handle.puts(str)
+      handle.puts("#{log_prefix} #{str}")
     end
   end
-  
+
   # Writes string to @out_file, if defined, else to STDOUT.
-  def output (str)
+  def output(str)
     p_file_or_stderr(@out_file, str)
   end
 
   # Writes string to @log_file, if defined, else to STDERR.
   # TODO: real logger
-  def log (str)
+  def log(str)
     p_file_or_stderr(@log_file, str)
   end
 
-  # Writes string to @master_log, if defined, else to STDERR.
-    # TODO: real logger
-  def mlog (str)
-    p_file_or_stderr(@master_log, str)
+  # Writes string to @session_log, if defined, else to STDERR.
+  # TODO: real logger
+  def slog(str)
+    p_file_or_stderr(@session_log, str)
   end
 
   def scrub_file(f)
@@ -120,6 +141,8 @@ class Autoscrub
     raise FileNameError if !valid_filename?(File.basename(f))
     @out_file = get_out_file(f)
     @log_file = get_log_file(f)
+    log("Starting scrub log of #{f} for #{@member_id}")
+    @scrubfields.logger = @log_file
     raise WellFormedFileError if !well_formed_file?(f)
   end
 
@@ -129,21 +152,19 @@ class Autoscrub
   def scrub_files
     file_success = {}
     @files.each do |f|
-      mlog("Scrubbing #{f}")
+      slog("Scrubbing #{f}")
       begin
         scrub_file(f)
         file_success[f] = true
       rescue StandardError => e
-        mlog("Input file #{f} rejected, reason: #{e} #{e.message}")
+        slog("Input file #{f} rejected, reason: #{e} #{e.message}")
         file_success[f] = false
       rescue SystemCallError => e
-        mlog("something wrong with file #{f}?")
+        slog("something wrong with file #{f}?")
         file_success[f] = false
       ensure
-
-        log(@scrubfields.stats_to_str)
+        log("File stats:\n#{@scrubfields.stats_to_str}")
         @scrubfields.clear_stats
-        
         @out_file.close() if @out_file.methods.include?(:close)
         @out_file = nil
         @log_file.close() if @log_file.methods.include?(:close)
@@ -155,7 +176,7 @@ class Autoscrub
 
   # Check that the member_id points to a member in the data store
   def valid_member_id?(member_id)
-    # Tie in data store wrapper that checks for valid members
+    # TODO: Tie in data store wrapper that checks for valid members
     # Currently all values will be accepted except "failme"
     log("valid_member_id? not fully implemented, allows anything")
     log("Checking member_id #{member_id}")
@@ -169,7 +190,7 @@ class Autoscrub
         else
           false
         end
-    log("returning #{ret}")
+    log("member_id #{member_id} OK? #{ret}")
     return ret
   end
 
@@ -185,8 +206,8 @@ class Autoscrub
     (member_id, item_type, update_type, date_str, *rest) =
       filename.split(SPEC_REGEXP[:FILENAME_PART_DELIM])
 
-    # mlog because @log is not open when this is called
-    mlog([
+    # slog because @log is not open when this is called
+    slog([
           "Processing of #{filename} failed due to filename errors.",
           "Filename must match the template:",
           "<member_id>_<item_type>_<update_type>_<date_str>_<rest>",
@@ -203,23 +224,43 @@ class Autoscrub
   end
 
   def analyze_member_id(str)
-    not_nil_and_match(str, SPEC_REGEXP[:MEMBER_ID], "must be all a-z+")
+    not_nil_and_match(
+      str,
+      SPEC_REGEXP[:MEMBER_ID],
+      "must be all a-z+"
+    )
   end
 
   def file_belong_to_member(member_id)
-    not_nil_and_match(member_id, /^#{@member_id}$/, "must match @member_id (#{@member_id})")
+    not_nil_and_match(
+      member_id,
+      /^#{@member_id}$/,
+      "must match @member_id (#{@member_id})"
+    )
   end
-  
+
   def analyze_item_type(str)
-    not_nil_and_match(str, SPEC_REGEXP[:ITEM_TYPE], "must be mono|multi|serial")
+    not_nil_and_match(
+      str,
+      SPEC_REGEXP[:ITEM_TYPE],
+      "must be mono|multi|serial"
+    )
   end
 
   def analyze_update_type(str)
-    not_nil_and_match(str, SPEC_REGEXP[:UPDATE_TYPE], "must be full|partial")
+    not_nil_and_match(
+      str,
+      SPEC_REGEXP[:UPDATE_TYPE],
+      "must be full|partial"
+    )
   end
 
   def analyze_date_str(str)
-    not_nil_and_match(str, SPEC_REGEXP[:DATE], "must be 8 digits")
+    not_nil_and_match(
+      str,
+      SPEC_REGEXP[:DATE],
+      "must be 8 digits"
+    )
   end
 
   # Shortcut for the analyze_x methods above.
@@ -244,8 +285,8 @@ class Autoscrub
     if arr.size > 10 || arr.join.length > 100 then
       return "not ok, too long"
     end
-    
-    if arr[-1] == "tsv" || (arr[-2] == "tsv" && arr[-1] == "gz") then
+
+    if arr[-1] == "tsv" || (arr[-2] == "tsv" && arr[-1] == "gz")
       return "ok"
     end
 
@@ -256,7 +297,7 @@ class Autoscrub
   def get_out_file(filename)
     out_filename = filename.gsub(/^.+\//, "").gsub(/\.gz$/, "")
     out_filename.concat(".out.ndj")
-    mlog("Opening output file #{DATA_DIR}/#{out_filename}")
+    slog("Opening output file #{DATA_DIR}/#{out_filename}")
     return File.open("#{DATA_DIR}/#{out_filename}", "w")
   end
 
@@ -265,7 +306,7 @@ class Autoscrub
     log_filename = filename.gsub(/^.+\//, "").gsub("\.gz", "").gsub("\.tsv","")
     today = Time.now.strftime("%Y%m%d")
     log_filename.concat("_#{today}.log.txt")
-    mlog("Opening log file #{LOG_DIR}/#{log_filename}")
+    slog("Opening log file #{LOG_DIR}/#{log_filename}")
     return File.open("#{LOG_DIR}/#{log_filename}", "w")
   end
 
@@ -287,7 +328,7 @@ class Autoscrub
       line_no += 1
       line.chomp!
       yield line, line_no
-    end    
+    end
   end
 
   # Given filename, determine mono|multi|serial.
@@ -329,7 +370,7 @@ class Autoscrub
       end
     end
 
-    return false if col_map.empty?    
+    return false if col_map.empty?
     return true
   end
 
@@ -347,16 +388,13 @@ class Autoscrub
 
     col_map.each do |col_type, i|
       validated_val = check_col_val(col_type, cols[i])
-       ##################################
-      ## collect stats on col vals here ##
-       ##################################      
       if validated_val.empty? && col_type == "oclc" then
         log("No usable OCNs in #{cols[i]} reject line [#{cols.join("\t")}]")
         return false
       end
       line_hash[col_type] = validated_val
     end
-    
+
     output(line_hash)
     return true
   end
@@ -364,7 +402,6 @@ class Autoscrub
   # Based on col type, pass on to the right method
   # to check if col val makes sense
   def check_col_val(col_type, col_val)
-
     case col_type
     when "oclc"
       @scrubfields.ocn(col_val)
@@ -436,13 +473,13 @@ class Autoscrub
     end
 
     log("column_map: #{col_map}")
-    
+
     return col_map
   end
 
   # Check that the line has a decent number of cols.
   # This function is not used (yet) and may never be. Good axing candidate.
-  def number_of_cols(cols)    
+  def number_of_cols(cols)
     if cols.size < MIN_FILE_COLS then
       log("Too few cols (#{cols.size} vs min #{MIN_FILE_COLS})")
       return false

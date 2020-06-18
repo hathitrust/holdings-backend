@@ -7,7 +7,7 @@
 # Copyright (C), University of Michigan Library
 
 class EnumChronParser
-  attr_reader :enum, :chron
+  attr_accessor :enum, :chron
 
   DOT_PATTERN = /\.\s+([^\.]+)/.freeze
   DATE_PATTERN = /\. [0-2]\d{3}/.freeze
@@ -79,10 +79,6 @@ class EnumChronParser
     end
     mstr
   end
-
-  attr_writer :enum
-
-  attr_writer :chron
 
   def add_to_enum(enum)
     # normal_e = normalize_enum(e)

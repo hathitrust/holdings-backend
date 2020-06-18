@@ -1,9 +1,16 @@
 # frozen_string_literal: true
 
 require_relative 'enum_chron_parser';
-                    
+
+=begin
+
+This class knows how to extract and validate certain values
+from a member submission file.
+
+=end
+
 class ScrubFields
-  
+
   # "444; 555; 666" -> %w[444,555,666]
   OCN_SPLIT_DELIM      = /[,:;\|\/ ]+/.freeze
   LOCAL_ID_SPLIT_DELIM = /[,; ]+/.freeze
@@ -58,8 +65,13 @@ class ScrubFields
 
   EC_PARSER = EnumChronParser.new
 
-  def initialize
-    @stats = {}    
+  attr_accessor :logger
+  
+  def initialize(logger=$stdout)
+    # Store counts of events here using count_x(event)
+    # and when you're done you can log stats_to_str()
+    @stats  = {}
+    @logger = logger
   end
 
   def stats_to_str
@@ -71,24 +83,24 @@ class ScrubFields
   def clear_stats
     @stats = {}
   end
-  
+
   def count_x(x)
     @stats[x] ||= 0
     @stats[x]  += 1
   end
-  
+
   # Given a string, determines which valid ocns are in it,
   # and returns them as a uniq'd array of Integers.
   def ocn(str)
     output = []
     return output if str.nil?
-
+    count_x("rec_with_ocn")
     str.strip!
     candidates = str.split(OCN_SPLIT_DELIM)
 
     if candidates.size > MAX_NUM_ITEMS then
       count_x(:too_many_ocns)
-      warn "Too many items (#{candidates.size}) in ocn #{str}"
+      @logger.puts "Too many items (#{candidates.size}) in ocn #{str}"
     end
 
     # DO WHILE MAYBE COMEFROM reject_value
@@ -111,13 +123,15 @@ class ScrubFields
         DIGIT_MIX.match?(candidate) &&
           reject_value("ocn is mix of digits and non-digits", candidate)
 
-        # Check prefixes, with / without parens
+        # Check prefixes, w/wo parens
         if PAREN_PREFIX.match(candidate) then
           paren_expr = Regexp.last_match(0)
+          count_x("ocn_paren #{paren_expr}")
           OK_PAREN_PREFIX.match?(paren_expr) ||
             reject_value("ocn has an invalid paren prefix", candidate)
         elsif PREFIX.match(candidate) then
           prefix_expr = Regexp.last_match(0)
+          count_x("ocn_prefix #{paren_expr}")
           OK_PREFIX.match?(prefix_expr) ||
             reject_value("ocn has an invalid prefix", candidate)
         end
@@ -125,7 +139,7 @@ class ScrubFields
         # As far as the numeric part goes, the only thing we can say
         # about it is that it should be smaller than the current max ocn.
         numeric_part > CURRENT_MAX_OCN &&
-          reject_value("number is too large for an ocn", numeric_part)
+          reject_value("too large for an ocn", numeric_part)
 
         numeric_part.zero? &&
           reject_value("ocn is zero", candidate)
@@ -135,7 +149,7 @@ class ScrubFields
       end
     end
 
-    # TODO? Resolve ocns and return uniq resolved?
+    # Not resolving OCNs at this point.
     output.uniq!
     return output
   end
@@ -150,12 +164,12 @@ class ScrubFields
     candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
     if candidates.size > 1 then
-      warn "there are #{candidates.size} candidates in this local_id"
+      @logger.puts "there are #{candidates.size} candidates in this local_id"
       # maybe throw something??
     end
 
     if candidates.size > MAX_NUM_ITEMS then
-      warn "in fact lots of items #{candidates.size} in local_id #{str}";
+      @logger.puts "in fact lots of items #{candidates.size} in local_id #{str}";
       # maybe definitely throw something??
     end
 
@@ -224,25 +238,24 @@ class ScrubFields
     m = rx.match(str)
     output << m[0] unless m.nil?
 
-    count_x("#{str}")
+    # Get the name of the calling method
+    cmeth = caller_locations[0].label
+    count_x("#{cmeth}:#{str}")
     return output
   end
 
   # Directly throws :rejected_value
   def reject_value(reason, val)
-    warn [reason, val].join(":")
-    count_x("#{reason}_#{val}")
+    @logger.puts [reason, val].join(":")
+    count_x("rejected: #{reason}")
     throw :rejected_value
   end
 
   # May indirectly throw :rejected_value
   def capture_numeric(str)
     md = str.match(NUMERIC_PART)
-    if !md.nil? then
-      return md[0].to_i
-    else
-      reject_value("could not extract numeric part", str)
-    end
+    md.nil? && reject_value("could not extract numeric part from ocn", str)
+    return md[0].to_i
   end
 
 end
