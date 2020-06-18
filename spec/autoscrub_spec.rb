@@ -360,13 +360,13 @@ RSpec.describe Autoscrub do
 
     let(:testfile_id) { "cornell_mono_full_20200324_head100" }
     let(:fixtures_path) { File.dirname(__FILE__) + "/../testdata" }
-    let(:master_log) { "#{fixtures_path}/master_cornell_#{today}.log.txt" }
+    let(:session_log) { "#{fixtures_path}/session_cornell_#{today}.log.txt" }
     let(:holdings_log) { "#{fixtures_path}/#{testfile_id}_#{today}.log.txt" }
     let(:holdings_file) { "#{fixtures_path}/#{testfile_id}.tsv" }
     let(:today) { Time.now.strftime("%Y%m%d") }
 
     def scrub_testdata
-      FileUtils.rm_f(master_log)
+      FileUtils.rm_f(session_log)
       FileUtils.rm_f(holdings_log)
       Autoscrub.new("cornell", holdings_file).scrub_files
     end
@@ -376,8 +376,8 @@ RSpec.describe Autoscrub do
       expect(File).to exist(holdings_file)
     end
 
-    it "creates a master log file named with the institution id and the processed date"
-    it "master log indicates whether or not the file was accepted or rejected"
+    it "creates a session log file named with the institution id and the processed date"
+    it "session log indicates whether or not the file was accepted or rejected"
     it "holdings log indicates whether or not the file was accepted or rejected"
     it "contains stats on all the things that were right & wrong"
   end
