@@ -14,7 +14,8 @@ class ClusterHtItem
 
   # Cluster the HTItem
   def cluster
-    c = (Cluster.merge_many(Cluster.where(ocns: { "$in": @ht_item.ocns })) ||
+    c = (@ht_item.ocns.any? &&
+         Cluster.merge_many(Cluster.where(ocns: { "$in": @ht_item.ocns })) ||
          Cluster.new(ocns: @ht_item.ocns).tap(&:save))
     c.ht_items << @ht_item
     c.ocns = c.ht_items.collect(&:ocns).flatten.uniq

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "cluster_holding"
-require "pp"
 RSpec.describe ClusterHolding do
   let(:h) { build(:holding) }
   let(:c) { create(:cluster, ocns: [h.ocn]) }

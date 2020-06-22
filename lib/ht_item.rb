@@ -11,7 +11,7 @@ require "mongoid"
 # - enum_chron
 class HtItem
   include Mongoid::Document
-  field :ocns, type: Array
+  field :ocns, type: Array, default: []
   field :item_id, type: String
   field :ht_bib_key, type: Integer
   field :rights, type: String
@@ -20,7 +20,7 @@ class HtItem
 
   embedded_in :cluster
   validates :item_id, uniqueness: true
-  validates_presence_of :ocns, :item_id, :ht_bib_key, :rights, :bib_fmt
+  validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
       record.errors.add attr, "must be an integer" \

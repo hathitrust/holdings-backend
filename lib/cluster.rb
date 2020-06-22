@@ -4,6 +4,7 @@ require "mongoid"
 require "holding"
 require "ht_item"
 require "commitment"
+require "ocn_resolution"
 require "serial"
 
 # A set of identifiers (e.g. OCLC numbers),
@@ -21,7 +22,9 @@ class Cluster
   embeds_many :ocn_resolutions, class_name: "OCNResolution"
   embeds_many :serials, class_name: "Serial"
   embeds_many :commitments
-  index({ ocns: 1 }, unique: true)
+  index({ ocns: 1 },
+        unique: true,
+        partial_filter_expression: { "ocns.0": { :$exists => true } })
   index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
   index({ "ocn_resolutions.ocns": 1 }, unique: true, sparse: true)
   scope :for_resolution, lambda {|resolution|
