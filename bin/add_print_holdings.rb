@@ -18,10 +18,7 @@ Mongoid.load!("mongoid.yml", :test)
 BATCH_SIZE = 10_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
 logger = Logger.new(STDOUT)
-
-# rubocop:disable Layout/LineLength
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
-# rubocop:enable Layout/LineLength
 
 update = ARGV[0] == "-u"
 if update

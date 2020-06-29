@@ -5,7 +5,6 @@
 # classifies all terms as either enum and chron,
 # PJU - May 2012
 # Copyright (C), University of Michigan Library
-
 class EnumChronParser
   attr_accessor :enum, :chron
 
@@ -64,13 +63,14 @@ class EnumChronParser
     # recover the 'n.s.' pattern
     newstr.sub!("n.s.", "n.s. ")
     newstr.gsub!(/\s\s/, " ")
-    return newstr
+    newstr
   end
 
   def dot_sub(mstr)
     # remove spaces after dots except when followed by a date
 
-    positions = mstr.enum_for(:scan, DOT_PATTERN).map { Regexp.last_match.begin(0) }
+    positions = mstr.enum_for(:scan,
+                              DOT_PATTERN).map { Regexp.last_match.begin(0) }
     iter = 0
     positions.each do |p|
       i = p - iter
@@ -147,7 +147,7 @@ class EnumChronParser
       end
 
       ren = en.gsub QUOTED_BSLASH, ""
-      ren = en.gsub DOT_SPACE, "."
+      ren = ren.gsub DOT_SPACE, "."
       ren = ren.gsub SPACE, ""
       ren = ren.delete "("
       ren = ren.delete ")"

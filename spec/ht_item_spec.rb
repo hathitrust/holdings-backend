@@ -67,5 +67,4 @@ RSpec.describe HtItem do
     expect(c.ht_items.first.n_enum).to eq(nil)
     expect(c.ht_items.first.n_chron).to eq(nil)
   end
-
 end

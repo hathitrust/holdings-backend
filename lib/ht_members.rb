@@ -1,7 +1,10 @@
-class Ht_members
+# frozen_string_literal: true
 
-  def initialize (*members)
-    @members = members.empty? ? load_from_db : members;
+# WIP: cache of information about HathiTrust members
+class HTMembers
+
+  def initialize(*members)
+    @members = members.empty? ? load_from_db : members
   end
 
   def load_from_db
@@ -9,6 +12,6 @@ class Ht_members
   end
 
   def get_list
-    return @members
+    @members
   end
 end

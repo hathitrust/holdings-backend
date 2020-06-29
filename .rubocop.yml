@@ -1,3 +1,5 @@
+inherit_from: .rubocop_todo.yml
+
 require:
   - rubocop-performance
   - rubocop-rspec
@@ -16,21 +18,12 @@ AllCops:
     - '*.gemspec'
     - 'spec/support/fixtures/**/*'
     - 'db/schema.rb'
-    - 'lib/util/ppnum.rb'
 
 Naming/FileName:
-  ExpectMatchingDefinition: true
-  Exclude:
-    - 'bin/**/*'
-    - 'lib/core_extensions/**/*'
-    - 'spec/**/*'
-    - 'lib/*/version.rb'
-    - 'db/**/*'
-    - 'config.ru'
-    - 'lib/services.rb'
   AllowedAcronyms:
     - OCLC
     - OCN
+    - HT
 
 Style/Documentation:
   Exclude:
@@ -59,12 +52,19 @@ Layout/LineLength:
   URISchemes:
     - http
     - https
+  Max: 100
 
+Style/FormatStringToken:
+  Enabled: false
 
-Metrics/BlockLength:
-  Exclude:
-    - 'spec/support/**/*.rb'
-    - 'spec/**/*_spec.rb'
+Style/NumericPredicate:
+  Enabled: false
+
+# see .rubocop_todo.yml
+# Metrics/BlockLength:
+#   Exclude:
+#     - 'spec/support/**/*.rb'
+#     - 'spec/**/*_spec.rb'
 
 Layout/ElseAlignment:
   Enabled: false
@@ -159,6 +159,7 @@ Layout/BlockAlignment:
   EnforcedStyleAlignWith: start_of_block
 
 Layout/EndAlignment:
+  AutoCorrect: true
   EnforcedStyleAlignWith: start_of_line
 
 Layout/DefEndAlignment:
@@ -230,3 +231,15 @@ RSpec/ContextWording:
 Lint/AmbiguousBlockAssociation:
   Exclude:
     - 'spec/**/*.rb'
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/CyclomaticComplexity:
+  Max: 15
+
+Metrics/PerceivedComplexity:
+  Max: 15
+
+Metrics/MethodLength:
+  Max: 20

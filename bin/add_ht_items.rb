@@ -27,17 +27,12 @@ def hathifile_to_record(hathifile_line)
   }
 end
 
-
 BATCH_SIZE = 10_000
 logger = Logger.new(STDOUT)
 waypoint = Utils::Waypoint.new
-STDIN.set_encoding 'utf-8'
-
-# rubocop:disable Layout/LineLength
+STDIN.set_encoding "utf-8"
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
-# rubocop:enable Layout/LineLength
 
-count = 0
 update = ARGV[0] == "-u"
 clean  = ARGV.include?("--clean")
 
@@ -60,12 +55,12 @@ Zinzout.zin(filename).each do |line|
   h = HtItem.new(rec)
 
   c = if update
-        ClusterHtItem.new(h).update
+    ClusterHtItem.new(h).update
       else
         ClusterHtItem.new(h).cluster
-      end
+  end
   c.save!
-  waypoint.on_batch { |wp| logger.info wp.batch_line }
+  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
 logger.info waypoint.final_line
