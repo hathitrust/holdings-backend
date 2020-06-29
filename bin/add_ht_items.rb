@@ -17,12 +17,14 @@ Mongoid.load!("mongoid.yml", :test)
 # @param hathifile_line, a tsv line
 def hathifile_to_record(hathifile_line)
   fields = hathifile_line.split(/\t/)
-  {item_id: fields[0],
-   ocns: fields[7].split(",").map(&:to_i),
-   ht_bib_key: fields[3].to_i,
-   rights: fields[2],
-   bib_fmt: fields[19],
-   enum_chron: fields[4]}
+  {
+    item_id:    fields[0],
+    ocns:       fields[7].split(",").map(&:to_i),
+    ht_bib_key: fields[3].to_i,
+    rights:     fields[2],
+    bib_fmt:    fields[19],
+    enum_chron: fields[4]
+  }
 end
 
 
@@ -37,6 +39,13 @@ logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BAT
 
 count = 0
 update = ARGV[0] == "-u"
+clean  = ARGV.include?("--clean")
+
+if clean
+  logger.info "Removing clusters first"
+  Cluster.each(&:delete)
+end
+
 if update
   filename = ARGV[1]
   logger.info "Updating HT Items."

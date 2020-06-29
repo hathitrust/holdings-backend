@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-
 require "ht_item"
 require "cluster"
+
 RSpec.describe HtItem do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
@@ -47,4 +47,25 @@ RSpec.describe HtItem do
   it "can have an empty ocns field" do
     expect(build(:ht_item, ocns: []).valid?).to be true
   end
+
+  it "normalizes enum_chron" do
+    cloned = htitem_hash
+    enumchron_input = "v.1 Jul 1999"
+    cloned[:enum_chron] = enumchron_input
+    c.ht_items.create(cloned)
+    expect(c.ht_items.first.enum_chron).to eq(enumchron_input)
+    expect(c.ht_items.first.n_enum).to eq("1")
+    expect(c.ht_items.first.n_chron).to eq("Jul 1999")
+  end
+
+  it "does nothing if given an empty enum_chron" do
+    cloned = htitem_hash
+    enumchron_input = ""
+    cloned[:enum_chron] = enumchron_input
+    c.ht_items.create(cloned)
+    expect(c.ht_items.first.enum_chron).to eq(enumchron_input)
+    expect(c.ht_items.first.n_enum).to eq(nil)
+    expect(c.ht_items.first.n_chron).to eq(nil)
+  end
+
 end
