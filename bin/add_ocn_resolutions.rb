@@ -14,25 +14,21 @@ Mongoid.load!("mongoid.yml", :test)
 
 BATCH_SIZE = 10_000
 logger = Logger.new(STDOUT)
-waypoint = Utils::Waypoint.new
+waypoint = Utils::Waypoint.new(BATCH_SIZE)
 
 # rubocop:disable Layout/LineLength
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 # rubocop:enable Layout/LineLength
 
-count = 0
+STDIN.set_encoding 'utf-8'
 Zinzout.zin(ARGV.shift).each do |line|
-  count += 1
+  waypoint.incr
   (deprecated, resolved) = line.split.map(&:to_i)
   r = OCNResolution.new(deprecated: deprecated, resolved: resolved)
   c = ClusterOCNResolution.new(r).cluster
   c.save
-
-  if (count % BATCH_SIZE).zero? && !count.zero?
-    waypoint.mark(count)
-    logger.info waypoint.batch_line
-  end
+  waypoint.on_batch {|wp| logger.info wp.batch_line}
 end
 
-waypoint.mark(count)
 logger.info waypoint.final_line
+
