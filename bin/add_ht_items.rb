@@ -17,18 +17,19 @@ Mongoid.load!("mongoid.yml", :test)
 # @param hathifile_line, a tsv line
 def hathifile_to_record(hathifile_line)
   fields = hathifile_line.split(/\t/)
-  { item_id:    fields[0],
-    ocns:       fields[7].split(",").map(&:to_i),
-    ht_bib_key: fields[3].to_i,
-    rights:     fields[2],
-    bib_fmt:    fields[19],
-    enum_chron: fields[4] }
+  {item_id: fields[0],
+   ocns: fields[7].split(",").map(&:to_i),
+   ht_bib_key: fields[3].to_i,
+   rights: fields[2],
+   bib_fmt: fields[19],
+   enum_chron: fields[4]}
 end
 
-logger = Logger.new(STDOUT)
-waypoint = Utils::Waypoint.new
 
 BATCH_SIZE = 10_000
+logger = Logger.new(STDOUT)
+waypoint = Utils::Waypoint.new
+STDIN.set_encoding 'utf-8'
 
 # rubocop:disable Layout/LineLength
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
@@ -45,22 +46,17 @@ else
 end
 
 Zinzout.zin(filename).each do |line|
-  count += 1
+  waypoint.incr
   rec = hathifile_to_record(line)
   h = HtItem.new(rec)
 
   c = if update
-    ClusterHtItem.new(h).update
-  else
-    ClusterHtItem.new(h).cluster
-  end
+        ClusterHtItem.new(h).update
+      else
+        ClusterHtItem.new(h).cluster
+      end
   c.save!
-
-  if (count % BATCH_SIZE).zero? && !count.zero?
-    waypoint.mark(count)
-    logger.info waypoint.batch_line
-  end
+  waypoint.on_batch { |wp| logger.info wp.batch_line }
 end
 
-waypoint.mark(count)
 logger.info waypoint.final_line
