@@ -51,7 +51,8 @@ class EnumChronParser
     @chron = []
   end
 
-  def preprocess(str)
+  def preprocess(str_o)
+    str = str_o.dup
     str.tr! ",", " "
     str.tr! ":", " "
     str.delete! ";"
@@ -63,6 +64,7 @@ class EnumChronParser
     # recover the 'n.s.' pattern
     newstr.sub!("n.s.", "n.s. ")
     newstr.gsub!(/\s\s/, " ")
+    return newstr
   end
 
   def dot_sub(mstr)
@@ -190,7 +192,7 @@ class EnumChronParser
     clear_fields
 
     # preprocess
-    pstr = preprocess(input_str)
+    input_str = preprocess(input_str)
 
     ### classify enum vs chron ###
     begin
