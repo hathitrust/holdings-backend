@@ -6,6 +6,6 @@ FactoryBot.define do
     organization { ["umich", "carleton", "smu"].sample }
     local_id { rand(1_000_000).to_s }
     mono_multi_serial { ["mono", "multi", "serial"].sample }
-    date_received { DateTime.now }
+    date_received { Date.today }
   end
 end

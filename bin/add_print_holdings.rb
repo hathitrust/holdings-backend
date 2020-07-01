@@ -23,14 +23,35 @@ logger = Logger.new(STDOUT)
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 # rubocop:enable Layout/LineLength
 
-count = 0
-Zinzout.zin(ARGV.shift).each do |line|
+update = ARGV[0] == "-u"
+if update
+  filename = ARGV[1]
+  logger.info "Updating Print Holdings."
+else
+  filename = ARGV[0]
+  logger.info "Adding Print Holdings."
+end
+
+organization = nil
+current_date = nil
+Zinzout.zin(filename).each do |line|
   next if /^OCN\tBIB/.match?(line)
+
   waypoint.incr
   h = Holding.new_from_holding_file_line(line)
-  c = ClusterHolding.new(h).cluster
-  c.save
-  waypoint.on_batch {|wp| logger.info wp.batch_line}
+  organization = (organization || h.organization)
+  current_date = (current_date || h.date_received)
+  c = if update
+    ClusterHolding.new(h).update
+  else
+    ClusterHolding.new(h).cluster
+  end
+  c.save!
+  waypoint.on_batch {|wp| logger.info wp.batch_line }
+end
+
+if update
+  ClusterHolding.delete_old_holdings(organization, current_date)
 end
 
 logger.info waypoint.final_line
