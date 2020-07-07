@@ -53,9 +53,9 @@ class ClusterHolding
       "holdings.organization": org,
       "holdings.date_received": { "$lt": date }
     ).each do |c|
-      c.holdings.select do |h|
-        h.organization == org && h.date_received < date
-      end.map {|h| ClusterHolding.new(h).delete }
+      c.holdings
+        .select {|h| h.organization == org && h.date_received < date }
+        .map {|h| ClusterHolding.new(h).delete }
     end
   end
 

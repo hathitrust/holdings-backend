@@ -1,14 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'enum_chron_parser';
+require_relative "enum_chron_parser"
 
-=begin
-
-This class knows how to extract and validate certain values
-from a member submission file.
-
-=end
-
+#
+# This class knows how to extract and validate certain values
+# from a member submission file.
+#
 class ScrubFields
 
   # "444; 555; 666" -> %w[444,555,666]
@@ -42,16 +39,14 @@ class ScrubFields
   # Get current max oclc
   # TODO: maybe rewrite this in ruby for testability / less crappiness
   max_ocn = `bash #{__dir__}/get_max_ocn.sh`.split("\n").last
-  CURRENT_MAX_OCN = if !max_ocn.nil? then
-                      max_ocn.strip!
-                      if JUST_DIGITS.match?(max_ocn) then
-                        max_ocn.to_i
-                      else
-                        nil
-                      end
-                    end
+  CURRENT_MAX_OCN = unless max_ocn.nil?
+    max_ocn.strip!
+    if JUST_DIGITS.match?(max_ocn)
+      max_ocn.to_i
+    end
+  end
 
-  if CURRENT_MAX_OCN.nil? then
+  if CURRENT_MAX_OCN.nil?
     raise "failed to set CURRENT_MAX_OCN"
   end
 
@@ -66,8 +61,8 @@ class ScrubFields
   EC_PARSER = EnumChronParser.new
 
   attr_accessor :logger
-  
-  def initialize(logger=$stdout)
+
+  def initialize(logger = $stdout)
     # Store counts of events here using count_x(event)
     # and when you're done you can log stats_to_str()
     @stats  = {}
@@ -75,9 +70,9 @@ class ScrubFields
   end
 
   def stats_to_str
-    @stats.keys.map { |k|
+    @stats.keys.map do |k|
       [k, @stats[k]].join(":")
-    }.join("\n")
+    end.join("\n")
   end
 
   def clear_stats
@@ -94,11 +89,12 @@ class ScrubFields
   def ocn(str)
     output = []
     return output if str.nil?
+
     count_x("rec_with_ocn")
     str.strip!
     candidates = str.split(OCN_SPLIT_DELIM)
 
-    if candidates.size > MAX_NUM_ITEMS then
+    if candidates.size > MAX_NUM_ITEMS
       count_x(:too_many_ocns)
       @logger.puts "Too many items (#{candidates.size}) in ocn #{str}"
     end
@@ -124,12 +120,12 @@ class ScrubFields
           reject_value("ocn is mix of digits and non-digits", candidate)
 
         # Check prefixes, w/wo parens
-        if PAREN_PREFIX.match(candidate) then
+        if PAREN_PREFIX.match(candidate)
           paren_expr = Regexp.last_match(0)
           count_x("ocn_paren #{paren_expr}")
           OK_PAREN_PREFIX.match?(paren_expr) ||
             reject_value("ocn has an invalid paren prefix", candidate)
-        elsif PREFIX.match(candidate) then
+        elsif PREFIX.match(candidate)
           prefix_expr = Regexp.last_match(0)
           count_x("ocn_prefix #{paren_expr}")
           OK_PREFIX.match?(prefix_expr) ||
@@ -151,7 +147,7 @@ class ScrubFields
 
     # Not resolving OCNs at this point.
     output.uniq!
-    return output
+    output
   end
 
   # Given a string, checks if there are any valid-looking local_ids
@@ -163,13 +159,13 @@ class ScrubFields
     str.strip!
     candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
-    if candidates.size > 1 then
+    if candidates.size > 1
       @logger.puts "there are #{candidates.size} candidates in this local_id"
       # maybe throw something??
     end
 
-    if candidates.size > MAX_NUM_ITEMS then
-      @logger.puts "in fact lots of items #{candidates.size} in local_id #{str}";
+    if candidates.size > MAX_NUM_ITEMS
+      @logger.puts "in fact lots of items #{candidates.size} in local_id #{str}"
       # maybe definitely throw something??
     end
 
@@ -177,8 +173,8 @@ class ScrubFields
       catch(:rejected_value) do
         candidate.size > LOCAL_ID_MAX_LEN &&
           reject_value(
-            "local_id too long (%i > max %i)" %
-            [candidate.size, LOCAL_ID_MAX_LEN],
+            format("local_id too long (%i > max %i)", candidate.size,
+                   LOCAL_ID_MAX_LEN),
             candidate
           )
         output << candidate
@@ -186,7 +182,7 @@ class ScrubFields
     end
     output.uniq!
 
-    return output
+    output
   end
 
   # Given a string, checks if there are any valid-looking issns,
@@ -206,14 +202,14 @@ class ScrubFields
     end
 
     output = ok_issns.join(";")
-    return [output]
+    [output]
   end
 
   # Given an enumchron str, returns an array with a norm'd enum and norm'd chron
   # The enumchron parser is ancient, murky & probably not the best.
   def enumchron(str)
     EC_PARSER.parse(str)
-    return [EC_PARSER.normalized_enum, EC_PARSER.normalized_chron]
+    [EC_PARSER.normalized_enum, EC_PARSER.normalized_chron]
   end
 
   # checks that the given string contains an ok status
@@ -241,7 +237,7 @@ class ScrubFields
     # Get the name of the calling method
     cmeth = caller_locations[0].label
     count_x("#{cmeth}:#{str}")
-    return output
+    output
   end
 
   # Directly throws :rejected_value
@@ -255,7 +251,7 @@ class ScrubFields
   def capture_numeric(str)
     md = str.match(NUMERIC_PART)
     md.nil? && reject_value("could not extract numeric part from ocn", str)
-    return md[0].to_i
+    md[0].to_i
   end
 
 end

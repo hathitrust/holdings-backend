@@ -12,7 +12,6 @@ require "enum_chron_parser"
 # - enum_chron
 # - n_enum
 # - n_chron
-
 class HtItem
   include Mongoid::Document
   field :ocns, type: Array, default: []
@@ -35,7 +34,7 @@ class HtItem
     end
   end
 
-  def initialize(params=nil)
+  def initialize(params = nil)
     super
     normalize_enum_chron
   end
@@ -43,7 +42,7 @@ class HtItem
   def normalize_enum_chron
     # When created with an enumchron, normalize it into separate
     # n_enum and n_chron
-    if !enum_chron.nil?
+    unless enum_chron.nil?
       ec_parser = EnumChronParser.new
       ec_parser.parse(enum_chron)
       self.n_enum  = ec_parser.normalized_enum

@@ -12,7 +12,6 @@ module Utils
                 :start_time, :batch_start_time, :batch_end_time,
                 :count, :prev_count
 
-
     def initialize(batch_size = 100)
       @batch_size_target = batch_size
       @last_batch_divsor = 0
@@ -42,8 +41,6 @@ module Utils
       batch_divisor > @last_batch_divsor
     end
 
-
-
     def batch_divisor
       count.div batch_size_target
     end
@@ -62,7 +59,6 @@ module Utils
       @last_batch_divsor = batch_divisor
     end
 
-
     def total_seconds_so_far
       Time.now - start_time
     end
@@ -76,6 +72,7 @@ module Utils
     # @return [String] Rate-per-second in form XXX.YY
     def batch_rate_str(decimals = 0)
       return "0" if @count.zero?
+
       format "%5.#{decimals}f", (last_batch_size.to_f / last_batch_seconds)
     end
 
@@ -84,9 +81,9 @@ module Utils
     # @return [String] Rate-per-second in form XXX.YY
     def total_rate_str(decimals = 0)
       return "0" if @count.zero?
+
       format "%5.#{decimals}f", (count / total_seconds_so_far)
     end
-
 
     def batch_line
       # rubocop:disable Layout/LineLength
@@ -99,7 +96,6 @@ module Utils
       "Finished. #{ppnum(count, 10)} total records in #{seconds_to_time_string(total_seconds_so_far)}. Overall #{total_rate_str} r/s."
       # rubocop:enable Layout/LineLength
     end
-
 
     def seconds_to_time_string(sec)
       hours, leftover = sec.divmod(3600)
