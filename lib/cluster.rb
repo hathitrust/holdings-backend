@@ -24,7 +24,7 @@ class Cluster
   embeds_many :commitments
   index({ ocns: 1 },
         unique: true,
-        partial_filter_expression: { "ocns.0": { :$exists => true } })
+        partial_filter_expression: { ocns: { :$gt => 0 } })
   index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
   index({ "ocn_resolutions.ocns": 1 }, unique: true, sparse: true)
   scope :for_resolution, lambda {|resolution|
