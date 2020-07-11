@@ -39,4 +39,14 @@ RSpec.describe Holding do
       expect(h.same_as?(h2)).to be(false)
     end
   end
+
+  describe "#new_from_holding_file_line" do
+    it "turns a holdings file line into a new Holding" do
+      line = "100000252\t005556200\tumich\tCH\t\t2019-10-24\t\tmono\t\t\t\t0"
+      rec = described_class.new_from_holding_file_line(line)
+      expect(rec).to be_a(described_class)
+      expect(rec.mono_multi_serial).to eq("mono")
+      expect(rec.n_enum).to eq("")
+    end
+  end
 end

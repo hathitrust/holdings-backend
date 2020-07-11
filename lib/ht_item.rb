@@ -22,6 +22,7 @@ class HtItem
   field :enum_chron, type: String
   field :n_enum, type: String
   field :n_chron, type: String
+  field :content_provider_code, type: String
 
   embedded_in :cluster
   validates :item_id, uniqueness: true

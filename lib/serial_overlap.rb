@@ -1,0 +1,19 @@
+# frozen_string_literal: true
+
+require "cluster"
+require "overlap"
+
+# Overlap record for items in Serial clusters
+class SerialOverlap < Overlap
+
+  # These methods should return an empty string in the most basic case
+  def copy_count
+    cc = @cluster.holdings.where(organization: @org).count
+    if !cc.zero? || (@ht_item.content_provider_code == @org)
+      1
+    else
+      0
+    end
+  end
+
+end
