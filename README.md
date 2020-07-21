@@ -12,6 +12,7 @@
 docker-compose build
 docker-compose up -d
 docker-compose run --rm dev bundle install
+docker-compose run --rm dev bundle exec ruby lib/tasks/build_database.rb
 ```
 
 ## Running the tests
