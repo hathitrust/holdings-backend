@@ -10,7 +10,7 @@ require "logger"
 require "utils/waypoint"
 require "utils/ppnum"
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 BATCH_SIZE = 10_000
 logger = Logger.new(STDOUT)

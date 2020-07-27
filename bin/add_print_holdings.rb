@@ -13,7 +13,7 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 BATCH_SIZE = 10_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
