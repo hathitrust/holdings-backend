@@ -10,7 +10,7 @@ require "zinzout"
 require "utils/ppnum"
 require "utils/waypoint"
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 # Convert a tsv line from the hathifile into a record like hash
 #

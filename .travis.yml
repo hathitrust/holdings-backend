@@ -10,4 +10,5 @@ before_install:
 
 script:
   - docker-compose run --rm dev bundle exec rubocop
-  - docker-compose run --rm dev bundle exec rspec
+  - docker-compose run --rm -e MONGOID_ENV=test dev bundle exec ruby lib/tasks/build_database.rb
+  - docker-compose run --rm -e MONGOID_ENV=test dev bundle exec rspec

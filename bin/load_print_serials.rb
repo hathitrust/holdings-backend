@@ -9,7 +9,7 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 # Convert a tsv line from the print_serials_*.tsv into a hash
 #
