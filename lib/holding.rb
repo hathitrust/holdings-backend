@@ -10,6 +10,8 @@ class Holding
   field :organization, type: String
   field :local_id, type: String
   field :enum_chron, type: String
+  field :n_enum, type: String, default: ""
+  field :n_chron, type: String
   field :status, type: String
   field :condition, type: String
   field :gov_doc_flag, type: Boolean
@@ -35,6 +37,8 @@ class Holding
       condition:         fields[4],
       gov_doc_flag:      !fields[10].to_i.zero?,
       mono_multi_serial: fields[7],
+      n_enum:            fields[8],
+      n_chron:           fields[9],
       date_received:     DateTime.parse(fields[5]) }
   end
 

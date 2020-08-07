@@ -7,5 +7,6 @@ FactoryBot.define do
     local_id { rand(1_000_000).to_s }
     mono_multi_serial { ["mono", "multi", "serial"].sample }
     date_received { Date.today }
+    condition { "" }
   end
 end
