@@ -15,7 +15,7 @@ require "serial"
 # - commitments
 class Cluster
   include Mongoid::Document
-  store_in collection: "clusters", database: "test", client: "default"
+  store_in collection: "clusters"
   field :ocns
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
