@@ -34,17 +34,25 @@ current_date = nil
 Zinzout.zin(filename).each do |line|
   next if /^OCN\tBIB/.match?(line)
 
-  waypoint.incr
-  h = Holding.new_from_holding_file_line(line)
-  organization = (organization || h.organization)
-  current_date = (current_date || h.date_received)
-  c = if update
-    ClusterHolding.new(h).update
-  else
-    ClusterHolding.new(h).cluster
+  begin
+    waypoint.incr
+    h = Holding.new_from_holding_file_line(line)
+    organization = (organization || h.organization)
+    current_date = (current_date || h.date_received)
+    c = if update
+      ClusterHolding.new(h).update
+    else
+      ClusterHolding.new(h).cluster
+    end
+    c.upsert if c.changed?
+    waypoint.on_batch {|wp| logger.info wp.batch_line }
+  rescue StandardError => e
+    puts "Encountered error while processing line: "
+    puts line
+    puts e.message
+    puts e.backtrace.inspect
+    raise e
   end
-  c.save!
-  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
 if update

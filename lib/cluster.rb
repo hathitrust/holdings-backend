@@ -6,6 +6,11 @@ require "ht_item"
 require "commitment"
 require "ocn_resolution"
 require "serial"
+require "cluster_ht_item"
+
+# Indication of a retryable error with clustering
+class ClusterError < RuntimeError
+end
 
 # A set of identifiers (e.g. OCLC numbers),
 # - ocns
@@ -31,16 +36,16 @@ class Cluster
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
 
-  validates_each :ocns do |record, attr, value|
-    value.each do |ocn|
-      record.errors.add attr, "must be an integer" \
-        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-    end
-    # ocns are a superset of ht_items.ocns
-    record.errors.add attr, "must contain all ocns" \
-      if (record.ht_items.collect(&:ocns).flatten +
-          record.ocn_resolutions.collect(&:ocns).flatten - value).any?
-  end
+  #validates_each :ocns do |record, attr, value|
+  #  value.each do |ocn|
+  #    record.errors.add attr, "must be an integer" \
+  #      unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+  #  end
+  #  # ocns are a superset of ht_items.ocns
+  #  record.errors.add attr, "must contain all ocns" \
+  #    if (record.ht_items.collect(&:ocns).flatten +
+  #        record.ocn_resolutions.collect(&:ocns).flatten - value).any?
+  #end
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
@@ -50,7 +55,22 @@ class Cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
     move_members_to_self(other)
+    puts "Deleting cluster #{other._id}"
     other.delete
+    self
+  end
+
+  # Merges all clusters in clusters into the given
+  # destination cluster
+  #
+  # @parm clusters The clusters whose members to merge with this cluster
+  # @return this cluster
+  def merge_many(clusters)
+    clusters.each do |source|
+      raise ClusterError, "clusters disappeared, try again" if source.nil?
+      merge(source) unless source._id == _id
+    end
+    save if changed?
     self
   end
 
@@ -58,12 +78,21 @@ class Cluster
   #
   # @param clusters All the clusters we need to merge
   # @return a cluster or nil if nil set
-  def self.merge_many(clusters)
+  def self.merge_many(clusters,transaction: true)
     c = clusters.shift
-    clusters.each do |c2|
-      c.merge(c2) unless c._id == c2._id
+    if(clusters.any?)
+      raise ClusterError, "cluster disappeared, try again" if c.nil?
+
+      if(transaction)
+        c.with_session do |session|
+          session.start_transaction
+          c.merge_many(clusters)
+          session.commit_transaction
+        end
+      else
+        c.merge_many(clusters)
+      end
     end
-    c&.save
     c
   end
 

@@ -14,9 +14,15 @@ services:
     image: mongo
     volumes:
       - data_db:/data/db
+    command: --replSet rs0 --bind_ip localhost,mongo_dev
+    volumes:
+      - ./bin:/tmp/bin
 
   mongo_test:
     image: mongo
+    command: --replSet rs0 --bind_ip localhost,mongo_test
+    volumes:
+      - ./bin:/tmp/bin
 
   mariadb:
     image: mariadb

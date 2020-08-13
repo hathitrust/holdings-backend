@@ -12,12 +12,16 @@ class Reclusterer
   end
 
   def recluster
-    @cluster.delete
+    @cluster.with_session do |session|
+      session.start_transaction
+      @cluster.delete
 
-    @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r).cluster.save }
-    @cluster.holdings.each {|h| ClusterHolding.new(h).cluster.save }
-    @cluster.ht_items.each {|h| ClusterHtItem.new(h).cluster.save }
-    @cluster.serials.each {|s| ClusterSerial.new(s).cluster.save }
+      @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r).cluster(transaction: false).save }
+      @cluster.holdings.each {|h| ClusterHolding.new(h).cluster(transaction: false).save }
+      @cluster.ht_items.each {|h| ClusterHtItem.new(h).cluster(transaction: false).save }
+      @cluster.serials.each {|s| ClusterSerial.new(s).cluster(transaction: false).save }
+      session.commit_transaction
+    end
     # TODO ClusterCommitment
   end
 
