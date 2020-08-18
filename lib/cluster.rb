@@ -62,7 +62,7 @@ class Cluster
     clusters.each do |c2|
       c.merge(c2) unless c._id == c2._id
     end
-    c&.save
+    c&.save if c&.changed?
     c
   end
 

@@ -43,7 +43,7 @@ Zinzout.zin(filename).each do |line|
   else
     ClusterHolding.new(h).cluster
   end
-  c.save!
+  c.save! if c.changed?
   waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
