@@ -5,6 +5,7 @@ require "calculate_format"
 
 # Collects overlap records for every ht_item in a cluster
 class ClusterOverlap
+  attr_accessor :orgs
 
   def initialize(cluster, orgs = nil)
     @cluster = cluster

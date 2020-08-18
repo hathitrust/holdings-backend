@@ -69,6 +69,6 @@ RSpec.describe HtItem do
   end
 
   it "has an access of deny or allow" do
-    expect(build(:ht_item).access).to be_in(['allow', 'deny'])
+    expect(build(:ht_item).access).to be_in(["allow", "deny"])
   end
 end
