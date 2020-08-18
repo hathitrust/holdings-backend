@@ -46,33 +46,40 @@ RSpec.describe HoldingsDB do
       expect(c.tables).to include(:ht_institutions)
     end
 
-    it "connects with ENV connection string" do
-      wipe_env
-      ENV["DB_CONNECTION_STRING"] = connection_string
-      c                           = described_class.connection
-      expect(c.tables).to include(:ht_institutions)
-    end
+    context "with clean environment" do
+      around :each do |example|
+        old_env = ENV.to_h
+        wipe_env
 
-    it "connects with ENV settings" do
-      wipe_env
-      set_env
-      c = described_class.connection
-      expect(c.tables).to include(:ht_institutions)
-    end
+        example.run
 
-    it "fails as expected with bad env" do
-      wipe_env
-      set_env
-      ENV["DB_USER"] = "NO_SUCH_USER"
-      expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
-    end
+        old_env.each {|k, v| ENV[k] = v }
+      end
 
-    it "allows override of ENV" do
-      wipe_env
-      set_env
-      ENV["DB_USER"] = "NO_SUCH_USER"
-      c = described_class.connection(user: user)
-      expect(c.tables).to include(:ht_institutions)
+      it "connects with ENV connection string" do
+        ENV["DB_CONNECTION_STRING"] = connection_string
+        c                           = described_class.connection
+        expect(c.tables).to include(:ht_institutions)
+      end
+
+      it "connects with ENV settings" do
+        set_env
+        c = described_class.connection
+        expect(c.tables).to include(:ht_institutions)
+      end
+
+      it "fails as expected with bad env" do
+        set_env
+        ENV["DB_USER"] = "NO_SUCH_USER"
+        expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
+      end
+
+      it "allows override of ENV" do
+        set_env
+        ENV["DB_USER"] = "NO_SUCH_USER"
+        c = described_class.connection(user: user)
+        expect(c.tables).to include(:ht_institutions)
+      end
     end
   end
 

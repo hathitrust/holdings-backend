@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "mongoid"
+require "ht_members"
+require "services"
 
 # A member holding
 class Holding
@@ -17,11 +19,23 @@ class Holding
   field :gov_doc_flag, type: Boolean
   field :mono_multi_serial, type: String
   field :date_received, type: DateTime
+  field :country_code, type: String
+  field :weight, type: Float
 
   embedded_in :cluster
 
   validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
   validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
+
+  def initialize(params = nil)
+    super
+    set_member_data if organization
+  end
+
+  def organization=(organization)
+    super
+    set_member_data
+  end
 
   # Convert a tsv line from a validated holding file into a record like hash
   #
@@ -67,4 +81,12 @@ class Holding
   def same_as?(other)
     (self == other) && (date_received == other.date_received)
   end
+
+  private
+
+  def set_member_data
+    self.country_code = Services.ht_members[organization].country_code
+    self.weight       = Services.ht_members[organization].weight
+  end
+
 end
