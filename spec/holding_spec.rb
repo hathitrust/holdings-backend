@@ -2,6 +2,8 @@
 
 require "holding"
 require "cluster"
+require "spec_helper"
+
 RSpec.describe Holding do
   let(:c) { create(:cluster) }
   let(:h) { build(:holding) }

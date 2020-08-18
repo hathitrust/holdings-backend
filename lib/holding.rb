@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "mongoid"
+require "member_info"
 
 # A member holding
 class Holding
@@ -17,7 +18,10 @@ class Holding
   field :gov_doc_flag, type: Boolean
   field :mono_multi_serial, type: String
   field :date_received, type: DateTime
-
+  # HT-2454
+  field :country_code, type: String
+  field :weight, type: Float
+  
   embedded_in :cluster
 
   validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received

@@ -9,6 +9,7 @@ gem "dotenv"
 gem "mongo"
 gem "mongoid"
 gem "zinzout"
+gem "mysql2"
 
 group :development, :test do
   gem "pry"
