@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "mongoid"
-require "member_info"
+require_relative "ht_members"
 
 # A member holding
 class Holding

@@ -61,6 +61,21 @@ class HTMembers
     @members = @mocked ? members : load_from_db
   end
 
+  # Are all the ENV vars required for DB connection set?
+  def db_env_set?
+    problem = false
+    %w[host username password port database].each do |name_part|
+      name = "mysql_#{name_part}";
+      # ENV[name] must be set, non-nil and non-empty.
+      if !ENV.key?(name) || ENV[name].nil? || ENV[name].empty? then
+        warn "ENV[#{name}] not set correctly (#{ENV[name]})"
+        problem = true
+      end
+    end
+
+    return !problem
+  end
+  
   def load_from_db
     data = {}
     # Attempt loading from db, use canned data if it fails.
