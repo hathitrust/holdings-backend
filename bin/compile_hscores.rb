@@ -11,13 +11,12 @@ require "utils/ppnum"
 require "cluster"
 require "ht_item_overlap"
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", :development)
 
 # Find ht items that match the given org or all
 def matching_clusters(org = nil)
   if org.nil?
-    Cluster.where("holdings.0": { "$exists": 1 },
-                  "ht_items.0": { "$exists": 1 },
+    Cluster.where("ht_items.0": { "$exists": 1 },
                   "ht_items.access": "deny")
   else
     Cluster.where("holdings.0": { "$exists": 1 },
@@ -65,8 +64,8 @@ if __FILE__ == $PROGRAM_NAME
   end
   logger.info waypoint.final_line
   if org.nil?
-    puts totals.to_json
+    puts compile_total_hscore(frequency).to_json
   else
-    puts totals[org].to_json
+    puts compile_total_hscore(frequency)[org].to_json
   end
 end
