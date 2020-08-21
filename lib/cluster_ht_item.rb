@@ -18,7 +18,9 @@ class ClusterHtItem
          Cluster.merge_many(Cluster.where(ocns: { "$in": @ht_item.ocns })) ||
          Cluster.new(ocns: @ht_item.ocns).tap(&:save))
     c.ht_items << @ht_item
-    c.ocns = c.collect_ocns
+    @ht_item.ocns.each do |ocn|
+      c.ocns << ocn unless c.ocns.include?(ocn)
+    end
     c
   end
 
