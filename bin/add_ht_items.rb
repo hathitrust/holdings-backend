@@ -51,17 +51,26 @@ else
 end
 
 Zinzout.zin(filename).each do |line|
-  waypoint.incr
-  rec = hathifile_to_record(line)
-  h = HtItem.new(rec)
 
-  c = if update
-    ClusterHtItem.new(h).update
-      else
-        ClusterHtItem.new(h).cluster
+  begin
+    waypoint.incr
+    rec = hathifile_to_record(line)
+    h = HtItem.new(rec)
+
+    c = if update
+      ClusterHtItem.new(h).update
+        else
+          ClusterHtItem.new(h).cluster
+    end
+    c.save! if c.changed?
+    waypoint.on_batch {|wp| logger.info wp.batch_line }
+  rescue StandardError => e
+    puts "Encountered error while processing line: "
+    puts line
+    puts e.message
+    puts e.backtrace.inspect
+    raise e
   end
-  c.save! if c.changed?
-  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
 logger.info waypoint.final_line
