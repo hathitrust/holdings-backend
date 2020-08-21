@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster_ht_item"
 RSpec.describe ClusterHtItem do
   let(:ht) { build(:ht_item) }
@@ -146,6 +147,14 @@ RSpec.describe ClusterHtItem do
       updated_ht = build(:ht_item, item_id: no_ocn.item_id, ocns: c.ocns)
       described_class.new(updated_ht).update
       expect(Cluster.each.to_a.size).to eq(1)
+    end
+
+    it "can add an HTItem to a cluster with a concordance rule" do
+      resolution = build(:ocn_resolution)
+      htitem = build(:ht_item, ocns: [resolution.deprecated])
+      create(:cluster, ocns: resolution.ocns, ocn_resolutions: [resolution])
+      c = described_class.new(htitem).cluster
+      expect(c.valid?).to be true
     end
   end
 end

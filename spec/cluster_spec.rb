@@ -92,21 +92,24 @@ RSpec.describe Cluster do
   end
 
   describe "#collect_ocns" do
-    let(:ht) { build(:ht_item) }
+    let(:ht_item) { build(:ht_item) }
     let(:holding) { build(:holding) }
     let(:resolution) { build(:ocn_resolution) }
     let(:cluster) { create(:cluster) }
 
     before(:each) do
-      cluster.ht_items << ht
+      cluster.ht_items << ht_item
       cluster.holdings << holding
       cluster.ocn_resolutions << resolution
     end
 
-    it "gathers all of the OCNs from it's embedded documents" do
-      expect(cluster.collect_ocns).to include(*ht.ocns)
-      expect(cluster.collect_ocns).to include(*holding.ocn)
+    it "gathers all of the OCNs from its embedded resolution and HTitem" do
+      expect(cluster.collect_ocns).to include(*ht_item.ocns)
       expect(cluster.collect_ocns).to include(*resolution.ocns)
+    end
+
+    it "does not gather OCNs from holdings" do
+      expect(cluster.collect_ocns).not_to include(*holding.ocn)
     end
   end
 
