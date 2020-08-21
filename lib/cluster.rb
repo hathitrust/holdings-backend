@@ -67,11 +67,10 @@ class Cluster
     c
   end
 
-  # Collects OCNs from embedded documents
+  # Collects OCNs from OCN resolutions and HT items
   def collect_ocns
     (ocn_resolutions.collect(&:ocns).flatten +
-    ht_items.collect(&:ocns).flatten +
-    holdings.collect(&:ocn).flatten).uniq
+     ht_items.collect(&:ocns).flatten).uniq
   end
 
   private
