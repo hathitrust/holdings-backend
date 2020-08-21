@@ -13,6 +13,6 @@ class Serial
 
   embedded_in :cluster
 
-  validates_presence_of :ocns, :record_id
+  #validates_presence_of :ocns, :record_id
 
 end

@@ -12,8 +12,8 @@ class OCNResolution
   field :ocns, type: Array
 
   embedded_in :cluster
-  validates :deprecated, uniqueness: true
-  validates_presence_of :deprecated, :resolved, :ocns
+  #validates :deprecated, uniqueness: true
+  #validates_presence_of :deprecated, :resolved, :ocns
   index(ocns: 1)
 
   scope :for_cluster, lambda {|_cluster|

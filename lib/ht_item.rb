@@ -25,15 +25,15 @@ class HtItem
   field :content_provider_code, type: String
 
   embedded_in :cluster
-  validates :item_id, uniqueness: true
-  validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt
+  #validates :item_id, uniqueness: true
+  #validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt
 
-  validates_each :ocns do |record, attr, value|
-    value.each do |ocn|
-      record.errors.add attr, "must be an integer" \
-        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-    end
-  end
+  #validates_each :ocns do |record, attr, value|
+  #  value.each do |ocn|
+  #    record.errors.add attr, "must be an integer" \
+  #      unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+  #  end
+  #end
 
   def initialize(params = nil)
     super

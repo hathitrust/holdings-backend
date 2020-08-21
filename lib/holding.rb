@@ -20,8 +20,8 @@ class Holding
 
   embedded_in :cluster
 
-  validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
-  validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
+  #validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
+  #validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
 
   # Convert a tsv line from a validated holding file into a record like hash
   #

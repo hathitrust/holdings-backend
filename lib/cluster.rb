@@ -31,16 +31,16 @@ class Cluster
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
 
-  validates_each :ocns do |record, attr, value|
-    value.each do |ocn|
-      record.errors.add attr, "must be an integer" \
-        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-    end
-    # ocns are a superset of ht_items.ocns
-    record.errors.add attr, "must contain all ocns" \
-      if (record.ht_items.collect(&:ocns).flatten +
-          record.ocn_resolutions.collect(&:ocns).flatten - value).any?
-  end
+  #validates_each :ocns do |record, attr, value|
+  #  value.each do |ocn|
+  #    record.errors.add attr, "must be an integer" \
+  #      unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+  #  end
+  #  # ocns are a superset of ht_items.ocns
+  #  record.errors.add attr, "must contain all ocns" \
+  #    if (record.ht_items.collect(&:ocns).flatten +
+  #        record.ocn_resolutions.collect(&:ocns).flatten - value).any?
+  #end
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
