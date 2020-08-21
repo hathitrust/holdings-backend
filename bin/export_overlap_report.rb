@@ -29,12 +29,12 @@ end
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
-  logger = Logger.new(STDOUT)
+  logger = Logger.new(STDERR)
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
   org = ARGV.shift
   matching_clusters(org).each do |c|
-    ClusterOverlap.new(c, organization).each do |overlap|
+    ClusterOverlap.new(c, org).each do |overlap|
       waypoint.incr
       h = overlap.to_hash
       puts [h[:cluster_id],
