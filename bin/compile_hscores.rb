@@ -56,8 +56,8 @@ if __FILE__ == $PROGRAM_NAME
 
       waypoint.incr
       overlap = HtItemOverlap.new(ht_item)
-      overlap.organizations_with_holdings.each do |organization|
-        frequency[organization][overlap.organizations_with_holdings.count] += 1
+      overlap.matching_orgs.each do |organization|
+        frequency[organization][overlap.matching_orgs.count] += 1
       end
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end

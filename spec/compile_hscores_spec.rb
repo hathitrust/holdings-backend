@@ -33,8 +33,10 @@ RSpec.describe "compile_hscores" do
     let(:freq) { { umich: { 1 => 5, 2 => 3, 3 => 1 }, smu: { 1 => 2, 2 => 1 } } }
 
     it "compiles the total hscore" do
-      expect(compile_total_hscore(freq)[:umich]).to eq(5.0 + 0.5*3 + 1.0/3.0)
-      expect(compile_total_hscore(freq)[:smu]).to eq(2.0 + 0.5*1)
+      expect(compile_total_hscore(freq)[:umich]).to \
+        be_within(0.0001).of(5.0 / 1.0 + 3.0 / 2.0 + 1.0 / 3.0)
+      expect(compile_total_hscore(freq)[:smu]).to \
+        be_within(0.0001).of(2.0 / 1.0 + 1.0 / 2.0)
     end
   end
 end

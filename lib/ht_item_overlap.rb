@@ -6,6 +6,8 @@ require "ht_item"
 # Collects
 class HtItemOverlap
 
+  attr_accessor :matching_orgs
+
   def initialize(ht_item)
     @ht_item = ht_item
     @cluster = ht_item._parent
