@@ -64,8 +64,8 @@ class HTMembers
   # Are all the ENV vars required for DB connection set?
   def db_env_set?
     problem = false
-    %w[host username password port database].each do |name_part|
-      name = "mysql_#{name_part}";
+    %w[HOST USERNAME PASSWORD PORT DATABASE].each do |name_part|
+      name = "MYSQL_#{name_part}";
       # ENV[name] must be set, non-nil and non-empty.
       if !ENV.key?(name) || ENV[name].nil? || ENV[name].empty? then
         warn "ENV[#{name}] not set correctly (#{ENV[name]})"
@@ -81,11 +81,11 @@ class HTMembers
     # Attempt loading from db, use canned data if it fails.
     begin
       mysql_client = Mysql2::Client.new(
-        :host     => ENV["mysql_host"],
-        :username => ENV["mysql_username"],
-        :password => ENV["mysql_password"],
-        :port     => ENV["mysql_port"],
-        :database => ENV["mysql_database"],
+        :host     => ENV["MYSQL_HOST"],
+        :username => ENV["MYSQL_USERNAME"],
+        :password => ENV["MYSQL_PASSWORD"],
+        :port     => ENV["MYSQL_PORT"],
+        :database => ENV["MYSQL_DATABASE"],
         :connect_timeout => 5,
       )
 
@@ -104,6 +104,7 @@ class HTMembers
     return data
   end
 
+  # Given a member_id, returns a hash of data for that member.
   def get(member_id)
     if @members.key?(member_id) then
       @members[member_id]
