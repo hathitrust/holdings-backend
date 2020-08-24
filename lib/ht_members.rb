@@ -45,7 +45,13 @@ class HTMembers
     }
   end
 
-  SQL = "SELECT member_id, country_code, weight FROM some_table"
+  SQL = %w<
+    SELECT DISTINCT IF(mapto_inst_id='universityofcalifornia', inst_id, mapto_inst_id) AS member_id,
+    country_code,
+    weight
+    FROM ht_institutions
+    WHERE enabled = '1'
+  >.join(' ')
 
   CANNED_DATA = {
     "brocku"  => HTMembers.template("ca", 0.67),
@@ -53,7 +59,7 @@ class HTMembers
     "umich"   => HTMembers.template("us", 1.33),
     "yale"    => HTMembers.template("us", 1.33),
   }
-  
+
   attr_reader :mocked, :canned, :members
   def initialize(members = {})
     @mocked  = !members.empty?
@@ -75,7 +81,7 @@ class HTMembers
 
     return !problem
   end
-  
+
   def load_from_db
     data = {}
     # Attempt loading from db, use canned data if it fails.
