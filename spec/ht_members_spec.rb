@@ -25,18 +25,18 @@ RSpec.describe HTMembers do
     it "knows if the required ENV vars are set" do
       htm = HTMembers.new()
       
-      ENV["mysql_host"]     = nil
-      ENV["mysql_username"] = nil
-      ENV["mysql_password"] = nil
-      ENV["mysql_port"]     = nil
-      ENV["mysql_database"] = nil
+      ENV["MYSQL_HOST"]     = nil
+      ENV["MYSQL_USERNAME"] = nil
+      ENV["MYSQL_PASSWORD"] = nil
+      ENV["MYSQL_PORT"]     = nil
+      ENV["MYSQL_DATABASE"] = nil
       expect(htm.db_env_set?).to be(false)
 
-      ENV["mysql_host"]     = "test1"
-      ENV["mysql_username"] = "test2"
-      ENV["mysql_password"] = "test3"
-      ENV["mysql_port"]     = "test4" 
-      ENV["mysql_database"] = "test5"
+      ENV["MYSQL_HOST"]     = "test1"
+      ENV["MYSQL_USERNAME"] = "test2"
+      ENV["MYSQL_PASSWORD"] = "test3"
+      ENV["MYSQL_PORT"]     = "test4" 
+      ENV["MYSQL_DATABASE"] = "test5"
       expect(htm.db_env_set?).to be(true)
     end
   end
@@ -44,11 +44,11 @@ RSpec.describe HTMembers do
   describe "canning" do
     it "allows you to use canned data" do
       # Which it will do if not given mock data and db_env_set? fails
-      ENV["mysql_host"]     = nil
-      ENV["mysql_username"] = nil
-      ENV["mysql_password"] = nil
-      ENV["mysql_port"]     = nil
-      ENV["mysql_database"] = nil
+      ENV["MYSQL_HOST"]     = nil
+      ENV["MYSQL_USERNAME"] = nil
+      ENV["MYSQL_PASSWORD"] = nil
+      ENV["MYSQL_PORT"]     = nil
+      ENV["MYSQL_DATABASE"] = nil
       htm = HTMembers.new()
       expect(htm.mocked).to be(false)
       expect(htm.canned).to be(true)      
@@ -67,7 +67,7 @@ RSpec.describe HTMembers do
         expect(htm.members.size).to be > 0
       else
         skip "could not test db, you must set .env vars" do
-          "no-op"
+          nil
         end
       end
     end
