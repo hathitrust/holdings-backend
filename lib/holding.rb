@@ -18,7 +18,6 @@ class Holding
   field :gov_doc_flag, type: Boolean
   field :mono_multi_serial, type: String
   field :date_received, type: DateTime
-  # HT-2454
   field :country_code, type: String
   field :weight, type: Float
   
@@ -27,6 +26,18 @@ class Holding
   validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
   validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
 
+  @@ht_members = HTMembers.new()
+  
+  def initialize(params = nil)
+    super
+    get_member_data
+  end
+
+  def get_member_data
+    self.country_code = @@ht_members.get(organization)["country_code"]
+    self.weight       = @@ht_members.get(organization)["weight"]
+  end
+  
   # Convert a tsv line from a validated holding file into a record like hash
   #
   # @param holding_line, a tsv line
