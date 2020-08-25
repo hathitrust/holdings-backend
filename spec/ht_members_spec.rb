@@ -4,10 +4,7 @@ require "dotenv"
 RSpec.describe HTMembers do
   let(:mock_umich) {
     {
-      "umich" => {
-        "country_code" => "us",
-        "weight"       => 1.33
-      }
+      "umich" => HTMembers.template("us", 1.33, "EYM")
     }
   }
 
@@ -18,6 +15,7 @@ RSpec.describe HTMembers do
       expect(htm.canned).to be(false)
       expect(htm.get("umich")["country_code"]).to eq("us")
       expect(htm.get("umich")["weight"]).to eq(1.33)
+      expect(htm.get("umich")["oclc_sym"]).to eq("EYM")
     end
   end
 
@@ -54,6 +52,7 @@ RSpec.describe HTMembers do
       expect(htm.canned).to be(true)      
       expect(htm.get("brocku")["country_code"]).to eq("ca")
       expect(htm.get("brocku")["weight"]).to eq(0.67)
+      expect(htm.get("brocku")["oclc_sym"]).to eq("BRX")
     end
   end
 
@@ -65,6 +64,7 @@ RSpec.describe HTMembers do
         expect(htm.mocked).to be(false)
         expect(htm.canned).to be(false)
         expect(htm.members.size).to be > 0
+        expect(htm.get("umich").nil?).to be(false)
       else
         skip "could not test db, you must set .env vars" do
           nil

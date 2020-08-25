@@ -38,26 +38,35 @@ Or if you want to provide your own mock data:
 =end
 
 class HTMembers
-  def self.template(cc, wt)
+  def self.template(cc, wt, sym)
     {
       "country_code" => cc,
-      "weight"       => wt
+      "weight"       => wt,
+      "oclc_sym"     => sym,
     }
   end
 
+  # If we get more cases like universityofcalifornia then this might
+  # look better as a series of SELECT ... UNION SELECT ....
   SQL = %w<
-    SELECT DISTINCT IF(mapto_inst_id='universityofcalifornia', inst_id, mapto_inst_id) AS member_id,
+    SELECT DISTINCT 
+    IF(
+      mapto_inst_id='universityofcalifornia',
+      inst_id, 
+      mapto_inst_id
+    ) AS member_id,
     country_code,
-    weight
+    weight,
+    oclc_sym
     FROM ht_institutions
     WHERE enabled = '1'
   >.join(' ')
 
   CANNED_DATA = {
-    "brocku"  => HTMembers.template("ca", 0.67),
-    "harvard" => HTMembers.template("za", 1.33),
-    "umich"   => HTMembers.template("us", 1.33),
-    "yale"    => HTMembers.template("us", 1.33),
+    "brocku"  => HTMembers.template("ca", 0.67, "BRX"),
+    "harvard" => HTMembers.template("za", 1.33, "HUL"),
+    "umich"   => HTMembers.template("us", 1.33, "EYM"),
+    "yale"    => HTMembers.template("us", 1.33, "YUS"),
   }
 
   attr_reader :mocked, :canned, :members
@@ -98,7 +107,7 @@ class HTMembers
       res = mysql_client.query(SQL)
       res.each do |row|
         data[row[:member_id]] = HTMembers.template(
-          row["country_code"], row["weight"]
+          row["country_code"], row["weight"], row["oclc_sym"]
         )
       end
     rescue Mysql2::Error::ConnectionError => e
@@ -116,7 +125,7 @@ class HTMembers
       @members[member_id]
     else
       warn "No member_info data for member_id:#{member_id}"
-      {"country_code" => "xx", "weight" => 0.0}
+      {"country_code"=>"xx", "weight"=>0.0, "oclc_sym"=>""}
     end
   end
 
@@ -129,10 +138,11 @@ if $0 == __FILE__ then
   puts "using mocked data? #{htm.mocked}"
   puts htm.get("umich")["country_code"]
   puts htm.get("harvard")["weight"]
+  puts htm.get("brocku")["oclc_sym"]
 
   # Mock your own
   htm2 = HTMembers.new(
-    {"harvard" => {"country_code" => "us", "weight" => 1.33}}
+    {"harvard" => HTMembers.template("us", 1.33, "HUL")}
   )
   puts "using canned data? #{htm2.canned}"
   puts "using mocked data? #{htm2.mocked}"
