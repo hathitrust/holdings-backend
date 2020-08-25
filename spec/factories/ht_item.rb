@@ -9,5 +9,6 @@ FactoryBot.define do
     access { ["allow", "deny"].sample }
     bib_fmt { ["m", "s", "r"].sample }
     enum_chron { ["", "V.1"].sample }
+    content_provider_code { ["umich", "smu", "stanford"].sample }
   end
 end

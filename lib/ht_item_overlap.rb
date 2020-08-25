@@ -3,7 +3,7 @@
 require "cluster_overlap"
 require "ht_item"
 
-# Collects
+# Collects organizations with an HTItem overlap
 class HtItemOverlap
 
   attr_accessor :matching_orgs
@@ -31,5 +31,4 @@ class HtItemOverlap
       0.0
     end
   end
-
 end

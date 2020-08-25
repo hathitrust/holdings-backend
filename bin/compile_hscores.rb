@@ -8,39 +8,10 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "utils/waypoint"
 require "utils/ppnum"
-require "cluster"
+require "cost_report"
 require "ht_item_overlap"
 
 Mongoid.load!("mongoid.yml", :development)
-
-# Find ht items that match the given org or all
-def matching_clusters(org = nil)
-  if org.nil?
-    Cluster.where("ht_items.0": { "$exists": 1 },
-                  "ht_items.access": "deny")
-  else
-    Cluster.where("holdings.0": { "$exists": 1 },
-                  "ht_items.0": { "$exists": 1 },
-                  "ht_items.access": "deny",
-                  "$or": [{ "holdings.organization": org },
-                          { "ht_items.content_provider_code": org }])
-  end
-end
-
-# Compile the totals
-def compile_total_hscore(frequency)
-  totals = Hash.new {|hash, key| hash[key] = 0.0 }
-  frequency.each do |organization, h_scores|
-    h_scores.each do |num_orgs, freq|
-      totals[organization] += (1.0 / num_orgs * freq)
-    end
-  end
-  totals
-end
-
-# Supports histogram reporting
-# { org => { 1 org : count, 2 org : count }
-frequency = Hash.new {|hash, key| hash[key] = Hash.new(0) }
 
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
@@ -50,22 +21,21 @@ if __FILE__ == $PROGRAM_NAME
 
   org = ARGV.shift
 
-  matching_clusters(org).each do |c|
+  cost_report = CostReport.new(org)
+  cost_report.matching_clusters.each do |c|
     c.ht_items.each do |ht_item|
       next unless ht_item.access == "deny"
 
       waypoint.incr
-      overlap = HtItemOverlap.new(ht_item)
-      overlap.matching_orgs.each do |organization|
-        frequency[organization][overlap.matching_orgs.count] += 1
-      end
+      cost_report.add_ht_item_to_freq_table(ht_item)
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end
   end
+  puts cost_report.freq_table.to_json
   logger.info waypoint.final_line
   if org.nil?
-    puts compile_total_hscore(frequency).to_json
+    puts cost_report.total_hscore.to_json
   else
-    puts compile_total_hscore(frequency)[org].to_json
+    puts cost_report.total_hscore[org.to_sym].to_json
   end
 end
