@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "ht_members"
 require "dotenv"
 
