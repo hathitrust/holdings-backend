@@ -28,6 +28,7 @@ def hathifile_to_record(hathifile_line)
   }
 end
 
+MAX_RETRIES = 5
 BATCH_SIZE = 10_000
 logger = Logger.new(STDOUT)
 waypoint = Utils::Waypoint.new
@@ -50,19 +51,35 @@ else
   logger.info "Adding HT Items."
 end
 
+def process_htitem(h,retries=0)
+  raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
+  begin
+    c = if update
+          ClusterHtItem.new(h).update
+        else
+          ClusterHtItem.new(h).cluster
+        end
+    c.upsert if c.changed?
+  rescue Mongo::Error::OperationFailure => e
+    if(e.code_name =~ /duplicate key error/)
+      puts "Got DuplicateKeyError while processing #{h.item_id}, retrying #{retries+1}"
+      process_htitem(h,retries+1)
+    end
+  rescue ClusterError => e
+    puts "Got ClusterError while processing #{h.item_id}, retrying #{retries+1}"
+    process_htitem(h,retries+1)
+  end
+end
+
 Zinzout.zin(filename).each do |line|
 
   begin
     waypoint.incr
     rec = hathifile_to_record(line)
+
+    process_line(line)
     h = HtItem.new(rec)
 
-    c = if update
-      ClusterHtItem.new(h).update
-        else
-          ClusterHtItem.new(h).cluster
-    end
-    c.save! if c.changed?
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   rescue StandardError => e
     puts "Encountered error while processing line: "
