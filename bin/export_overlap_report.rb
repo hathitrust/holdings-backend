@@ -34,7 +34,7 @@ if __FILE__ == $PROGRAM_NAME
 
   org = ARGV.shift
   matching_clusters(org).each do |c|
-    ClusterOverlap.new(c, organization).each do |overlap|
+    ClusterOverlap.new(c, org).each do |overlap|
       waypoint.incr
       h = overlap.to_hash
       puts [h[:cluster_id],

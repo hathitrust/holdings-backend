@@ -3,7 +3,7 @@
 require "cluster"
 
 # The most basic overlap record
-# Inherited by SinglePartOverlap and MultiPartOverlap and used for Serials
+# Inherited by SinglePartOverlap, MultiPartOverlap, and SerialOverlap
 class Overlap
   attr_accessor :org
 
@@ -18,6 +18,12 @@ class Overlap
     define_method "#{method}_count".to_sym do
       ""
     end
+  end
+
+  # Members that provided matching ht_items
+  # Overridden in MultiPartOverlap to deal with enum chrons
+  def members_with_matching_ht_items
+    @cluster.ht_items.pluck(:content_provider_code).uniq
   end
 
   def to_hash

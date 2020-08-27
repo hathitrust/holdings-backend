@@ -22,6 +22,7 @@ RSpec.describe Overlap do
     ClusterHolding.new(h).cluster.tap(&:save)
     ClusterHolding.new(h2).cluster.tap(&:save)
     ClusterHolding.new(h3).cluster.tap(&:save)
+    c.reload
   end
 
   describe "#to_hash" do
@@ -35,6 +36,13 @@ RSpec.describe Overlap do
           wd_count: "",
           lm_count: "",
           access_count: "")
+    end
+  end
+
+  describe "#members_with_matching_ht_items" do
+    it "returns all content_provider_codes in matching ht_items" do
+      overlap = described_class.new(c, "irrelevant", ht)
+      expect(overlap.members_with_matching_ht_items).to eq([ht.content_provider_code])
     end
   end
 end

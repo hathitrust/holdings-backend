@@ -111,6 +111,31 @@ RSpec.describe CostReport do
         end
         expect(cr.freq_table).to eq(spm.content_provider_code.to_sym => { 1 => 2 })
       end
+
+      it "multiple holdings lead to one hshare" do
+        ClusterHtItem.new(spm).cluster.tap(&:save)
+        mpm_holding = spm_holding.clone
+        mpm_holding.n_enum = "1"
+        mpm_holding.mono_multi_serial = "multi"
+        ClusterHolding.new(spm_holding).cluster.tap(&:save)
+        ClusterHolding.new(mpm_holding).cluster.tap(&:save)
+        cr.matching_clusters.each do |c|
+          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+        end
+        expect(cr.freq_table).to eq(spm.content_provider_code.to_sym => { 1 => 1 })
+      end
+
+      it "HtItem derived holdings apply to all Items in the cluster" do
+        ClusterHtItem.new(spm).cluster.tap(&:save)
+        ht_copy.content_provider_code = "different_cpc"
+        ClusterHtItem.new(ht_copy).cluster.tap(&:save)
+        cr.matching_clusters.each do |c|
+          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+        end
+        expected_freq = { spm.content_provider_code.to_sym => { 2 => 2 },
+                         different_cpc: { 2 => 2 } }
+        expect(cr.freq_table).to eq(expected_freq)
+      end
     end
 
     describe "MPM holding without enum chron" do
@@ -160,6 +185,7 @@ RSpec.describe CostReport do
               enum_chron: "2",
               n_enum: "2",
               bib_fmt: "s",
+              content_provider_code: "not_ht_serial.c_p_c",
               access: "deny")
       end
       let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
@@ -171,7 +197,7 @@ RSpec.describe CostReport do
               organization: "not_a_cpc")
       end
 
-      it "assigns all serials to the member" do
+      it "assigns all serials to the member and ht_item derived holdings affect hshare" do
         ClusterHtItem.new(ht_serial).cluster.tap(&:save)
         ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
         ClusterSerial.new(serial).cluster.tap(&:save)
@@ -179,7 +205,8 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(2 => 2)
+        # ht_serial.c_p_c + ht_serial2.c_p_c + holding_serial.org
+        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(3 => 2)
       end
     end
   end
