@@ -61,21 +61,25 @@ def process_htitem(h,retries=0)
   end
 end
 
+last_ocn = nil
+htitems = []
+
 Zinzout.zin(filename).each do |line|
+  waypoint.incr
 
-  begin
-    waypoint.incr
+  htitem = HtItem.new(hathifile_to_record(line))
 
-    process_htitem(HtItem.new(hathifile_to_record(line)))
-
-    waypoint.on_batch {|wp| logger.info wp.batch_line }
-  rescue StandardError => e
-    puts "Encountered error while processing line: "
-    puts line
-    puts e.message
-    puts e.backtrace.inspect
-    raise e
+  if(htitem.ocns != last_ocn)
+    process_htitems(htitems)
+    htitem = []
   end
+
+  htitems << htitem
+
+  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
+
+# process final batch
+process_htitems(htitems)
 
 logger.info waypoint.final_line

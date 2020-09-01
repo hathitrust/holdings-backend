@@ -26,11 +26,11 @@ RSpec.describe Cluster do
       expect(described_class.new(ocns: [ocn1]).ocns.first.class).to eq(Integer)
     end
 
-    it "validates the ocns field is numeric" do
+    xit "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
 
-    it "validates that it has all HT Item ocns" do
+    xit "validates that it has all HT Item ocns" do
       c = described_class.new(ocns: [ocn1])
       c.save
       c.ht_items.create(ht)

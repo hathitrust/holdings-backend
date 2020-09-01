@@ -35,6 +35,7 @@ class Cluster
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
+  scope :for_ocns, lambda { |ocns| where(:ocns.in => ocns) }
 
   #validates_each :ocns do |record, attr, value|
   #  value.each do |ocn|
@@ -46,6 +47,7 @@ class Cluster
   #    if (record.ht_items.collect(&:ocns).flatten +
   #        record.ocn_resolutions.collect(&:ocns).flatten - value).any?
   #end
+
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
