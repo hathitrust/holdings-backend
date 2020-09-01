@@ -1,62 +1,79 @@
+
 # frozen_string_literal: true
 
 require "cluster"
 require "reclusterer"
 
-# Services for clustering HT Items
+# Services for batch loading HT items
 class ClusterHtItem
-  # Creates a ClusterHTItem
-  #
-  # @param HTItem that needs clustering
-  def initialize(ht_item)
-    @ht_item = ht_item
+
+  def initialize(ocns=[],transaction: true)
+    @ocns = ocns
+    @transaction = transaction
   end
 
   # Cluster the HTItem
-  def cluster(transaction: true)
-    c = (@ht_item.ocns.any? &&
-         Cluster.merge_many(Cluster.where(ocns: { "$in": @ht_item.ocns }),transaction: transaction) ||
-         Cluster.new(ocns: @ht_item.ocns).tap(&:save))
-    c.ht_items << @ht_item
-    @ht_item.ocns.each do |ocn|
-      c.ocns << ocn unless c.ocns.include?(ocn)
+  def cluster(batch)
+    cluster_for_ocns.tap do |c|
+      to_append = []
+      batch.each do |item|
+
+        if ( existing_item = c.ht_item(item.item_id) )
+          existing_item.update_attributes(item.to_hash)
+        else
+          remove_old_ht_item(item)
+          to_append << item
+        end
+      end
+      c.ht_items.concat(to_append)
     end
-    c
   end
 
   # Move an HTItem from one cluster to another
   #
   # @param new_cluster - the cluster to move to
-  def move(new_cluster)
-    unless new_cluster.id == @ht_item._parent.id
-      duped_htitem = @ht_item.dup
-      @ht_item.delete
+  def move(ht_item,new_cluster)
+    unless new_cluster.id == ht_item._parent.id
+      duped_htitem = ht_item.dup
+      ht_item.delete
       new_cluster.ht_items << duped_htitem
-      @ht_item = duped_htitem
+      ht_item = duped_htitem
     end
   end
 
   # Removes an HTItem
-  def delete
-    Cluster.where("ht_items.item_id": @ht_item.item_id).each do |c|
-      c.ht_items.delete_if {|h| h.item_id == @ht_item.item_id }
+  def delete(ht_item)
+    Cluster.where("ht_items.item_id": ht_item.item_id).each do |c|
+      c.ht_items.delete_if {|h| h.item_id == ht_item.item_id }
       Reclusterer.new(c).recluster
     end
   end
 
-  # Deletes an HTItem, then re-adds it
-  def update
-    Cluster.where("ht_items.item_id": @ht_item.item_id).each do |c|
-      ht = c.ht_items.to_a.find {|h| h.item_id == @ht_item.item_id }
-      if ht.ocns != @ht_item.ocns
-        ht.delete
-        Reclusterer.new(c).recluster
-      else
-        ht.update_attributes(@ht_item.to_hash)
-        c.save
-        return c
-      end
+  private
+
+  def remove_old_ht_item(ht_item)
+    if(cluster = Cluster.with_ht_item(ht_item).first)
+      cluster.ht_item(ht_item.item_id).delete
+
+      # Note that technically we only need to do this if there were multiple
+      # OCNs for that HT item and nothing else binds the cluster together.
+      # It may be worth optimizing not to do this if the htitem has only one
+      # OCN, since that will be the common case. Probably not worth checking
+      # that nothing else binds the cluster together?
+      Reclusterer.new(cluster).recluster
     end
-    cluster
   end
+
+  def cluster_for_ocns
+    existing_cluster_with_ocns || Cluster.create(ocns: @ocns)
+  end
+
+  def existing_cluster_with_ocns
+    return unless @ocns.any?
+    Cluster.merge_many(Cluster.for_ocns(@ocns),
+                       transaction: @transaction).tap do |c|
+      c&.add_to_set(ocns: @ocns)
+    end
+  end
+
 end

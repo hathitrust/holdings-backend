@@ -4,6 +4,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster_ht_item"
+require "batch_cluster_ht_item"
 require "ht_item"
 require "ocn_resolution"
 require "zinzout"
@@ -46,37 +47,43 @@ end
 filename = ARGV[0]
 logger.info "Updating HT Items."
 
-def process_htitem(h,retries=0)
+def process_batch(ocns,batch,retries=0)
   raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
   begin
-    c = ClusterHtItem.new(h).update
+    c = ClusterHtItem.new(ocns).cluster(batch)
     c.upsert if c.changed?
   rescue Mongo::Error::OperationFailure => e
     if(e.code_name =~ /duplicate key error/)
-      puts "Got DuplicateKeyError while processing #{h.item_id}, retrying #{retries+1}"
-      process_htitem(h,retries+1)
+      puts "Got DuplicateKeyError while processing #{ocns}, retrying #{retries+1}"
+      process_batch(ocns,batch,retries+1)
     end
   rescue ClusterError => e
-    puts "Got ClusterError while processing #{h.item_id}, retrying #{retries+1}"
-    process_htitem(h,retries+1)
+    puts "Got ClusterError while processing #{ocns}, retrying #{retries+1}"
+    process_batch(ocns,batch,retries+1)
   end
 end
+
+last_ocns = nil
+batch = []
 
 Zinzout.zin(filename).each do |line|
+  waypoint.incr
 
-  begin
-    waypoint.incr
+  htitem = HtItem.new(hathifile_to_record(line))
 
-    process_htitem(HtItem.new(hathifile_to_record(line)))
-
-    waypoint.on_batch {|wp| logger.info wp.batch_line }
-  rescue StandardError => e
-    puts "Encountered error while processing line: "
-    puts line
-    puts e.message
-    puts e.backtrace.inspect
-    raise e
+  # always process htitems with no OCN as a batch of 1
+  if(last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns))
+    process_batch(last_ocns,batch)
+    batch = []
   end
+
+  batch << htitem
+  last_ocns = htitem.ocns
+
+  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
+
+# process final batch
+process_batch(last_ocns,batch)
 
 logger.info waypoint.final_line
