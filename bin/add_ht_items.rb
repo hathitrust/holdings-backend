@@ -35,7 +35,6 @@ waypoint = Utils::Waypoint.new
 STDIN.set_encoding "utf-8"
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
-update = ARGV[0] == "-u"
 clean  = ARGV.include?("--clean")
 
 if clean
@@ -43,22 +42,13 @@ if clean
   Cluster.each(&:delete)
 end
 
-if update
-  filename = ARGV[1]
-  logger.info "Updating HT Items."
-else
-  filename = ARGV[0]
-  logger.info "Adding HT Items."
-end
+filename = ARGV[0]
+logger.info "Updating HT Items."
 
 def process_htitem(h,retries=0)
   raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
   begin
-    c = if update
-          ClusterHtItem.new(h).update
-        else
-          ClusterHtItem.new(h).cluster
-        end
+    c = ClusterHtItem.new(h).update
     c.upsert if c.changed?
   rescue Mongo::Error::OperationFailure => e
     if(e.code_name =~ /duplicate key error/)
@@ -75,10 +65,8 @@ Zinzout.zin(filename).each do |line|
 
   begin
     waypoint.incr
-    rec = hathifile_to_record(line)
 
-    process_line(line)
-    h = HtItem.new(rec)
+    process_htitem(HtItem.new(hathifile_to_record(line)))
 
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   rescue StandardError => e
