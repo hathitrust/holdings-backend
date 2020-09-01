@@ -16,6 +16,10 @@ services:
   mongo_test:
     image: mongo
 
+  mariadb:
+    image: mariadb
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d/
 
 volumes:
   gem_cache:
