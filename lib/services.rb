@@ -3,8 +3,10 @@
 require "canister"
 require "holdings_db"
 require "ht_members"
+require "logger"
 
 Services = Canister.new
 
-Services.register(:holdings_db) { HoldingsDB.connection }
+Services.register(:holdings_db) { HoldingsDB.new }
 Services.register(:ht_members) { HTMembers.new }
+Services.register(:logger) { Logger.new(STDERR) }

@@ -26,6 +26,17 @@ def matching_clusters(org = nil)
   end
 end
 
+def overlap_line(overlap_hash)
+  [overlap_hash[:cluster_id],
+   overlap_hash[:volume_id],
+   overlap_hash[:member_id],
+   overlap_hash[:copy_count],
+   overlap_hash[:brt_count],
+   overlap_hash[:wd_count],
+   overlap_hash[:lm_count],
+   overlap_hash[:access_count]].join("\t")
+end
+
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
@@ -36,15 +47,7 @@ if __FILE__ == $PROGRAM_NAME
   matching_clusters(org).each do |c|
     ClusterOverlap.new(c, org).each do |overlap|
       waypoint.incr
-      h = overlap.to_hash
-      puts [h[:cluster_id],
-            h[:volume_id],
-            h[:member_id],
-            h[:copy_count],
-            h[:brt_count],
-            h[:wd_count],
-            h[:lm_count],
-            h[:access_count]].join("\t")
+      puts overlap_line(overlap.to_hash)
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end
   end

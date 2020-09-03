@@ -10,7 +10,7 @@ RSpec.describe HoldingsDB do
   let(:database) { "ht_repository" }
   let(:host) { "mariadb" }
   let(:connection) do
-    described_class.connection(user: user,
+    described_class.new(user: user,
                                password: password,
                                database: database,
                                host: host)
@@ -84,10 +84,6 @@ RSpec.describe HoldingsDB do
   end
 
   describe "Data is loaded" do
-    it "finds all the tables" do
-      expect(connection.tables).to match_array([:ht_collections, :ht_institutions])
-    end
-
     it "finds all the institutions" do
       c = described_class.connection(user: user, password: password, database: database, host: host)
       expect(c[:ht_institutions].count).to equal(249)
