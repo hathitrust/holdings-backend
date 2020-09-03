@@ -11,8 +11,8 @@ RSpec.describe "overlap_report" do
   before(:each) do
     Cluster.each(&:delete)
     ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHtItem.new(ht2).cluster.tap(&:save)
+    ClusterHtItem.new(ht.ocns).cluster([ht]).tap(&:save)
+    ClusterHtItem.new(ht2.ocns).cluster([ht2]).tap(&:save)
   end
 
   describe "matching_clusters" do

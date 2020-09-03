@@ -17,7 +17,7 @@ RSpec.describe CalculateFormat do
     end
 
     it "is a MPM if it or another item has enum_chron" do
-      c_mpm = ClusterHtItem.new(ht_mpm).cluster
+      c_mpm = ClusterHtItem.new(ht_mpm.ocns).cluster([ht_mpm])
       expect(
         described_class.new(c_mpm).item_format(ht_mpm)
       ).to eq("mpm")

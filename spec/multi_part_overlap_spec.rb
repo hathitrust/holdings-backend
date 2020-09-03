@@ -29,7 +29,7 @@ RSpec.describe MultiPartOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(ht_w_ec).cluster.tap(&:save)
+    ClusterHtItem.new(ht_w_ec.ocns).cluster([ht_w_ec]).tap(&:save)
   end
 
   describe "#matching_holdings" do

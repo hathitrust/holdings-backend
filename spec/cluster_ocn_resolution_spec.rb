@@ -105,7 +105,7 @@ RSpec.describe ClusterOCNResolution do
         [resolution.deprecated,
          resolution.resolved,
          resolution2.deprecated].each do |ocn|
-           ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
+           ClusterHtItem.new([ocn]).cluster([build(:ht_item, ocns: [ocn])]).save
          end
       end
 

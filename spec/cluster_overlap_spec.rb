@@ -16,7 +16,7 @@ RSpec.describe ClusterOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(spm).cluster.tap(&:save)
+    ClusterHtItem.new(spm.ocns).cluster([spm]).tap(&:save)
     ClusterHolding.new(holding).cluster.tap(&:save)
     ClusterHolding.new(holding2).cluster.tap(&:save)
   end

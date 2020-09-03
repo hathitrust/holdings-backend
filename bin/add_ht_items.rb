@@ -49,7 +49,7 @@ logger.info "Updating HT Items."
 def process_batch(ocns,batch,retries=0)
   raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
   begin
-    c = BatchClusterHtItem.new(ocns).cluster(batch)
+    c = ClusterHtItem.new(ocns).cluster(batch)
     c.upsert if c.changed?
   rescue Mongo::Error::OperationFailure => e
     if(e.code_name =~ /duplicate key error/)

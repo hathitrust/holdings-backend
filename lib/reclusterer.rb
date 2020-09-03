@@ -18,7 +18,8 @@ class Reclusterer
 
       @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r).cluster(transaction: false).save }
       @cluster.holdings.each {|h| ClusterHolding.new(h).cluster(transaction: false).save }
-      @cluster.ht_items.each {|h| ClusterHtItem.new(h).cluster(transaction: false).save }
+      # TODO: group and batch by OCN
+      @cluster.ht_items.each {|h| ClusterHtItem.new(h.ocns, transaction: false).cluster([h]).save }
       @cluster.serials.each {|s| ClusterSerial.new(s).cluster(transaction: false).save }
       session.commit_transaction
     end

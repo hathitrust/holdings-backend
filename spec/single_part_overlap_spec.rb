@@ -17,7 +17,7 @@ RSpec.describe SinglePartOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(ht).cluster.tap(&:save)
+    ClusterHtItem.new(ht.ocns).cluster([ht]).tap(&:save)
     ClusterHolding.new(h).cluster.tap(&:save)
     ClusterHolding.new(h2).cluster.tap(&:save)
     ClusterHolding.new(h3).cluster.tap(&:save)
