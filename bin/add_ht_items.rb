@@ -70,7 +70,8 @@ Zinzout.zin(filename).each do |line|
 
   htitem = HtItem.new(hathifile_to_record(line))
 
-  if(last_ocns && htitem.ocns != last_ocns)
+  # always process htitems with no OCN as a batch of 1
+  if(last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns))
     process_batch(last_ocns,batch)
     batch = []
   end
