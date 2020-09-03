@@ -29,7 +29,7 @@ RSpec.describe HtItem do
     expect(c.ht_items.first._parent).to be(c)
   end
 
-  xit "prevents duplicates from being created" do
+  it "prevents duplicates from being created" do
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone
     c.ht_items.create(cloned)

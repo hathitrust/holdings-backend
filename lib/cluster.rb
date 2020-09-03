@@ -36,17 +36,18 @@ class Cluster
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
   scope :for_ocns, lambda { |ocns| where(:ocns.in => ocns) }
+  scope :with_ht_item, lambda { |ht_item| where("ht_items.item_id": ht_item.item_id) }
 
-  #validates_each :ocns do |record, attr, value|
-  #  value.each do |ocn|
-  #    record.errors.add attr, "must be an integer" \
-  #      unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-  #  end
-  #  # ocns are a superset of ht_items.ocns
-  #  record.errors.add attr, "must contain all ocns" \
-  #    if (record.ht_items.collect(&:ocns).flatten +
-  #        record.ocn_resolutions.collect(&:ocns).flatten - value).any?
-  #end
+  validates_each :ocns do |record, attr, value|
+    value.each do |ocn|
+      record.errors.add attr, "must be an integer" \
+        unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+    end
+    # ocns are a superset of ht_items.ocns
+    record.errors.add attr, "must contain all ocns" \
+      if (record.ht_items.collect(&:ocns).flatten +
+          record.ocn_resolutions.collect(&:ocns).flatten - value).any?
+  end
 
 
   # Adds the members of the given cluster to this cluster.
@@ -104,6 +105,13 @@ class Cluster
      ht_items.collect(&:ocns).flatten).uniq
   end
 
+  # returns the first matching ht item by item id in this cluster, if any
+  #
+  # @param the item id to find
+  def ht_item(item_id)
+    ht_items.to_a.find { |h| h.item_id == item_id }
+  end
+
   private
 
   # Moves embedded documents from another cluster to itself
@@ -114,5 +122,4 @@ class Cluster
     other.ht_items.each {|ht| ClusterHtItem.new(ht).move(self) }
     other.commitments.each {|c| c.move(self) }
   end
-
 end

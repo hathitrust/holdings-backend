@@ -4,6 +4,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "cluster_ht_item"
+require "batch_cluster_ht_item"
 require "ht_item"
 require "ocn_resolution"
 require "zinzout"
@@ -45,41 +46,42 @@ end
 filename = ARGV[0]
 logger.info "Updating HT Items."
 
-def process_htitem(h,retries=0)
+def process_batch(ocns,batch,retries=0)
   raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
   begin
-    c = ClusterHtItem.new(h).update
+    c = BatchClusterHtItem.new(ocns).cluster(batch)
     c.upsert if c.changed?
   rescue Mongo::Error::OperationFailure => e
     if(e.code_name =~ /duplicate key error/)
-      puts "Got DuplicateKeyError while processing #{h.item_id}, retrying #{retries+1}"
-      process_htitem(h,retries+1)
+      puts "Got DuplicateKeyError while processing #{ocns}, retrying #{retries+1}"
+      process_batch(ocns,batch,retries+1)
     end
   rescue ClusterError => e
-    puts "Got ClusterError while processing #{h.item_id}, retrying #{retries+1}"
-    process_htitem(h,retries+1)
+    puts "Got ClusterError while processing #{ocns}, retrying #{retries+1}"
+    process_batch(ocns,batch,retries+1)
   end
 end
 
-last_ocn = nil
-htitems = []
+last_ocns = nil
+batch = []
 
 Zinzout.zin(filename).each do |line|
   waypoint.incr
 
   htitem = HtItem.new(hathifile_to_record(line))
 
-  if(htitem.ocns != last_ocn)
-    process_htitems(htitems)
-    htitem = []
+  if(last_ocns && htitem.ocns != last_ocns)
+    process_batch(last_ocns,batch)
+    batch = []
   end
 
-  htitems << htitem
+  batch << htitem
+  last_ocns = htitem.ocns
 
   waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
 # process final batch
-process_htitems(htitems)
+process_batch(last_ocns,batch)
 
 logger.info waypoint.final_line
