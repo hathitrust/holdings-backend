@@ -18,6 +18,7 @@ class HtItem
   field :item_id, type: String
   field :ht_bib_key, type: Integer
   field :rights, type: String
+  field :access, type: String
   field :bib_fmt, type: String
   field :enum_chron, type: String
   field :n_enum, type: String
@@ -26,7 +27,7 @@ class HtItem
 
   embedded_in :cluster
   validates :item_id, uniqueness: true
-  validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt
+  validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt, :access
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -57,6 +58,7 @@ class HtItem
       item_id:    item_id,
       ht_bib_key: ht_bib_key,
       rights:     rights,
+      access:     access,
       bib_fmt:    bib_fmt,
       enum_chron: enum_chron,
       n_enum:     n_enum,

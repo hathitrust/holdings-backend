@@ -6,10 +6,9 @@ require "overlap"
 # Overlap record for items in Serial clusters
 class SerialOverlap < Overlap
 
-  # These methods should return an empty string in the most basic case
   def copy_count
     cc = @cluster.holdings.where(organization: @org).count
-    if !cc.zero? || (@ht_item.content_provider_code == @org)
+    if !cc.zero? || (members_with_matching_ht_items.include? @org)
       1
     else
       0

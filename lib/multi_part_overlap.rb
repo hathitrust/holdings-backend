@@ -5,9 +5,15 @@ require "overlap"
 # Overlap record for items in MPM clusters
 class MultiPartOverlap < Overlap
 
+  def members_with_matching_ht_items
+    @cluster.ht_items.where("$or": [{ n_enum: @ht_item.n_enum },
+                                    { n_enum: nil }])
+      .pluck(:content_provider_code).uniq
+  end
+
   def copy_count
     cc = matching_holdings.count
-    if cc.zero? && (@ht_item.content_provider_code == @org)
+    if cc.zero? && (members_with_matching_ht_items.include? @org)
       1
     else
       cc

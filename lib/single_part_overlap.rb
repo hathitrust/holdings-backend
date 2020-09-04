@@ -7,7 +7,7 @@ class SinglePartOverlap < Overlap
 
   def copy_count
     cc = @cluster.holdings.where(organization: @org).count
-    if cc.zero? && (@ht_item.content_provider_code == @org)
+    if cc.zero? && (members_with_matching_ht_items.include? @org)
       1
     else
       cc
