@@ -18,6 +18,7 @@ AllCops:
     - '*.gemspec'
     - 'spec/support/fixtures/**/*'
     - 'db/schema.rb'
+    - 'sql/**/*'
 
 Naming/FileName:
   AllowedAcronyms:
