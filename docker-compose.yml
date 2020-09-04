@@ -16,6 +16,12 @@ services:
   mongo_test:
     image: mongo
 
+  mariadb:
+    image: mariadb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d/
 
 volumes:
   gem_cache:

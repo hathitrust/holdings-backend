@@ -6,9 +6,9 @@ services:
 before_install:
   - docker-compose build
   - docker-compose run --rm dev bundle install
-  - docker-compose up -d mongo_test
+  - docker-compose up -d mongo_test mariadb
 
 script:
   - docker-compose run --rm dev bundle exec rubocop
-  - docker-compose run --rm -e MONGOID_ENV=test dev bundle exec ruby lib/tasks/build_database.rb
-  - docker-compose run --rm -e MONGOID_ENV=test dev bundle exec rspec
+  - docker-compose run --rm -e MONGOID_ENV=test dev bin/wait-for mongo_test:27017 -- bundle exec ruby lib/tasks/build_database.rb
+  - docker-compose run --rm -e MONGOID_ENV=test dev bin/wait-for mariadb:3306 -- bundle exec rspec

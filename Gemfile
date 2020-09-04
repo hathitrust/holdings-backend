@@ -8,6 +8,8 @@ gem "canister"
 gem "dotenv"
 gem "mongo"
 gem "mongoid"
+gem "mysql2"
+gem "sequel"
 gem "zinzout"
 
 group :development, :test do
