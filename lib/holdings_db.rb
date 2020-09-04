@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-require 'sequel'
-require 'mysql2'
-require 'dotenv'
+require "sequel"
+require "mysql2"
+require "dotenv"
 
 Dotenv.load(".env")
 
+# Backend for connection to MySQL database for production information about
+# holdings and institutions
 class HoldingsDB
 
   attr_reader :rawdb
@@ -21,40 +23,42 @@ class HoldingsDB
   # different database by just doing `HoldingDB.connect(database: 'otherDB')`)
   #
   # @example
-  # DB = HoldingsDB.connect # accept all from ENV
-  # DB = HoldingsDB.connect('mysql2://username:password@host:3435/myDatabase') # full connection string
+  # # Accept all from env
+  # DB = HoldingsDB.connect
+  # # Full connection string
+  # DB = HoldingsDB.connect('mysql2://username:password@host:3435/myDatabase')
   # DB = HoldingsDB.connect(user: 'otheruser', password: 'herPassword') # change user
-  def self.connection(connection_string = ENV['DB_CONNECTION_STRING'],
-                      user: ENV['DB_USER'],
-                      password: ENV['DB_PASSWORD'],
-                      host: (ENV['DB_HOST'] || 'localhost'),
-                      port: ENV['DB_PORT'],
-                      database: ENV['DB_DATABASE'],
-                      adapter: (ENV['DB_ADAPTER'] || :mysql2)
-  )
+  def self.connection(connection_string = ENV["DB_CONNECTION_STRING"],
+    **kwargs)
     begin
       if !connection_string.nil?
         Sequel.connect(connection_string)
       else
-        db_args = {
-            config_local_infile: true,
-            adapter:             adapter,
-            user:                user,
-            password:            password,
-            host:                host,
-            database:            database
-        }
-        if port
-          args[:port] = port
-        end
+        db_args = gather_db_args(kwargs).merge(
+          config_local_infile: true
+        )
         Sequel.connect(**db_args)
       end
     rescue Sequel::DatabaseConnectionError => e
       puts "Error trying to connect"
       raise e
     end
+  end
 
+  class << self
+    private
 
+    def gather_db_args(args)
+      [:user, :password, :host,
+       :port, :database, :adapter].each do |db_arg|
+         args[db_arg] ||= ENV["DB_" + db_arg.to_s.upcase]
+       end
+
+      args[:host] ||= "localhost"
+      args[:adapter] ||= :mysql2
+
+      args
+    end
   end
 
 end
