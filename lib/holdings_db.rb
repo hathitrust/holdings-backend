@@ -16,7 +16,17 @@ class HoldingsDB
   # #create_connection will take
   #  * a full connection string (passed here OR in the environment
   #    variable MYSQL_CONNECTION_STRING)
-  #  * a set of named arguments, drawn from those passed in and the environment
+  #  * a set of named arguments, drawn from those passed in and the
+  #    environment. Arguments are those supported by Sequel.
+  #
+  # Environment variables are mapped as follows:
+  #
+  #   user: DB_USER
+  #   password: DB_PASSWORD
+  #   host: DB_HOST
+  #   port: DB_PORT
+  #   database: DB_DATABASE
+  #   adapter: DB_ADAPTER
   #
   # Easiest is to pass in a full connection string, but you can set useful defaults
   # in the environment and then pass in only what you want to change (e.g., get a
