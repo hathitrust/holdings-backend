@@ -55,8 +55,16 @@ class HTMembers
     if @members.key?(inst_id)
       @members[inst_id]
     else
-      raise "No member_info data for inst_id:#{inst_id}"
+      raise KeyError, "No member_info data for inst_id:#{inst_id}"
     end
+  end
+
+  # Adds a temporary member to the member data cache for the lifetime of the
+  # object; does not persist it to the database
+  #
+  # @param member The HTMember to add
+  def add_temp(member)
+    @members[member.inst_id] = member
   end
 
 end

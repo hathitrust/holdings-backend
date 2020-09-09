@@ -190,6 +190,10 @@ RSpec.describe CostReport do
       end
       let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
       let(:holding_serial) do
+        Services.ht_members.add_temp(
+          HTMember.new(inst_id: "not_a_cpc", country_code: "xx", weight: 1.0)
+        )
+
         build(:holding,
               ocn: ht_serial.ocns.first,
               enum_chron: "3",
