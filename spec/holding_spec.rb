@@ -2,6 +2,8 @@
 
 require "holding"
 require "cluster"
+require "spec_helper"
+
 RSpec.describe Holding do
   let(:c) { create(:cluster) }
   let(:h) { build(:holding) }
@@ -37,6 +39,18 @@ RSpec.describe Holding do
     it "same_as is not true if date_received does not match" do
       h2.date_received = Date.yesterday
       expect(h.same_as?(h2)).to be(false)
+    end
+  end
+
+  describe "#country_code" do
+    it "is automatically set when organization is set" do
+      expect(build(:holding, organization: "ualberta").country_code).to eq("ca")
+    end
+  end
+
+  describe "#weight" do
+    it "is automatically set when organization is set" do
+      expect(build(:holding, organization: "utexas").weight).to eq(3.0)
     end
   end
 
