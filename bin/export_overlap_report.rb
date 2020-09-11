@@ -22,7 +22,7 @@ def matching_clusters(org = nil)
   else
     Cluster.where("ht_items.0": { "$exists": 1 },
               "$or": [{ "holdings.organization": org },
-                      { "ht_items.content_provider_code": org }])
+                      { "ht_items.billing_entity": org }])
   end
 end
 

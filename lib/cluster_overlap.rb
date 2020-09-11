@@ -42,6 +42,6 @@ class ClusterOverlap
 
   def organizations_in_cluster
     (@cluster.holdings.pluck(:organization) +
- @cluster.ht_items.pluck(:content_provider_code)).uniq
+ @cluster.ht_items.pluck(:billing_entity)).uniq
   end
 end

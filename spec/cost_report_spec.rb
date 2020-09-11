@@ -11,13 +11,13 @@ RSpec.describe CostReport do
           ocns: c.ocns,
             enum_chron: "",
             access: "deny",
-            content_provider_code: "smu")
+            billing_entity: "smu")
   end
   let(:mpm) do
     build(:ht_item,
           enum_chron: "1",
             n_enum: "1",
-            content_provider_code: "stanford",
+            billing_entity: "stanford",
             access: "deny")
   end
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
@@ -83,13 +83,13 @@ RSpec.describe CostReport do
         build(:ht_item,
               enum_chron: "",
               ocns: spm.ocns,
-              content_provider_code: spm.content_provider_code,
+              billing_entity: spm.billing_entity,
               access: "deny")
       end
       let(:spm_holding) do
         build(:holding,
               enum_chron: "",
-              organization: spm.content_provider_code,
+              organization: spm.billing_entity,
               ocn: spm.ocns.first)
       end
 
@@ -99,7 +99,7 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.content_provider_code.to_sym => { 1 => 2 })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { 1 => 2 })
       end
 
       it "handles multiple copies of the same spm and holdings" do
@@ -109,7 +109,7 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.content_provider_code.to_sym => { 1 => 2 })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { 1 => 2 })
       end
 
       it "multiple holdings lead to one hshare" do
@@ -122,17 +122,17 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.content_provider_code.to_sym => { 1 => 1 })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { 1 => 1 })
       end
 
       it "HtItem derived holdings apply to all Items in the cluster" do
         ClusterHtItem.new(spm).cluster.tap(&:save)
-        ht_copy.content_provider_code = "different_cpc"
+        ht_copy.billing_entity = "different_cpc"
         ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expected_freq = { spm.content_provider_code.to_sym => { 2 => 2 },
+        expected_freq = { spm.billing_entity.to_sym => { 2 => 2 },
                          different_cpc: { 2 => 2 } }
         expect(cr.freq_table).to eq(expected_freq)
       end
@@ -185,20 +185,20 @@ RSpec.describe CostReport do
               enum_chron: "2",
               n_enum: "2",
               bib_fmt: "s",
-              content_provider_code: "not_ht_serial.c_p_c",
+              billing_entity: "not_ht_serial.billing_entity",
               access: "deny")
       end
       let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
       let(:holding_serial) do
         Services.ht_members.add_temp(
-          HTMember.new(inst_id: "not_a_cpc", country_code: "xx", weight: 1.0)
+          HTMember.new(inst_id: "not_a_collection", country_code: "xx", weight: 1.0)
         )
 
         build(:holding,
               ocn: ht_serial.ocns.first,
               enum_chron: "3",
               n_enum: "3",
-              organization: "not_a_cpc")
+              organization: "not_a_collection")
       end
 
       it "assigns all serials to the member and ht_item derived holdings affect hshare" do
@@ -209,7 +209,7 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        # ht_serial.c_p_c + ht_serial2.c_p_c + holding_serial.org
+        # ht_serial.billing_entity + ht_serial2.billing_entity + holding_serial.org
         expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(3 => 2)
       end
     end

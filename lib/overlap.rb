@@ -23,7 +23,7 @@ class Overlap
   # Members that provided matching ht_items
   # Overridden in MultiPartOverlap to deal with enum chrons
   def members_with_matching_ht_items
-    @cluster.ht_items.pluck(:content_provider_code).uniq
+    @cluster.ht_items.pluck(:billing_entity).uniq
   end
 
   def to_hash
