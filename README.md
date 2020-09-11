@@ -19,6 +19,25 @@ docker-compose run --rm dev bundle exec ruby lib/tasks/build_database.rb
 
 `docker-compose run --rm dev bundle exec rspec`
 
+## Clearing out/resetting the data
+For resetting everything (cleaning up containers & their persistent volumes):
+
+```shell script
+# Clear it out
+docker-compose down # to stop services
+docker volume rm holdings-backend_data_db # to clear out the development database
+docker volume rm holdings-backend_gem_cache # to clear out gems
+
+# Rebuild it
+docker-compose build
+docker-compose run --rm dev bundle install
+docker-compose up -d
+docker-compose run --rm -e MONGOID_ENV=test dev bundle exec ruby lib/tasks/build_database.rb
+docker-compose run --rm -e MONGOID_ENV=development dev bundle exec ruby lib/tasks/build_database.rb 
+
+```
+
+
 ## Loading data
 
 The Holdings data store is derived from three sources:
