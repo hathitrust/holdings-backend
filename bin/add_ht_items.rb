@@ -47,23 +47,6 @@ end
 filename = ARGV[0]
 logger.info "Updating HT Items."
 
-def process_batch(ocns, batch, retries = 0)
-  raise "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
-
-  begin
-    c = ClusterHtItem.new(ocns).cluster(batch)
-    c.upsert if c.changed?
-  rescue Mongo::Error::OperationFailure => e
-    if /duplicate key error/.match?(e.code_name)
-      puts "Got DuplicateKeyError while processing #{ocns}, retrying #{retries+1}"
-      process_batch(ocns, batch, retries+1)
-    end
-  rescue ClusterError => e
-    puts "Got ClusterError while processing #{ocns}, retrying #{retries+1}"
-    process_batch(ocns, batch, retries+1)
-  end
-end
-
 last_ocns = nil
 batch = []
 
@@ -74,7 +57,7 @@ Zinzout.zin(filename).each do |line|
 
   # always process htitems with no OCN as a batch of 1
   if last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns)
-    process_batch(last_ocns, batch)
+    ClusterHtItem.process_batch(last_ocns, batch)
     batch = []
   end
 

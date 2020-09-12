@@ -24,7 +24,7 @@ Zinzout.zin(ARGV.shift).each do |line|
     (deprecated, resolved) = line.split.map(&:to_i)
     r = OCNResolution.new(deprecated: deprecated, resolved: resolved)
     c = ClusterOCNResolution.new(r).cluster
-    c.upsert if c.changed?
+    c.save if c.changed?
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   rescue StandardError => e
     puts "Encountered error while processing line: "

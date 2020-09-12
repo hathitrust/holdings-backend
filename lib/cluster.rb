@@ -7,10 +7,7 @@ require "commitment"
 require "ocn_resolution"
 require "serial"
 require "cluster_ht_item"
-
-# Indication of a retryable error with clustering
-class ClusterError < RuntimeError
-end
+require "cluster_error"
 
 # A set of identifiers (e.g. OCLC numbers),
 # - ocns
@@ -57,7 +54,7 @@ class Cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
     move_members_to_self(other)
-    puts "Deleting cluster #{other._id}"
+#    puts "Deleted cluster #{other.inspect} (merged into #{inspect})"
     other.delete
     self
   end
@@ -77,6 +74,21 @@ class Cluster
     self
   end
 
+  def self.session
+    Mongoid::Threaded.get_session
+  end
+
+  def self.with_transaction
+    if s = Mongoid::Threaded.get_session
+      raise "In a session but not in a transaction??" unless s.in_transaction?
+      yield
+    else
+      Cluster.with_session do |session|
+        session.with_transaction { yield }
+      end
+    end
+  end
+
   # Merges multiple clusters together
   #
   # @param clusters All the clusters we need to merge
@@ -85,16 +97,7 @@ class Cluster
     c = clusters.shift
     if clusters.any?
       raise ClusterError, "cluster disappeared, try again" if c.nil?
-
-      if transaction
-        c.with_session do |session|
-          session.start_transaction
-          c.merge_many(clusters)
-          session.commit_transaction
-        end
-      else
-        c.merge_many(clusters)
-      end
+      with_transaction { c.merge_many(clusters) }
     end
     c
   end
@@ -122,4 +125,5 @@ class Cluster
     other.ht_items.each {|ht| ClusterHtItem.new(ht.ocns).move(ht, self) }
     other.commitments.each {|c| c.move(self) }
   end
+
 end

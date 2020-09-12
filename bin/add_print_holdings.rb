@@ -44,7 +44,7 @@ Zinzout.zin(filename).each do |line|
     else
       ClusterHolding.new(h).cluster
     end
-    c.upsert if c.changed?
+    c.save if c.changed?
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   rescue StandardError => e
     puts "Encountered error while processing line: "
