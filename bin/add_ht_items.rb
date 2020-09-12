@@ -37,7 +37,7 @@ waypoint = Utils::Waypoint.new
 STDIN.set_encoding "utf-8"
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
-clean  = ARGV.include?("--clean")
+clean = ARGV.include?("--clean")
 
 if clean
   logger.info "Removing clusters first"
@@ -47,19 +47,20 @@ end
 filename = ARGV[0]
 logger.info "Updating HT Items."
 
-def process_batch(ocns,batch,retries=0)
-  raise RuntimeError, "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
+def process_batch(ocns, batch, retries = 0)
+  raise "Too many retries for #{h.item_id}" if retries > MAX_RETRIES
+
   begin
     c = ClusterHtItem.new(ocns).cluster(batch)
     c.upsert if c.changed?
   rescue Mongo::Error::OperationFailure => e
-    if(e.code_name =~ /duplicate key error/)
+    if /duplicate key error/.match?(e.code_name)
       puts "Got DuplicateKeyError while processing #{ocns}, retrying #{retries+1}"
-      process_batch(ocns,batch,retries+1)
+      process_batch(ocns, batch, retries+1)
     end
   rescue ClusterError => e
     puts "Got ClusterError while processing #{ocns}, retrying #{retries+1}"
-    process_batch(ocns,batch,retries+1)
+    process_batch(ocns, batch, retries+1)
   end
 end
 
@@ -72,8 +73,8 @@ Zinzout.zin(filename).each do |line|
   htitem = HtItem.new(hathifile_to_record(line))
 
   # always process htitems with no OCN as a batch of 1
-  if(last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns))
-    process_batch(last_ocns,batch)
+  if last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns)
+    process_batch(last_ocns, batch)
     batch = []
   end
 
@@ -84,6 +85,6 @@ Zinzout.zin(filename).each do |line|
 end
 
 # process final batch
-process_batch(last_ocns,batch)
+process_batch(last_ocns, batch)
 
 logger.info waypoint.final_line

@@ -1,4 +1,3 @@
-
 # frozen_string_literal: true
 
 require "cluster"
@@ -7,7 +6,7 @@ require "reclusterer"
 # Services for batch loading HT items
 class ClusterHtItem
 
-  def initialize(ocns=[],transaction: true)
+  def initialize(ocns = [], transaction: true)
     @ocns = ocns
     @transaction = transaction
   end
@@ -17,8 +16,7 @@ class ClusterHtItem
     cluster_for_ocns.tap do |c|
       to_append = []
       batch.each do |item|
-
-        if ( existing_item = c.ht_item(item.item_id) )
+        if (existing_item = c.ht_item(item.item_id))
           existing_item.update_attributes(item.to_hash)
         else
           remove_old_ht_item(item)
@@ -32,7 +30,7 @@ class ClusterHtItem
   # Move an HTItem from one cluster to another
   #
   # @param new_cluster - the cluster to move to
-  def move(ht_item,new_cluster)
+  def move(ht_item, new_cluster)
     unless new_cluster.id == ht_item._parent.id
       duped_htitem = ht_item.dup
       ht_item.delete
@@ -52,7 +50,7 @@ class ClusterHtItem
   private
 
   def remove_old_ht_item(ht_item)
-    if(cluster = Cluster.with_ht_item(ht_item).first)
+    if (cluster = Cluster.with_ht_item(ht_item).first)
       cluster.ht_item(ht_item.item_id).delete
 
       # Note that technically we only need to do this if there were multiple
@@ -70,10 +68,11 @@ class ClusterHtItem
 
   def existing_cluster_with_ocns
     return unless @ocns.any?
+
     Cluster.merge_many(Cluster.for_ocns(@ocns),
                        transaction: @transaction).tap do |c|
-      c&.add_to_set(ocns: @ocns)
-    end
+                         c&.add_to_set(ocns: @ocns)
+                       end
   end
 
 end

@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require "spec_helper"
 require "cluster_ht_item"
 RSpec.describe ClusterHtItem do
   let(:item) { build(:ht_item) }
   let(:ocns) { item.ocns }
-  let(:batch) { [item,build(:ht_item, ocns: ocns)] }
+  let(:batch) { [item, build(:ht_item, ocns: ocns)] }
   let(:empty_cluster) { create(:cluster, ocns: ocns) }
   let(:cluster_with_item) { create(:cluster, ocns: ocns, ht_items: [item]) }
   let(:no_ocn) { build(:ht_item, ocns: []) }
@@ -128,7 +130,6 @@ RSpec.describe ClusterHtItem do
     end
   end
 
-
   describe "#move" do
     let(:c2) { create(:cluster) }
 
@@ -140,7 +141,7 @@ RSpec.describe ClusterHtItem do
     it "moves an HT Item from one cluster to another" do
       cluster = described_class.new(item.ocns).cluster([item])
       expect(cluster.ht_items.to_a.size).to eq(1)
-      described_class.new(item.ocns).move(item,c2)
+      described_class.new(item.ocns).move(item, c2)
       expect(cluster.ht_items.to_a.size).to eq(0)
       expect(c2.ht_items.to_a.size).to eq(1)
     end
@@ -170,6 +171,4 @@ RSpec.describe ClusterHtItem do
       expect(Cluster.each.to_a.first).not_to eq(cluster)
     end
   end
-
-
 end

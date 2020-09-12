@@ -35,8 +35,8 @@ class Cluster
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
-  scope :for_ocns, lambda { |ocns| where(:ocns.in => ocns) }
-  scope :with_ht_item, lambda { |ht_item| where("ht_items.item_id": ht_item.item_id) }
+  scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
+  scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -48,7 +48,6 @@ class Cluster
       if (record.ht_items.collect(&:ocns).flatten +
           record.ocn_resolutions.collect(&:ocns).flatten - value).any?
   end
-
 
   # Adds the members of the given cluster to this cluster.
   # Deletes the other cluster.
@@ -71,6 +70,7 @@ class Cluster
   def merge_many(clusters)
     clusters.each do |source|
       raise ClusterError, "clusters disappeared, try again" if source.nil?
+
       merge(source) unless source._id == _id
     end
     save if changed?
@@ -81,12 +81,12 @@ class Cluster
   #
   # @param clusters All the clusters we need to merge
   # @return a cluster or nil if nil set
-  def self.merge_many(clusters,transaction: true)
+  def self.merge_many(clusters, transaction: true)
     c = clusters.shift
-    if(clusters.any?)
+    if clusters.any?
       raise ClusterError, "cluster disappeared, try again" if c.nil?
 
-      if(transaction)
+      if transaction
         c.with_session do |session|
           session.start_transaction
           c.merge_many(clusters)
@@ -109,7 +109,7 @@ class Cluster
   #
   # @param the item id to find
   def ht_item(item_id)
-    ht_items.to_a.find { |h| h.item_id == item_id }
+    ht_items.to_a.find {|h| h.item_id == item_id }
   end
 
   private
@@ -119,7 +119,7 @@ class Cluster
   # @param other - the other cluster
   def move_members_to_self(other)
     other.holdings.each {|h| ClusterHolding.new(h).move(self) }
-    other.ht_items.each {|ht| ClusterHtItem.new(ht.ocns).move(ht,self) }
+    other.ht_items.each {|ht| ClusterHtItem.new(ht.ocns).move(ht, self) }
     other.commitments.each {|c| c.move(self) }
   end
 end
