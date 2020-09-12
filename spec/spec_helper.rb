@@ -40,4 +40,20 @@ RSpec.configure do |config|
   config.before(:suite) do
     FactoryBot.find_definitions
   end
+
+  config.before(:all) do
+    # Ensure we don't try to use DB for tests by default and that we have
+    # mock HT member data to use in tests
+    Services.register(:holdings_db) { nil }
+    Services.register(:ht_members) do
+      HTMembers.new(
+        "carleton" => HTMember.new(inst_id: "carleton", country_code: "us", weight: 1.0),
+        "umich" => HTMember.new(inst_id: "umich", country_code: "us", weight: 1.0),
+        "smu" => HTMember.new(inst_id: "smu", country_code: "us", weight: 1.0),
+        "stanford" => HTMember.new(inst_id: "stanford", country_code: "us", weight: 1.0),
+        "ualberta" => HTMember.new(inst_id: "ualberta", country_code: "ca", weight: 1.0),
+        "utexas" => HTMember.new(inst_id: "utexas", country_code: "us", weight: 3.0)
+      )
+    end
+  end
 end
