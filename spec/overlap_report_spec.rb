@@ -5,8 +5,8 @@ require_relative "../bin/export_overlap_report"
 
 RSpec.describe "overlap_report" do
   let(:h) { build(:holding) }
-  let(:ht) { build(:ht_item, ocns: [h.ocn], content_provider_code: "not_same_as_holding") }
-  let(:ht2) { build(:ht_item, content_provider_code: "not_same_as_holding") }
+  let(:ht) { build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding") }
+  let(:ht2) { build(:ht_item, billing_entity: "not_same_as_holding") }
 
   before(:each) do
     Cluster.each(&:delete)
@@ -25,7 +25,7 @@ RSpec.describe "overlap_report" do
     end
 
     it "finds by ht_item" do
-      expect(matching_clusters(ht.content_provider_code).count).to eq(2)
+      expect(matching_clusters(ht.billing_entity).count).to eq(2)
     end
   end
 end

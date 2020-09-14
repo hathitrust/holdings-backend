@@ -8,7 +8,7 @@ class MultiPartOverlap < Overlap
   def members_with_matching_ht_items
     @cluster.ht_items.where("$or": [{ n_enum: @ht_item.n_enum },
                                     { n_enum: nil }])
-      .pluck(:content_provider_code).uniq
+      .pluck(:billing_entity).uniq
   end
 
   def copy_count

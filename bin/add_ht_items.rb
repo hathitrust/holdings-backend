@@ -18,14 +18,14 @@ Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 def hathifile_to_record(hathifile_line)
   fields = hathifile_line.split(/\t/)
   {
-    item_id:               fields[0],
-    ocns:                  fields[7].split(",").map(&:to_i),
-    ht_bib_key:            fields[3].to_i,
-    rights:                fields[2],
-    access:                fields[1],
-    bib_fmt:               fields[19],
-    enum_chron:            fields[4],
-    content_provider_code: fields[21]
+    item_id:         fields[0],
+    ocns:            fields[7].split(",").map(&:to_i),
+    ht_bib_key:      fields[3].to_i,
+    rights:          fields[2],
+    access:          fields[1],
+    bib_fmt:         fields[19],
+    enum_chron:      fields[4],
+    collection_code: fields[20]
   }
 end
 

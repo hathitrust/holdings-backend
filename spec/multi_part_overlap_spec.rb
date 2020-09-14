@@ -35,7 +35,7 @@ RSpec.describe MultiPartOverlap do
   describe "#members_with_matching_ht_items" do
     it "finds a member with ht_item with the same enumchron" do
       ht_w_ec_dupe = ht_w_ec.clone
-      ht_w_ec_dupe.content_provider_code = "different_member"
+      ht_w_ec_dupe.billing_entity = "different_member"
       cluster = ClusterHtItem.new(ht_w_ec_dupe).cluster.tap(&:save)
       overlap = described_class.new(cluster, "different_member", ht_w_ec)
       expect(overlap.members_with_matching_ht_items).to include("different_member")
@@ -43,7 +43,7 @@ RSpec.describe MultiPartOverlap do
 
     it "finds a member with ht_item with nil enumchron" do
       ht_wo_ec_dupe = ht_wo_ec.clone
-      ht_wo_ec_dupe.content_provider_code = "different_member"
+      ht_wo_ec_dupe.billing_entity = "different_member"
       cluster = ClusterHtItem.new(ht_wo_ec_dupe).cluster.tap(&:save)
       overlap = described_class.new(cluster, "different_member", ht_w_ec)
       expect(overlap.members_with_matching_ht_items).to include("different_member")
@@ -101,16 +101,16 @@ RSpec.describe MultiPartOverlap do
       expect(mpo.copy_count).to be(0)
     end
 
-    it "returns 1 copy if content_provider_code matches" do
-      ht_w_ec.update_attributes(content_provider_code: "different_org")
+    it "returns 1 copy if billing_entity matches" do
+      ht_w_ec.update_attributes(billing_entity: "different_org")
       c.reload
       mpo = described_class.new(c, "different_org", ht_w_ec)
       expect(mpo.copy_count).to be(1)
     end
 
-    it "returns 1 copy if content_provider_code in members_with_matching_ht_items" do
+    it "returns 1 copy if billing_entity in members_with_matching_ht_items" do
       ht_wo_ec_dupe = ht_wo_ec.clone
-      ht_wo_ec_dupe.content_provider_code = "different_member"
+      ht_wo_ec_dupe.billing_entity = "different_member"
       cluster = ClusterHtItem.new(ht_wo_ec_dupe).cluster.tap(&:save)
       mpo = described_class.new(cluster, "different_member", ht_w_ec)
       expect(mpo.copy_count).to be(1)

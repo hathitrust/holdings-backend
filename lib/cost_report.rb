@@ -21,7 +21,7 @@ class CostReport
       Cluster.where("ht_items.0": { "$exists": 1 },
                   "ht_items.access": "deny",
                   "$or": [{ "holdings.organization": @organization },
-                          { "ht_items.content_provider_code": @organization }])
+                          { "ht_items.billing_entity": @organization }])
     end
   end
 
