@@ -6,12 +6,11 @@ Dotenv.load(".env")
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
-require "ocn_resolution"
-require "holding"
 require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "cluster_overlap"
+require "etas_overlap"
 
 Mongoid.load!("mongoid.yml", :development)
 
@@ -44,18 +43,21 @@ if __FILE__ == $PROGRAM_NAME
   org = ARGV.shift
   matching_clusters(org).each do |c|
     ClusterOverlap.new(c, org).each do |overlap|
-      waypoint.incr
+      cluster_format = CalculateFormat.new(c).cluster_format,
+                       waypoint.incr
       overlap.matching_holdings.each do |holding|
         unless reports.key?(holding[:organization])
           reports[holding[:organization]] = open_report(holding[:organization],
                                                         date_of_report,
                                                         report_path)
         end
-        reports[holding[:organization]].puts [holding[:ocn],
-                                              holding[:local_id],
-                                              CalculateFormat.new(c).cluster_format,
-                                              overlap.ht_item.access,
-                                              overlap.ht_item.rights].join("\t")
+        etas_record = ETASOverlap.new(ocn: holding[:ocn],
+                                      local_id: holding[:local_id],
+                                      item_type: cluster_format,
+                                      access: overlap.ht_item.access,
+                                      rights: overlap.ht_item.rights)
+
+        reports[holding[:organization]].puts etas_record
       end
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end
