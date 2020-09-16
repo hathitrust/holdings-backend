@@ -19,7 +19,7 @@ class Reclusterer
       @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r.dup).cluster.save }
       @cluster.holdings.each {|h| ClusterHolding.new(h.dup).cluster.save }
       # TODO: group and batch by OCN
-      @cluster.ht_items.each {|h| ClusterHtItem.new(h.ocns).cluster([h.dup]).save }
+      @cluster.ht_items.each {|h| ClusterHtItem.new(h.dup).cluster.save }
       @cluster.serials.each {|s| ClusterSerial.new(s.dup).cluster.save }
     end
   end

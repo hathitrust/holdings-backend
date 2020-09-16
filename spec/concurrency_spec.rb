@@ -6,9 +6,9 @@ require "tmpdir"
 
 class InstrumentedClusterHtItem < ClusterHtItem
 
-  def initialize(ocns = [], pid:, tmpdir:, wait_before_merge: nil,
+  def initialize(htitems = [], pid:, tmpdir:, wait_before_merge: nil,
     wait_before_save: nil, wait_before_delete: nil)
-    super(ocns)
+    super(htitems)
     @pid = pid
     @wait_before_merge = wait_before_merge
     @wait_before_save = wait_before_save
@@ -25,17 +25,19 @@ class InstrumentedClusterHtItem < ClusterHtItem
     end
   end
 
-  def cluster(htitems)
-    super(htitems).tap do |_c|
-      write_status("#{@pid}_saved_cluster")
+  def cluster_with_htitem(htitem)
+    super.tap do |c|
+      puts "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
+      write_status("#{@pid}_got_cluster")
+      wait_for(@wait_before_delete)
     end
   end
 
-  def delete_htitem_and_recluster(c,ht_otem)
-    puts "before delete: htitems from #{c}: #{c.ht_items.inspect}"
-    write_status("#{@pid}_got_cluster")
-    wait_for(@wait_before_delete)
-    super
+
+  def cluster
+    super.tap do |_c|
+      write_status("#{@pid}_saved_cluster")
+    end
   end
 
   def write_status(file)
@@ -79,14 +81,14 @@ RSpec.describe "concurrency" do
     let(:first_process) do
       Proc.new do |tmpdir|
         setup_mongo
-        ClusterHtItem.new([1]).cluster([]).save
-        ClusterHtItem.new([2]).cluster([]).save
+        create(:cluster, ocns: [1])
+        create(:cluster, ocns: [2])
 
         ht_item = FactoryBot.build(:ht_item, ocns: [2])
 
-        InstrumentedClusterHtItem.new(ht_item.ocns, pid: "first",
+        InstrumentedClusterHtItem.new(ht_item, pid: "first",
                                         wait_before_save: "second_got_cluster",
-                                        tmpdir: tmpdir).cluster([ht_item])
+                                        tmpdir: tmpdir).cluster
       end
     end
 
@@ -95,10 +97,10 @@ RSpec.describe "concurrency" do
         setup_mongo
         ht_item = FactoryBot.build(:ht_item, ocns: [1, 2])
 
-        InstrumentedClusterHtItem.new(ht_item.ocns, pid: "second",
+        InstrumentedClusterHtItem.new(ht_item, pid: "second",
                                    wait_before_merge: "first_got_cluster",
                                    wait_before_save: "first_saved_cluster",
-                                   tmpdir: tmpdir).cluster([ht_item])
+                                   tmpdir: tmpdir).cluster
       end
     end
 
@@ -125,14 +127,13 @@ RSpec.describe "concurrency" do
         setup_mongo
         ocns = first_ht_item.ocns
         puts "first saving cluster"
-        ClusterHtItem.new(ocns).cluster([first_ht_item]).save
+        ClusterHtItem.new(first_ht_item).cluster.save
 
         puts "first starting instrumentcluster"
 
-        InstrumentedClusterHtItem.new(ocns, pid: "first",
+        InstrumentedClusterHtItem.new(first_ht_item, pid: "first",
                                      wait_before_delete: "second_saved_cluster",
-                                     tmpdir: tmpdir)
-          .delete(first_ht_item)
+                                     tmpdir: tmpdir).delete
 
       end
     end
@@ -141,10 +142,10 @@ RSpec.describe "concurrency" do
       Proc.new do |tmpdir|
         setup_mongo
 
-        InstrumentedClusterHtItem.new(second_ht_item.ocns, pid: "second",
+        InstrumentedClusterHtItem.new(second_ht_item, pid: "second",
                                    wait_before_save: "first_got_cluster",
                                    tmpdir: tmpdir)
-          .cluster([second_ht_item])
+          .cluster
       end
     end
 
