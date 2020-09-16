@@ -34,7 +34,7 @@ end
 
 BATCH_SIZE = 1_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
-logger = Logger.new(STDOUT)
+logger = Services.logger
 
 if __FILE__ == $PROGRAM_NAME
   # delete old print serial records

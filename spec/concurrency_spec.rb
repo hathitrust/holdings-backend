@@ -1,10 +1,15 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "services"
 require "cluster_ht_item"
 require "tmpdir"
 
 class InstrumentedClusterHtItem < ClusterHtItem
+
+  def logger
+    Services.logger
+  end
 
   def initialize(htitems = [], pid:, tmpdir:, wait_before_merge: nil,
     wait_before_save: nil, wait_before_delete: nil)
@@ -27,7 +32,7 @@ class InstrumentedClusterHtItem < ClusterHtItem
 
   def cluster_with_htitem(htitem)
     super.tap do |c|
-      puts "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
+      logger.debug "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
       write_status("#{@pid}_got_cluster")
       wait_for(@wait_before_delete)
     end
@@ -41,12 +46,12 @@ class InstrumentedClusterHtItem < ClusterHtItem
   end
 
   def write_status(file)
-    puts "#{@pid} writing status #{file}"
+    logger.debug "#{@pid} writing status #{file}"
     File.open("#{@tmpdir}/#{file}", "w") {|_| }
   end
 
   def wait_for(file)
-    puts "#{@pid} waiting on #{file}"
+    logger.debug "#{@pid} waiting on #{file}"
     return unless file
 
     sleep(0.05) until File.exist?("#{@tmpdir}/#{file}")
@@ -54,22 +59,25 @@ class InstrumentedClusterHtItem < ClusterHtItem
 end
 
 RSpec.describe "concurrency" do
+  def reconnect_mongoid
+    # from https://docs.mongodb.com/mongoid/current/tutorials/mongoid-configuration/
+    Mongoid::Clients.clients.each do |name, client|
+      client.close
+      client.reconnect
+    end
+  end
+
   def run_concurrent(first_process,second_process)
+    Mongoid.disconnect_clients
     Dir.mktmpdir do |tmpdir|
       fork do
+        reconnect_mongoid
         second_process.call(tmpdir)
       end
+      reconnect_mongoid
       first_process.call(tmpdir)
       Process.wait
     end
-
-    setup_mongo
-    #Cluster.all.each {|c| puts JSON.pretty_generate(JSON.parse(c.to_json)) }
-  end
-
-  def setup_mongo
-    Mongoid.load!("mongoid.yml", :test)
-    Cluster.create_indexes
   end
 
   before(:each) do
@@ -80,7 +88,6 @@ RSpec.describe "concurrency" do
 
     let(:first_process) do
       Proc.new do |tmpdir|
-        setup_mongo
         create(:cluster, ocns: [1])
         create(:cluster, ocns: [2])
 
@@ -94,7 +101,6 @@ RSpec.describe "concurrency" do
 
     let(:second_process) do
       Proc.new do |tmpdir|
-        setup_mongo
         ht_item = FactoryBot.build(:ht_item, ocns: [1, 2])
 
         InstrumentedClusterHtItem.new(ht_item, pid: "second",
@@ -124,12 +130,8 @@ RSpec.describe "concurrency" do
 
     let(:first_process) do
       Proc.new do |tmpdir|
-        setup_mongo
         ocns = first_ht_item.ocns
-        puts "first saving cluster"
         ClusterHtItem.new(first_ht_item).cluster.save
-
-        puts "first starting instrumentcluster"
 
         InstrumentedClusterHtItem.new(first_ht_item, pid: "first",
                                      wait_before_delete: "second_saved_cluster",
@@ -140,8 +142,6 @@ RSpec.describe "concurrency" do
 
     let(:second_process) do
       Proc.new do |tmpdir|
-        setup_mongo
-
         InstrumentedClusterHtItem.new(second_ht_item, pid: "second",
                                    wait_before_save: "first_got_cluster",
                                    tmpdir: tmpdir)

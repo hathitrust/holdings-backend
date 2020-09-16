@@ -108,8 +108,7 @@ class HoldingsDB < SimpleDelegator
         Sequel.connect(**db_args)
       end
     rescue Sequel::DatabaseConnectionError => e
-      puts "Error trying to connect"
-      pp e
+      Services.logger.error "Error trying to connect"
       raise e
     end
   end

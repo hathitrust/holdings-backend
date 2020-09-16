@@ -3,6 +3,7 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
+require "services"
 require "cluster_ht_item"
 require "batch_cluster_ht_item"
 require "ht_item"
@@ -32,7 +33,7 @@ end
 
 MAX_RETRIES = 5
 BATCH_SIZE = 10_000
-logger = Logger.new(STDOUT)
+logger = Services.logger
 waypoint = Utils::Waypoint.new
 STDIN.set_encoding "utf-8"
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"

@@ -54,7 +54,7 @@ class Cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
     move_members_to_self(other)
-#    puts "Deleted cluster #{other.inspect} (merged into #{inspect})"
+    Services.logger.debug "Deleted cluster #{other.inspect} (merged into #{inspect})"
     other.delete
     self
   end
@@ -115,7 +115,23 @@ class Cluster
     ht_items.to_a.find {|h| h.item_id == item_id }
   end
 
+  def add_ht_items(*items)
+    push_to_field(:ht_items, items.flatten)
+  end
+
   private
+
+  def push_to_field(field, items)
+    result = collection.update_one( { _id: _id }, { "$push" => { field => { "$each" => items.map(&:as_document) } } }, session: self.class.session )
+    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
+
+    items.each do |item|
+      item.parentize(self)
+      item._association = send(field)._association
+      item.cluster=self
+    end
+    reload
+  end
 
   # Moves embedded documents from another cluster to itself
   #

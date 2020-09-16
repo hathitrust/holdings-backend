@@ -40,7 +40,7 @@ end
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
-  logger = Logger.new(STDERR)
+  logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
   org = ARGV.shift

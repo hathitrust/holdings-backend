@@ -17,7 +17,7 @@ Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 BATCH_SIZE = 10_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
-logger = Logger.new(STDOUT)
+logger = Services.logger
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
 update = ARGV[0] == "-u"
@@ -47,9 +47,9 @@ Zinzout.zin(filename).each do |line|
     c.save if c.changed?
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   rescue StandardError => e
-    puts "Encountered error while processing line: "
-    puts line
-    puts e.message
+    logger.error "Encountered error while processing line: "
+    logger.error line
+    logger.error e.message
     puts e.backtrace.inspect
     raise e
   end

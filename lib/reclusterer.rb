@@ -13,7 +13,7 @@ class Reclusterer
 
   def recluster
     Cluster.with_transaction do
-      puts "Deleting and reclustering cluster #{@cluster.inspect}"
+      Services.logger.debug "Deleting and reclustering cluster #{@cluster.inspect}"
       @cluster.delete
 
       @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r.dup).cluster.save }

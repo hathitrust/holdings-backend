@@ -55,5 +55,9 @@ RSpec.configure do |config|
         "utexas" => HTMember.new(inst_id: "utexas", country_code: "us", weight: 3.0)
       )
     end
+
+    Services.register(:logger) do
+      Logger.new("test.log").tap { |l| l.level == Logger::DEBUG }
+    end
   end
 end

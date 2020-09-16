@@ -15,21 +15,20 @@ class ClusterHtItem
     @htitems = htitems.flatten
     @ocns = @htitems.first.ocns
 
-    if @htitems.find { |h| h.ocns != @ocns }
+    if @htitems.find {|h| h.ocns != @ocns }
       raise ArgumentError, "OCNs for each HTItem in batch must match"
     end
 
     if (@ocns.nil? || @ocns.empty?) && @htitems.length > 1
       raise ArgumentError, "Cannot cluster multiple OCN-less HTItems"
     end
-
   end
 
-  def cluster()
+  def cluster
     retry_operation do
       cluster_for_ocns.tap do |cluster|
-        puts "adding htitems #{htitems.inspect} with ocns #{@ocns} to cluster #{cluster.inspect}"
-        update_or_add_htitems(cluster,htitems)
+        Services.logger.debug "adding htitems #{htitems.inspect} with ocns #{@ocns} to cluster #{cluster.inspect}"
+        update_or_add_htitems(cluster, htitems)
       end
     end
   end
@@ -39,6 +38,7 @@ class ClusterHtItem
   # @param new_cluster - the cluster to move to
   def move(new_cluster)
     raise ArgumentError, "Can only move one HTItem at a time" unless htitems.length == 1
+
     ht_item = htitems.first
 
     retry_operation do
@@ -47,7 +47,7 @@ class ClusterHtItem
       Cluster.with_transaction do
         duped_htitem = ht_item.dup
         ht_item.delete
-        new_cluster.ht_items << duped_htitem
+        new_cluster.add_ht_items(duped_htitem)
       end
     end
   end
@@ -66,7 +66,7 @@ class ClusterHtItem
 
       Cluster.with_transaction do
         if (cluster = cluster_with_htitem(ht_item))
-          puts "removing old htitem #{ht_item.item_id}"
+          Services.logger.debug "removing old htitem #{ht_item.item_id}"
           cluster.ht_item(ht_item.item_id).delete
 
           # Note that technically we only need to do this if there were multiple
@@ -92,7 +92,7 @@ class ClusterHtItem
   end
 
   def cluster_for_ocns
-    existing_cluster_with_ocns.tap { |c| puts "Got existing cluster #{c.inspect}" if c} || Cluster.create(ocns: @ocns).tap { |c| puts "Created cluster #{c.inspect}" }
+    existing_cluster_with_ocns || Cluster.create(ocns: @ocns)
   end
 
   def existing_cluster_with_ocns
@@ -103,12 +103,12 @@ class ClusterHtItem
     end
   end
 
-  def update_or_add_htitems(cluster,htitems)
-    puts "Cluster #{cluster.inspect}: adding htitems #{htitems.inspect} with ocns #{@ocns}"
+  def update_or_add_htitems(cluster, htitems)
+    Services.logger.debug "Cluster #{cluster.inspect}: adding htitems #{htitems.inspect} with ocns #{@ocns}"
     to_append = []
     htitems.each do |item|
       if (existing_item = cluster.ht_item(item.item_id))
-        puts "updating existing item with id #{item.item_id}"
+        Services.logger.debug "updating existing item with id #{item.item_id}"
         existing_item.update_attributes(item.to_hash)
       else
         ClusterHtItem.new(item).delete
@@ -116,17 +116,8 @@ class ClusterHtItem
       end
     end
 
-    if(to_append.length > 0)
-      docs = to_append.map(&:as_document)
-      result = cluster.collection.update_one( { _id: cluster._id }, { "$push" => { :ht_items => { "$each" => docs } } }, session: Cluster.session )
-      raise ClusterError, "#{cluster.inspect} deleted before update" unless result.modified_count > 0
-
-      to_append.each do |item|
-        item.parentize(cluster)
-        item._association = cluster.ht_items._association
-        item.cluster=cluster
-      end
-      cluster.reload
+    unless to_append.empty?
+      cluster.add_ht_items(to_append)
     end
   end
 
@@ -144,13 +135,13 @@ class ClusterHtItem
   end
 
   def retryable_error?(error)
-    error.code == MONGO_DUPLICATE_KEY_ERROR || error.code_name == "WriteConflict" 
-#    error.code == MONGO_DUPLICATE_KEY_ERROR
+    error.code == MONGO_DUPLICATE_KEY_ERROR || error.code_name == "WriteConflict"
+    #    error.code == MONGO_DUPLICATE_KEY_ERROR
   end
 
-  def handle_batch_error?(exception, tries, condition=true)
+  def handle_batch_error?(exception, tries, condition = true)
     if condition && tries < MAX_RETRIES
-      warn "Got #{exception} while processing #{@ocns}, retrying (try #{tries+1})"
+      Services.logger.warn "Got #{exception} while processing #{@ocns}, retrying (try #{tries+1})"
       true
     else
       false
