@@ -25,20 +25,20 @@ RSpec.describe ClusterHtItem do
     end
 
     it "accepts multiple HTItems as direct arguments" do
-      expect(described_class.new(item,item2)).not_to be nil
+      expect(described_class.new(item, item2)).not_to be nil
     end
 
     it "raises ArgumentError with two HTItems with different single OCNs" do
       expect do
-        described_class.new( [item, build(:ht_item)])
+        described_class.new([item, build(:ht_item)])
       end.to raise_exception(ArgumentError)
     end
 
     it "raises ArgumentError with two HTItems with different multiple OCNs" do
       expect do
         described_class.new([
-          build(:ht_item, ocns: [1,2]),
-          build(:ht_item, ocns: [1,3])
+          build(:ht_item, ocns: [1, 2]),
+          build(:ht_item, ocns: [1, 3])
         ])
       end.to raise_exception(ArgumentError)
     end
@@ -66,7 +66,7 @@ RSpec.describe ClusterHtItem do
       expect(Cluster).not_to receive(:with_ht_item)
 
       update_item = build(:ht_item, item_id: item.item_id, ocns: item.ocns)
-      cluster = described_class.new(update_item).cluster
+      described_class.new(update_item).cluster
     end
 
     it "adds an HT Item to an existing cluster" do

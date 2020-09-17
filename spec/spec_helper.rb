@@ -7,6 +7,7 @@ require "bundler/setup"
 require "factory_bot"
 require "simplecov"
 require "mongoid"
+require "fixtures/members"
 SimpleCov.start
 
 Mongoid.load!("mongoid.yml", :test)
@@ -45,19 +46,10 @@ RSpec.configure do |config|
     # Ensure we don't try to use DB for tests by default and that we have
     # mock HT member data to use in tests
     Services.register(:holdings_db) { nil }
-    Services.register(:ht_members) do
-      HTMembers.new(
-        "carleton" => HTMember.new(inst_id: "carleton", country_code: "us", weight: 1.0),
-        "umich" => HTMember.new(inst_id: "umich", country_code: "us", weight: 1.0),
-        "smu" => HTMember.new(inst_id: "smu", country_code: "us", weight: 1.0),
-        "stanford" => HTMember.new(inst_id: "stanford", country_code: "us", weight: 1.0),
-        "ualberta" => HTMember.new(inst_id: "ualberta", country_code: "ca", weight: 1.0),
-        "utexas" => HTMember.new(inst_id: "utexas", country_code: "us", weight: 3.0)
-      )
-    end
+    Services.register(:ht_members) { mock_members }
 
     Services.register(:logger) do
-      Logger.new("test.log").tap { |l| l.level == Logger::DEBUG }
+      Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }
     end
   end
 end

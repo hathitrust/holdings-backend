@@ -11,22 +11,19 @@ class InstrumentedClusterHtItem < ClusterHtItem
     Services.logger
   end
 
-  def initialize(htitems = [], pid:, tmpdir:, wait_before_merge: nil,
-    wait_before_save: nil, wait_before_delete: nil)
+  def initialize(htitems = [], pid:, tmpdir:, wait_before: {})
     super(htitems)
     @pid = pid
-    @wait_before_merge = wait_before_merge
-    @wait_before_save = wait_before_save
-    @wait_before_delete = wait_before_delete
+    @wait_before = wait_before
     @tmpdir = tmpdir
   end
 
   def cluster_for_ocns
-    wait_for(@wait_before_merge)
+    wait_for(:merge)
 
     super.tap do |_c|
       write_status("#{@pid}_got_cluster")
-      wait_for(@wait_before_save)
+      wait_for(:save)
     end
   end
 
@@ -34,10 +31,9 @@ class InstrumentedClusterHtItem < ClusterHtItem
     super.tap do |c|
       logger.debug "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
       write_status("#{@pid}_got_cluster")
-      wait_for(@wait_before_delete)
+      wait_for(:delete)
     end
   end
-
 
   def cluster
     super.tap do |_c|
@@ -50,9 +46,11 @@ class InstrumentedClusterHtItem < ClusterHtItem
     File.open("#{@tmpdir}/#{file}", "w") {|_| }
   end
 
-  def wait_for(file)
-    logger.debug "#{@pid} waiting on #{file}"
+  def wait_for(condition)
+    file = @wait_before[condition]
     return unless file
+
+    logger.debug "#{@pid} waiting on #{file}"
 
     sleep(0.05) until File.exist?("#{@tmpdir}/#{file}")
   end
@@ -61,13 +59,13 @@ end
 RSpec.describe "concurrency" do
   def reconnect_mongoid
     # from https://docs.mongodb.com/mongoid/current/tutorials/mongoid-configuration/
-    Mongoid::Clients.clients.each do |name, client|
+    Mongoid::Clients.clients.each do |_name, client|
       client.close
       client.reconnect
     end
   end
 
-  def run_concurrent(first_process,second_process)
+  def run_concurrent(first_process, second_process)
     Mongoid.disconnect_clients
     Dir.mktmpdir do |tmpdir|
       fork do
@@ -85,27 +83,26 @@ RSpec.describe "concurrency" do
   end
 
   context "when a process writes an htitem into a cluster that was deleted in another process" do
-
     let(:first_process) do
-      Proc.new do |tmpdir|
+      proc do |tmpdir|
         create(:cluster, ocns: [1])
         create(:cluster, ocns: [2])
 
         ht_item = FactoryBot.build(:ht_item, ocns: [2])
 
         InstrumentedClusterHtItem.new(ht_item, pid: "first",
-                                        wait_before_save: "second_got_cluster",
+                                        wait_before: { save: "second_got_cluster" },
                                         tmpdir: tmpdir).cluster
       end
     end
 
     let(:second_process) do
-      Proc.new do |tmpdir|
+      proc do |tmpdir|
         ht_item = FactoryBot.build(:ht_item, ocns: [1, 2])
 
         InstrumentedClusterHtItem.new(ht_item, pid: "second",
-                                   wait_before_merge: "first_got_cluster",
-                                   wait_before_save: "first_saved_cluster",
+                                   wait_before: { merge: "first_got_cluster",
+                                                  save:  "first_saved_cluster" },
                                    tmpdir: tmpdir).cluster
       end
     end
@@ -125,25 +122,23 @@ RSpec.describe "concurrency" do
     #   - Process 1 deletes a different htitem and calls reclusterer
     #   - Ensure the htitem added by process 2 hasn't disappeared
 
-    let(:first_ht_item)  { FactoryBot.build(:ht_item, ocns: [1,2]) }
+    let(:first_ht_item)  { FactoryBot.build(:ht_item, ocns: [1, 2]) }
     let(:second_ht_item) { FactoryBot.build(:ht_item, ocns: [1]) }
 
     let(:first_process) do
-      Proc.new do |tmpdir|
-        ocns = first_ht_item.ocns
+      proc do |tmpdir|
         ClusterHtItem.new(first_ht_item).cluster.save
 
         InstrumentedClusterHtItem.new(first_ht_item, pid: "first",
-                                     wait_before_delete: "second_saved_cluster",
+                                     wait_before: { delete: "second_saved_cluster" },
                                      tmpdir: tmpdir).delete
-
       end
     end
 
     let(:second_process) do
-      Proc.new do |tmpdir|
+      proc do |tmpdir|
         InstrumentedClusterHtItem.new(second_ht_item, pid: "second",
-                                   wait_before_save: "first_got_cluster",
+                                   wait_before: { save: "first_got_cluster" },
                                    tmpdir: tmpdir)
           .cluster
       end

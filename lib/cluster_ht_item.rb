@@ -5,6 +5,11 @@ require "reclusterer"
 require "cluster_error"
 
 # Services for batch loading HT items
+#
+# rubocop:disable Metrics/ClassLength
+# Much of this esp. around transactions and retry should be extracted to common
+# functionality shared by the other Cluster classes; remove this disabled cop
+# after doing so.
 class ClusterHtItem
 
   MAX_RETRIES=5
@@ -27,7 +32,8 @@ class ClusterHtItem
   def cluster
     retry_operation do
       cluster_for_ocns.tap do |cluster|
-        Services.logger.debug "adding htitems #{htitems.inspect} with ocns #{@ocns} to cluster #{cluster.inspect}"
+        Services.logger.debug "adding htitems #{htitems.inspect} " \
+          " with ocns #{@ocns} to cluster #{cluster.inspect}"
         update_or_add_htitems(cluster, htitems)
       end
     end
@@ -104,7 +110,8 @@ class ClusterHtItem
   end
 
   def update_or_add_htitems(cluster, htitems)
-    Services.logger.debug "Cluster #{cluster.inspect}: adding htitems #{htitems.inspect} with ocns #{@ocns}"
+    Services.logger.debug "Cluster #{cluster.inspect}: " \
+      "adding htitems #{htitems.inspect} with ocns #{@ocns}"
     to_append = []
     htitems.each do |item|
       if (existing_item = cluster.ht_item(item.item_id))
@@ -136,7 +143,6 @@ class ClusterHtItem
 
   def retryable_error?(error)
     error.code == MONGO_DUPLICATE_KEY_ERROR || error.code_name == "WriteConflict"
-    #    error.code == MONGO_DUPLICATE_KEY_ERROR
   end
 
   def handle_batch_error?(exception, tries, condition = true)
@@ -149,3 +155,4 @@ class ClusterHtItem
   end
 
 end
+# rubocop:enable Metrics/ClassLength

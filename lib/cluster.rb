@@ -79,8 +79,9 @@ class Cluster
   end
 
   def self.with_transaction
-    if s = Mongoid::Threaded.get_session
+    if (s = Mongoid::Threaded.get_session)
       raise "In a session but not in a transaction??" unless s.in_transaction?
+
       yield
     else
       Cluster.with_session do |session|
@@ -93,10 +94,11 @@ class Cluster
   #
   # @param clusters All the clusters we need to merge
   # @return a cluster or nil if nil set
-  def self.merge_many(clusters, transaction: true)
+  def self.merge_many(clusters)
     c = clusters.shift
     if clusters.any?
       raise ClusterError, "cluster disappeared, try again" if c.nil?
+
       with_transaction { c.merge_many(clusters) }
     end
     c
@@ -122,7 +124,11 @@ class Cluster
   private
 
   def push_to_field(field, items)
-    result = collection.update_one( { _id: _id }, { "$push" => { field => { "$each" => items.map(&:as_document) } } }, session: self.class.session )
+    result = collection.update_one(
+      { _id: _id },
+      { "$push" => { field => { "$each" => items.map(&:as_document) } } },
+      session: self.class.session
+    )
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
 
     items.each do |item|
