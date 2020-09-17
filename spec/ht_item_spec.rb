@@ -67,7 +67,6 @@ RSpec.describe HtItem do
     expect(build(:ht_item).access).to be_in(["allow", "deny"])
   end
 
-
   describe "#billing_entity" do
     it "is automatically set when collection_code is set" do
       expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
@@ -75,8 +74,8 @@ RSpec.describe HtItem do
   end
 
   describe "#to_hash" do
-    it "contains content_provider_code" do
-      expect(htitem_hash[:content_provider_code]).not_to be nil
+    it "contains billing_entity" do
+      expect(htitem_hash[:billing_entity]).not_to be nil
     end
 
     it "does not contain _id" do

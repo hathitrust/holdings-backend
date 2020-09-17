@@ -8,6 +8,7 @@ require "factory_bot"
 require "simplecov"
 require "mongoid"
 require "fixtures/members"
+require "fixtures/collections"
 SimpleCov.start
 
 Mongoid.load!("mongoid.yml", :test)
@@ -47,6 +48,7 @@ RSpec.configure do |config|
     # mock HT member data to use in tests
     Services.register(:holdings_db) { nil }
     Services.register(:ht_members) { mock_members }
+    Services.register(:ht_collections) { mock_collections }
 
     Services.register(:logger) do
       Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }

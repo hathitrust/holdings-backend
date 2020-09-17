@@ -33,6 +33,14 @@ RSpec.describe HTCollections do
   end
 
   describe "db connection" do
+    # Ensure we have a clean database connection for each test
+    around(:each) do |example|
+      old_holdings_db = Services.holdings_db
+      Services.register(:holdings_db) { HoldingsDB.connection }
+      example.run
+      Services.register(:holdings_db) { old_holdings_db }
+    end
+
     let(:ht_collections) { described_class.new }
 
     it "can fetch data from the database" do

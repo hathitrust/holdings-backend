@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
+require "cluster_holding"
 require "single_part_overlap"
 
 RSpec.describe SinglePartOverlap do
