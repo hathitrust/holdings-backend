@@ -22,8 +22,8 @@ RSpec.describe "overlap_report_import_to_mysql" do
   # Build up a couple items and save them using the export logic from bin/export_overlap_report
   around(:all) do |spec|
     h   = build(:holding)
-    ht  = build(:ht_item, ocns: [h.ocn], content_provider_code: "not_same_as_holding")
-    ht2 = build(:ht_item, content_provider_code: "not_same_as_holding")
+    ht  = build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding")
+    ht2 = build(:ht_item, billing_entity: "not_same_as_holding")
     Cluster.each(&:delete)
     ClusterHolding.new(h).cluster.tap(&:save)
     ClusterHtItem.new(ht).cluster.tap(&:save)
