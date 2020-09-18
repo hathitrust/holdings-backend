@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster_ht_item"
+require "cluster_holding"
 require_relative "../bin/export_overlap_report"
 
 RSpec.describe "overlap_report" do

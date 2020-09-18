@@ -52,3 +52,4 @@ config/environments/*.local.yml
 /docs/_build/
 /docs/_yard/
 *.iml
+/testdata
