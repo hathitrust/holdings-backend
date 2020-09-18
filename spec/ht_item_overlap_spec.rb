@@ -9,7 +9,7 @@ RSpec.describe HtItemOverlap do
           ocns: c.ocns,
           enum_chron: "1",
           n_enum: "1",
-          content_provider_code: "ucr")
+          billing_entity: "ucr")
   end
   let(:holding) do
     build(:holding,

@@ -2,6 +2,7 @@
 
 require "mongoid"
 require "enum_chron_parser"
+require "services"
 
 # An HT Item
 # - ocns
@@ -12,6 +13,8 @@ require "enum_chron_parser"
 # - enum_chron
 # - n_enum
 # - n_chron
+# - collection_code
+# - billing_entity
 class HtItem
   include Mongoid::Document
   field :ocns, type: Array, default: []
@@ -23,7 +26,8 @@ class HtItem
   field :enum_chron, type: String
   field :n_enum, type: String
   field :n_chron, type: String
-  field :content_provider_code, type: String
+  field :collection_code, type: String
+  field :billing_entity, type: String
 
   embedded_in :cluster
   validates :item_id, uniqueness: true
@@ -39,6 +43,12 @@ class HtItem
   def initialize(params = nil)
     super
     normalize_enum_chron
+    set_billing_entity if collection_code
+  end
+
+  def collection_code=(collection_code)
+    super
+    set_billing_entity
   end
 
   def normalize_enum_chron
@@ -65,4 +75,11 @@ class HtItem
       n_chron:    n_chron
     }
   end
+
+  private
+
+  def set_billing_entity
+    self.billing_entity = Services.ht_collections[collection_code].billing_entity
+  end
+
 end

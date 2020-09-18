@@ -10,7 +10,7 @@ RSpec.describe SinglePartOverlap do
           ocns: c.ocns,
           bib_fmt: "spm",
           enum_chron: "",
-          content_provider_code: "yet_another_org")
+          collection_code: "OKS")
   end
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
   let(:h2) do
@@ -37,17 +37,17 @@ RSpec.describe SinglePartOverlap do
       expect(spo.copy_count).to eq(2)
     end
 
-    it "returns 1 if only content_provider_code matches" do
-      ht.update_attributes(content_provider_code: "different_org")
+    it "returns 1 if only billing_entity matches" do
+      ht.update_attributes(billing_entity: "different_org")
       c.reload
       expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
     end
 
-    it "returns 1 if any content_provider_code in the cluster matches" do
+    it "returns 1 if any billing_entity in the cluster matches" do
       ClusterHtItem.new(ht2).cluster.tap(&:save)
       c.reload
-      # ht2.c_p_c will have a CC for a umich item despite no holdings
-      expect(described_class.new(c, ht2.content_provider_code, ht).copy_count).to eq(1)
+      # ht2.billing_entity will have a CC for a umich item despite no holdings
+      expect(described_class.new(c, ht2.billing_entity, ht).copy_count).to eq(1)
     end
 
     it "returns 0 if nothing matches" do

@@ -4,7 +4,7 @@ require "cluster_overlap"
 
 RSpec.describe ClusterOverlap do
   let(:c) { build(:cluster) }
-  let(:spm) { build(:ht_item, ocns: c.ocns, enum_chron: "", content_provider_code: "ucr") }
+  let(:spm) { build(:ht_item, ocns: c.ocns, enum_chron: "", billing_entity: "ucr") }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
   let(:holding2) do
     build(:holding,

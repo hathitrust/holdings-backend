@@ -44,15 +44,15 @@ RSpec.describe SerialOverlap do
       expect(described_class.new(c, h.organization, ht).copy_count).to eq(1)
     end
 
-    it "returns 1 if content_provider_code matches" do
-      ht.update_attributes(content_provider_code: "different_org")
+    it "returns 1 if billing_entity matches" do
+      ht.update_attributes(billing_entity: "different_org")
       c.reload
       expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
     end
 
-    it "returns 1 if any content_provider_code in the cluster matches" do
-      # ht2.c_p_c will have a CC for a umich item despite no holdings
-      expect(described_class.new(c, ht2.content_provider_code, ht).copy_count).to eq(1)
+    it "returns 1 if any billing_entity in the cluster matches" do
+      # ht2.billing_entity will have a CC for a umich item despite no holdings
+      expect(described_class.new(c, ht2.billing_entity, ht).copy_count).to eq(1)
     end
   end
 end

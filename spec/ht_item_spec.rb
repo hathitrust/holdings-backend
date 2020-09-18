@@ -71,4 +71,10 @@ RSpec.describe HtItem do
   it "has an access of deny or allow" do
     expect(build(:ht_item).access).to be_in(["allow", "deny"])
   end
+
+  describe "#billing_entity" do
+    it "is automatically set when collection_code is set" do
+      expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
+    end
+  end
 end
