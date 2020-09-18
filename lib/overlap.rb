@@ -6,6 +6,7 @@ require "cluster"
 # Inherited by SinglePartOverlap, MultiPartOverlap, and SerialOverlap
 class Overlap
   attr_accessor :org
+  attr_accessor :ht_item
 
   def initialize(cluster, org, ht_item)
     @cluster = cluster
@@ -18,6 +19,10 @@ class Overlap
     define_method "#{method}_count".to_sym do
       ""
     end
+  end
+
+  def matching_holdings
+    @cluster.holdings.where(organization: @org)
   end
 
   # Members that provided matching ht_items
