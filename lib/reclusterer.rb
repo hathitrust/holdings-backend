@@ -12,7 +12,7 @@ class Reclusterer
   end
 
   def recluster
-    Cluster.with_transaction do
+    Retryable.with_transaction do
       Services.logger.debug "Deleting and reclustering cluster #{@cluster.inspect}"
       @cluster.delete
 

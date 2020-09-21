@@ -74,22 +74,6 @@ class Cluster
     self
   end
 
-  def self.session
-    Mongoid::Threaded.get_session
-  end
-
-  def self.with_transaction
-    if (s = Mongoid::Threaded.get_session)
-      raise "In a session but not in a transaction??" unless s.in_transaction?
-
-      yield
-    else
-      Cluster.with_session do |session|
-        session.with_transaction { yield }
-      end
-    end
-  end
-
   # Merges multiple clusters together
   #
   # @param clusters All the clusters we need to merge
@@ -117,8 +101,25 @@ class Cluster
     ht_items.to_a.find {|h| h.item_id == item_id }
   end
 
+  def add_holdings(*items)
+    push_to_field(:holdings, items.flatten)
+  end
+
   def add_ht_items(*items)
     push_to_field(:ht_items, items.flatten)
+  end
+
+  def add_ocn_resolutions(*items)
+    push_to_field(:ocn_resolutions, items.flatten)
+  end
+
+  def add_ocns(*ocns_to_add)
+    result = collection.update_one(
+      { _id: _id },
+      { "$push" => { ocns: { "$each" => ocns_to_add.flatten } } },
+      session: self.class.session
+    )
+    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
   end
 
   private

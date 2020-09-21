@@ -4,23 +4,42 @@ require "cluster"
 
 # Services for clustering Print Holdings records
 class ClusterHolding
-  def initialize(holding)
-    @holding = holding
+  def initialize(*holdings)
+    @holdings = holdings.flatten
+    @ocns= [@holdings.first.ocn]
+    @holding = @holdings.first
+
+    if @holdings.find {|h| h.ocn != @ocns.first }
+      raise ArgumentError, "OCN for each holding in batch must match"
+    end
+
+    if (@ocns.nil? || @ocns.empty?) && @holdings.length > 1
+      raise ArgumentError, "Cannot cluster multiple OCN-less holdings"
+    end
   end
 
   def cluster
-    c = (Cluster.find_by(ocns: @holding[:ocn]) ||
-         Cluster.new(ocns: [@holding[:ocn]]).tap(&:save))
-    c.holdings << @holding
-    c
+    Retryable.new.run do
+      cluster_for_ocns.tap do |cluster|
+        Services.logger.debug "adding holdings #{@holdings.inspect} "\
+          " with ocn #{@ocns} to cluster #{cluster.inspect}"
+        cluster.add_holdings(@holdings)
+      end
+    end
   end
 
   def move(new_cluster)
-    unless new_cluster.id == @holding._parent.id
-      duped_h = @holding.dup
-      new_cluster.holdings << duped_h
-      @holding.delete
-      @holding = duped_h
+    raise ArgumentError, "Can only move one holding at a time" unless @holdings.length == 1
+
+    holding = @holdings.first
+
+    Retryable.with_transaction do
+      unless new_cluster.id == holding._parent.id
+        duped_h = holding.dup
+        new_cluster.add_holdings(duped_h)
+        holding.delete
+        holding = duped_h
+      end
     end
   end
 
@@ -41,11 +60,17 @@ class ClusterHolding
   end
 
   def delete
-    c = Cluster.find_by(ocns: @holding.ocn)
-    @holding.delete
-    c.save
-    c.reload
-    c.delete unless c._children.any?
+    raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1
+
+    holding = @holdings.first
+
+    Retryable.new.run do
+      c = Cluster.find_by(ocns: holding.ocn)
+      holding.delete
+      c.save
+      c.reload
+      c.delete unless c._children.any?
+    end
   end
 
   def self.delete_old_holdings(org, date)
@@ -57,6 +82,14 @@ class ClusterHolding
         .select {|h| h.organization == org && h.date_received < date }
         .map {|h| ClusterHolding.new(h).delete }
     end
+  end
+
+  private
+
+  attr_reader :htitems, :ocns
+
+  def cluster_for_ocns
+    Cluster.for_ocns(@ocns).first || Cluster.create(ocns: @ocns)
   end
 
 end
