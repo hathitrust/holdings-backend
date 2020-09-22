@@ -17,7 +17,9 @@ class ClusterOCNResolution
     c = (Cluster.merge_many(Cluster.where(ocns: { "$in": @resolution.ocns })) ||
          Cluster.new(ocns: @resolution.ocns).tap(&:save))
     c.ocn_resolutions << @resolution
-    c.ocns = c.collect_ocns
+    @resolution.ocns.each do |ocn|
+      c.ocns << ocn unless c.ocns.include?(ocn)
+    end
     c
   end
 

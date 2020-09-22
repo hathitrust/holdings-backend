@@ -51,6 +51,11 @@ class HtItem
     set_billing_entity
   end
 
+  def enum_chron=(enum_chron)
+    super
+    normalize_enum_chron
+  end
+
   def normalize_enum_chron
     # When created with an enumchron, normalize it into separate
     # n_enum and n_chron
@@ -63,17 +68,7 @@ class HtItem
   end
 
   def to_hash
-    {
-      ocns:       ocns,
-      item_id:    item_id,
-      ht_bib_key: ht_bib_key,
-      rights:     rights,
-      access:     access,
-      bib_fmt:    bib_fmt,
-      enum_chron: enum_chron,
-      n_enum:     n_enum,
-      n_chron:    n_chron
-    }
+    attributes.with_indifferent_access.except(:_id)
   end
 
   private

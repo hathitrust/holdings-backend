@@ -3,7 +3,9 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
+require "services"
 require "cluster_ht_item"
+require "batch_cluster_ht_item"
 require "ht_item"
 require "ocn_resolution"
 require "zinzout"
@@ -29,40 +31,44 @@ def hathifile_to_record(hathifile_line)
   }
 end
 
+MAX_RETRIES = 5
 BATCH_SIZE = 10_000
-logger = Logger.new(STDOUT)
+logger = Services.logger
 waypoint = Utils::Waypoint.new
 STDIN.set_encoding "utf-8"
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
-update = ARGV[0] == "-u"
-clean  = ARGV.include?("--clean")
+clean = ARGV.include?("--clean")
 
 if clean
   logger.info "Removing clusters first"
   Cluster.each(&:delete)
 end
 
-if update
-  filename = ARGV[1]
-  logger.info "Updating HT Items."
-else
-  filename = ARGV[0]
-  logger.info "Adding HT Items."
-end
+filename = ARGV[0]
+logger.info "Updating HT Items."
+
+last_ocns = nil
+batch = []
 
 Zinzout.zin(filename).each do |line|
   waypoint.incr
-  rec = hathifile_to_record(line)
-  h = HtItem.new(rec)
 
-  c = if update
-    ClusterHtItem.new(h).update
-      else
-        ClusterHtItem.new(h).cluster
+  htitem = HtItem.new(hathifile_to_record(line))
+
+  # always process htitems with no OCN as a batch of 1
+  if last_ocns && (last_ocns.empty? || htitem.ocns != last_ocns)
+    ClusterHtItem.process_batch(last_ocns, batch)
+    batch = []
   end
-  c.save!
+
+  batch << htitem
+  last_ocns = htitem.ocns
+
   waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
+
+# process final batch
+process_batch(last_ocns, batch)
 
 logger.info waypoint.final_line

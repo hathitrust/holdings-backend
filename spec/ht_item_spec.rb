@@ -8,7 +8,8 @@ RSpec.describe HtItem do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
-  let(:htitem_hash) { build(:ht_item).to_hash }
+  let(:htitem) { build(:ht_item) }
+  let(:htitem_hash) { htitem.to_hash }
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
   before(:each) do
@@ -20,11 +21,11 @@ RSpec.describe HtItem do
     expect(described_class.new(htitem_hash)).to be_a(described_class)
   end
 
-  it "does not have a parent" do
+  it "has no parent when built on its own" do
     expect(build(:ht_item)._parent).to be_nil
   end
 
-  it "has a parent" do
+  it "has a parent when created via a cluster" do
     c.ht_items.create(htitem_hash)
     expect(c.ht_items.first._parent).to be(c)
   end
@@ -49,23 +50,17 @@ RSpec.describe HtItem do
   end
 
   it "normalizes enum_chron" do
-    cloned = htitem_hash
-    enumchron_input = "v.1 Jul 1999"
-    cloned[:enum_chron] = enumchron_input
-    c.ht_items.create(cloned)
-    expect(c.ht_items.first.enum_chron).to eq(enumchron_input)
-    expect(c.ht_items.first.n_enum).to eq("1")
-    expect(c.ht_items.first.n_chron).to eq("Jul 1999")
+    htitem = build(:ht_item, enum_chron: "v.1 Jul 1999")
+    expect(htitem.enum_chron).to eq("v.1 Jul 1999")
+    expect(htitem.n_enum).to eq("1")
+    expect(htitem.n_chron).to eq("Jul 1999")
   end
 
   it "does nothing if given an empty enum_chron" do
-    cloned = htitem_hash
-    enumchron_input = ""
-    cloned[:enum_chron] = enumchron_input
-    c.ht_items.create(cloned)
-    expect(c.ht_items.first.enum_chron).to eq(enumchron_input)
-    expect(c.ht_items.first.n_enum).to eq(nil)
-    expect(c.ht_items.first.n_chron).to eq(nil)
+    htitem = build(:ht_item, enum_chron: "")
+    expect(htitem.enum_chron).to eq("")
+    expect(htitem.n_enum).to be nil
+    expect(htitem.n_chron).to be nil
   end
 
   it "has an access of deny or allow" do
@@ -75,6 +70,16 @@ RSpec.describe HtItem do
   describe "#billing_entity" do
     it "is automatically set when collection_code is set" do
       expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
+    end
+  end
+
+  describe "#to_hash" do
+    it "contains billing_entity" do
+      expect(htitem_hash[:billing_entity]).not_to be nil
+    end
+
+    it "does not contain _id" do
+      expect(htitem_hash.key?(:_id)).to be false
     end
   end
 end

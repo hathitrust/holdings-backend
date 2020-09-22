@@ -91,7 +91,7 @@ class Autoscrub
     session_log_name = "session_#{@member_id}_#{date}"
     @session_log = get_log_file(session_log_name)
     slog("Starting session log for member #{@member_id}")
-    warn "Logging to #{File.expand_path(@session_log.path)}"
+    Services.logger.warn "Logging to #{File.expand_path(@session_log.path)}"
 
     @scrubfields = ScrubFields.new
 
@@ -110,7 +110,7 @@ class Autoscrub
     log_prefix  = "#{time} | .#{caller_meth} |"
 
     if handle.nil?
-      puts "#{log_prefix} #{str}"
+      Services.logger.info "#{log_prefix} #{str}"
     else
       handle.puts("#{log_prefix} #{str}")
     end

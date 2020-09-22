@@ -223,9 +223,9 @@ class EnumChronParser
       end
       return unless ALPHANUM.match?(input_str)
     rescue StandardError => e
-      puts e.message
-      puts e.backtrace.inspect
-      warn "[Parser] Problem parsing '#{input_str}'"
+      Services.logger.warn "[Parser] Problem parsing '#{input_str}'"
+      Services.logger.warn e.message
+      Services.logger.warn e.backtrace.inspect
       return
     end
 

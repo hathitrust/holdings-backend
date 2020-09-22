@@ -17,7 +17,7 @@ Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
 BATCH_SIZE = 10_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
-logger = Logger.new(STDOUT)
+logger = Services.logger
 logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
 update = ARGV[0] == "-u"
@@ -34,17 +34,25 @@ current_date = nil
 Zinzout.zin(filename).each do |line|
   next if /^OCN\tBIB/.match?(line)
 
-  waypoint.incr
-  h = Holding.new_from_holding_file_line(line)
-  organization = (organization || h.organization)
-  current_date = (current_date || h.date_received)
-  c = if update
-    ClusterHolding.new(h).update
-  else
-    ClusterHolding.new(h).cluster
+  begin
+    waypoint.incr
+    h = Holding.new_from_holding_file_line(line)
+    organization = (organization || h.organization)
+    current_date = (current_date || h.date_received)
+    c = if update
+      ClusterHolding.new(h).update
+    else
+      ClusterHolding.new(h).cluster
+    end
+    c.save if c.changed?
+    waypoint.on_batch {|wp| logger.info wp.batch_line }
+  rescue StandardError => e
+    logger.error "Encountered error while processing line: "
+    logger.error line
+    logger.error e.message
+    puts e.backtrace.inspect
+    raise e
   end
-  c.save!
-  waypoint.on_batch {|wp| logger.info wp.batch_line }
 end
 
 if update

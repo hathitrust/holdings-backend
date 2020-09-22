@@ -6,6 +6,8 @@ require "ht_item"
 require "commitment"
 require "ocn_resolution"
 require "serial"
+require "cluster_ht_item"
+require "cluster_error"
 
 # A set of identifiers (e.g. OCLC numbers),
 # - ocns
@@ -15,7 +17,7 @@ require "serial"
 # - commitments
 class Cluster
   include Mongoid::Document
-  store_in collection: "clusters", database: "test", client: "default"
+  store_in collection: "clusters"
   field :ocns
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
@@ -30,6 +32,8 @@ class Cluster
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
+  scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
+  scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -50,8 +54,40 @@ class Cluster
   def merge(other)
     self.ocns = (ocns + other.ocns).sort.uniq
     move_members_to_self(other)
+    Services.logger.debug "Deleted cluster #{other.inspect} (merged into #{inspect})"
     other.delete
     self
+  end
+
+  # Merges all clusters in clusters into the given
+  # destination cluster
+  #
+  # @parm clusters The clusters whose members to merge with this cluster
+  # @return this cluster
+  def merge_many(clusters)
+    clusters.each do |source|
+      raise ClusterError, "clusters disappeared, try again" if source.nil?
+
+      merge(source) unless source._id == _id
+    end
+    save if changed?
+    self
+  end
+
+  def self.session
+    Mongoid::Threaded.get_session
+  end
+
+  def self.with_transaction
+    if (s = Mongoid::Threaded.get_session)
+      raise "In a session but not in a transaction??" unless s.in_transaction?
+
+      yield
+    else
+      Cluster.with_session do |session|
+        session.with_transaction { yield }
+      end
+    end
   end
 
   # Merges multiple clusters together
@@ -60,10 +96,11 @@ class Cluster
   # @return a cluster or nil if nil set
   def self.merge_many(clusters)
     c = clusters.shift
-    clusters.each do |c2|
-      c.merge(c2) unless c._id == c2._id
+    if clusters.any?
+      raise ClusterError, "cluster disappeared, try again" if c.nil?
+
+      with_transaction { c.merge_many(clusters) }
     end
-    c&.save
     c
   end
 
@@ -73,7 +110,34 @@ class Cluster
      ht_items.collect(&:ocns).flatten).uniq
   end
 
+  # returns the first matching ht item by item id in this cluster, if any
+  #
+  # @param the item id to find
+  def ht_item(item_id)
+    ht_items.to_a.find {|h| h.item_id == item_id }
+  end
+
+  def add_ht_items(*items)
+    push_to_field(:ht_items, items.flatten)
+  end
+
   private
+
+  def push_to_field(field, items)
+    result = collection.update_one(
+      { _id: _id },
+      { "$push" => { field => { "$each" => items.map(&:as_document) } } },
+      session: self.class.session
+    )
+    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
+
+    items.each do |item|
+      item.parentize(self)
+      item._association = send(field)._association
+      item.cluster=self
+    end
+    reload
+  end
 
   # Moves embedded documents from another cluster to itself
   #

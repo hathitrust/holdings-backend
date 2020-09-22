@@ -7,6 +7,8 @@ require "bundler/setup"
 require "factory_bot"
 require "simplecov"
 require "mongoid"
+require "fixtures/members"
+require "fixtures/collections"
 SimpleCov.start
 
 Mongoid.load!("mongoid.yml", :test)
@@ -39,5 +41,17 @@ RSpec.configure do |config|
 
   config.before(:suite) do
     FactoryBot.find_definitions
+  end
+
+  config.before(:all) do
+    # Ensure we don't try to use DB for tests by default and that we have
+    # mock HT member data to use in tests
+    Services.register(:holdings_db) { nil }
+    Services.register(:ht_members) { mock_members }
+    Services.register(:ht_collections) { mock_collections }
+
+    Services.register(:logger) do
+      Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }
+    end
   end
 end

@@ -62,7 +62,7 @@ class ScrubFields
 
   attr_accessor :logger
 
-  def initialize(logger = $stdout)
+  def initialize(logger = Services.logger)
     # Store counts of events here using count_x(event)
     # and when you're done you can log stats_to_str()
     @stats  = {}
@@ -96,7 +96,7 @@ class ScrubFields
 
     if candidates.size > MAX_NUM_ITEMS
       count_x(:too_many_ocns)
-      @logger.puts "Too many items (#{candidates.size}) in ocn #{str}"
+      @logger.error "Too many items (#{candidates.size}) in ocn #{str}"
     end
 
     # DO WHILE MAYBE COMEFROM reject_value
@@ -160,12 +160,12 @@ class ScrubFields
     candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
     if candidates.size > 1
-      @logger.puts "there are #{candidates.size} candidates in this local_id"
+      @logger.warn "there are #{candidates.size} candidates in this local_id"
       # maybe throw something??
     end
 
     if candidates.size > MAX_NUM_ITEMS
-      @logger.puts "in fact lots of items #{candidates.size} in local_id #{str}"
+      @logger.error "in fact lots of items #{candidates.size} in local_id #{str}"
       # maybe definitely throw something??
     end
 
@@ -242,7 +242,7 @@ class ScrubFields
 
   # Directly throws :rejected_value
   def reject_value(reason, val)
-    @logger.puts [reason, val].join(":")
+    @logger.warn [reason, val].join(":")
     count_x("rejected: #{reason}")
     throw :rejected_value
   end
