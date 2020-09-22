@@ -55,23 +55,6 @@ RSpec.describe ClusterOCNResolution do
     end
   end
 
-  describe "#move" do
-    let(:c2) { create(:cluster) }
-
-    before(:each) do
-      Cluster.each(&:delete)
-      c.save
-    end
-
-    it "moves an OCN resolution from one cluster to another" do
-      cluster = described_class.new(resolution).cluster
-      expect(cluster.ocn_resolutions.to_a.size).to eq(1)
-      described_class.new(resolution).move(c2)
-      expect(cluster.ocn_resolutions.to_a.size).to eq(0)
-      expect(c2.ocns).to eq(resolution.ocns)
-    end
-  end
-
   describe "#delete" do
     before(:each) do
       Cluster.each(&:delete)

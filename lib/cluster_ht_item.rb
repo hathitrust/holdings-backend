@@ -2,56 +2,36 @@
 
 require "cluster"
 require "reclusterer"
-require "cluster_error"
+require "cluster_getter"
 require "retryable"
 
 # Services for batch loading HT items
 class ClusterHtItem
 
-  def initialize(*htitems)
-    @htitems = htitems.flatten
-    @ocns = @htitems.first.ocns
+  def initialize(*ht_items)
+    @ht_items = ht_items.flatten
+    @ocns = @ht_items.first.ocns
 
-    if @htitems.find {|h| h.ocns != @ocns }
+    if @ht_items.find {|c| c.ocns != @ocns }
       raise ArgumentError, "OCNs for each HTItem in batch must match"
     end
 
-    if (@ocns.nil? || @ocns.empty?) && @htitems.length > 1
+    if (@ocns.nil? || @ocns.empty?) && @ht_items.length > 1
       raise ArgumentError, "Cannot cluster multiple OCN-less HTItems"
     end
   end
 
   def cluster
-    Retryable.new.run do
-      cluster_for_ocns.tap do |cluster|
-        Services.logger.debug "adding htitems #{htitems.inspect} " \
-          " with ocns #{@ocns} to cluster #{cluster.inspect}"
-        update_or_add_htitems(cluster, htitems)
-      end
-    end
-  end
-
-  # Move HTItem from one cluster to another
-  #
-  # @param new_cluster - the cluster to move to
-  def move(new_cluster)
-    raise ArgumentError, "Can only move one HTItem at a time" unless htitems.length == 1
-
-    ht_item = htitems.first
-    return if new_cluster.id == ht_item._parent.id
-
-    Retryable.with_transaction do
-      duped_htitem = ht_item.dup
-      ht_item.delete
-      new_cluster.add_ht_items(duped_htitem)
+    ClusterGetter.for(@ocns) do |cluster|
+      update_or_add_ht_items(cluster, @ht_items)
     end
   end
 
   # Removes an HTItem
   def delete
-    raise ArgumentError, "Can only delete one HTItem at a time" unless htitems.length == 1
+    raise ArgumentError, "Can only delete one HTItem at a time" unless ht_items.length == 1
 
-    ht_item = htitems.first
+    ht_item = ht_items.first
     # Don't start a transaction until we know there's something we need to
     # delete. If we do need to delete the thing, then we need to re-fetch it so
     # we can acquire the correct lock
@@ -77,29 +57,17 @@ class ClusterHtItem
 
   private
 
-  attr_reader :htitems, :ocns
+  attr_reader :ht_items, :ocns
 
   def cluster_with_htitem(htitem)
     Cluster.with_ht_item(htitem).first
   end
 
-  def cluster_for_ocns
-    existing_cluster_with_ocns || Cluster.create(ocns: @ocns)
-  end
-
-  def existing_cluster_with_ocns
-    return unless @ocns.any?
-
-    Cluster.merge_many(Cluster.for_ocns(@ocns)).tap do |c|
-      c&.add_to_set(ocns: @ocns)
-    end
-  end
-
-  def update_or_add_htitems(cluster, htitems)
+  def update_or_add_ht_items(cluster, ht_items)
     Services.logger.debug "Cluster #{cluster.inspect}: " \
-      "adding htitems #{htitems.inspect} with ocns #{@ocns}"
+      "adding ht_items #{ht_items.inspect} with ocns #{@ocns}"
     to_append = []
-    htitems.each do |item|
+    ht_items.each do |item|
       if (existing_item = cluster.ht_item(item.item_id))
         Services.logger.debug "updating existing item with id #{item.item_id}"
         existing_item.update_attributes(item.to_hash)

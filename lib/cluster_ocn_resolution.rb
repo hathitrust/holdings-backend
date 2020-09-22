@@ -2,50 +2,25 @@
 
 require "cluster"
 require "reclusterer"
+require "cluster_getter"
 
 # Services for clustering OCN Resolutions
 class ClusterOCNResolution
-  # Creates a ClusterOCNResolution
-  #
-  # @param OCNResolution that needs clustering
+
   def initialize(*resolutions)
     @resolutions = resolutions.flatten
-    @ocns = @resolutions.first.ocns
+    resolved = @resolutions.first.resolved
+    @ocns = @resolutions.map(&:ocns).flatten.uniq
 
-    if @resolutions.find {|r| r.ocns != @ocns }
-      raise ArgumentError, "OCNs for each OCNResolution in batch must match"
+    if @resolutions.find {|c| c.resolved != resolved }
+      raise ArgumentError, "Resolved OCNs for each OCN resolution rule in batch must match"
     end
   end
 
   # Cluster the OCNResolution
   def cluster
-    Retryable.new.run do
-      cluster_for_ocns.tap do |cluster|
-        cluster.add_ocn_resolutions(@resolutions)
-
-        ocns_to_add = @resolutions.map(&:ocns)
-          .flatten.uniq.reject {|ocn| cluster.ocns.include?(ocn) }
-
-        cluster.add_ocns(ocns_to_add) unless ocns_to_add.empty?
-      end
-    end
-  end
-
-  # Move an OCN resolution rule from one cluster to another
-  #
-  # @param new_cluster - the cluster to move to
-  def move(new_cluster)
-    raise ArgumentError, "Can only move one resolution at a time" unless @resolutions.length == 1
-
-    resolution = @resolutions.first
-    return if new_cluster.id == resolution._parent.id
-
-    Retryable.with_transaction do
-      duped_resolution = resolution.dup
-      resolution.delete
-      new_cluster.add_ocn_resolutions(duped_resolution)
-      resolution = duped_resolution
-      new_cluster.ocns = new_cluster.collect_ocns
+    ClusterGetter.for(@ocns) do |cluster|
+      cluster.add_ocn_resolutions(@resolutions)
     end
   end
 
@@ -69,18 +44,6 @@ class ClusterOCNResolution
           Reclusterer.new(c).recluster
         end
       end
-    end
-  end
-
-  def cluster_for_ocns
-    existing_cluster_with_ocns || Cluster.create(ocns: @ocns)
-  end
-
-  def existing_cluster_with_ocns
-    return unless @ocns.any?
-
-    Cluster.merge_many(Cluster.for_ocns(@ocns)).tap do |c|
-      c&.add_to_set(ocns: @ocns)
     end
   end
 

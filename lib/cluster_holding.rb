@@ -1,51 +1,34 @@
 # frozen_string_literal: true
 
 require "cluster"
+require "cluster_getter"
 
 # Services for clustering Print Holdings records
 class ClusterHolding
+
   def initialize(*holdings)
     @holdings = holdings.flatten
-    @ocns= [@holdings.first.ocn]
-    @holding = @holdings.first
+    @ocn = @holdings.first.ocn
 
-    if @holdings.find {|h| h.ocn != @ocns.first }
+    if @holdings.find {|c| c.ocn != @ocn }
       raise ArgumentError, "OCN for each holding in batch must match"
     end
 
-    if (@ocns.nil? || @ocns.empty?) && @holdings.length > 1
-      raise ArgumentError, "Cannot cluster multiple OCN-less holdings"
-    end
+    raise ArgumentError, "Holding must have exactly one OCN" if @ocn.nil?
   end
 
   def cluster
-    Retryable.new.run do
-      cluster_for_ocns.tap do |cluster|
-        Services.logger.debug "adding holdings #{@holdings.inspect} "\
-          " with ocn #{@ocns} to cluster #{cluster.inspect}"
-        cluster.add_holdings(@holdings)
-      end
-    end
-  end
-
-  def move(new_cluster)
-    raise ArgumentError, "Can only move one holding at a time" unless @holdings.length == 1
-
-    holding = @holdings.first
-
-    Retryable.with_transaction do
-      unless new_cluster.id == holding._parent.id
-        duped_h = holding.dup
-        new_cluster.add_holdings(duped_h)
-        holding.delete
-        holding = duped_h
-      end
+    ClusterGetter.for([@ocn]) do |cluster|
+      cluster.add_holdings(@holdings)
     end
   end
 
   # Updates a matching holding or adds it
   def update
-    c = Cluster.find_by(ocns: @holding.ocn)
+    # TODO retryable etc.
+    @holding = @holdings.first
+
+    c = Cluster.find_by(ocns: [@holding.ocn])
     return cluster unless c
 
     old_holding = c.holdings.to_a.find do |h|
@@ -82,14 +65,6 @@ class ClusterHolding
         .select {|h| h.organization == org && h.date_received < date }
         .map {|h| ClusterHolding.new(h).delete }
     end
-  end
-
-  private
-
-  attr_reader :htitems, :ocns
-
-  def cluster_for_ocns
-    Cluster.for_ocns(@ocns).first || Cluster.create(ocns: @ocns)
   end
 
 end

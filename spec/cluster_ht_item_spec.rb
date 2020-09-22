@@ -169,27 +169,6 @@ RSpec.describe ClusterHtItem do
     end
   end
 
-  describe "#move" do
-    let(:c2) { create(:cluster) }
-
-    before(:each) do
-      Cluster.each(&:delete)
-      empty_cluster.save
-    end
-
-    it "moves an HT Item from one cluster to another" do
-      cluster = described_class.new(item).cluster
-      expect(cluster.ht_items.to_a.size).to eq(1)
-      described_class.new(item).move(c2)
-      expect(cluster.ht_items.to_a.size).to eq(0)
-      expect(c2.ht_items.to_a.size).to eq(1)
-    end
-
-    it "won't move multiple htitems" do
-      expect { described_class.new(batch).move(c2) }.to raise_exception(ArgumentError)
-    end
-  end
-
   describe "#delete" do
     let(:item2) { build(:ht_item, ocns: item.ocns) }
 

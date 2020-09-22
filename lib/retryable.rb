@@ -7,15 +7,21 @@ class Retryable
   # Not constantized by mongo gem
   MONGO_DUPLICATE_KEY_ERROR=11_000
 
-  def self.with_transaction
+  def self.ensure_transaction
     if (s = Mongoid::Threaded.get_session)
       raise "In a session but not in a transaction??" unless s.in_transaction?
 
-      new.run { yield }
+      yield
     else
       Cluster.with_session do |session|
-        session.with_transaction { new.run { yield } }
+        session.with_transaction { yield }
       end
+    end
+  end
+
+  def self.with_transaction
+    ensure_transaction do
+      new.run { yield }
     end
   end
 

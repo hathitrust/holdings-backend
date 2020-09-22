@@ -52,6 +52,7 @@ RSpec.configure do |config|
 
     Services.register(:logger) do
       Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }
+      #      Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }
     end
   end
 end

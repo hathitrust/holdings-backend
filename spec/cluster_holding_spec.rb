@@ -26,23 +26,6 @@ RSpec.describe ClusterHolding do
     end
   end
 
-  describe "#move" do
-    let(:c2) { create(:cluster) }
-
-    before(:each) do
-      Cluster.each(&:delete)
-      c.save
-    end
-
-    it "moves a holding from one cluster to another" do
-      cluster = described_class.new(h).cluster
-      expect(cluster.holdings.count).to eq(1)
-      described_class.new(h).move(c2)
-      expect(cluster.holdings.count).to eq(0)
-      expect(c2.holdings.count).to eq(1)
-    end
-  end
-
   describe "#update" do
     let(:h2) { h.clone }
     let(:h3) { h.clone }
