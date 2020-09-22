@@ -3,10 +3,12 @@
 require "mongoid"
 require "ht_members"
 require "services"
+require "enum_chron"
 
 # A member holding
 class Holding
   include Mongoid::Document
+  include EnumChron
   # Changes to the field list must be reflected in `==` and `same_as`
   field :ocn, type: Integer
   field :organization, type: String
@@ -29,28 +31,12 @@ class Holding
 
   def initialize(params = nil)
     super
-    normalize_enum_chron
     set_member_data if organization
   end
 
   def organization=(organization)
     super
     set_member_data
-  end
-
-  def enum_chron=(enum_chron)
-    super
-    normalize_enum_chron
-  end
-
-  def normalize_enum_chron
-    # normalize into separate n_enum and n_chron
-    unless enum_chron.nil?
-      ec_parser = EnumChronParser.new
-      ec_parser.parse(enum_chron)
-      self.n_enum  = ec_parser.normalized_enum
-      self.n_chron = ec_parser.normalized_chron
-    end
   end
 
   # Convert a tsv line from a validated holding file into a record like hash

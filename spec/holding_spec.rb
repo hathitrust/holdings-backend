@@ -25,7 +25,7 @@ RSpec.describe Holding do
   end
 
   it "does nothing if given an empty enum_chron" do
-    holding = build(:holding, enum_chron:"")
+    holding = build(:holding, enum_chron: "")
     expect(holding.enum_chron).to eq("")
     expect(holding.n_enum).to be nil
     expect(holding.n_chron).to be nil
