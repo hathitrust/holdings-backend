@@ -18,6 +18,19 @@ RSpec.describe Holding do
     expect(c.holdings.first._parent).to be(c)
   end
 
+  it "normalizees enum_chron" do
+    holding = build(:holding, enum_chron: "v.1 Jul 1999")
+    expect(holding.n_enum).to eq("1")
+    expect(holding.n_chron).to eq("Jul 1999")
+  end
+
+  it "does nothing if given an empty enum_chron" do
+    holding = build(:holding, enum_chron:"")
+    expect(holding.enum_chron).to eq("")
+    expect(holding.n_enum).to be nil
+    expect(holding.n_chron).to be nil
+  end
+
   describe "#==" do
     it "== is true if all fields match except date_received" do
       h2.date_received = Date.yesterday
@@ -60,7 +73,7 @@ RSpec.describe Holding do
       rec = described_class.new_from_holding_file_line(line)
       expect(rec).to be_a(described_class)
       expect(rec.mono_multi_serial).to eq("mono")
-      expect(rec.n_enum).to eq("")
+      expect(rec.n_enum).to eq(nil)
     end
   end
 end
