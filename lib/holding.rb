@@ -3,10 +3,12 @@
 require "mongoid"
 require "ht_members"
 require "services"
+require "enum_chron"
 
 # A member holding
 class Holding
   include Mongoid::Document
+  include EnumChron
   # Changes to the field list must be reflected in `==` and `same_as`
   field :ocn, type: Integer
   field :organization, type: String

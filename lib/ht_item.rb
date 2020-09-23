@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "mongoid"
-require "enum_chron_parser"
+require "enum_chron"
 require "services"
 
 # An HT Item
@@ -17,6 +17,7 @@ require "services"
 # - billing_entity
 class HtItem
   include Mongoid::Document
+  include EnumChron
   field :ocns, type: Array, default: []
   field :item_id, type: String
   field :ht_bib_key, type: Integer
@@ -42,29 +43,12 @@ class HtItem
 
   def initialize(params = nil)
     super
-    normalize_enum_chron
     set_billing_entity if collection_code
   end
 
   def collection_code=(collection_code)
     super
     set_billing_entity
-  end
-
-  def enum_chron=(enum_chron)
-    super
-    normalize_enum_chron
-  end
-
-  def normalize_enum_chron
-    # When created with an enumchron, normalize it into separate
-    # n_enum and n_chron
-    unless enum_chron.nil?
-      ec_parser = EnumChronParser.new
-      ec_parser.parse(enum_chron)
-      self.n_enum  = ec_parser.normalized_enum
-      self.n_chron = ec_parser.normalized_chron
-    end
   end
 
   def to_hash
