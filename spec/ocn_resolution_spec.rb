@@ -26,4 +26,11 @@ RSpec.describe OCNResolution do
   it "returns both ocns" do
     expect(resolution.ocns).to eq([deprecated, resolved])
   end
+
+  describe "==" do
+    it "is equal if both ocns are the same" do
+      expect(described_class.new(deprecated: deprecated, resolved: resolved))
+        .to eq(described_class.new(deprecated: deprecated, resolved: resolved))
+    end
+  end
 end

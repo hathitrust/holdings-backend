@@ -23,7 +23,7 @@ class ClusterHtItem
 
   def cluster
     ClusterGetter.for(@ocns) do |cluster|
-      update_or_add_ht_items(cluster, @ht_items)
+      update_or_add_ht_items(cluster)
     end
   end
 
@@ -63,7 +63,7 @@ class ClusterHtItem
     Cluster.with_ht_item(htitem).first
   end
 
-  def update_or_add_ht_items(cluster, ht_items)
+  def update_or_add_ht_items(cluster)
     Services.logger.debug "Cluster #{cluster.inspect}: " \
       "adding ht_items #{ht_items.inspect} with ocns #{@ocns}"
     to_append = []

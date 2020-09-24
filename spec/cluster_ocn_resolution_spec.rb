@@ -12,12 +12,33 @@ RSpec.describe ClusterOCNResolution do
       Cluster.each(&:delete)
     end
 
+    it "can add a batch" do
+      cluster = described_class.new(resolution, resolution2).cluster
+
+      expect(cluster.ocn_resolutions.to_a.size).to eq(2)
+      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
+                                              resolution.resolved,
+                                              resolution2.deprecated)
+      expect(Cluster.count).to eq(1)
+    end
+
+    it "ignores duplicate resolution rules" do
+      described_class.new(resolution, resolution2).cluster
+      cluster = described_class.new(resolution.dup).cluster
+
+      expect(cluster.ocn_resolutions.to_a.size).to eq(2)
+      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
+                                              resolution.resolved,
+                                              resolution2.deprecated)
+      expect(Cluster.count).to eq(1)
+    end
+
     it "adds an OCN Resolution to an existing cluster" do
       c.save
       cluster = described_class.new(resolution).cluster
       expect(cluster.ocn_resolutions.first._parent.id).to eq(c.id)
       expect(cluster.ocn_resolutions.to_a.size).to eq(1)
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
     end
 
     it "creates a new cluster if no match is found" do

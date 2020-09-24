@@ -20,7 +20,7 @@ class ClusterOCNResolution
   # Cluster the OCNResolution
   def cluster
     ClusterGetter.for(@ocns) do |cluster|
-      cluster.add_ocn_resolutions(@resolutions)
+      update_or_add_resolutions(cluster)
     end
   end
 
@@ -45,6 +45,14 @@ class ClusterOCNResolution
         end
       end
     end
+  end
+
+  def update_or_add_resolutions(cluster)
+    to_add = []
+    @resolutions.each do |r|
+      to_add << r unless cluster.ocn_resolutions.any? {|existing| r == existing }
+    end
+    cluster.add_ocn_resolutions(to_add)
   end
 
 end
