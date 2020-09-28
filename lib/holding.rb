@@ -23,6 +23,7 @@ class Holding
   field :date_received, type: DateTime
   field :country_code, type: String
   field :weight, type: Float
+  field :uuid, type: String
 
   embedded_in :cluster
 
@@ -43,7 +44,8 @@ class Holding
   #
   # @param holding_line, a tsv line
   def self.holding_to_record(holding_line)
-    # OCN  BIB  MEMBER_ID  STATUS  CONDITION  DATE  ENUM_CHRON  TYPE  ISSN  N_ENUM  N_CHRON  GOV_DOC
+    # OCN  BIB  MEMBER_ID  STATUS  CONDITION  DATE  ENUM_CHRON  TYPE  \
+    # ISSN  N_ENUM  N_CHRON  GOV_DOC UUID
     fields = holding_line.split(/\t/)
     { ocn:               fields[0].to_i,
       organization:      fields[2],
@@ -55,7 +57,8 @@ class Holding
       mono_multi_serial: fields[7],
       n_enum:            fields[8],
       n_chron:           fields[9],
-      date_received:     DateTime.parse(fields[5]) }
+      date_received:     DateTime.parse(fields[5]),
+      uuid:              fields[11] }
   end
 
   def self.new_from_holding_file_line(line)
@@ -63,7 +66,7 @@ class Holding
     new(rec)
   end
 
-  # Is false when any field other than date_received is not the same
+  # Is false when any field other than date_received or uuid is not the same
   #
   # @param other, another holding
   def ==(other)
@@ -81,7 +84,7 @@ class Holding
   #
   # @param other, another holding
   def same_as?(other)
-    (self == other) && (date_received == other.date_received)
+    (self == other) && (date_received == other.date_received) && (uuid == other.uuid)
   end
 
   private

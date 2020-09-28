@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster"
 require "cluster_getter"
 
@@ -25,21 +26,30 @@ class ClusterHolding
 
   # Updates a matching holding or adds it
   def update
-    # TODO retryable etc.
-    @holding = @holdings.first
+    ClusterGetter.for([@ocn]) do |c|
+      to_add = []
 
-    c = Cluster.find_by(ocns: [@holding.ocn])
-    return cluster unless c
+      @holdings.each do |holding|
+        if (existing = c.holdings.to_a.find {|h| h.uuid == holding.uuid })
+          next if existing.same_as?(holding)
 
-    old_holding = c.holdings.to_a.find do |h|
-      h == @holding && h.date_received != @holding.date_received
+          raise "Found holding #{existing} with same UUID " \
+            "but different attributes from update #{holding}"
+        end
+
+        old_holding = c.holdings.to_a.find do |h|
+          h == holding && h.date_received != holding.date_received
+        end
+
+        if old_holding
+          old_holding.update_attributes(date_received: holding.date_received, uuid: holding.uuid)
+        else
+          to_add << holding
+        end
+      end
+
+      c.add_holdings(to_add)
     end
-    if old_holding
-      old_holding.update_attributes(date_received: @holding.date_received)
-    else
-      c = cluster
-    end
-    c
   end
 
   def delete
