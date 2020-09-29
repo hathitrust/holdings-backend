@@ -12,7 +12,7 @@ RSpec.describe SinglePartOverlap do
           ocns: c.ocns,
           bib_fmt: "spm",
           enum_chron: "",
-          collection_code: "OKS")
+          collection_code: "HVD")
   end
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
   let(:h2) do

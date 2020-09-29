@@ -72,6 +72,13 @@ RSpec.describe HtItemOverlap do
             enum_chron: "1")
     end
 
+    let(:ucm_item) do
+      build(:ht_item,
+            ocns: c.ocns,
+            collection_code: "UCM",
+            enum_chron: "1")
+    end
+
     it "returns ratio of organizations" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
@@ -84,6 +91,15 @@ RSpec.describe HtItemOverlap do
       overlap = described_class.new(c.ht_items.first)
       expect(c.ht_items.first.billing_entity).not_to eq("hathitrust")
       expect(overlap.h_share("hathitrust")).to eq(1.0 / 4)
+      expect(overlap.h_share("umich")).to eq(1.0 / 4)
+    end
+
+    it "assigns an h_share to UCM as it would anyone else" do
+      ClusterHtItem.new(ucm_item).cluster.tap(&:save)
+      c.reload
+      overlap = described_class.new(c.ht_items.first)
+      expect(c.ht_items.first.billing_entity).not_to eq("ucm")
+      expect(overlap.h_share("ucm")).to eq(1.0 / 4)
       expect(overlap.h_share("umich")).to eq(1.0 / 4)
     end
 

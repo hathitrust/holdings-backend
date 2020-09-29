@@ -14,11 +14,11 @@ def mock_collections
     "HVD" => HTCollection.new(collection: "HVD", content_provider_cluster: "harvard",
                               responsible_entity: "harvard", original_from_inst_id: "harvard",
                               billing_entity: "harvard"),
-    "OKS" => HTCollection.new(collection: "OKS", content_provider_cluster: "okstate",
-                              responsible_entity: "okstate", original_from_inst_id: "okstate",
-                              billing_entity: "okstate"),
     "KEIO" => HTCollection.new(collection: "KEIO", content_provider_cluster: "keio",
                                responsible_entity: "hathitrust", original_from_inst_id: "keio",
-                               billing_entity: "hathitrust")
+                               billing_entity: "hathitrust"),
+    "UCM" => HTCollection.new(collection: "UCM", content_provider_cluster: "ucm",
+                               responsible_entity: "ucm", original_from_inst_id: "ucm",
+                               billing_entity: "ucm")
   )
 end
