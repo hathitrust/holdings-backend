@@ -65,10 +65,26 @@ RSpec.describe HtItemOverlap do
   end
 
   describe "#h_share" do
+    let(:keio_item) do
+      build(:ht_item,
+            ocns: c.ocns,
+            collection_code: "KEIO",
+            enum_chron: "1")
+    end
+
     it "returns ratio of organizations" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
       expect(overlap.h_share("umich")).to eq(1.0 / 3)
+    end
+
+    it "assigns an h_share to hathitrust for KEIO items" do
+      ClusterHtItem.new(keio_item).cluster.tap(&:save)
+      c.reload
+      overlap = described_class.new(c.ht_items.first)
+      expect(c.ht_items.first.billing_entity).not_to eq("hathitrust")
+      expect(overlap.h_share("hathitrust")).to eq(1.0 / 4)
+      expect(overlap.h_share("umich")).to eq(1.0 / 4)
     end
 
     it "returns 0 if not held" do
