@@ -18,8 +18,8 @@ class ClusterOCNResolution
   end
 
   # Cluster the OCNResolution
-  def cluster
-    ClusterGetter.for(@ocns) do |cluster|
+  def cluster(getter: ClusterGetter.new(@ocns))
+    getter.get do |cluster|
       update_or_add_resolutions(cluster)
     end
   end

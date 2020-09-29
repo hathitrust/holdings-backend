@@ -18,15 +18,15 @@ class ClusterHolding
     raise ArgumentError, "Holding must have exactly one OCN" if @ocn.nil?
   end
 
-  def cluster
-    ClusterGetter.for([@ocn]) do |cluster|
+  def cluster(getter: ClusterGetter.new([@ocn]))
+    getter.get do |cluster|
       cluster.add_holdings(@holdings)
     end
   end
 
   # Updates a matching holding or adds it
-  def update
-    ClusterGetter.for([@ocn]) do |c|
+  def update(getter: ClusterGetter.new([@ocn]))
+    getter.get do |c|
       to_add = []
 
       @holdings.each do |holding|

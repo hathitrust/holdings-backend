@@ -10,25 +10,21 @@ require "cluster"
 # - Make a new cluster with the OCNs
 # # TODO rename to ClusterGetter or something?
 class ClusterGetter
-  def self.for(ocns)
-    if block_given?
-      Retryable.new.run do
-        new(ocns).get.tap {|c| yield c }
-      end
-    else
-      new(ocns).get
-    end
-  end
-
   def initialize(ocns)
     @ocns = ocns
   end
 
   def get
-    find_or_merge || Cluster.create(ocns: @ocns)
+    Retryable.new.run do
+      try_strategies.tap {|c| yield c if block_given? }
+    end
   end
 
   private
+
+  def try_strategies
+    find_or_merge || Cluster.create(ocns: @ocns)
+  end
 
   # @return A single cluster that contains all the members & OCNs of the
   # original clusters, or nil if there is no appropriate cluster.

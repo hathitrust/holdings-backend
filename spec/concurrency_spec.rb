@@ -5,54 +5,65 @@ require "services"
 require "cluster_ht_item"
 require "tmpdir"
 
-class InstrumentedClusterHtItem < ClusterHtItem
-
-  def logger
-    Services.logger
-  end
-
-  def initialize(htitems = [], pid:, tmpdir:, wait_before: {})
-    super(htitems)
+class Synchronizer
+  def initialize(pid:, tmpdir:, wait_before: {})
     @pid = pid
     @wait_before = wait_before
     @tmpdir = tmpdir
   end
 
-  def cluster_for_ocns
-    wait_for(:merge)
-
-    super.tap do |_c|
-      write_status("#{@pid}_got_cluster")
-      wait_for(:save)
-    end
-  end
-
-  def cluster_with_htitem(htitem)
-    super.tap do |c|
-      logger.debug "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
-      write_status("#{@pid}_got_cluster")
-      wait_for(:delete)
-    end
-  end
-
-  def cluster
-    super.tap do |_c|
-      write_status("#{@pid}_saved_cluster")
-    end
-  end
-
-  def write_status(file)
-    logger.debug "#{@pid} writing status #{file}"
-    File.open("#{@tmpdir}/#{file}", "w") {|_| }
+  def write_status(action)
+    Services.logger.debug "#{@pid} writing status #{@pid}_#{action}"
+    File.open("#{@tmpdir}/#{@pid}_#{action}", "w") {|_| }
   end
 
   def wait_for(condition)
     file = @wait_before[condition]
     return unless file
 
-    logger.debug "#{@pid} waiting on #{file}"
+    Services.logger.debug "#{@pid} waiting on #{file}"
 
     sleep(0.05) until File.exist?("#{@tmpdir}/#{file}")
+  end
+end
+
+class InstrumentedClusterGetter < ClusterGetter
+
+  def initialize(ocns, synchronizer)
+    super(ocns)
+    @synchronizer = synchronizer
+  end
+
+  def get
+    @synchronizer.wait_for(:merge)
+
+    super do |c|
+      @synchronizer.write_status("got_cluster")
+      @synchronizer.wait_for(:save)
+      yield c
+    end
+  end
+
+end
+
+class InstrumentedClusterHtItem < ClusterHtItem
+
+  def with_synchronizer(synchronizer)
+    tap { @synchronizer = synchronizer }
+  end
+
+  def cluster
+    super(getter: InstrumentedClusterGetter.new(@ocns, @synchronizer)).tap do
+      @synchronizer.write_status("saved_cluster")
+    end
+  end
+
+  def cluster_with_htitem(htitem)
+    super.tap do |c|
+      Services.logger.debug "before delete: htitems from #{c}: #{c&.ht_items&.inspect}"
+      @synchronizer.write_status("got_cluster")
+      @synchronizer.wait_for(:delete)
+    end
   end
 end
 
@@ -88,22 +99,30 @@ RSpec.describe "concurrency" do
         create(:cluster, ocns: [1])
         create(:cluster, ocns: [2])
 
-        ht_item = FactoryBot.build(:ht_item, ocns: [2])
+        ht_item = build(:ht_item, ocns: [2])
 
-        InstrumentedClusterHtItem.new(ht_item, pid: "first",
-                                        wait_before: { save: "second_got_cluster" },
-                                        tmpdir: tmpdir).cluster
+        syncher = Synchronizer.new(pid: "first",
+                                   wait_before: { save: "second_got_cluster" },
+                                   tmpdir: tmpdir)
+
+        InstrumentedClusterHtItem.new(ht_item)
+          .with_synchronizer(syncher)
+          .cluster
       end
     end
 
     let(:second_process) do
       proc do |tmpdir|
-        ht_item = FactoryBot.build(:ht_item, ocns: [1, 2])
+        ht_item = build(:ht_item, ocns: [1, 2])
 
-        InstrumentedClusterHtItem.new(ht_item, pid: "second",
+        syncher = Synchronizer.new(pid: "second",
                                    wait_before: { merge: "first_got_cluster",
                                                   save:  "first_saved_cluster" },
-                                   tmpdir: tmpdir).cluster
+                                   tmpdir: tmpdir)
+
+        InstrumentedClusterHtItem.new(ht_item)
+          .with_synchronizer(syncher)
+          .cluster
       end
     end
 
@@ -129,17 +148,24 @@ RSpec.describe "concurrency" do
       proc do |tmpdir|
         ClusterHtItem.new(first_ht_item).cluster.save
 
-        InstrumentedClusterHtItem.new(first_ht_item, pid: "first",
-                                     wait_before: { delete: "second_saved_cluster" },
-                                     tmpdir: tmpdir).delete
+        syncher = Synchronizer.new(pid: "first",
+                                   wait_before: { delete: "second_saved_cluster" },
+                                   tmpdir: tmpdir)
+
+        InstrumentedClusterHtItem.new(first_ht_item)
+          .with_synchronizer(syncher)
+          .delete
       end
     end
 
     let(:second_process) do
       proc do |tmpdir|
-        InstrumentedClusterHtItem.new(second_ht_item, pid: "second",
+        syncher = Synchronizer.new(pid: "second",
                                    wait_before: { save: "first_got_cluster" },
                                    tmpdir: tmpdir)
+
+        InstrumentedClusterHtItem.new(second_ht_item)
+          .with_synchronizer(syncher)
           .cluster
       end
     end

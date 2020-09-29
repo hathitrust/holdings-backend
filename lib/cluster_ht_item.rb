@@ -21,8 +21,8 @@ class ClusterHtItem
     end
   end
 
-  def cluster
-    ClusterGetter.for(@ocns) do |cluster|
+  def cluster(getter: ClusterGetter.new(@ocns))
+    getter.get do |cluster|
       update_or_add_ht_items(cluster)
     end
   end
