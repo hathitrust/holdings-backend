@@ -76,4 +76,18 @@ RSpec.describe Holding do
       expect(rec.n_enum).to eq("")
     end
   end
+
+  describe "#batch_with?" do
+    let(:holding1) { build(:holding, ocn: 123) }
+    let(:holding2) { build(:holding, ocn: 123) }
+    let(:holding3) { build(:holding, ocn: 456) }
+
+    it "batches with a holding with the same ocn" do
+      expect(holding1.batch_with?(holding2)).to be true
+    end
+
+    it "doesn't batch with a holding with a different ocn" do
+      expect(holding1.batch_with?(holding3)).to be false
+    end
+  end
 end

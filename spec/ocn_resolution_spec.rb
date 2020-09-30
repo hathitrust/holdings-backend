@@ -33,4 +33,22 @@ RSpec.describe OCNResolution do
         .to eq(described_class.new(deprecated: deprecated, resolved: resolved))
     end
   end
+
+  describe "#batch_with?" do
+    let(:resolution1) { build(:ocn_resolution, deprecated: 123, resolved: 456) }
+    let(:resolution2) { build(:ocn_resolution, deprecated: 312, resolved: 456) }
+    let(:resolution3) { build(:ocn_resolution, deprecated: 123, resolved: 789) }
+
+    it "batches items with the same resolved OCN" do
+      expect(resolution1.batch_with?(resolution2)).to be true
+    end
+
+    it "does not batch items with different deprecated and resolved OCNS" do
+      expect(resolution2.batch_with?(resolution3)).to be false
+    end
+
+    it "does not batch items with the same deprecated but different resolved OCN" do
+      expect(resolution1.batch_with?(resolution3)).to be false
+    end
+  end
 end

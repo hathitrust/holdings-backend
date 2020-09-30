@@ -55,6 +55,12 @@ class HtItem
     attributes.with_indifferent_access.except(:_id)
   end
 
+  def batch_with?(other)
+    return false if ocns.empty?
+
+    ocns == other.ocns
+  end
+
   private
 
   def set_billing_entity

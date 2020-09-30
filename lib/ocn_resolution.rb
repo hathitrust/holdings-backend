@@ -29,4 +29,8 @@ class OCNResolution
     self.ocns = [deprecated, resolved]
   end
 
+  def batch_with?(other)
+    resolved == other.resolved
+  end
+
 end

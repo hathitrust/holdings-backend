@@ -87,6 +87,10 @@ class Holding
     (self == other) && (date_received == other.date_received) && (uuid == other.uuid)
   end
 
+  def batch_with?(other)
+    ocn == other.ocn
+  end
+
   private
 
   def set_member_data

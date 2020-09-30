@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "spec_helper"
 require "cluster"
 require "cluster_getter"
 
@@ -12,6 +11,7 @@ class ClusterHolding
     @ocn = @holdings.first.ocn
 
     if @holdings.find {|c| c.ocn != @ocn }
+      puts @holdings.map(&:inspect)
       raise ArgumentError, "OCN for each holding in batch must match"
     end
 

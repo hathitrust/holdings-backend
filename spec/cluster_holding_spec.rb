@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster_holding"
+
 RSpec.describe ClusterHolding do
   let(:h) { build(:holding) }
   let(:batch) { [h, build(:holding, ocn: h.ocn)] }

@@ -7,6 +7,9 @@ require "ht_members"
 require "logger"
 
 Services = Canister.new
+Services.register(:"mongo!") do
+  Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
+end
 
 Services.register(:holdings_db) { HoldingsDB.new }
 Services.register(:ht_members) { HTMembers.new }

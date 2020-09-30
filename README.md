@@ -8,11 +8,10 @@
 * [Docker](https://docs.docker.com/install/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
+Run the following script to build and start the Docker containers:
+
 ```bash
-docker-compose build
-docker-compose up -d
-docker-compose run --rm dev bundle install
-docker-compose run --rm dev bundle exec ruby lib/tasks/build_database.rb
+bash bin/setup_dev.sh
 ```
 
 ## Running the tests
@@ -29,14 +28,8 @@ docker volume rm holdings-backend_data_db # to clear out the development databas
 docker volume rm holdings-backend_gem_cache # to clear out gems
 
 # Rebuild it
-docker-compose build
-docker-compose run --rm dev bundle install
-docker-compose up -d
-docker-compose run --rm -e MONGOID_ENV=test dev bundle exec ruby lib/tasks/build_database.rb
-docker-compose run --rm -e MONGOID_ENV=development dev bundle exec ruby lib/tasks/build_database.rb 
-
+bash bin/setup_dev.sh
 ```
-
 
 ## Loading data
 
@@ -51,15 +44,19 @@ This directory is mounted in the docker container, so anything under
 it will also be available in the docker container. Files elsewhere on 
 your host computer will *not* be reachable.
 
+For all files, they will be batched by OCN. It is not required that incoming
+files be sorted by OCN but they will likely load substantially faster if they
+are and there are a lot of things with a particular OCN.
+
 Files:
 * Must be located under the repository root
 * Can be gzipped or not -- the scripts will figure it out
 
 Script command cheat sheet:
-* `docker compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`
-* `docker compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
-* `docker compose run --rm dev bundle exec bin/add_print_holdings <filepath>` (full file)
-* `docker compose run --rm dev bundle exec bin/add_print_holdings -u <filepath>` (update file)
+* `docker-compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`
+* `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
+* `docker-compose run --rm dev bundle exec bin/add_print_holdings <filepath>` (full file)
+* `docker-compose run --rm dev bundle exec bin/add_print_holdings -u <filepath>` (update file)
 
 ### Loading the OCLC Concordance file
 
@@ -76,10 +73,10 @@ To load the OCLC concordance file:
     and put it somewhere under the repository root 
   * Make sure your docker cluster is up and running 
     * `docker-compose ps` (run from the repo root) should show mongo running 
-    * `docker-compose up -d` if it's not up
+    * `bin/setup_dev.sh` if it's not up
   * From the root of the repository:
-    * `docker compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`, where
-      * `docker compose run` is the command
+    * `docker-compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`, where
+      * `docker-compose run` is the command
       * `--rm` says to fire up a container for this and then tear it back 
       down so it isn't still running
       * `<filepath>` is the path _relative to the repository root_
@@ -95,16 +92,11 @@ for each item line. See the
 [Hathifiles file format specification](https://www.hathitrust.org/hathifiles_description)
 for more info if you're interested.
 
-To load a **full** Hathifile:
+To load a Hathifile (either a full file or an update):
   * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
   or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
-  * `docker compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
+  * `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
   where the components are exactly as for the OCLC concordance file.
-  
-To load an **update** Hathifile (note the `-u` switch!)
-  * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
-  or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
-  * `docker compose run --rm dev bundle exec bin/add_ht_items.rb -u <filepath>`
 
 ### Loading (scrubbed) print holdings
 
@@ -118,4 +110,6 @@ These raw files are "scrubbed" and verified, resulting in scrubbed files.
 
 To load a scrubbed file:
   * Get the file(s) you want from `/htapps/mwarin.babel/phdb_scripts/data/loadfiles/`
-  * `docker compose run --rm dev bundle exec bin/add_print_holdings <filepath>`
+  * Add UUIDs for tracking whether the individual line has been processed: `bin ruby/add_uuid.rb infile > outfile`
+  * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
+
