@@ -56,11 +56,11 @@ RSpec.describe HtItem do
     expect(htitem.n_chron).to eq("Jul 1999")
   end
 
-  it "does nothing if given an empty enum_chron" do
+  it "gives empty string if given an empty enum_chron" do
     htitem = build(:ht_item, enum_chron: "")
     expect(htitem.enum_chron).to eq("")
-    expect(htitem.n_enum).to be nil
-    expect(htitem.n_chron).to be nil
+    expect(htitem.n_enum).to eq("")
+    expect(htitem.n_chron).to eq("")
   end
 
   it "has an access of deny or allow" do

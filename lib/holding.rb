@@ -13,9 +13,9 @@ class Holding
   field :ocn, type: Integer
   field :organization, type: String
   field :local_id, type: String
-  field :enum_chron, type: String
+  field :enum_chron, type: String, default: ""
   field :n_enum, type: String, default: ""
-  field :n_chron, type: String
+  field :n_chron, type: String, default: ""
   field :status, type: String
   field :condition, type: String
   field :gov_doc_flag, type: Boolean

@@ -24,9 +24,9 @@ class HtItem
   field :rights, type: String
   field :access, type: String
   field :bib_fmt, type: String
-  field :enum_chron, type: String
-  field :n_enum, type: String
-  field :n_chron, type: String
+  field :enum_chron, type: String, default: ""
+  field :n_enum, type: String, default: ""
+  field :n_chron, type: String, default: ""
   field :collection_code, type: String
   field :billing_entity, type: String
 

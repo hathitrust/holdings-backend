@@ -18,11 +18,10 @@ module EnumChron
 
   def normalize_enum_chron
     # normalize into separate n_enum and n_chron
-    unless enum_chron.nil?
-      ec_parser = EnumChronParser.new
-      ec_parser.parse(enum_chron)
-      self.n_enum  = ec_parser.normalized_enum
-      self.n_chron = ec_parser.normalized_chron
-    end
+    enum_chron = self.enum_chron || ""
+    ec_parser = EnumChronParser.new
+    ec_parser.parse(enum_chron)
+    self.n_enum  = ec_parser.normalized_enum || ""
+    self.n_chron = ec_parser.normalized_chron || ""
   end
 end
