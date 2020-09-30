@@ -48,6 +48,16 @@ RSpec.describe MultiPartOverlap do
       overlap = described_class.new(cluster, "different_member", ht_w_ec)
       expect(overlap.members_with_matching_ht_items).to include("different_member")
     end
+
+    it "finds a member with any ht_item if this ht_item enumchron is nil" do
+      ht_w_ec_dupe = ht_wo_ec.clone
+      ht_w_ec_dupe.enum_chron = "1"
+      ht_w_ec_dupe.billing_entity = "different_member"
+      ClusterHtItem.new(ht_wo_ec).cluster.tap(&:save)
+      cluster = ClusterHtItem.new(ht_w_ec_dupe).cluster.tap(&:save)
+      overlap = described_class.new(cluster, "different_member", ht_wo_ec)
+      expect(overlap.members_with_matching_ht_items).to include("different_member")
+    end
   end
 
   describe "#matching_holdings" do
