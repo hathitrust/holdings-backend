@@ -46,6 +46,7 @@ RSpec.describe HTCollections do
     it "can fetch data from the database" do
       expect(ht_collections["MIU"].billing_entity).to eq("umich")
       expect(ht_collections["KEIO"].billing_entity).to eq("hathitrust")
+      expect(ht_collections["UCM"].billing_entity).to eq("ucm")
     end
 
     it "can fetch the full set of members" do
