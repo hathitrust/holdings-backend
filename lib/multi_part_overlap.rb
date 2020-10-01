@@ -9,8 +9,7 @@ class MultiPartOverlap < Overlap
     if @ht_item.n_enum == ""
       @cluster.ht_items.pluck(:billing_entity).uniq
     else
-      @cluster.ht_items.where("$or": [{ n_enum: @ht_item.n_enum },
-                                      { n_enum: "" }])
+      @cluster.ht_items.select {|h| h.n_enum.empty? || h.n_enum == @ht_item.n_enum }
         .pluck(:billing_entity).uniq
     end
   end

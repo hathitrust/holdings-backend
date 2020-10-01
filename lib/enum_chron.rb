@@ -7,8 +7,9 @@ require "services"
 module EnumChron
 
   def initialize(params = nil)
+    params ||= {}
+    params[:enum_chron] ||= ""
     super
-    normalize_enum_chron
   end
 
   def enum_chron=(enum_chron)
@@ -18,7 +19,6 @@ module EnumChron
 
   def normalize_enum_chron
     # normalize into separate n_enum and n_chron
-    enum_chron = self.enum_chron || ""
     ec_parser = EnumChronParser.new
     ec_parser.parse(enum_chron)
     self.n_enum  = ec_parser.normalized_enum || ""

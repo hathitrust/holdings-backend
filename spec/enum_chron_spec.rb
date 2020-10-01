@@ -6,7 +6,9 @@ require "enum_chron"
 class DummyRecord
   include Mongoid::Document
   include EnumChron
-  attr_accessor :enum_chron, :n_enum, :n_chron
+  field :enum_chron
+  field :n_enum
+  field :n_chron
 
 end
 
@@ -16,6 +18,7 @@ RSpec.describe EnumChron do
   let(:rec_wo_ec) { DummyRecord.new }
 
   it "uses EnumChronParser to set n_chron and n_enum" do
+    expect(rec_w_ec.enum_chron).to eq("1 aug")
     expect(rec_w_ec.n_enum).to eq("1")
     expect(rec_w_ec.n_chron).to eq("aug")
   end
@@ -26,6 +29,7 @@ RSpec.describe EnumChron do
   end
 
   it "sets n_chron and n_enum to empty string if nil enumchron" do
+    expect(rec_wo_ec.enum_chron).to eq("")
     expect(rec_wo_ec.n_chron).to eq("")
     expect(rec_wo_ec.n_enum).to eq("")
   end
