@@ -27,8 +27,8 @@ RSpec.describe Holding do
   it "does nothing if given an empty enum_chron" do
     holding = build(:holding, enum_chron: "")
     expect(holding.enum_chron).to eq("")
-    expect(holding.n_enum).to be nil
-    expect(holding.n_chron).to be nil
+    expect(holding.n_enum).to eq("")
+    expect(holding.n_chron).to eq("")
   end
 
   describe "#==" do
@@ -73,7 +73,7 @@ RSpec.describe Holding do
       rec = described_class.new_from_holding_file_line(line)
       expect(rec).to be_a(described_class)
       expect(rec.mono_multi_serial).to eq("mono")
-      expect(rec.n_enum).to eq(nil)
+      expect(rec.n_enum).to eq("")
     end
   end
 end

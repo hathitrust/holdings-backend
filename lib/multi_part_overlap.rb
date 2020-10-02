@@ -6,9 +6,12 @@ require "overlap"
 class MultiPartOverlap < Overlap
 
   def members_with_matching_ht_items
-    @cluster.ht_items.where("$or": [{ n_enum: @ht_item.n_enum },
-                                    { n_enum: nil }])
-      .pluck(:billing_entity).uniq
+    if @ht_item.n_enum == ""
+      @cluster.ht_items.pluck(:billing_entity).uniq
+    else
+      @cluster.ht_items.select {|h| h.n_enum.empty? || h.n_enum == @ht_item.n_enum }
+        .pluck(:billing_entity).uniq
+    end
   end
 
   def copy_count
@@ -38,7 +41,7 @@ class MultiPartOverlap < Overlap
   end
 
   def matching_holdings
-    if @ht_item.n_enum.nil? || (@ht_item.n_enum == "")
+    if @ht_item.n_enum == ""
       @cluster.holdings.where(organization: @org)
     else
       @cluster.holdings.where(organization: @org,
