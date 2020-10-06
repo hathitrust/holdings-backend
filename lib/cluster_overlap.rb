@@ -29,7 +29,7 @@ class ClusterOverlap
   end
 
   def overlap_record(ht_item, org)
-    case CalculateFormat.new(@cluster).cluster_format
+    case ht_item._parent.format
     when "ser"
       SerialOverlap.new(@cluster, org, ht_item)
     when "spm"

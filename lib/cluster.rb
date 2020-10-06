@@ -118,6 +118,10 @@ class Cluster
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
   end
 
+  def format
+    @format ||= CalculateFormat.new(self).cluster_format
+  end
+
   def push_to_field(field, items)
     return if items.empty?
 
