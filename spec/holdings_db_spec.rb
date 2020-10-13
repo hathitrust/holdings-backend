@@ -25,7 +25,7 @@ RSpec.describe HoldingsDB do
   end
 
   def wipe_env
-    env_mapping.keys.each {|x| ENV.delete(x) }
+    env_mapping.each_key {|x| ENV.delete(x) }
     ENV.delete("DB_CONNECTION_STRING")
   end
 

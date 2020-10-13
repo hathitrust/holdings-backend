@@ -2,54 +2,54 @@
 
 require "cluster"
 require "reclusterer"
+require "cluster_getter"
 
 # Services for clustering OCN Resolutions
 class ClusterOCNResolution
-  # Creates a ClusterOCNResolution
-  #
-  # @param OCNResolution that needs clustering
-  def initialize(resolution)
-    @resolution = resolution
-  end
 
-  # Cluster the OCNResolution
-  def cluster
-    c = (Cluster.merge_many(Cluster.where(ocns: { "$in": @resolution.ocns })) ||
-         Cluster.new(ocns: @resolution.ocns).tap(&:save))
-    c.ocn_resolutions << @resolution
-    @resolution.ocns.each do |ocn|
-      c.ocns << ocn unless c.ocns.include?(ocn)
+  def initialize(*resolutions)
+    @resolutions = resolutions.flatten
+    @ocns = @resolutions.map(&:ocns).flatten.uniq
+
+    if @resolutions.count > 1 && @resolutions.any? {|r| !r.batch_with?(@resolutions.first) }
+      raise ArgumentError, "Resolved OCNs for each OCN resolution rule in batch must match"
     end
-    c
   end
 
-  # Move an OCN resolution rule from one cluster to another
-  #
-  # @param new_cluster - the cluster to move to
-  def move(new_cluster)
-    unless new_cluster.id == @resolution._parent.id
-      duped_resolution = @resolution.dup
-      @resolution.delete
-      new_cluster.ocn_resolutions << duped_resolution
-      @resolution = duped_resolution
-      new_cluster.ocns = new_cluster.collect_ocns
+  def cluster(getter: ClusterGetter.new(@ocns))
+    getter.get do |cluster|
+      add_resolutions(cluster)
     end
   end
 
   def delete
-    Cluster.where(ocns: { "$all": @resolution.ocns }).each do |c|
-      had_resolution = false
+    raise ArgumentError, "Can only delete one resolution at a time" unless @resolutions.length == 1
 
-      c.ocn_resolutions.delete_if do |candidate|
-        candidate.deprecated == @resolution.deprecated &&
-          candidate.resolved == @resolution.resolved &&
-          had_resolution = true
-      end
+    resolution = @resolutions.first
+    return unless Cluster.where(ocns: { "$all": resolution.ocns }).any?
 
-      if had_resolution
-        Reclusterer.new(c).recluster
+    Retryable.with_transaction do
+      Cluster.where(ocns: { "$all": resolution.ocns }).each do |c|
+        had_resolution = false
+
+        c.ocn_resolutions.delete_if do |candidate|
+          candidate.deprecated == resolution.deprecated &&
+            candidate.resolved == resolution.resolved &&
+            had_resolution = true
+        end
+
+        if had_resolution
+          Reclusterer.new(c).recluster
+        end
       end
     end
+  end
+
+  private
+
+  def add_resolutions(cluster)
+    to_add = @resolutions.reject {|r| cluster.ocn_resolutions.include? r }
+    cluster.add_ocn_resolutions(to_add)
   end
 
 end

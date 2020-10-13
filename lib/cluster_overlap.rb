@@ -29,13 +29,14 @@ class ClusterOverlap
   end
 
   def overlap_record(ht_item, org)
-    if CalculateFormat.new(@cluster).cluster_format == "ser"
+    case CalculateFormat.new(@cluster).cluster_format
+    when "ser"
       SerialOverlap.new(@cluster, org, ht_item)
-    elsif CalculateFormat.new(@cluster).cluster_format == "spm"
+    when "spm"
       SinglePartOverlap.new(@cluster, org, ht_item)
-    elsif CalculateFormat.new(@cluster).cluster_format == "mpm"
+    when "mpm"
       MultiPartOverlap.new(@cluster, org, ht_item)
-    elsif CalculateFormat.new(@cluster).cluster_format == "ser/spm"
+    when "ser/spm"
       SinglePartOverlap.new(@cluster, org, ht_item)
     end
   end

@@ -20,7 +20,7 @@ RSpec.describe "overlap_report_import_to_mysql" do
   end
 
   # Build up a couple items and save them using the export logic from bin/export_overlap_report
-  around(:all) do |spec|
+  around(:each) do |spec|
     h   = build(:holding)
     ht  = build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding")
     ht2 = build(:ht_item, billing_entity: "not_same_as_holding")

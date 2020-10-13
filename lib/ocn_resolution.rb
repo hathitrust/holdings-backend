@@ -20,9 +20,17 @@ class OCNResolution
     where(:$in => ocns)
   }
 
+  def ==(other)
+    deprecated == other.deprecated && resolved == other.resolved
+  end
+
   def initialize(params = nil)
     super
     self.ocns = [deprecated, resolved]
+  end
+
+  def batch_with?(other)
+    resolved == other.resolved
   end
 
 end

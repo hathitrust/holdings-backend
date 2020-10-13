@@ -74,22 +74,6 @@ class Cluster
     self
   end
 
-  def self.session
-    Mongoid::Threaded.get_session
-  end
-
-  def self.with_transaction
-    if (s = Mongoid::Threaded.get_session)
-      raise "In a session but not in a transaction??" unless s.in_transaction?
-
-      yield
-    else
-      Cluster.with_session do |session|
-        session.with_transaction { yield }
-      end
-    end
-  end
-
   # Merges multiple clusters together
   #
   # @param clusters All the clusters we need to merge
@@ -99,15 +83,9 @@ class Cluster
     if clusters.any?
       raise ClusterError, "cluster disappeared, try again" if c.nil?
 
-      with_transaction { c.merge_many(clusters) }
+      Retryable.with_transaction { c.merge_many(clusters) }
     end
     c
-  end
-
-  # Collects OCNs from OCN resolutions and HT items
-  def collect_ocns
-    (ocn_resolutions.collect(&:ocns).flatten +
-     ht_items.collect(&:ocns).flatten).uniq
   end
 
   # returns the first matching ht item by item id in this cluster, if any
@@ -117,17 +95,36 @@ class Cluster
     ht_items.to_a.find {|h| h.item_id == item_id }
   end
 
+  def add_holdings(*items)
+    push_to_field(:holdings, items.flatten)
+  end
+
   def add_ht_items(*items)
     push_to_field(:ht_items, items.flatten)
   end
 
-  private
+  def add_ocn_resolutions(*items)
+    push_to_field(:ocn_resolutions, items.flatten)
+  end
+
+  def add_ocns(*ocns_to_add)
+    return if ocns_to_add.empty?
+
+    result = collection.update_one(
+      { _id: _id },
+      { "$push" => { ocns: { "$each" => ocns_to_add.flatten } } },
+      session: Mongoid::Threaded.get_session
+    )
+    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
+  end
 
   def push_to_field(field, items)
+    return if items.empty?
+
     result = collection.update_one(
       { _id: _id },
       { "$push" => { field => { "$each" => items.map(&:as_document) } } },
-      session: self.class.session
+      session: Mongoid::Threaded.get_session
     )
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
 
@@ -139,13 +136,10 @@ class Cluster
     reload
   end
 
-  # Moves embedded documents from another cluster to itself
-  #
-  # @param other - the other cluster
-  def move_members_to_self(other)
-    other.holdings.each {|h| ClusterHolding.new(h).move(self) }
-    other.ht_items.each {|ht| ClusterHtItem.new(ht).move(self) }
-    other.commitments.each {|c| c.move(self) }
+  def add_members_from(cluster)
+    relations.values.map(&:name).each do |relation|
+      push_to_field(relation, cluster.send(relation).map(&:dup))
+    end
   end
 
 end

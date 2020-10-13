@@ -2,118 +2,72 @@
 
 require "cluster"
 require "reclusterer"
-require "cluster_error"
+require "cluster_getter"
+require "retryable"
 
 # Services for batch loading HT items
-#
-# rubocop:disable Metrics/ClassLength
-# Much of this esp. around transactions and retry should be extracted to common
-# functionality shared by the other Cluster classes; remove this disabled cop
-# after doing so.
 class ClusterHtItem
 
-  MAX_RETRIES=5
-  # Not constantized by mongo ge
-  MONGO_DUPLICATE_KEY_ERROR=11_000
+  def initialize(*ht_items)
+    @ht_items = ht_items.flatten
+    @ocns = @ht_items.first.ocns
 
-  def initialize(*htitems)
-    @htitems = htitems.flatten
-    @ocns = @htitems.first.ocns
-
-    if @htitems.find {|h| h.ocns != @ocns }
-      raise ArgumentError, "OCNs for each HTItem in batch must match"
+    if @ht_items.count > 1 && @ht_items.any? {|h| !h.batch_with?(@ht_items.first) }
+      raise ArgumentError, "OCN for each HTItem in batch must match"
     end
 
-    if (@ocns.nil? || @ocns.empty?) && @htitems.length > 1
+    if (@ocns.nil? || @ocns.empty?) && @ht_items.length > 1
       raise ArgumentError, "Cannot cluster multiple OCN-less HTItems"
     end
   end
 
-  def cluster
-    retry_operation do
-      cluster_for_ocns.tap do |cluster|
-        Services.logger.debug "adding htitems #{htitems.inspect} " \
-          " with ocns #{@ocns} to cluster #{cluster.inspect}"
-        update_or_add_htitems(cluster, htitems)
-      end
-    end
-  end
-
-  # Move HTItem from one cluster to another
-  #
-  # @param new_cluster - the cluster to move to
-  def move(new_cluster)
-    raise ArgumentError, "Can only move one HTItem at a time" unless htitems.length == 1
-
-    ht_item = htitems.first
-
-    retry_operation do
-      return if new_cluster.id == ht_item._parent.id
-
-      Cluster.with_transaction do
-        duped_htitem = ht_item.dup
-        ht_item.delete
-        new_cluster.add_ht_items(duped_htitem)
-      end
+  def cluster(getter: ClusterGetter.new(@ocns))
+    getter.get do |cluster|
+      update_or_add_ht_items(cluster)
     end
   end
 
   # Removes an HTItem
   def delete
-    raise ArgumentError, "Can only delete one HTItem at a time" unless htitems.length == 1
+    raise ArgumentError, "Can only delete one HTItem at a time" unless ht_items.length == 1
 
-    ht_item = htitems.first
-
+    ht_item = ht_items.first
     # Don't start a transaction until we know there's something we need to
     # delete. If we do need to delete the thing, then we need to re-fetch it so
     # we can acquire the correct lock
-    retry_operation do
-      return unless cluster_with_htitem(ht_item)
+    return unless cluster_with_htitem(ht_item)
 
-      Cluster.with_transaction do
-        if (cluster = cluster_with_htitem(ht_item))
-          Services.logger.debug "removing old htitem #{ht_item.item_id}"
-          cluster.ht_item(ht_item.item_id).delete
+    Retryable.with_transaction do
+      if (cluster = cluster_with_htitem(ht_item))
+        Services.logger.debug "removing old htitem #{ht_item.item_id}"
+        cluster.ht_item(ht_item.item_id).delete
 
-          # Note that technically we only need to do this if there were multiple
-          # OCNs for that HT item and nothing else binds the cluster together.
-          # It may be worth optimizing not to do this if the htitem has only
-          # one OCN, since that will be the common case. Not sure if it's worth
-          # optimizing away if there are multiple OCNs (i.e. doing the check to
-          # see if anything else binds the cluster together). In general the
-          # operation is probably rare enough that we don't need to worry about
-          # this for the time being.
-          Reclusterer.new(cluster).recluster
-        end
+        # Note that technically we only need to do this if there were multiple
+        # OCNs for that HT item and nothing else binds the cluster together.
+        # It may be worth optimizing not to do this if the htitem has only
+        # one OCN, since that will be the common case. Not sure if it's worth
+        # optimizing away if there are multiple OCNs (i.e. doing the check to
+        # see if anything else binds the cluster together). In general the
+        # operation is probably rare enough that we don't need to worry about
+        # this for the time being.
+        Reclusterer.new(cluster).recluster
       end
     end
   end
 
   private
 
-  attr_reader :htitems, :ocns
+  attr_reader :ht_items, :ocns
 
   def cluster_with_htitem(htitem)
     Cluster.with_ht_item(htitem).first
   end
 
-  def cluster_for_ocns
-    existing_cluster_with_ocns || Cluster.create(ocns: @ocns)
-  end
-
-  def existing_cluster_with_ocns
-    return unless @ocns.any?
-
-    Cluster.merge_many(Cluster.for_ocns(@ocns)).tap do |c|
-      c&.add_to_set(ocns: @ocns)
-    end
-  end
-
-  def update_or_add_htitems(cluster, htitems)
+  def update_or_add_ht_items(cluster)
     Services.logger.debug "Cluster #{cluster.inspect}: " \
-      "adding htitems #{htitems.inspect} with ocns #{@ocns}"
+      "adding ht_items #{ht_items.inspect} with ocns #{@ocns}"
     to_append = []
-    htitems.each do |item|
+    ht_items.each do |item|
       if (existing_item = cluster.ht_item(item.item_id))
         Services.logger.debug "updating existing item with id #{item.item_id}"
         existing_item.update_attributes(item.to_hash)
@@ -128,31 +82,4 @@ class ClusterHtItem
     end
   end
 
-  def retry_operation
-    tries = 0
-
-    begin
-      tries += 1
-      yield
-    rescue Mongo::Error::OperationFailure => e
-      handle_batch_error?(e, tries, retryable_error?(e)) && retry || raise
-    rescue ClusterError => e
-      handle_batch_error?(e, tries) && retry || raise
-    end
-  end
-
-  def retryable_error?(error)
-    error.code == MONGO_DUPLICATE_KEY_ERROR || error.code_name == "WriteConflict"
-  end
-
-  def handle_batch_error?(exception, tries, condition = true)
-    if condition && tries < MAX_RETRIES
-      Services.logger.warn "Got #{exception} while processing #{@ocns}, retrying (try #{tries+1})"
-      true
-    else
-      false
-    end
-  end
-
 end
-# rubocop:enable Metrics/ClassLength

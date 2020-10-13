@@ -1,51 +1,68 @@
 # frozen_string_literal: true
 
 require "cluster"
+require "cluster_getter"
 
 # Services for clustering Print Holdings records
 class ClusterHolding
-  def initialize(holding)
-    @holding = holding
+
+  def initialize(*holdings)
+    @holdings = holdings.flatten
+    @ocn = @holdings.first.ocn
+
+    if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
+      raise ArgumentError, "OCN for each holding in batch must match"
+    end
+
+    raise ArgumentError, "Holding must have exactly one OCN" if @ocn.nil?
   end
 
-  def cluster
-    c = (Cluster.find_by(ocns: @holding[:ocn]) ||
-         Cluster.new(ocns: [@holding[:ocn]]).tap(&:save))
-    c.holdings << @holding
-    c
-  end
-
-  def move(new_cluster)
-    unless new_cluster.id == @holding._parent.id
-      duped_h = @holding.dup
-      new_cluster.holdings << duped_h
-      @holding.delete
-      @holding = duped_h
+  def cluster(getter: ClusterGetter.new([@ocn]))
+    getter.get do |cluster|
+      cluster.add_holdings(@holdings)
     end
   end
 
   # Updates a matching holding or adds it
-  def update
-    c = Cluster.find_by(ocns: @holding.ocn)
-    return cluster unless c
+  def update(getter: ClusterGetter.new([@ocn]))
+    getter.get do |c|
+      to_add = []
 
-    old_holding = c.holdings.to_a.find do |h|
-      h == @holding && h.date_received != @holding.date_received
+      @holdings.each do |holding|
+        if (existing = c.holdings.to_a.find {|h| h.uuid == holding.uuid })
+          next if existing.same_as?(holding)
+
+          raise "Found holding #{existing} with same UUID " \
+            "but different attributes from update #{holding}"
+        end
+
+        old_holding = c.holdings.to_a.find do |h|
+          h == holding && h.date_received != holding.date_received
+        end
+
+        if old_holding
+          old_holding.update_attributes(date_received: holding.date_received, uuid: holding.uuid)
+        else
+          to_add << holding
+        end
+      end
+
+      c.add_holdings(to_add)
     end
-    if old_holding
-      old_holding.update_attributes(date_received: @holding.date_received)
-    else
-      c = cluster
-    end
-    c
   end
 
   def delete
-    c = Cluster.find_by(ocns: @holding.ocn)
-    @holding.delete
-    c.save
-    c.reload
-    c.delete unless c._children.any?
+    raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1
+
+    holding = @holdings.first
+
+    Retryable.new.run do
+      c = Cluster.find_by(ocns: holding.ocn)
+      holding.delete
+      c.save
+      c.reload
+      c.delete unless c._children.any?
+    end
   end
 
   def self.delete_old_holdings(org, date)

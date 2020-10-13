@@ -98,3 +98,11 @@ RSpec/ExampleLength:
 RSpec/MultipleExpectations:
   Exclude:
     - 'spec/autoscrub_spec.rb'
+
+Metrics/CyclomaticComplexity:
+  Exclude:
+    - 'lib/enum_chron_parser.rb'
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - 'lib/enum_chron_parser.rb'

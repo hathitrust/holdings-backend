@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require "cluster"
+require "cluster_ocn_resolution"
+require "cluster_holding"
+require "cluster_ht_item"
+require "cluster_serial"
 
 # Deletes a cluster, then re-creates clusters from the data in that cluster.
 # Use after changing data in a cluster that could affect which items are in the
@@ -12,7 +16,7 @@ class Reclusterer
   end
 
   def recluster
-    Cluster.with_transaction do
+    Retryable.with_transaction do
       Services.logger.debug "Deleting and reclustering cluster #{@cluster.inspect}"
       @cluster.delete
 

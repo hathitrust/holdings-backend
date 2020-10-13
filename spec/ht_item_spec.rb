@@ -82,4 +82,44 @@ RSpec.describe HtItem do
       expect(htitem_hash.key?(:_id)).to be false
     end
   end
+
+  describe "#batch_with?" do
+    let(:single_ocn1) { build(:ht_item, ocns: [123]) }
+    let(:single_ocn2) { build(:ht_item, ocns: [123]) }
+    let(:single_ocn3) { build(:ht_item, ocns: [456]) }
+    let(:multiple_ocn1) { build(:ht_item, ocns: [123, 456]) }
+    let(:multiple_ocn2) { build(:ht_item, ocns: [123, 456]) }
+    let(:multiple_ocn3) { build(:ht_item, ocns: [789, 999]) }
+    let(:no_ocn1) { build(:ht_item, ocns: [], ht_bib_key: 123) }
+    let(:no_ocn2) { build(:ht_item, ocns: [], ht_bib_key: 123) }
+    let(:no_ocn3) { build(:ht_item, ocns: [], ht_bib_key: 456) }
+
+    it "batches HTItems with the same single OCN" do
+      expect(single_ocn1.batch_with?(single_ocn2)).to be true
+    end
+
+    it "batches HTItems with the same multiple OCNs" do
+      expect(multiple_ocn1.batch_with?(multiple_ocn2)).to be true
+    end
+
+    it "does not batch HTItems with a different single OCN" do
+      expect(single_ocn1.batch_with?(single_ocn3)).to be false
+    end
+
+    it "does not batch HTItems with a different multiple OCNs" do
+      expect(multiple_ocn1.batch_with?(multiple_ocn3)).to be false
+    end
+
+    it "does not batch HTItems with different numbers of OCNs" do
+      expect(single_ocn1.batch_with?(multiple_ocn1)).to be false
+    end
+
+    it "does not batch two HTItems with no OCN but the same bib key" do
+      expect(no_ocn1.batch_with?(no_ocn2)).to be false
+    end
+
+    it "does not batch two HTItems with no OCN and different bib keys" do
+      expect(no_ocn1.batch_with?(no_ocn3)).to be false
+    end
+  end
 end

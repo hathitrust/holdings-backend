@@ -12,12 +12,33 @@ RSpec.describe ClusterOCNResolution do
       Cluster.each(&:delete)
     end
 
+    it "can add a batch" do
+      cluster = described_class.new(resolution, resolution2).cluster
+
+      expect(cluster.ocn_resolutions.to_a.size).to eq(2)
+      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
+                                              resolution.resolved,
+                                              resolution2.deprecated)
+      expect(Cluster.count).to eq(1)
+    end
+
+    it "ignores duplicate resolution rules" do
+      described_class.new(resolution, resolution2).cluster
+      cluster = described_class.new(resolution.dup).cluster
+
+      expect(cluster.ocn_resolutions.to_a.size).to eq(2)
+      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
+                                              resolution.resolved,
+                                              resolution2.deprecated)
+      expect(Cluster.count).to eq(1)
+    end
+
     it "adds an OCN Resolution to an existing cluster" do
       c.save
       cluster = described_class.new(resolution).cluster
       expect(cluster.ocn_resolutions.first._parent.id).to eq(c.id)
       expect(cluster.ocn_resolutions.to_a.size).to eq(1)
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
     end
 
     it "creates a new cluster if no match is found" do
@@ -52,23 +73,6 @@ RSpec.describe ClusterOCNResolution do
     it "cluster has its embed's ocns" do
       cluster = described_class.new(resolution).cluster
       expect(cluster.ocns).to eq(resolution.ocns)
-    end
-  end
-
-  describe "#move" do
-    let(:c2) { create(:cluster) }
-
-    before(:each) do
-      Cluster.each(&:delete)
-      c.save
-    end
-
-    it "moves an OCN resolution from one cluster to another" do
-      cluster = described_class.new(resolution).cluster
-      expect(cluster.ocn_resolutions.to_a.size).to eq(1)
-      described_class.new(resolution).move(c2)
-      expect(cluster.ocn_resolutions.to_a.size).to eq(0)
-      expect(c2.ocns).to eq(resolution.ocns)
     end
   end
 
