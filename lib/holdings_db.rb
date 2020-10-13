@@ -18,7 +18,7 @@ class HoldingsDB < SimpleDelegator
 
   def initialize(connection_string = ENV["DB_CONNECTION_STRING"], **kwargs)
     @rawdb = self.class.connection(connection_string, **kwargs)
-    __setobj__(@rawdb)
+    super(@rawdb)
   end
 
   # Load the given filepath into the table named.
@@ -119,7 +119,7 @@ class HoldingsDB < SimpleDelegator
     def gather_db_args(args)
       [:user, :password, :host,
        :port, :database, :adapter].each do |db_arg|
-         args[db_arg] ||= ENV["DB_" + db_arg.to_s.upcase]
+         args[db_arg] ||= ENV["DB_#{db_arg.to_s.upcase}"]
        end
 
       args[:host] ||= "localhost"

@@ -15,7 +15,7 @@ Services.register(:holdings_db) { HoldingsDB.new }
 Services.register(:ht_members) { HTMembers.new }
 Services.register(:ht_collections) { HTCollections.new }
 Services.register(:logger) do
-  Logger.new(STDERR).tap do |l|
+  Logger.new($stderr).tap do |l|
     l.level = Logger::INFO
   end
 end

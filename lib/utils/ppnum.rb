@@ -17,7 +17,7 @@ def ppnum(i, width = 0, decimals = 0)
   dec_str = if decimals.zero?
     ""
   else
-    "." + format("%.#{decimals}f", i).split(".").last
+    ".#{format("%.#{decimals}f", i).split(".").last}"
   end
   numstr = i.floor.to_s.reverse.split(/(...)/)
     .reject(&:empty?)

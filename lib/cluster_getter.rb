@@ -8,7 +8,6 @@ require "cluster"
 # - Fetch an existing cluster that has the OCNs you want
 # - Merge multiple clusters together to get a single one with the OCNs you want
 # - Make a new cluster with the OCNs
-# # TODO rename to ClusterGetter or something?
 class ClusterGetter
   def initialize(ocns)
     @ocns = ocns

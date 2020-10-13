@@ -10,8 +10,7 @@ class ClusterHolding
     @holdings = holdings.flatten
     @ocn = @holdings.first.ocn
 
-    if @holdings.find {|c| c.ocn != @ocn }
-      puts @holdings.map(&:inspect)
+    if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
       raise ArgumentError, "OCN for each holding in batch must match"
     end
 

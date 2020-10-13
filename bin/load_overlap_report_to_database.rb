@@ -17,7 +17,7 @@ require "utils/waypoint"
 if ARGV.empty? || ARGV.include?("-h")
   puts "Usage"
   puts "  #{$PROGRAM_NAME} file_to_load <optional_log_file>"
-  puts "\n  Default is to log to STDERR"
+  puts "\n  Default is to log to $stderr"
   exit 1
 end
 
@@ -26,7 +26,7 @@ def connection
   Services.holdings_db
 end
 
-def get_logger(logfile = STDERR)
+def get_logger(logfile = $stderr)
   Logger.new(logfile)
 end
 

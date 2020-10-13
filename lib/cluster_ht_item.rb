@@ -12,8 +12,8 @@ class ClusterHtItem
     @ht_items = ht_items.flatten
     @ocns = @ht_items.first.ocns
 
-    if @ht_items.find {|c| c.ocns != @ocns }
-      raise ArgumentError, "OCNs for each HTItem in batch must match"
+    if @ht_items.count > 1 && @ht_items.any? {|h| !h.batch_with?(@ht_items.first) }
+      raise ArgumentError, "OCN for each HTItem in batch must match"
     end
 
     if (@ocns.nil? || @ocns.empty?) && @ht_items.length > 1

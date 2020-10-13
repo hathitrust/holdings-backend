@@ -5,8 +5,7 @@ require "cluster"
 # The most basic overlap record
 # Inherited by SinglePartOverlap, MultiPartOverlap, and SerialOverlap
 class Overlap
-  attr_accessor :org
-  attr_accessor :ht_item
+  attr_accessor :org, :ht_item
 
   def initialize(cluster, org, ht_item)
     @cluster = cluster

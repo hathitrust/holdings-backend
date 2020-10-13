@@ -31,8 +31,8 @@ end
 #
 class Autoscrub
   # Todo: read these dir paths from config/env?
-  DATA_DIR = __dir__ + "/../testdata"
-  LOG_DIR  = __dir__ + "/../testdata"
+  DATA_DIR = "#{__dir__}/../testdata"
+  LOG_DIR  = "#{__dir__}/../testdata"
 
   SPEC_REGEXP = {
     # A single regex for file name pass/fail.
@@ -47,10 +47,10 @@ class Autoscrub
     $/x.freeze,
 
     # Split filename on these to get the individual parts.
-    FILENAME_PART_DELIM: /[_\.]/.freeze,
+    FILENAME_PART_DELIM: /[_.]/.freeze,
 
     # If filename fail, further regexes to discover why.
-    MEMBER_ID:           /^[a-z\_\-]+$/.freeze,
+    MEMBER_ID:           /^[a-z_\-]+$/.freeze,
     ITEM_TYPE:           /^(mono|multi|serial)$/.freeze,
     ITEM_TYPE_CONTEXT:   /_(mono|multi|serial)_/.freeze,
     UPDATE_TYPE:         /^(full|partial)$/.freeze,
@@ -432,8 +432,7 @@ class Autoscrub
 
     # Check that all required cols are present
     if REQ_HEADER_COLS & header_cols != REQ_HEADER_COLS
-      log("Missing required header cols:" + \
-          (REQ_HEADER_COLS - header_cols).join(", "))
+      log("Missing required header cols:#{(REQ_HEADER_COLS - header_cols).join(", ")}")
       violations += 1
     end
 

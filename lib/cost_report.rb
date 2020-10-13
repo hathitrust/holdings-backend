@@ -4,8 +4,7 @@ require "ht_item_overlap"
 
 # Generates reports based on h_share
 class CostReport
-  attr_accessor :organization
-  attr_accessor :freq_table
+  attr_accessor :organization, :freq_table
 
   def initialize(org = nil)
     @organization = org

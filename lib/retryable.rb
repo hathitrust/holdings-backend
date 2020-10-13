@@ -7,21 +7,21 @@ class Retryable
   # Not constantized by mongo gem
   MONGO_DUPLICATE_KEY_ERROR=11_000
 
-  def self.ensure_transaction
+  def self.ensure_transaction(&block)
     if (s = Mongoid::Threaded.get_session)
       raise "In a session but not in a transaction??" unless s.in_transaction?
 
       yield
     else
       Cluster.with_session do |session|
-        session.with_transaction { yield }
+        session.with_transaction(&block)
       end
     end
   end
 
-  def self.with_transaction
+  def self.with_transaction(&block)
     ensure_transaction do
-      new.run { yield }
+      new.run(&block)
     end
   end
 
@@ -35,17 +35,16 @@ class Retryable
     begin
       @tries += 1
       yield
-    rescue Mongo::Error::OperationFailure => e
+    rescue Mongo::Error::OperationFailure, ClusterError => e
       @error = e
       retryable_error? && more_tries? && retry || raise
-    rescue ClusterError => e
-      @error = e
-      more_tries? && retry || raise
     end
   end
 
   def retryable_error?
-    error.code == MONGO_DUPLICATE_KEY_ERROR || error.code_name == "WriteConflict"
+    error.is_a?(ClusterError) ||
+      error.code == MONGO_DUPLICATE_KEY_ERROR ||
+      error.code_name == "WriteConflict"
   end
 
   def more_tries?

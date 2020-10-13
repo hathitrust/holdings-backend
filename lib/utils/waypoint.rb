@@ -28,6 +28,7 @@ module Utils
 
     def incr(increase = 1)
       @count += increase
+      self
     end
 
     def on_batch

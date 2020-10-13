@@ -9,7 +9,7 @@ require_relative "enum_chron_parser"
 class ScrubFields
 
   # "444; 555; 666" -> %w[444,555,666]
-  OCN_SPLIT_DELIM      = /[,:;\|\/ ]+/.freeze
+  OCN_SPLIT_DELIM      = /[,:;|\/ ]+/.freeze
   LOCAL_ID_SPLIT_DELIM = /[,; ]+/.freeze
   ISSN_DELIM           = LOCAL_ID_SPLIT_DELIM
 

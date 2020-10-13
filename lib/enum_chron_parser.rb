@@ -8,7 +8,7 @@
 class EnumChronParser
   attr_accessor :enum, :chron
 
-  DOT_PATTERN = /\.\s+([^\.]+)/.freeze
+  DOT_PATTERN = /\.\s+([^.]+)/.freeze
   DATE_PATTERN = /\. [0-2]\d{3}/.freeze
 
   # chron patterns
@@ -17,14 +17,14 @@ class EnumChronParser
              apr|april|may|june?|
              july?|aug|august|sept?|september|
              oct|october|nov|november|dec|december)
-             [\.\?]?/ix.freeze
+             [.?]?/ix.freeze
   DAY_RE = /[0-3]?[0-9](th|st|rd|nd)$/i.freeze
   DAY_RE1 = /([0-9]{1,4})(th|st|rd|nd)?/i.freeze
   DAY_RE2 = /[0-3]?[0-9](th|st|rd|nd)?/.freeze
   MONTH_DAY_RE = /(#{MONTH_RE} #{DAY_RE1})/.freeze
   MONTH_SPAN_RE = /(#{MONTH_RE}-#{MONTH_RE})/.freeze
   DAY_SPAN_RE = /(#{DAY_RE2}-#{DAY_RE2})/.freeze
-  DATE_MONTH_SPAN_RE = /(#{DATE_RE}\-#{MONTH_RE})/.freeze
+  DATE_MONTH_SPAN_RE = /(#{DATE_RE}-#{MONTH_RE})/.freeze
   MONTH_DAY_SPAN_RE = /(#{MONTH_RE} #{DAY_SPAN_RE})/.freeze
   SEASONS_RE = /(spring|summer|winter|fall)/i.freeze
 
@@ -33,17 +33,17 @@ class EnumChronParser
   LONG_NUM_RE = /^([0-9]{5,})/.freeze
 
   # Misc patterns
-  REN_RE_1 = /([A-Za-z0-9\.]+)\((\d{2,4})\)/.freeze
+  REN_RE_1 = /([A-Za-z0-9.]+)\((\d{2,4})\)/.freeze
   REN_RE_2 = /([A-Z])(\d+)/i.freeze
   REN_RE_3 = /\w+\.(.*)/.freeze
-  REN_RE_4 = /[A-Za-z]+[\s]+([\d]+)/.freeze
-  QUOTED_BSLASH = /\"\\\"/.freeze
+  REN_RE_4 = /[A-Za-z]+\s\](\d\])/.freeze
+  QUOTED_BSLASH = /"\\"/.freeze
   DOT_SPACE = /\.\s+/.freeze
   SPACE = /\s/.freeze
   C_AZ = /C[a-z]*\./i.freeze
   DOUBLE_COLON = /::/.freeze
   ALPHANUM = /[a-z0-9]/i.freeze
-  TRAIL_HYPHEN = /\-$/.freeze
+  TRAIL_HYPHEN = /-$/.freeze
 
   def initialize
     @enum  = []
@@ -110,13 +110,13 @@ class EnumChronParser
     # first chron
     return if @chron.empty?
 
-    chron = if @chron.class == Array
+    chron = if @chron.instance_of?(Array)
       @chron.join(" ")
     else
       @chron
     end
     # dates
-    newchron = if chron.to_i
+    if chron.to_i
       if chron.length == 2
         if chron.to_i > 0 && chron.to_i < 12
           "20" << chron
@@ -129,7 +129,6 @@ class EnumChronParser
     else
       chron
     end
-    newchron
   end
 
   def normalized_enum
@@ -240,8 +239,7 @@ class EnumChronParser
         bits.insert(i+1, sub_b[1])
         bits.delete(b)
       end
-    end
-    bits.each do |b|
+
       # match chron primaries
       if b =~ ENUM_RE || b =~ LONG_NUM_RE
         add_to_enum(b)

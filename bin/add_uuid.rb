@@ -7,8 +7,8 @@ require "securerandom"
 
 ARGF.each do |line|
   if /^OCN\tBIB/.match?(line)
-    puts [line.strip, "UUID"].join("\t")
+    puts [line.chomp, "UUID"].join("\t")
   else
-    puts [line.strip, SecureRandom.uuid].join("\t")
+    puts [line.chomp, SecureRandom.uuid].join("\t")
   end
 end

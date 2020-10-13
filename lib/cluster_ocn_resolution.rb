@@ -9,18 +9,16 @@ class ClusterOCNResolution
 
   def initialize(*resolutions)
     @resolutions = resolutions.flatten
-    resolved = @resolutions.first.resolved
     @ocns = @resolutions.map(&:ocns).flatten.uniq
 
-    if @resolutions.find {|c| c.resolved != resolved }
+    if @resolutions.count > 1 && @resolutions.any? {|r| !r.batch_with?(@resolutions.first) }
       raise ArgumentError, "Resolved OCNs for each OCN resolution rule in batch must match"
     end
   end
 
-  # Cluster the OCNResolution
   def cluster(getter: ClusterGetter.new(@ocns))
     getter.get do |cluster|
-      update_or_add_resolutions(cluster)
+      add_resolutions(cluster)
     end
   end
 
@@ -47,11 +45,10 @@ class ClusterOCNResolution
     end
   end
 
-  def update_or_add_resolutions(cluster)
-    to_add = []
-    @resolutions.each do |r|
-      to_add << r unless cluster.ocn_resolutions.any? {|existing| r == existing }
-    end
+  private
+
+  def add_resolutions(cluster)
+    to_add = @resolutions.reject {|r| cluster.ocn_resolutions.include? r }
     cluster.add_ocn_resolutions(to_add)
   end
 
