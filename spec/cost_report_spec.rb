@@ -71,6 +71,14 @@ RSpec.describe CostReport do
     end
   end
 
+  describe "#pd_cost_for_member" do
+    it "calculates pd cost for a member weight" do
+      # mock_members umich and utexas have weights 1 and 3 respectively
+      expect(cr.pd_cost_for_member(:umich)).to eq(cr.pd_cost / 8.0 * 1.0)
+      expect(cr.pd_cost_for_member(:utexas)).to eq(cr.pd_cost / 8.0 * 3.0)
+    end
+  end
+
   describe "#compile_frequency_table" do
     it "ignores PD items" do
       pd_item = build(:ht_item,

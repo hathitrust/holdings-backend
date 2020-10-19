@@ -10,7 +10,7 @@ class CostReport
 
   def initialize(org = nil, cost: ENV["target_cost"], lines: 1_000_000, logger: Services.logger)
     @organization = org
-    @target_cost = cost.to_f
+    @target_cost = Float(cost)
     @maxlines = lines
     @logger = logger
     # Member Hash of a format hash of a member count hash
@@ -99,7 +99,7 @@ class CostReport
   end
 
   def total_hscore(member)
-    spm_total(member.to_sym) + mpm_total(member.to_sym) + ser_total(member.to_sym)
+    spm_total(member) + mpm_total(member) + ser_total(member)
   end
 
   [:spm, :ser, :mpm].each do |format|
@@ -107,7 +107,7 @@ class CostReport
     define_method "#{format}_total".to_sym do |member|
       total = 0.0
       freq_table[member.to_sym][format].each do |num_orgs, freq|
-        total += (1.0 / num_orgs * freq)
+        total += freq.to_f / num_orgs
       end
       total
     end
@@ -119,15 +119,15 @@ class CostReport
   end
 
   def total_ic_costs(member)
-    total_hscore(member) * cost_per_volume.to_f
+    total_hscore(member) * cost_per_volume
   end
 
   def extra_per_member
-    total_ic_costs(:hathitrust).to_f / Services.ht_members.members.count
+    total_ic_costs(:hathitrust) / Services.ht_members.members.count
   end
 
   def total_cost_for_member(member)
-    total_ic_costs(member.to_s) + pd_cost_for_member(member.to_s) + extra_per_member
+    total_ic_costs(member) + pd_cost_for_member(member) + extra_per_member
   end
 
   def to_tsv
