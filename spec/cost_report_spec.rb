@@ -29,6 +29,7 @@ RSpec.describe CostReport do
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
+    ENV["target_cost"] = "10"
     Cluster.each(&:delete)
     c.save
     c2.save
