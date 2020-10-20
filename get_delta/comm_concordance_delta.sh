@@ -61,7 +61,8 @@ logmsg "diffing, writing results to $output";
 # > a b
 # < c d
 # format which I think is neater..
-comm -3 $data_dir/old_pruned.txt $data_dir/new_pruned.txt | awk -F'\t' '{if ($1 == ""){ print ">\t" $2 "\t" $3 }else{ print "<\t" $1 "\t" $2} }' > $output;
+#comm -3 $data_dir/old_pruned.txt $data_dir/new_pruned.txt | awk -F'\t' '{if ($1 == ""){ print ">\t" $2 "\t" $3 }else{ print "<\t" $1 "\t" $2} }' > $output;
+comm -3 $data_dir/old_pruned.txt $data_dir/new_pruned.txt | awk -F'\t' "{if (\$1 == \"\"){ print \$2 \"\t\" \$3 > \"$output.adds\" }else{ print \$1 \"\t\" \$2 > \"$output.deletes\"} }";
 
 # Clean up intermediate files.
 rm $data_dir/old_pruned.txt $data_dir/new_pruned.txt;
