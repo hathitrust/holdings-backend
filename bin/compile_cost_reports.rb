@@ -13,6 +13,26 @@ require "ht_item_overlap"
 
 Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"])
 
+def to_tsv(report)
+  tsv = []
+  tsv << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
+  Services.ht_members.members.keys.sort.each do |member|
+    next unless report.organization.nil? || (member == report.organization.to_s)
+
+    tsv << [
+      member,
+      report.spm_costs(member),
+      report.mpm_costs(member),
+      report.ser_costs(member),
+      report.pd_cost_for_member(member),
+      Services.ht_members[member].weight,
+      report.extra_per_member,
+      report.total_cost_for_member(member)
+    ].join("\t")
+  end
+  tsv.join("\n")
+end
+
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
@@ -21,8 +41,8 @@ if __FILE__ == $PROGRAM_NAME
 
   org = ARGV.shift
 
-  cost_report = CostReport.new(org, maxlines: BATCH_SIZE, logger: logger)
+  cost_report = CostReport.new(org, lines: BATCH_SIZE, logger: logger)
 
   logger.info waypoint.final_line
-  puts cost_report.to_tsv
+  puts to_tsv(cost_report)
 end

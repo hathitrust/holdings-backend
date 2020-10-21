@@ -31,7 +31,7 @@ RSpec.describe "overlap_report_import_to_mysql" do
 
     org = nil # all orgs
     File.open(tempfilepath, "w:utf-8") do |tmpfile|
-      matching_clusters(org).each do |c|
+      ClusterOverlap.matching_clusters(org).each do |c|
         ClusterOverlap.new(c, org).each do |overlap|
           tmpfile.puts overlap_line(overlap.to_hash)
         end

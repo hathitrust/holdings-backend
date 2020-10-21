@@ -15,16 +15,7 @@ require "cluster_overlap"
 
 Mongoid.load!("mongoid.yml", :test)
 
-# Find clusters that match the given org or all
-def matching_clusters(org = nil)
-  if org.nil?
-    Cluster.where("ht_items.0": { "$exists": 1 })
-  else
-    Cluster.where("ht_items.0": { "$exists": 1 },
-              "$or": [{ "holdings.organization": org },
-                      { "ht_items.billing_entity": org }])
-  end
-end
+BATCH_SIZE = 10_000
 
 def overlap_line(overlap_hash)
   [overlap_hash[:cluster_id],
@@ -37,19 +28,24 @@ def overlap_line(overlap_hash)
    overlap_hash[:access_count]].join("\t")
 end
 
-if __FILE__ == $PROGRAM_NAME
-  BATCH_SIZE = 10_000
+def full_report(org)
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
-  org = ARGV.shift
-  matching_clusters(org).each do |c|
+  report = []
+  ClusterOverlap.matching_clusters(org).each do |c|
     ClusterOverlap.new(c, org).each do |overlap|
       waypoint.incr
-      puts overlap_line(overlap.to_hash)
+      report << overlap_line(overlap.to_hash)
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end
   end
   logger.info waypoint.final_line
+  report
+end
+
+if __FILE__ == $PROGRAM_NAME
+  org = ARGV.shift
+  puts full_report(org).join("\n")
 end

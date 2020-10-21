@@ -89,12 +89,12 @@ class CostReport
   def matching_clusters
     if @organization.nil?
       Cluster.where("ht_items.0": { "$exists": 1 },
-                "ht_items.access": "deny")
+                "ht_items.access": "deny").no_timeout
     else
       Cluster.where("ht_items.0": { "$exists": 1 },
                   "ht_items.access": "deny",
                   "$or": [{ "holdings.organization": @organization },
-                          { "ht_items.billing_entity": @organization }])
+                          { "ht_items.billing_entity": @organization }]).no_timeout
     end
   end
 
@@ -128,26 +128,6 @@ class CostReport
 
   def total_cost_for_member(member)
     total_ic_costs(member) + pd_cost_for_member(member) + extra_per_member
-  end
-
-  def to_tsv
-    report = []
-    report << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
-    Services.ht_members.members.keys.sort.each do |member|
-      next unless organization.nil? || (member == organization.to_s)
-
-      report << [
-        member,
-        spm_costs(member),
-        mpm_costs(member),
-        ser_costs(member),
-        pd_cost_for_member(member),
-        Services.ht_members[member.to_s].weight,
-        extra_per_member,
-        total_cost_for_member(member)
-      ].join("\t")
-    end
-    report.join("\n")
   end
 
 end
