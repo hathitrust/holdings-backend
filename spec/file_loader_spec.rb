@@ -20,6 +20,7 @@ end
 class FakeBatchLoader
   def initialize
     @loaded = []
+    @deleted = []
   end
 
   def item_from_line(line)
@@ -30,7 +31,11 @@ class FakeBatchLoader
     loaded << batch
   end
 
-  attr_reader :loaded
+  def delete(item)
+    deleted << item
+  end
+
+  attr_reader :loaded, :deleted
 end
 
 RSpec.describe FileLoader do
@@ -46,27 +51,42 @@ RSpec.describe FileLoader do
 
   let(:file_loader) { described_class.new(batch_loader: batch_loader) }
 
-  before(:each) { file_loader.load("fakefile", filehandle: fh) }
+  describe "#load" do
+    before(:each) { file_loader.load("fakefile", filehandle: fh) }
 
-  it "deserializes items using the given batch loader" do
-    expect(batch_loader.loaded.flatten.first).to be_a(FakeItem)
+    it "deserializes items using the given batch loader" do
+      expect(batch_loader.loaded.flatten.first).to be_a(FakeItem)
+    end
+
+    it "groups items in batches" do
+      expect(batch_loader.loaded.map {|a| a.map(&:line) })
+        .to include(["thing1", "thing1"])
+    end
+
+    it "loads all lines" do
+      expect(batch_loader.loaded.flatten.count).to eq(3)
+    end
+
+    it "loads the given data" do
+      expect(batch_loader.loaded.flatten.map(&:line))
+        .to contain_exactly("thing1", "thing1", "thing2")
+    end
+
+    it "doesn't send an empty batch" do
+      expect(batch_loader.loaded).not_to include([])
+    end
   end
 
-  it "groups items in batches" do
-    expect(batch_loader.loaded.map {|a| a.map(&:line) })
-      .to include(["thing1", "thing1"])
-  end
+  describe "#load_deletes" do
+    before(:each) { file_loader.load_deletes("fakefile", filehandle: fh) }
 
-  it "loads all lines" do
-    expect(batch_loader.loaded.flatten.count).to eq(3)
-  end
+    it "deserializes items using the given batch loader" do
+      expect(batch_loader.deleted.first).to be_a(FakeItem)
+    end
 
-  it "loads the given data" do
-    expect(batch_loader.loaded.flatten.map(&:line))
-      .to contain_exactly("thing1", "thing1", "thing2")
-  end
-
-  it "doesn't send an empty batch" do
-    expect(batch_loader.loaded).not_to include([])
+    it "deletes all lines one at a time" do
+      expect(batch_loader.deleted.map(&:line))
+        .to contain_exactly("thing1", "thing1", "thing2")
+    end
   end
 end
