@@ -24,6 +24,7 @@ class Holding
   field :country_code, type: String
   field :weight, type: Float
   field :uuid, type: String
+  field :issn, type: String
 
   embedded_in :cluster
 
@@ -48,17 +49,18 @@ class Holding
     # ISSN  N_ENUM  N_CHRON  GOV_DOC UUID
     fields = holding_line.split(/\t/)
     { ocn:               fields[0].to_i,
-      organization:      fields[2],
       local_id:          fields[1],
-      enum_chron:        fields[6],
+      organization:      fields[2],
       status:            fields[3],
       condition:         fields[4],
-      gov_doc_flag:      !fields[10].to_i.zero?,
-      mono_multi_serial: fields[7],
-      n_enum:            fields[8],
-      n_chron:           fields[9],
       date_received:     DateTime.parse(fields[5]),
-      uuid:              fields[11] }
+      enum_chron:        fields[6],
+      mono_multi_serial: fields[7],
+      issn:              fields[8],
+      n_enum:            fields[9],
+      n_chron:           fields[10],
+      gov_doc_flag:      !fields[11].to_i.zero?,
+      uuid:              fields[12] }
   end
 
   def self.new_from_holding_file_line(line)

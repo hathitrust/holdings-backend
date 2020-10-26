@@ -90,4 +90,18 @@ RSpec.describe Holding do
       expect(holding1.batch_with?(holding3)).to be false
     end
   end
+
+  describe "#inspect" do
+    it "shows the ocn" do
+      expect(h.inspect).to match(h.ocn.to_s)
+    end
+
+    it "shows the uuid" do
+      expect(h.inspect).to match(h.uuid)
+    end
+
+    it "shows the member" do
+      expect(h.inspect).to match(h.organization)
+    end
+  end
 end
