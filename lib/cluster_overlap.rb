@@ -8,6 +8,8 @@ require "serial_overlap"
 
 # Collects overlap records for every ht_item in a cluster
 class ClusterOverlap
+  include Enumerable
+
   attr_accessor :orgs
 
   def initialize(cluster, orgs = nil)
