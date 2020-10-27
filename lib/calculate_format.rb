@@ -8,6 +8,7 @@ class CalculateFormat
 
   def initialize(cluster)
     @cluster = cluster
+    @serials = Services.serials
   end
 
   # Calculate format for this particular ht_item in this particular cluster
@@ -27,9 +28,9 @@ class CalculateFormat
   def cluster_format
     if any_of_format? "mpm"
       "mpm"
-    elsif any_of_format?("spm") && @cluster.serials.any?
+    elsif any_of_format?("spm") && any_of_format?("ser")
       "ser/spm"
-    elsif @cluster.serials.any?
+    elsif any_of_format?("ser")
       "ser"
     else
       "spm"
@@ -49,7 +50,7 @@ class CalculateFormat
   end
 
   def matching_serial?(ht_item)
-    @cluster.serials.any? {|s| s.record_id == ht_item.ht_bib_key }
+    @serials.matches_htitem?(ht_item)
   end
 
 end
