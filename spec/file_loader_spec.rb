@@ -53,8 +53,8 @@ RSpec.describe FileLoader do
   end
 
   it "groups items in batches" do
-    expect(batch_loader.loaded.map {|a| a.map(&:line) })
-      .to include(["thing1", "thing1"])
+    expect(batch_loader.loaded.map { |a| a.map(&:line) })
+        .to include(["thing1", "thing1"])
   end
 
   it "loads all lines" do
@@ -63,10 +63,44 @@ RSpec.describe FileLoader do
 
   it "loads the given data" do
     expect(batch_loader.loaded.flatten.map(&:line))
-      .to contain_exactly("thing1", "thing1", "thing2")
+        .to contain_exactly("thing1", "thing1", "thing2")
   end
 
   it "doesn't send an empty batch" do
     expect(batch_loader.loaded).not_to include([])
   end
+
+  describe "Skipping the first line" do
+    before(:each) do
+      @handle = StringIO.new(<<~DATA)
+        thing1
+        thing1
+        thing2
+      DATA
+      @bl = FakeBatchLoader.new
+      @fl = FileLoader.new(batch_loader: @bl)
+    end
+
+    it "skips the first line on matching regexp" do
+      @fl.load("fakefile", filehandle: @handle, skip_header_match: /thing1/)
+      expect(@bl.loaded.flatten.map(&:line)).to contain_exactly("thing1", "thing2")
+    end
+
+    it "doesn't skip a line on nil skip_header_match" do
+      @fl.load("fakefile", filehandle: @handle)
+      expect(@bl.loaded.flatten.map(&:line)).to contain_exactly("thing1", "thing1", "thing2")
+    end
+
+    it "doesn't skip a line on failed skip_header_match" do
+      @fl.load("fakefile", filehandle: @handle, skip_header_match: /junk/)
+      expect(@bl.loaded.flatten.map(&:line)).to contain_exactly("thing1", "thing1", "thing2")
+    end
+
+    it "skips a line on an 'anything' match" do
+      @fl.load("fakefile", filehandle: @handle, skip_header_match: /./)
+      expect(@bl.loaded.flatten.map(&:line)).to contain_exactly("thing1", "thing2")
+    end
+
+  end
+
 end
