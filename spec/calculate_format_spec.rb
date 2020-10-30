@@ -11,6 +11,10 @@ RSpec.describe CalculateFormat do
   let(:c) { create(:cluster, ocns: ht_spm.ocns) }
   let(:s) { build(:serial, record_id: ht_ser.ht_bib_key, ocns: ht_ser.ocns) }
 
+  def add_serial(ht_item)
+    Services.serials.bibkeys.add(ht_item.ht_bib_key.to_i)
+  end
+
   describe "#item_format" do
     it "defaults to SPM" do
       expect(described_class.new(c).item_format(ht_spm)).to eq("spm")
@@ -31,7 +35,7 @@ RSpec.describe CalculateFormat do
     end
 
     it "is a SER if it is found in the serials file" do
-      c.serials << s
+      add_serial(ht_ser)
       expect(described_class.new(c).item_format(ht_ser)).to eq("ser")
       c.ht_items << ht_ser
       expect(
@@ -42,7 +46,7 @@ RSpec.describe CalculateFormat do
     it "MPM's don't clobber Serials just yet" do
       c.ht_items << ht_ser
       c.ht_items << ht_mpm
-      c.serials << s
+      add_serial(ht_ser)
       expect(
         described_class.new(c).item_format(c.ht_items.first)
       ).to eq("ser")
@@ -57,7 +61,7 @@ RSpec.describe CalculateFormat do
       c.ht_items << ht_mpm
       c.ht_items << ht_spm
       c.ht_items << ht_ser
-      c.serials << s
+      add_serial(ht_ser)
       expect(described_class.new(c).cluster_format).to eq("mpm")
     end
 
@@ -67,15 +71,15 @@ RSpec.describe CalculateFormat do
     end
 
     it "is a SER if all items are SER" do
-      c.serials << s
       c.ht_items << ht_ser
+      add_serial(ht_ser)
       expect(described_class.new(c).cluster_format).to eq("ser")
     end
 
     it "is a SER/SPM if some items are SER and some are SPM" do
       c.ht_items << ht_spm
       c.ht_items << ht_ser
-      c.serials << s
+      add_serial(ht_ser)
       expect(described_class.new(c).cluster_format).to eq("ser/spm")
     end
   end

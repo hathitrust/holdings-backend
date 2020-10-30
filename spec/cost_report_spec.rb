@@ -204,7 +204,7 @@ RSpec.describe CostReport do
       it "assigns all serials to the member and ht_item derived holdings affect hshare" do
         ClusterHtItem.new(ht_serial).cluster.tap(&:save)
         ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
-        ClusterSerial.new(serial).cluster.tap(&:save)
+        Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
         ClusterHolding.new(holding_serial).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }

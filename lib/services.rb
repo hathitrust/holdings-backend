@@ -4,6 +4,7 @@ require "canister"
 require "holdings_db"
 require "ht_collections"
 require "ht_members"
+require "serials_file"
 require "logger"
 
 Services = Canister.new
@@ -19,3 +20,5 @@ Services.register(:logger) do
     l.level = Logger::INFO
   end
 end
+
+Services.register(:serials) { SerialsFile.new(ENV["SERIALS_FILE"]) }

@@ -26,7 +26,7 @@ RSpec.describe SerialOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterSerial.new(s).cluster.tap(&:save)
+    Services.serials.bibkeys.add(ht.ht_bib_key.to_i)
     ClusterHtItem.new(ht).cluster.tap(&:save)
     ClusterHtItem.new(ht2).cluster.tap(&:save)
     ClusterHolding.new(h).cluster.tap(&:save)
