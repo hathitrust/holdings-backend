@@ -4,7 +4,6 @@ require "cluster"
 require "cluster_ocn_resolution"
 require "cluster_holding"
 require "cluster_ht_item"
-require "cluster_serial"
 
 # Deletes a cluster, then re-creates clusters from the data in that cluster.
 # Use after changing data in a cluster that could affect which items are in the
@@ -31,7 +30,6 @@ class Reclusterer
     @cluster.holdings.each {|h| ClusterHolding.new(h.dup).cluster.save }
     # TODO: group and batch by OCN
     @cluster.ht_items.each {|h| ClusterHtItem.new(h.dup).cluster.save }
-    @cluster.serials.each {|s| ClusterSerial.new(s.dup).cluster.save }
   end
 
 end
