@@ -15,21 +15,21 @@ class SinglePartOverlap < Overlap
   end
 
   def brt_count
-    @cluster.holdings.where(organization: @org, condition: "brt").count
+    @cluster.holdings.where(organization: @org, condition: "BRT").count
   end
 
   def wd_count
-    @cluster.holdings.where(organization: @org, status: "wd").count
+    @cluster.holdings.where(organization: @org, status: "WD").count
   end
 
   def lm_count
-    @cluster.holdings.where(organization: @org, status: "lm").count
+    @cluster.holdings.where(organization: @org, status: "LM").count
   end
 
   # Number of holdings with brt or lm
   def access_count
     @cluster.holdings.where(
-      organization: @org, "$or": [{ status: "lm" }, { condition: "brt" }]
+      organization: @org, "$or": [{ status: "LM" }, { condition: "BRT" }]
     ).count
   end
 

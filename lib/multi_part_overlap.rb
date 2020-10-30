@@ -24,20 +24,20 @@ class MultiPartOverlap < Overlap
   end
 
   def brt_count
-    matching_holdings.where(condition: "brt").count
+    matching_holdings.where(condition: "BRT").count
   end
 
   def wd_count
-    matching_holdings.where(status: "wd").count
+    matching_holdings.where(status: "WD").count
   end
 
   def lm_count
-    matching_holdings.where(status: "lm").count
+    matching_holdings.where(status: "LM").count
   end
 
   # Number of holdings with brt or lm
   def access_count
-    matching_holdings.where("$or": [{ status: "lm" }, { condition: "brt" }]).count
+    matching_holdings.where("$or": [{ status: "LM" }, { condition: "BRT" }]).count
   end
 
   def matching_holdings
