@@ -5,7 +5,6 @@ require "holding"
 require "ht_item"
 require "commitment"
 require "ocn_resolution"
-require "serial"
 require "cluster_ht_item"
 require "cluster_error"
 
@@ -22,7 +21,6 @@ class Cluster
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
   embeds_many :ocn_resolutions, class_name: "OCNResolution"
-  embeds_many :serials, class_name: "Serial"
   embeds_many :commitments
   index({ ocns: 1 },
         unique: true,
