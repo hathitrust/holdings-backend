@@ -15,6 +15,7 @@ gem "zinzout"
 group :development, :test do
   gem "pry"
   gem "pry-byebug"
+  gem "ruby-prof"
 end
 
 group :test do

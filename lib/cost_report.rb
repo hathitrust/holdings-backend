@@ -69,20 +69,28 @@ class CostReport
     waypoint = Utils::Waypoint.new(maxlines)
     logger.info("Begin compiling hscore frequency table.")
     matching_clusters.each do |c|
+      co = ClusterOverlap.new(c)
       c.ht_items.each do |ht_item|
         next unless ht_item.access == "deny"
-
         waypoint.incr
-        add_ht_item_to_freq_table(ht_item)
+        add_ht_item_to_freq_table(ht_item, co)
         waypoint.on_batch {|wp| logger.info wp.batch_line }
       end
     end
   end
 
-  def add_ht_item_to_freq_table(ht_item)
-    overlap = HtItemOverlap.new(ht_item)
-    overlap.matching_orgs.each do |org|
-      @freq_table[org.to_sym][ht_item._parent.format.to_sym][overlap.matching_orgs.count] += 1
+  def add_ht_item_to_freq_table(ht_item, co=nil)
+    co ||= ClusterOverlap.new(ht_item._parent)
+    matching_orgs = []
+    if ht_item.n_enum == "" or co.cluster.format =~ /s/
+      matching_orgs = co.orgs
+    else # cluster format is mpm and ht item n_enum is not empty
+      matching_orgs = (co.ecs_to_billing_entities[ht_item.n_enum] + co.ecs_to_billing_entities['']).flatten.uniq
+    end
+    #overlap = HtItemOverlap.new(ht_item, co)
+    #overlap.matching_orgs.each do |org|
+    matching_orgs.each do |org|
+      @freq_table[org.to_sym][ht_item._parent.format.to_sym][matching_orgs.count] += 1
     end
   end
 

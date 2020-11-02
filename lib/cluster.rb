@@ -122,6 +122,11 @@ class Cluster
     @format ||= CalculateFormat.new(self).cluster_format
   end
 
+  def organizations_in_cluster
+    @organizations_in_cluster ||= (self.holdings.pluck(:organization) + 
+                                  self.ht_items.pluck(:billing_entity)).uniq
+  end
+
   def push_to_field(field, items)
     return if items.empty?
 

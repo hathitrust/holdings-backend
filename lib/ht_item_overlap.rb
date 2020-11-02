@@ -8,16 +8,15 @@ class HtItemOverlap
 
   attr_accessor :matching_orgs
 
-  def initialize(ht_item)
+  def initialize(ht_item, cluster_overlap=nil)
     @ht_item = ht_item
-    @cluster = ht_item._parent
+    @co = cluster_overlap || ClusterOverlap.new(ht_item._parent)
     @matching_orgs = organizations_with_holdings
   end
 
   # Find all organization with holdings that match the given ht_item
   def organizations_with_holdings
-    co = ClusterOverlap.new(@cluster)
-    co.orgs.map {|cluster_org| co.overlap_record(@ht_item, cluster_org) }
+    @co.orgs.map {|cluster_org| @co.overlap_record(@ht_item, cluster_org) }
       .select {|overlap| overlap.copy_count.nonzero? }
       .collect(&:org)
       .uniq

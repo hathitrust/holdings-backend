@@ -9,10 +9,16 @@ require "serial_overlap"
 # Collects overlap records for every ht_item in a cluster
 class ClusterOverlap
   attr_accessor :orgs
+  attr_accessor :cluster
+  attr_accessor :ecs_to_ht_items
+  attr_accessor :ecs_to_billing_entities
 
   def initialize(cluster, orgs = nil)
     @cluster = cluster
-    @orgs = orgs.nil? ? organizations_in_cluster : [orgs].flatten
+    @ecs_to_ht_items = Hash.new {|h, k| h[k] = []}
+    @ecs_to_billing_entities = Hash.new {|h, k| h[k] = []}
+    get_billing_entities
+    @orgs = orgs.nil? ? cluster.organizations_in_cluster : [orgs].flatten
   end
 
   def each
@@ -28,6 +34,16 @@ class ClusterOverlap
     end
   end
 
+  def get_billing_entities
+    @cluster.holdings.each do |holding|
+      @ecs_to_billing_entities[holding.n_enum || ""] << holding.organization
+    end
+    @cluster.ht_items.each do |ht_item|
+      @ecs_to_billing_entities[ht_item.n_enum || ""] << ht_item.billing_entity
+      @ecs_to_ht_items[ht_item.n_enum || ""] << ht_item.billing_entity
+    end
+  end
+
   def overlap_record(ht_item, org)
     case ht_item._parent.format
     when "ser"
@@ -39,11 +55,6 @@ class ClusterOverlap
     when "ser/spm"
       SinglePartOverlap.new(@cluster, org, ht_item)
     end
-  end
-
-  def organizations_in_cluster
-    (@cluster.holdings.pluck(:organization) +
- @cluster.ht_items.pluck(:billing_entity)).uniq
   end
 
   def self.matching_clusters(org = nil)
