@@ -56,24 +56,20 @@ RSpec.describe FileLoader do
     expect(batch_loader.loaded.flatten.first).to be_a(FakeItem)
   end
 
-    it "groups items in batches" do
-      expect(batch_loader.loaded.map {|a| a.map(&:line) })
+  it "groups items in batches" do
+    expect(batch_loader.loaded.map { |a| a.map(&:line) })
         .to include(["thing1", "thing1"])
-    end
+  end
 
   it "loads all lines" do
     expect(batch_loader.loaded.flatten.count).to eq(3)
   end
 
-    it "loads the given data" do
-      expect(batch_loader.loaded.flatten.map(&:line))
+  it "loads the given data" do
+    expect(batch_loader.loaded.flatten.map(&:line))
         .to contain_exactly("thing1", "thing1", "thing2")
-    end
-
-    it "doesn't send an empty batch" do
-      expect(batch_loader.loaded).not_to include([])
-    end
   end
+
   it "doesn't send an empty batch" do
     expect(batch_loader.loaded).not_to include([])
   end
@@ -108,10 +104,7 @@ RSpec.describe FileLoader do
       @fl.load("fakefile", filehandle: @handle, skip_header_match: /./)
       expect(@bl.loaded.flatten.map(&:line)).to contain_exactly("thing1", "thing2")
     end
-
   end
-
-end
 
   describe "#load_deletes" do
     before(:each) { file_loader.load_deletes("fakefile", filehandle: fh) }
@@ -122,7 +115,7 @@ end
 
     it "deletes all lines one at a time" do
       expect(batch_loader.deleted.map(&:line))
-        .to contain_exactly("thing1", "thing1", "thing2")
+          .to contain_exactly("thing1", "thing1", "thing2")
     end
   end
 end
