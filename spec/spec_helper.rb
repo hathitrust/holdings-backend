@@ -9,6 +9,7 @@ require "simplecov"
 require "mongoid"
 require "fixtures/members"
 require "fixtures/collections"
+require "fixtures/mock_serials"
 SimpleCov.start
 
 Mongoid.load!("mongoid.yml", :test)
@@ -49,6 +50,7 @@ RSpec.configure do |config|
     Services.register(:holdings_db) { nil }
     Services.register(:ht_members) { mock_members }
     Services.register(:ht_collections) { mock_collections }
+    Services.register(:serials) { mock_serials }
 
     Services.register(:logger) do
       Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }

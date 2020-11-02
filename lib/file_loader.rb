@@ -44,6 +44,16 @@ class FileLoader
     waypoint.count
   end
 
+  def load_deletes(filename, filehandle: Zinzout.zin(filename))
+    logger.info "Deleting items from #{filename}, batches of #{ppnum @batch_size}"
+
+    filehandle.lazy
+      .map {|line| log_and_parse(line) }
+      .each {|item| batch_loader.delete(item) }
+
+    logger.info waypoint.final_line
+  end
+
   private
 
   def log_and_parse(line)

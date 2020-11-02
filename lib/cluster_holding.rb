@@ -32,8 +32,8 @@ class ClusterHolding
         if (existing = c.holdings.to_a.find {|h| h.uuid == holding.uuid })
           next if existing.same_as?(holding)
 
-          raise "Found holding #{existing} with same UUID " \
-            "but different attributes from update #{holding}"
+          raise "Found holding #{existing.inspect} with same UUID " \
+            "but different attributes from update #{holding.inspect}"
         end
 
         old_holding = c.holdings.to_a.find do |h|

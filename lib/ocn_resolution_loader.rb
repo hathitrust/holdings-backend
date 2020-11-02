@@ -13,4 +13,8 @@ class OCNResolutionLoader
   def load(batch)
     ClusterOCNResolution.new(batch).cluster
   end
+
+  def delete(item)
+    ClusterOCNResolution.new(item).delete
+  end
 end

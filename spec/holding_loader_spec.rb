@@ -4,6 +4,7 @@ require "spec_helper"
 require "holding_loader"
 
 RSpec.describe HoldingLoader do
+  let(:uuid) { SecureRandom.uuid }
   let(:line) do
     [
       "123",         # OCN
@@ -18,7 +19,7 @@ RSpec.describe HoldingLoader do
       "",            # N_ENUM
       "",            # N_CHRON
       "",            # GOV_DOC
-      SecureRandom.uuid
+      uuid
     ].join("\t")
   end
 
@@ -28,6 +29,7 @@ RSpec.describe HoldingLoader do
     it { expect(holding).to be_a(Holding) }
     it { expect(holding.ocn).to eq 123 }
     it { expect(holding.organization).to eq "umich" }
+    it { expect(holding.uuid).to eq uuid }
   end
 
   describe "#load" do
