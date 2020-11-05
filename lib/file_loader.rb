@@ -20,6 +20,7 @@ class FileLoader
   # @return [Iterator] An iterator with the first line possibly skipped
   def skip_matching_header(filehandle, skip_match)
     return filehandle unless skip_match
+
     iter     = filehandle.enum_for(:each)
     nextline = iter.next
     unless skip_match.match(nextline)
@@ -36,9 +37,9 @@ class FileLoader
   def load(filename, filehandle: Zinzout.zin(filename), skip_header_match: nil)
     logger.info "Loading #{filename}, batches of #{ppnum @batch_size}"
     skip_matching_header(filehandle, skip_header_match).each.lazy
-        .map { |line| log_and_parse(line) }
-        .chunk_while { |item1, item2| item1.batch_with?(item2) }
-        .each { |batch| batch_loader.load(batch) }
+      .map {|line| log_and_parse(line) }
+      .chunk_while {|item1, item2| item1.batch_with?(item2) }
+      .each {|batch| batch_loader.load(batch) }
 
     logger.info waypoint.final_line
     waypoint.count
@@ -57,7 +58,7 @@ class FileLoader
   private
 
   def log_and_parse(line)
-    waypoint.incr.on_batch { |wp| logger.info wp.batch_line }
+    waypoint.incr.on_batch {|wp| logger.info wp.batch_line }
     batch_loader.item_from_line(line)
   end
 

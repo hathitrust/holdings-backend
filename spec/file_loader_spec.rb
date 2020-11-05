@@ -59,8 +59,8 @@ RSpec.describe FileLoader do
     end
 
     it "groups items in batches" do
-      expect(batch_loader.loaded.map { |a| a.map(&:line) })
-          .to include(["thing1", "thing1"])
+      expect(batch_loader.loaded.map {|a| a.map(&:line) })
+        .to include(["thing1", "thing1"])
     end
 
     it "loads all lines" do
@@ -69,7 +69,7 @@ RSpec.describe FileLoader do
 
     it "loads the given data" do
       expect(batch_loader.loaded.flatten.map(&:line))
-          .to contain_exactly("thing1", "thing1", "thing2")
+        .to contain_exactly("thing1", "thing1", "thing2")
     end
 
     it "doesn't send an empty batch" do
@@ -86,7 +86,7 @@ RSpec.describe FileLoader do
 
     it "deletes all lines one at a time" do
       expect(batch_loader.deleted.map(&:line))
-          .to contain_exactly("thing1", "thing1", "thing2")
+        .to contain_exactly("thing1", "thing1", "thing2")
     end
   end
 
@@ -98,7 +98,7 @@ RSpec.describe FileLoader do
         thing2
       DATA
       @bl = FakeBatchLoader.new
-      @fl = FileLoader.new(batch_loader: @bl)
+      @fl = described_class.new(batch_loader: @bl)
     end
 
     it "skips the first line on matching regexp" do
