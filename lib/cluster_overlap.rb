@@ -31,7 +31,7 @@ class ClusterOverlap
   end
 
   def overlap_record(ht_item, org)
-    case CalculateFormat.new(@cluster).cluster_format
+    case ht_item._parent.format
     when "ser"
       SerialOverlap.new(@cluster, org, ht_item)
     when "spm"
@@ -47,4 +47,15 @@ class ClusterOverlap
     (@cluster.holdings.pluck(:organization) +
  @cluster.ht_items.pluck(:billing_entity)).uniq
   end
+
+  def self.matching_clusters(org = nil)
+    if org.nil?
+      Cluster.where("ht_items.0": { "$exists": 1 })
+    else
+      Cluster.where("ht_items.0": { "$exists": 1 },
+                "$or": [{ "holdings.organization": org },
+                        { "ht_items.billing_entity": org }])
+    end
+  end
+
 end

@@ -10,6 +10,7 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "ht_item_overlap"
+require "cost_report"
 
 Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
 
@@ -49,5 +50,7 @@ if __FILE__ == $PROGRAM_NAME
   end
   logger.info waypoint.final_line
 
-  puts "Total HScore:#{h_share_total}"
+  cost_report = CostReport.new
+
+  puts "Total Estimated IC Cost:#{h_share_total * cost_report.cost_per_volume}"
 end

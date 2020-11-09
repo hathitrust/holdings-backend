@@ -1,0 +1,108 @@
+# frozen_string_literal: true
+
+require "spec_helper"
+require "cost_report"
+require_relative "../bin/compile_cost_reports"
+
+RSpec.describe "CompileCostReports" do
+  # 4 HT Items
+  # - 1 serial with 2 holdings one of which is from the content provider
+  # - 1 spm with 0 holdings
+  # - 2 mpm with the same ocns with 1 holding
+  # - 1 spm with access = allow
+  let(:cr) { CostReport.new(cost: 10) }
+
+  let(:ht_serial) do
+    build(:ht_item,
+          enum_chron: "",
+          bib_fmt: "s",
+          collection_code: "MIU",
+          access: "deny")
+  end
+  let(:ht_spm) do
+    build(:ht_item,
+          enum_chron: "",
+          collection_code: "MIU",
+          access: "deny")
+  end
+  let(:ht_mpm1) do
+    build(:ht_item,
+          enum_chron: "1",
+          n_enum: "1",
+          collection_code: "MIU",
+          access: "deny")
+  end
+  let(:ht_mpm2) do
+    build(:ht_item,
+          ocns: ht_mpm1.ocns,
+          enum_chron: "",
+          collection_code: "PU",
+          access: "deny")
+  end
+  let(:ht_spm_pd) do
+    build(:ht_item,
+          enum_chron: "",
+          collection_code: "MIU",
+          access: "allow")
+  end
+  let(:holding_serial1) { build(:holding, ocn: ht_serial.ocns.first, organization: "umich") }
+  let(:holding_serial2) { build(:holding, ocn: ht_serial.ocns.first, organization: "utexas") }
+  let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
+  let(:holding_mpm) do
+    build(:holding, ocn: ht_mpm1.ocns.first, organization: "smu", enum_chron: "", n_enum: "")
+  end
+
+  before(:each) do
+    Cluster.each(&:delete)
+    Services.register(:ht_members) { mock_members }
+    ClusterHtItem.new(ht_serial).cluster.tap(&:save)
+    ClusterSerial.new(serial).cluster.tap(&:save)
+    ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+    ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)
+    ClusterHtItem.new(ht_mpm2).cluster.tap(&:save)
+    ClusterHtItem.new(ht_spm_pd).cluster.tap(&:save)
+    ClusterHolding.new(holding_serial1).cluster.tap(&:save)
+    ClusterHolding.new(holding_serial2).cluster.tap(&:save)
+    ClusterHolding.new(holding_mpm).cluster.tap(&:save)
+  end
+
+  it "computes the correct hscores" do
+    # 1/2 of the ht_serial
+    # 1 of the ht_spm
+    # 1/3 of ht_mpm1 (with SMU and upenn)
+    # 1/3 of ht_mpm2 (with SMU and upenn)
+    expect(cr.freq_table[:umich]).to eq(spm: { 1=>1 }, ser: { 2=>1 }, mpm: { 3=>2 })
+    expect(cr.total_hscore(:umich)).to be_within(0.0001).of(1/2.0 + 1.0 + 1/3.0 + 1/3.0)
+    expect(cr.freq_table[:utexas]).to eq(ser: { 2 => 1 })
+  end
+
+  it "computes total pd_cost" do
+    expect(cr.pd_cost).to be_within(0.0001).of(1 * 2.0)
+  end
+
+  it "computes costs for each format" do
+    # target_cost = $10
+    # num_volumes = 5
+    # cost_per_volume = $2
+    expect(cr.spm_costs(:umich)).to eq(2.0)
+    # A third of two volumes for $2 each
+    expect(cr.mpm_costs(:umich)).to eq(1/3.0 * 2 * 2.00)
+    expect(cr.ser_costs(:umich)).to eq(1/2.0 * 1 * 2.00)
+  end
+
+  it "computes total IC costs for a member" do
+    expect(cr.total_ic_costs(:umich)).to eq(cr.total_hscore(:umich) * 2.0)
+  end
+
+  it "produces .tsv output" do
+    expect(to_tsv(cr)).to eq([
+      "member_id	spm	mpm	ser	pd	weight	extra	total",
+      "smu	0.0	1.3333333333333333	0.0	0.25	1.0	0.0	1.5833333333333333",
+      "stanford	0.0	0.0	0.0	0.25	1.0	0.0	0.25",
+      "ualberta	0.0	0.0	0.0	0.25	1.0	0.0	0.25",
+      "umich	2.0	1.3333333333333333	1.0	0.25	1.0	0.0	4.583333333333333",
+      "upenn	0.0	1.3333333333333333	0.0	0.25	1.0	0.0	1.5833333333333333",
+      "utexas	0.0	0.0	1.0	0.75	3.0	0.0	1.75"
+    ].join("\n"))
+  end
+end

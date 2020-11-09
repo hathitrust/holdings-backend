@@ -17,17 +17,23 @@ RSpec.describe "overlap_report" do
     ClusterHtItem.new(ht2).cluster.tap(&:save)
   end
 
-  describe "matching_clusters" do
-    it "finds them all if org is nil" do
-      expect(matching_clusters.count).to eq(2)
+  describe "full_report" do
+    it "generates the correct report for the holding org" do
+      h2 = h.dup
+      h2.condition = "brt"
+      ClusterHolding.new(h2).cluster.tap(&:save)
+      expect(full_report(h.organization)).to eq([
+        "#{Cluster.first._id}\t#{ht.item_id}\t#{h.organization}\t2\t1\t0\t0\t1"
+      ])
     end
 
-    it "finds by holding" do
-      expect(matching_clusters(h.organization).count).to eq(1)
-    end
-
-    it "finds by ht_item" do
-      expect(matching_clusters(ht.billing_entity).count).to eq(2)
+    it "generates the correct report for the billing entity" do
+      cluster1 = Cluster.first
+      cluster2 = Cluster.find_by(ocns: ht2.ocns)
+      expect(full_report("not_same_as_holding")).to eq([
+        "#{cluster1._id}\t#{ht.item_id}\tnot_same_as_holding\t1\t0\t0\t0\t0",
+        "#{cluster2._id}\t#{ht2.item_id}\tnot_same_as_holding\t1\t0\t0\t0\t0"
+      ])
     end
   end
 end
