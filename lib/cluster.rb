@@ -120,6 +120,38 @@ class Cluster
     @format ||= CalculateFormat.new(self).cluster_format
   end
 
+  def organizations_in_cluster
+    @organizations_in_cluster ||= (holdings.pluck(:organization) +
+                                  ht_items.pluck(:billing_entity)).uniq
+  end
+
+  # Maps enumchrons to list of orgs that have an item with that enumchron
+  # Not necessary for SPMs/SERs
+  def item_enum_chron_orgs
+    return @item_enum_chron_orgs if @item_enum_chron_orgs
+
+    @item_enum_chron_orgs = Hash.new {|h, k| h[k] = [] }
+    ht_items.each {|ht| @item_enum_chron_orgs[ht.n_enum] << ht.billing_entity }
+    @item_enum_chron_orgs
+  end
+
+  # Maps enumchrons to list of orgs that have a holding with that enumchron
+  def holding_enum_chron_orgs
+    return @holding_enum_chron_orgs if @holding_enum_chron_orgs
+
+    @holding_enum_chron_orgs = Hash.new {|h, k| h[k] = [] }
+    holdings.each {|h| @holding_enum_chron_orgs[h.n_enum] << h.organization }
+    @holding_enum_chron_orgs
+  end
+
+  def enum_chron_orgs(enum_chron)
+    (item_enum_chron_orgs[enum_chron] + holding_enum_chron_orgs[enum_chron]).uniq
+  end
+
+  def billing_entities
+    @billing_entities ||= ht_items.pluck(:billing_entity).uniq
+  end
+
   def push_to_field(field, items)
     return if items.empty?
 
