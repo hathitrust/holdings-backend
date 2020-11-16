@@ -6,20 +6,20 @@ require "single_part_overlap"
 
 RSpec.describe SinglePartOverlap do
   let(:c) { build(:cluster) }
-  let(:ht) { build(:ht_item, ocns: c.ocns, bib_fmt: "spm", enum_chron: "") }
+  let(:ht) { build(:ht_item, ocns: c.ocns, bib_fmt: "BK", enum_chron: "") }
   let(:ht2) do
     build(:ht_item,
           ocns: c.ocns,
-          bib_fmt: "spm",
+          bib_fmt: "BK",
           enum_chron: "",
           collection_code: "HVD")
   end
-  let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
+  let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "LM") }
   let(:h2) do
     build(:holding,
           ocn: c.ocns.first,
             organization: "umich",
-            condition: "brt")
+            condition: "BRT")
   end
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
