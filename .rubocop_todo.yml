@@ -107,3 +107,9 @@ Metrics/CyclomaticComplexity:
 Metrics/PerceivedComplexity:
   Exclude:
     - 'lib/enum_chron_parser.rb'
+
+# Allow instance variables for repeated use in specs, 'cause `let` doesn't
+# work inside a begin block
+RSpec/InstanceVariable:
+  Exclude:
+    - 'spec/file_loader_spec.rb'
