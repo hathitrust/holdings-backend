@@ -97,14 +97,14 @@ RSpec.describe Cluster do
     describe "#holding_enum_chron_orgs" do
       it "maps enumchrons to member holdings" do
         c = described_class.first
-        expect(c.holding_enum_chron_orgs[h1.n_enum]).to eq([h1.organization])
+        expect(c.holding_enum_chron_orgs(h1.n_enum)).to eq([h1.organization])
       end
     end
 
     describe "#item_enum_chron_orgs" do
       it "has an item enumchrons orgs" do
         c = described_class.first
-        expect(c.item_enum_chron_orgs[ht1.n_enum]).to eq([ht1.billing_entity])
+        expect(c.item_enum_chron_orgs(ht1.n_enum)).to eq([ht1.billing_entity])
       end
     end
   end

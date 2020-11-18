@@ -127,25 +127,21 @@ class Cluster
 
   # Maps enumchrons to list of orgs that have an item with that enumchron
   # Not necessary for SPMs/SERs
-  def item_enum_chron_orgs
-    return @item_enum_chron_orgs if @item_enum_chron_orgs
-
-    @item_enum_chron_orgs = Hash.new {|h, k| h[k] = [] }
-    ht_items.each {|ht| @item_enum_chron_orgs[ht.n_enum] << ht.billing_entity }
-    @item_enum_chron_orgs
+  def item_enum_chron_orgs(enum)
+    @item_enum_chron_orgs ||= ht_items.group_by(&:n_enum)
+      .transform_values {|htitems| htitems.map(&:billing_entity) }
+    @item_enum_chron_orgs[enum] || []
   end
 
   # Maps enumchrons to list of orgs that have a holding with that enumchron
-  def holding_enum_chron_orgs
-    return @holding_enum_chron_orgs if @holding_enum_chron_orgs
-
-    @holding_enum_chron_orgs = Hash.new {|h, k| h[k] = [] }
-    holdings.each {|h| @holding_enum_chron_orgs[h.n_enum] << h.organization }
-    @holding_enum_chron_orgs
+  def holding_enum_chron_orgs(enum)
+    @holding_enum_chron_orgs ||= holdings.group_by(&:n_enum)
+      .transform_values {|holdings| holdings.map(&:organization) }
+    @holding_enum_chron_orgs[enum] || []
   end
 
   def enum_chron_orgs(enum_chron)
-    (item_enum_chron_orgs[enum_chron] + holding_enum_chron_orgs[enum_chron]).uniq
+    (item_enum_chron_orgs(enum_chron) + holding_enum_chron_orgs(enum_chron)).uniq
   end
 
   def billing_entities

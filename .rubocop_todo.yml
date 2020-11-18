@@ -44,7 +44,7 @@ Metrics/BlockLength:
     - 'spec/support/**/*.rb'
     - 'spec/**/*_spec.rb'
 
-# Offense count: 4
+# Offense count: 5
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
   Exclude:
