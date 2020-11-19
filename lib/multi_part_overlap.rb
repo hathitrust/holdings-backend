@@ -9,7 +9,7 @@ class MultiPartOverlap < Overlap
     if @ht_item.n_enum == ""
       @cluster.billing_entities
     else
-      (@cluster.item_enum_chron_orgs(@ht_item.n_enum) + @cluster.item_enum_chron_orgs("")).uniq
+      (@cluster.item_enum_chron_orgs[@ht_item.n_enum] + @cluster.item_enum_chron_orgs[""]).uniq
     end
   end
 
