@@ -14,7 +14,7 @@ RSpec.describe MultiPartOverlap do
           ocn: c.ocns.first,
             organization: h_w_ec.organization,
             n_enum: "1",
-            status: "lm")
+            status: "LM")
   end
 
   let(:h_brt_wd) do
@@ -22,8 +22,8 @@ RSpec.describe MultiPartOverlap do
           ocn: c.ocns.first,
             organization: h_w_ec.organization,
             n_enum: "1",
-            condition: "brt",
-            status: "wd")
+            condition: "BRT",
+            status: "WD")
   end
 
   before(:each) do

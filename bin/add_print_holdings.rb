@@ -20,6 +20,6 @@ end
 
 holding_loader = HoldingLoader.new(update: update)
 
-FileLoader.new(batch_loader: holding_loader).load(filename)
+FileLoader.new(batch_loader: holding_loader).load(filename, skip_header_match: /\A\s*OCN/)
 
 holding_loader.finalize

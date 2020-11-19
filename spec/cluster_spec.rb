@@ -50,6 +50,15 @@ RSpec.describe Cluster do
     end
   end
 
+  describe "#format" do
+    let(:c1) { create(:cluster) }
+
+    it "has a format" do
+      formats = ["spm", "mpm", "ser"]
+      expect(formats).to include(c1.format)
+    end
+  end
+
   describe "#save" do
     let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
     let(:c2) { build(:cluster, ocns: [ocn2]) }

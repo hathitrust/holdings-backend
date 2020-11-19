@@ -55,8 +55,10 @@ Files:
 Script command cheat sheet:
 * `docker-compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`
 * `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings <filepath>` (full file)
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings -u <filepath>` (update file)
+* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb
+ <filepath>` (full file)
+* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb -u
+ <filepath>` (update file)
 
 ### Loading the OCLC Concordance file
 

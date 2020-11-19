@@ -12,18 +12,7 @@ require "zinzout"
 require "cluster_overlap"
 require "etas_overlap"
 
-Mongoid.load!("mongoid.yml", :development)
-
-# Find clusters that match the given org
-def matching_clusters(org = nil)
-  if org.nil?
-    Cluster.where("ht_items.0": { "$exists": 1 },
-                  "holdings.0": { "$exists": 1 })
-  else
-    Cluster.where("ht_items.0": { "$exists": 1 },
-                  "holdings.organization": org)
-  end
-end
+Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"])
 
 def open_report(org, date, path)
   File.open("#{path}/#{org}_#{date}.tsv", "w")
@@ -41,10 +30,9 @@ if __FILE__ == $PROGRAM_NAME
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
   org = ARGV.shift
-  matching_clusters(org).each do |c|
+  ClusterOverlap.matching_clusters(org).each do |c|
     ClusterOverlap.new(c, org).each do |overlap|
-      cluster_format = CalculateFormat.new(c).cluster_format,
-                       waypoint.incr
+      waypoint.incr
       overlap.matching_holdings.each do |holding|
         unless reports.key?(holding[:organization])
           reports[holding[:organization]] = open_report(holding[:organization],
@@ -53,7 +41,7 @@ if __FILE__ == $PROGRAM_NAME
         end
         etas_record = ETASOverlap.new(ocn: holding[:ocn],
                                       local_id: holding[:local_id],
-                                      item_type: cluster_format,
+                                      item_type: c.format,
                                       access: overlap.ht_item.access,
                                       rights: overlap.ht_item.rights)
 
