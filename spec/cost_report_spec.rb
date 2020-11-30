@@ -4,7 +4,6 @@ require "spec_helper"
 require "cost_report"
 require "cluster_holding"
 require "cluster_ht_item"
-require "cluster_serial"
 
 RSpec.describe CostReport do
   let(:cr) { described_class.new(cost: 10) }

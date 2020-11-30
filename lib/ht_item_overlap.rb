@@ -16,11 +16,16 @@ class HtItemOverlap
 
   # Find all organization with holdings that match the given ht_item
   def organizations_with_holdings
-    co = ClusterOverlap.new(@cluster)
-    co.orgs.map {|cluster_org| co.overlap_record(@ht_item, cluster_org) }
-      .select {|overlap| overlap.copy_count.nonzero? }
-      .collect(&:org)
-      .uniq
+    if @cluster.format != "mpm"
+      # all orgs in the cluster hold every spm or ser in cluster
+      @cluster.organizations_in_cluster
+    elsif @ht_item.n_enum == ""
+      # all orgs in the cluster match an ht_item without an enum
+      @cluster.organizations_in_cluster
+    else
+      # ht_items match on enum and holdings without enum
+      (@cluster.enum_chron_orgs("") + @cluster.enum_chron_orgs(@ht_item.n_enum)).uniq
+    end
   end
 
   # Share of this particular item and organization
