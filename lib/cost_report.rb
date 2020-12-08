@@ -80,9 +80,9 @@ class CostReport
   end
 
   def add_ht_item_to_freq_table(ht_item)
-    overlap = HtItemOverlap.new(ht_item)
-    overlap.matching_orgs.each do |org|
-      @freq_table[org.to_sym][ht_item._parent.format.to_sym][overlap.matching_orgs.count] += 1
+    item_overlap = HtItemOverlap.new(ht_item)
+    item_overlap.matching_orgs.each do |org|
+      @freq_table[org.to_sym][ht_item._parent.format.to_sym][item_overlap.matching_orgs.count] += 1
     end
   end
 

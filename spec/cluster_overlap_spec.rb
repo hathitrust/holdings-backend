@@ -42,13 +42,6 @@ RSpec.describe ClusterOverlap do
     end
   end
 
-  describe "#organization_in_cluster" do
-    it "collects all of the organizations found in the cluster" do
-      expect(described_class.new(Cluster.first).organizations_in_cluster).to \
-        eq(["umich", "smu", "ucr"])
-    end
-  end
-
   describe "ClusterOverlap.matching_clusters" do
     let(:h) { build(:holding) }
     let(:ht) { build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding") }

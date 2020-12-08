@@ -10,11 +10,11 @@ require "serial_overlap"
 class ClusterOverlap
   include Enumerable
 
-  attr_accessor :orgs
+  attr_accessor :orgs, :cluster
 
   def initialize(cluster, orgs = nil)
     @cluster = cluster
-    @orgs = orgs.nil? ? organizations_in_cluster : [orgs].flatten
+    @orgs = orgs.nil? ? @cluster.organizations_in_cluster : [orgs].flatten
   end
 
   def each
@@ -31,7 +31,7 @@ class ClusterOverlap
   end
 
   def overlap_record(ht_item, org)
-    case ht_item._parent.format
+    case @cluster.format
     when "ser"
       SerialOverlap.new(@cluster, org, ht_item)
     when "spm"
@@ -41,11 +41,6 @@ class ClusterOverlap
     when "ser/spm"
       SinglePartOverlap.new(@cluster, org, ht_item)
     end
-  end
-
-  def organizations_in_cluster
-    (@cluster.holdings.pluck(:organization) +
- @cluster.ht_items.pluck(:billing_entity)).uniq
   end
 
   def self.matching_clusters(org = nil)

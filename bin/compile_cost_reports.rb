@@ -34,7 +34,7 @@ def to_tsv(report)
 end
 
 if __FILE__ == $PROGRAM_NAME
-  BATCH_SIZE = 10_000
+  BATCH_SIZE = 1_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
@@ -43,6 +43,6 @@ if __FILE__ == $PROGRAM_NAME
 
   cost_report = CostReport.new(org, lines: BATCH_SIZE, logger: logger)
 
-  logger.info waypoint.final_line
   puts to_tsv(cost_report)
+  logger.info waypoint.final_line
 end

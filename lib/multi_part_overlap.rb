@@ -7,10 +7,9 @@ class MultiPartOverlap < Overlap
 
   def members_with_matching_ht_items
     if @ht_item.n_enum == ""
-      @cluster.ht_items.pluck(:billing_entity).uniq
+      @cluster.billing_entities
     else
-      @cluster.ht_items.select {|h| h.n_enum.empty? || h.n_enum == @ht_item.n_enum }
-        .pluck(:billing_entity).uniq
+      (@cluster.item_enum_chron_orgs[@ht_item.n_enum] + @cluster.item_enum_chron_orgs[""]).uniq
     end
   end
 

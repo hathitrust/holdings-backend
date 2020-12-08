@@ -44,7 +44,7 @@ Metrics/BlockLength:
     - 'spec/support/**/*.rb'
     - 'spec/**/*_spec.rb'
 
-# Offense count: 4
+# Offense count: 5
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
   Exclude:
@@ -52,6 +52,7 @@ Metrics/ClassLength:
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub_fields.rb'
     - 'lib/cost_report.rb'
+    - 'lib/cluster.rb'
 
 # Offense count: 6
 # Configuration parameters: CountComments, ExcludedMethods.
