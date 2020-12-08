@@ -19,6 +19,18 @@ def mock_collections
                                billing_entity: "hathitrust"),
     "UCM" => HTCollection.new(collection: "UCM", content_provider_cluster: "ucm",
                                responsible_entity: "ucm", original_from_inst_id: "ucm",
-                               billing_entity: "ucm")
+                               billing_entity: "ucm"),
+    "NRLF" => HTCollection.new(collection: "NRLF", content_provider_cluster: "universityofcalifornia",
+                              responsible_entity: "universityofcalifornia", original_from_inst_id: "universityofcalifornia",
+                              billing_entity: "berkeley"),
+    "COO" => HTCollection.new(collection: "COO", content_provider_cluster: "cornell",
+                               responsible_entity: "cornell", original_from_inst_id: "cornell",
+                               billing_entity: "cornell"),
+    "MIU" => HTCollection.new(collection: "MIU", content_provider_cluster: "umich",
+                               responsible_entity: "umich", original_from_inst_id: "umich",
+                               billing_entity: "umich"),
+    "UIUC" => HTCollection.new(collection: "UIUC", content_provider_cluster: "illinois",
+                               responsible_entity: "illinois", original_from_inst_id: "illinois",
+                               billing_entity: "illinois"),
   )
 end
