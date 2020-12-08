@@ -126,13 +126,9 @@ class Cluster
                                   ht_items.pluck(:billing_entity)).uniq
   end
 
-  # Maps enumchrons to list of orgs that have an item with that enumchron
-  # Not necessary for SPMs/SERs
-  def item_enum_chron_orgs
-    @item_enum_chron_orgs ||= ht_items.group_by(&:n_enum)
-      .transform_values {|htitems| htitems.map(&:billing_entity) }
-      .tap {|h| h.default = [] }
-    @item_enum_chron_orgs
+  def item_enum_chrons
+    @item_enum_chrons ||= ht_items.pluck(:n_enum).uniq
+    @item_enum_chrons
   end
 
   # Maps enumchrons to list of orgs that have a holding with that enumchron
@@ -143,8 +139,18 @@ class Cluster
     @holding_enum_chron_orgs
   end
 
-  def enum_chron_orgs(enum)
-    (item_enum_chron_orgs[enum] + holding_enum_chron_orgs[enum]).uniq
+  def org_enum_chrons
+    @org_enum_chrons ||= holdings.group_by(&:organization)
+      .transform_values {|holdings| holdings.map(&:n_enum) }
+      .tap {|h| h.default = [] }
+    @org_enum_chrons
+  end
+
+  # Orgs that don't have "" enum chron or an enum chron found in the items
+  def organizations_with_holdings_but_no_matches
+    org_enum_chrons.reject do |_org, enums|
+      enums.include?("") || (enums & item_enum_chrons).any?
+    end.keys
   end
 
   def billing_entities
