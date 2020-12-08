@@ -5,6 +5,23 @@ require "zinzout"
 require "utils/waypoint"
 require "utils/ppnum"
 
+
+class BlankLineSkipper
+  AnyNonSpace = /\S/
+  include Enumerable
+  def initialize(iter)
+    @iter = iter
+  end
+
+  def each
+    return enum_for(:each) unless block_given?
+    @iter.each do |x|
+      next unless AnyNonSpace.match(x)
+      yield x
+    end
+  end
+end
+
 # Loads file of records that have been sorted by OCN
 class FileLoader
   def initialize(batch_loader:, batch_size: 10_000)
@@ -19,14 +36,12 @@ class FileLoader
   # @param [Regexp] skip_match The regexp which indicates that the first line should be skipped
   # @return [Iterator] An iterator with the first line possibly skipped
   def skip_matching_header(filehandle, skip_match)
-    return filehandle unless skip_match
-
     iter     = filehandle.enum_for(:each)
-    nextline = iter.next
-    unless skip_match.match(nextline)
-      iter.rewind
+    if skip_match
+      nextline = iter.next
+      iter.rewind unless skip_match.match(nextline)
     end
-    iter
+    BlankLineSkipper.new(iter)
   end
 
   # Load the given file
