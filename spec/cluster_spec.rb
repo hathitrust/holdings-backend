@@ -101,18 +101,6 @@ RSpec.describe Cluster do
       end
     end
 
-    describe "#item_enum_chron_orgs" do
-      xit "has an item enumchrons orgs" do
-        c = described_class.first
-        expect(c.item_enum_chron_orgs[ht1.n_enum]).to eq([ht1.billing_entity])
-      end
-
-      xit "returns an empty set if none found" do
-        c = described_class.first
-        expect(c.item_enum_chron_orgs["invalid_enum"]).to eq([])
-      end
-    end
-
     describe "#holding_enum_chron_orgs" do
       it "maps enumchrons to member holdings" do
         c = described_class.first

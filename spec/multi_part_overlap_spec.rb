@@ -32,34 +32,6 @@ RSpec.describe MultiPartOverlap do
     ClusterHtItem.new(ht_w_ec).cluster.tap(&:save)
   end
 
-  describe "#members_with_matching_ht_items" do
-    it "finds a member with ht_item with the same enumchron" do
-      ht_w_ec_dupe = ht_w_ec.clone
-      ht_w_ec_dupe.billing_entity = "different_member"
-      cluster = ClusterHtItem.new(ht_w_ec_dupe).cluster.tap(&:save)
-      overlap = described_class.new(cluster, "different_member", ht_w_ec)
-      expect(overlap.members_with_matching_ht_items).to include("different_member")
-    end
-
-    it "finds a member with ht_item with nil enumchron" do
-      ht_wo_ec_dupe = ht_wo_ec.clone
-      ht_wo_ec_dupe.billing_entity = "different_member"
-      cluster = ClusterHtItem.new(ht_wo_ec_dupe).cluster.tap(&:save)
-      overlap = described_class.new(cluster, "different_member", ht_w_ec)
-      expect(overlap.members_with_matching_ht_items).to include("different_member")
-    end
-
-    it "finds a member with any ht_item if this ht_item enumchron is nil" do
-      ht_w_ec_dupe = ht_wo_ec.clone
-      ht_w_ec_dupe.enum_chron = "1"
-      ht_w_ec_dupe.billing_entity = "different_member"
-      ClusterHtItem.new(ht_wo_ec).cluster.tap(&:save)
-      cluster = ClusterHtItem.new(ht_w_ec_dupe).cluster.tap(&:save)
-      overlap = described_class.new(cluster, "different_member", ht_wo_ec)
-      expect(overlap.members_with_matching_ht_items).to include("different_member")
-    end
-  end
-
   describe "#matching_holdings" do
     it "finds holdings that match on enum chron" do
       cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
@@ -75,12 +47,12 @@ RSpec.describe MultiPartOverlap do
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
-    it "finds holdings when ht item has no enum chron" do
+    it "does not find holdings with enum when ht item has no enum chron" do
       ht_w_ec.update_attributes(n_enum: "")
       cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
-      expect(overlap.matching_holdings.count).to eq(1)
+      expect(overlap.matching_holdings.count).to eq(0)
     end
 
     it "does not find holdings with the wrong enum chron" do
@@ -115,14 +87,6 @@ RSpec.describe MultiPartOverlap do
       ht_w_ec.update_attributes(billing_entity: "different_org")
       c.reload
       mpo = described_class.new(c, "different_org", ht_w_ec)
-      expect(mpo.copy_count).to be(1)
-    end
-
-    it "returns 1 copy if billing_entity in members_with_matching_ht_items" do
-      ht_wo_ec_dupe = ht_wo_ec.clone
-      ht_wo_ec_dupe.billing_entity = "different_member"
-      cluster = ClusterHtItem.new(ht_wo_ec_dupe).cluster.tap(&:save)
-      mpo = described_class.new(cluster, "different_member", ht_w_ec)
       expect(mpo.copy_count).to be(1)
     end
   end

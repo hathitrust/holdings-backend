@@ -24,12 +24,6 @@ class Overlap
     @cluster.holdings.where(organization: @org)
   end
 
-  # Members that provided matching ht_items
-  # Overridden in MultiPartOverlap to deal with more complex enum chron matching
-  def members_with_matching_ht_items
-    @cluster.billing_entities
-  end
-
   def to_hash
     {
       cluster_id:   @cluster._id.to_s,

@@ -232,15 +232,15 @@ RSpec.describe CostReport do
         expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { spm: { 1 => 1 } })
       end
 
-      it "HtItem derived holdings apply to all Items in the cluster" do
+      it "HtItem billing entity derived matches are independent of all others in the cluster" do
         ClusterHtItem.new(spm).cluster.tap(&:save)
         ht_copy.billing_entity = "different_cpc"
         ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expected_freq = { spm.billing_entity.to_sym => { spm: { 2 => 2 } },
-                         different_cpc: { spm: { 2 => 2 } } }
+        expected_freq = { spm.billing_entity.to_sym => { spm: { 1 => 1 } },
+                         different_cpc: { spm: { 1 => 1 } } }
         expect(cr.freq_table).to eq(expected_freq)
       end
     end
@@ -267,13 +267,13 @@ RSpec.describe CostReport do
               n_enum: "2")
       end
 
-      it "does not give mpm shares when enum_chron does not match" do
+      it "gives mpm shares when enum_chron does not match anything" do
         ClusterHtItem.new(mpm).cluster.tap(&:save)
         ClusterHolding.new(mpm_wrong_ec).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq({})
+        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: { 2=>1 })
       end
     end
 
@@ -308,7 +308,7 @@ RSpec.describe CostReport do
               organization: "not_a_collection")
       end
 
-      it "assigns all serials to the member and ht_item derived holdings affect hshare" do
+      it "assigns all serials to the member and ht_item billing entities affect hshare" do
         ClusterHtItem.new(ht_serial).cluster.tap(&:save)
         ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
         Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
@@ -316,8 +316,9 @@ RSpec.describe CostReport do
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        # ht_serial.billing_entity + ht_serial2.billing_entity + holding_serial.org
-        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: { 3 => 2 })
+        # ht_serial.billing_entity + holding_serial.org and
+        # ht_serial2.billing_entity + holding_serial.org
+        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: { 2 => 2 })
       end
     end
   end

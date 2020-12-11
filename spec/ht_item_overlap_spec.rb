@@ -47,7 +47,8 @@ RSpec.describe HtItemOverlap do
     it "returns all organizations that overlap with an item" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
-      expect(overlap.organizations_with_holdings.count).to eq(3)
+      # billing_entity: ucr, holdings: smu, umich, non_matching: stanford
+      expect(overlap.organizations_with_holdings.count).to eq(4)
     end
 
     it "member should match mpm if none of their holdings match" do
@@ -74,7 +75,7 @@ RSpec.describe HtItemOverlap do
       c.reload
       expect(CalculateFormat.new(c).cluster_format).to eq("mpm")
       overlap = described_class.new(c.ht_items.first)
-      expect(overlap.organizations_with_holdings.count).to eq(3)
+      expect(overlap.organizations_with_holdings.count).to eq(4)
     end
 
     it "matches if holding enum is ''" do
@@ -121,14 +122,14 @@ RSpec.describe HtItemOverlap do
     it "returns ratio of organizations" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
-      expect(overlap.h_share("umich")).to eq(1.0 / 3)
+      expect(overlap.h_share("umich")).to eq(1.0 / 4)
     end
 
     it "assigns an h_share to hathitrust for KEIO items" do
       ClusterHtItem.new(keio_item).cluster.tap(&:save)
       c.reload
-      overlap = described_class.new(c.ht_items.first)
-      expect(c.ht_items.first.billing_entity).not_to eq("hathitrust")
+      overlap = described_class.new(c.ht_items.last)
+      expect(c.ht_items.last.billing_entity).to eq("hathitrust")
       expect(overlap.h_share("hathitrust")).to eq(1.0 / 4)
       expect(overlap.h_share("umich")).to eq(1.0 / 4)
     end
@@ -136,8 +137,8 @@ RSpec.describe HtItemOverlap do
     it "assigns an h_share to UCM as it would anyone else" do
       ClusterHtItem.new(ucm_item).cluster.tap(&:save)
       c.reload
-      overlap = described_class.new(c.ht_items.first)
-      expect(c.ht_items.first.billing_entity).not_to eq("ucm")
+      overlap = described_class.new(c.ht_items.last)
+      expect(c.ht_items.last.billing_entity).to eq("ucm")
       expect(overlap.h_share("ucm")).to eq(1.0 / 4)
       expect(overlap.h_share("umich")).to eq(1.0 / 4)
     end
@@ -145,7 +146,7 @@ RSpec.describe HtItemOverlap do
     it "returns 0 if not held" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
-      expect(overlap.h_share("stanford")).to eq(0)
+      expect(overlap.h_share("upenn")).to eq(0)
     end
   end
 end
