@@ -43,6 +43,12 @@ RSpec.describe CalculateFormat do
       ).to eq("ser")
     end
 
+    it "is a SER if it is in the list of large cluster ocns" do
+      c_mpm = ClusterHtItem.new(ht_mpm).cluster
+      Services.large_clusters.ocns.add(ht_mpm.ocns.first)
+      expect(described_class.new(c_mpm).item_format(ht_mpm)).to eq("ser")
+    end
+
     it "MPM's don't clobber Serials just yet" do
       c.ht_items << ht_ser
       c.ht_items << ht_mpm

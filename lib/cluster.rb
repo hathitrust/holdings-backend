@@ -122,4 +122,7 @@ class Cluster
     end
   end
 
+  def large?
+    (Services.large_clusters.ocns & ocns).any?
+  end
 end

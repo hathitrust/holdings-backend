@@ -78,6 +78,20 @@ RSpec.describe ClusterHolding do
         eq(h2.date_received)
     end
 
+    it "updates multiple existing holdings if cluster.large?" do
+      c.ocns << Services.large_clusters.ocns.first
+      c.save
+      described_class.new(h).cluster
+      described_class.new(h.clone).cluster
+      h2.date_received = Date.today
+      h2.uuid = SecureRandom.uuid
+      described_class.new(h2).update
+      cluster = Cluster.first
+      expect(cluster.holdings.first.date_received).to eq(h2.date_received)
+      expect(cluster.holdings.last.date_received).to \
+        eq(h2.date_received)
+    end
+
     it "adds the holding if there is no existing holding" do
       described_class.new(h).cluster
       h2.uuid = SecureRandom.uuid
@@ -116,6 +130,29 @@ RSpec.describe ClusterHolding do
 
       h2 = build(:holding, ocn: h.ocn, uuid: h.uuid)
       expect { described_class.new(h2).update }.to raise_exception(/same UUID/)
+    end
+
+    it 'skips duplicative holdings for a member in "large clusters"' do
+      c.ocns = [Services.large_clusters.ocns.first]
+      c.save
+      dupes = [build(:holding, organization: "umich", ocn: c.ocns.first),
+               build(:holding, organization: "umich", ocn: c.ocns.first)]
+      described_class.new(dupes).update
+      cluster = Cluster.first
+      expect(cluster.holdings.count).to eq(1)
+    end
+
+    it 'updates the date_received for "large clusters"' do
+      c.ocns = [Services.large_clusters.ocns.first]
+      c.save
+      old = build(:holding, organization: "umich", ocn: c.ocns.first, date_received: Date.yesterday)
+      described_class.new(old).cluster
+      dupes = [build(:holding, organization: "umich", ocn: c.ocns.first, date_received: Date.today),
+               build(:holding, organization: "umich", ocn: c.ocns.first, date_received: Date.today)]
+      described_class.new(dupes).update
+      cluster = Cluster.first
+      expect(cluster.holdings.count).to eq(1)
+      expect(cluster.holdings.first.date_received).to eq(Date.today)
     end
   end
 
