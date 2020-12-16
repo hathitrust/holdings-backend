@@ -128,7 +128,6 @@ class Cluster
 
   def item_enum_chrons
     @item_enum_chrons ||= ht_items.pluck(:n_enum).uniq
-    @item_enum_chrons
   end
 
   # Maps enumchrons to list of orgs that have a holding with that enumchron
@@ -143,7 +142,6 @@ class Cluster
     @org_enum_chrons ||= holdings.group_by(&:organization)
       .transform_values {|holdings| holdings.map(&:n_enum) }
       .tap {|h| h.default = [] }
-    @org_enum_chrons
   end
 
   # Orgs that don't have "" enum chron or an enum chron found in the items

@@ -75,13 +75,17 @@ RSpec.describe "CompileCostReports" do
   end
 
   it "computes the correct hscores" do
+    # umich has 1 instance of a spm held by 1 org (umich)
+    # umich has 1 instance of a ser held by 2 org (umich and utexas)
+    # umich has 2 instance of a mpm held by 3 org ([smu, umich, utexas] and [smu, umich, upenn])
+    expect(cr.freq_table[:umich]).to eq(spm: { 1=>1 }, ser: { 2=>1 }, mpm: { 3=>2 })
     # 1/2 of the ht_serial
     # 1 of the ht_spm
     # 1/3 of ht_mpm1 (with SMU and upenn)
     # 1/3 of ht_mpm2 (with SMU and upenn)
-    # {:mpm=>{2=>1}, :ser=>{2=>1}, :spm=>{1=>1}}
-    expect(cr.freq_table[:umich]).to eq(spm: { 1=>1 }, ser: { 2=>1 }, mpm: { 3=>2 })
     expect(cr.total_hscore(:umich)).to be_within(0.0001).of(1/2.0 + 1.0 + 1/3.0 + 1/3.0)
+    # 1 instance of a ser held by 2 orgs (umich and utexas)
+    # 1 instance of a mpm held by 3 orgs (smu, umich, utexas)
     expect(cr.freq_table[:utexas]).to eq(ser: { 2 => 1 }, mpm: { 3 => 1 })
   end
 
