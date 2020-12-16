@@ -94,15 +94,10 @@ RSpec.describe Cluster do
       end
     end
 
-    describe "#item_enum_chron_orgs" do
-      it "has an item enumchrons orgs" do
+    describe "#item_enum_chrons" do
+      it "collects all item enum_chrons in the cluster" do
         c = described_class.first
-        expect(c.item_enum_chron_orgs[ht1.n_enum]).to eq([ht1.billing_entity])
-      end
-
-      it "returns an empty set if none found" do
-        c = described_class.first
-        expect(c.item_enum_chron_orgs["invalid_enum"]).to eq([])
+        expect(c.item_enum_chrons).to eq(["3"])
       end
     end
 
@@ -110,6 +105,42 @@ RSpec.describe Cluster do
       it "maps enumchrons to member holdings" do
         c = described_class.first
         expect(c.holding_enum_chron_orgs[h1.n_enum]).to eq([h1.organization])
+      end
+    end
+
+    describe "#org_enum_chrons" do
+      it "maps orgs to their enum_chrons" do
+        c = described_class.first
+        expect(c.org_enum_chrons[h1.organization]).to eq([h1.enum_chron, h2.enum_chron])
+      end
+    end
+
+    describe "#organizations_with_holdings_but_no_matches" do
+      it "is a list of orgs in the cluster that don't match anything" do
+        h3 = build(:holding, ocn: ocn1, enum_chron: "4", organization: "ualberta")
+        ClusterHolding.new(h3).cluster.tap(&:save)
+        c = described_class.first
+        expect(c.organizations_with_holdings_but_no_matches).to include("ualberta")
+      end
+
+      it "does not include orgs that do have a match" do
+        matching_holding = build(:holding, ocn: ocn1, enum_chron: "3")
+        ClusterHolding.new(matching_holding).cluster.tap(&:save)
+        c = described_class.first
+        expect(c.organizations_with_holdings_but_no_matches).not_to \
+          include(matching_holding.organization)
+      end
+
+      it "DOES NOT include orgs that only have a billing entity match" do
+        ht2 = build(:ht_item, ocns: [ocn1], enum_chron: "5", billing_entity: "ualberta")
+        ClusterHtItem.new(ht2).cluster.tap(&:save)
+        c = described_class.first
+        expect(c.organizations_with_holdings_but_no_matches).not_to include("ualberta")
+        # but does if they have a non-matching holding
+        h3 = build(:holding, ocn: ocn1, enum_chron: "6", organization: "ualberta")
+        ClusterHolding.new(h3).cluster.tap(&:save)
+        c = described_class.where(ocns: ocn1).first
+        expect(c.organizations_with_holdings_but_no_matches).to include("ualberta")
       end
     end
   end

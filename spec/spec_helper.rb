@@ -10,6 +10,7 @@ require "mongoid"
 require "fixtures/members"
 require "fixtures/collections"
 require "fixtures/mock_serials"
+require "pry"
 SimpleCov.start
 
 Mongoid.load!("mongoid.yml", :test)

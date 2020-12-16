@@ -6,7 +6,7 @@ require "ht_item"
 # Collects organizations with an HTItem overlap
 class HtItemOverlap
 
-  attr_accessor :matching_orgs
+  attr_accessor :matching_orgs, :ht_item
 
   def initialize(ht_item)
     @ht_item = ht_item
@@ -17,14 +17,12 @@ class HtItemOverlap
   # Find all organization with holdings that match the given ht_item
   def organizations_with_holdings
     if @cluster.format != "mpm"
-      # all orgs in the cluster hold every spm or ser in cluster
-      @cluster.organizations_in_cluster
-    elsif @ht_item.n_enum == ""
-      # all orgs in the cluster match an ht_item without an enum
-      @cluster.organizations_in_cluster
+      # all orgs with a holding hold every spm or ser in cluster
+      (@cluster.org_enum_chrons.keys + [@ht_item.billing_entity]).uniq
     else
       # ht_items match on enum and holdings without enum
-      (@cluster.enum_chron_orgs("") + @cluster.enum_chron_orgs(@ht_item.n_enum)).uniq
+      (@cluster.holding_enum_chron_orgs[""] + @cluster.holding_enum_chron_orgs[@ht_item.n_enum] +
+      @cluster.organizations_with_holdings_but_no_matches + [@ht_item.billing_entity]).uniq
     end
   end
 

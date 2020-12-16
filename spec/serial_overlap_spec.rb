@@ -49,10 +49,5 @@ RSpec.describe SerialOverlap do
       c.reload
       expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
     end
-
-    it "returns 1 if any billing_entity in the cluster matches" do
-      # ht2.billing_entity will have a CC for a umich item despite no holdings
-      expect(described_class.new(c, ht2.billing_entity, ht).copy_count).to eq(1)
-    end
   end
 end

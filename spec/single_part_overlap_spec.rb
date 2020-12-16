@@ -45,13 +45,6 @@ RSpec.describe SinglePartOverlap do
       expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
     end
 
-    it "returns 1 if any billing_entity in the cluster matches" do
-      ClusterHtItem.new(ht2).cluster.tap(&:save)
-      c.reload
-      # ht2.billing_entity will have a CC for a umich item despite no holdings
-      expect(described_class.new(c, ht2.billing_entity, ht).copy_count).to eq(1)
-    end
-
     it "returns 0 if nothing matches" do
       expect(described_class.new(c, "not an org", ht).copy_count).to eq(0)
     end

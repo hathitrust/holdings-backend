@@ -39,13 +39,6 @@ RSpec.describe Overlap do
     end
   end
 
-  describe "#members_with_matching_ht_items" do
-    it "returns all billing_entitys in matching ht_items" do
-      overlap = described_class.new(c, "irrelevant", ht)
-      expect(overlap.members_with_matching_ht_items).to eq([ht.billing_entity])
-    end
-  end
-
   describe "#matching_holdings" do
     it "finds all matching holdings for an org" do
       overlap = described_class.new(c, "umich", ht)
