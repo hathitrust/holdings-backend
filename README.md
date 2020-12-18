@@ -2,7 +2,7 @@
 
 
 
-![Build Status](https://github.com/hathitrust/holdings-backend/workflows/Run%20CI/badge.svg)
+![Build Status](https://github.com/hathitrust/holdings-backend/workflows/Docker%20Build/badge.svg)
 
 
 ## Prerequisites / Setup
