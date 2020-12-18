@@ -15,6 +15,12 @@ class Reclusterer
   end
 
   def recluster
+    if @cluster.large?
+      raise LargeClusterError,
+            "Reclustering large cluster will lead to incomplete holdings. " \
+            "OCNs: #{@cluster.ocns.join(", ")}"
+    end
+
     Retryable.with_transaction do
       Services.logger.debug "Deleting and reclustering cluster #{@cluster.inspect}"
       @cluster.delete

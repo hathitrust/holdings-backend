@@ -50,6 +50,11 @@ class ClusterGetter
         raise ClusterError, "clusters disappeared, try again" if source.nil?
         next if source._id == @target._id
 
+        if source.large? ^ @target.large?
+          warn("Merging into a large cluster. " \
+                "OCNs: [#{source.ocns.join(",")}] and [#{@target.ocns.join(",")}]")
+        end
+
         source.delete
         @target.add_members_from(source)
         @target.add_to_set(ocns: source.ocns)
