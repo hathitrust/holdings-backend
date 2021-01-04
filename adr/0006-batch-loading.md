@@ -26,13 +26,13 @@ any given cluster.
 This increases overall complexity of the system, but allows loading data in a
 timely fashion especially for large clusters.
 
-For best performance, input data should be sorted by OCN before loading into
-the system. This may require additional complexity in the management of the
-data files loaded into the system. In particular, for best performance,
-holdings from multiple institutions should be sorted together by OCN and loaded
-at the same time. The system can still handle unsorted data, it just has the
-potential to be significantly slower. This is likely to be more important for
-an initial load or full reload than for incremental updates.
+For best performance, input data should be sorted by OCLC control number (OCN)
+before loading into the system. This may require additional complexity in the
+management of the data files loaded into the system. In particular, for best
+performance, holdings from multiple institutions should be sorted together by
+OCN and loaded at the same time. The system can still handle unsorted data, it
+just has the potential to be significantly slower. This is likely to be more
+important for an initial load or full reload than for incremental updates.
 
 When data is sorted this way, the most frequent write operation is adding
 multiple subdocuments to a given document - for example, adding multiple
