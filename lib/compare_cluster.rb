@@ -19,7 +19,7 @@ class CompareCluster
     puts "Comparing holdings for htitem #{item_id}; " \
       "cluster format: #{CalculateFormat.new(@cluster).cluster_format}"
 
-    compare_htitems
+    #compare_htitems
     compare_holdings_keys
     compare_holdings_values
   end
@@ -105,7 +105,7 @@ class CompareCluster
   end
 
   def old_holdings
-    @old_holdings ||= Services.holdings_db[:holdings_htitem_htmember]
+    @old_holdings ||= Services.holdings_db[:holdings_htitem_htmember_jn_oct]
       .where(volume_id: item_id)
       .to_h {|h| [h[:member_id], h] }
   end
