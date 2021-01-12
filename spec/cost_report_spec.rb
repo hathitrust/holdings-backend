@@ -224,8 +224,8 @@ RSpec.describe CostReport do
         mpm_holding = spm_holding.clone
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "multi"
-        ClusterHolding.new(spm_holding).cluster.tap(&:save)
-        ClusterHolding.new(mpm_holding).cluster.tap(&:save)
+        cluster = ClusterHolding.new(spm_holding).cluster.tap(&:save)
+        cluster.add_holdings(mpm_holding).tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end

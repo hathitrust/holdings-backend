@@ -21,7 +21,7 @@ RSpec.describe "overlap_report" do
     it "generates the correct report for the holding org" do
       h2 = h.dup
       h2.condition = "BRT"
-      ClusterHolding.new(h2).cluster.tap(&:save)
+      Cluster.first.add_holdings(h2).tap(&:save)
       expect(full_report(h.organization)).to eq([
         "#{Cluster.first._id}\t#{ht.item_id}\t#{h.organization}\t2\t1\t0\t0\t1"
       ])

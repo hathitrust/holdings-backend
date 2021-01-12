@@ -17,14 +17,8 @@ class ClusterHolding
     raise ArgumentError, "Holding must have exactly one OCN" if @ocn.nil?
   end
 
-  def cluster(getter: ClusterGetter.new([@ocn]))
-    getter.get do |cluster|
-      cluster.add_holdings(@holdings)
-    end
-  end
-
   # Updates a matching holding or adds it
-  def update(getter: ClusterGetter.new([@ocn]))
+  def cluster(getter: ClusterGetter.new([@ocn]))
     getter.get do |c|
       to_add = []
 
@@ -50,6 +44,7 @@ class ClusterHolding
       c.add_holdings(to_add)
     end
   end
+  alias_method :update, :cluster
 
   def delete
     raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1

@@ -9,16 +9,10 @@ require "services"
 
 Services.mongo!
 
-update = ARGV[0] == "-u"
-if update
-  filename = ARGV[1]
-  Services.logger.info "Updating Print Holdings."
-else
-  filename = ARGV[0]
-  Services.logger.info "Adding Print Holdings."
-end
+filename = ARGV[0]
+Services.logger.info "Adding Print Holdings."
 
-holding_loader = HoldingLoader.new(update: update)
+holding_loader = HoldingLoader.new
 
 FileLoader.new(batch_loader: holding_loader).load(filename, skip_header_match: /\A\s*OCN/)
 
