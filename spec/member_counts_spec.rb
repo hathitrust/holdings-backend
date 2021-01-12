@@ -27,6 +27,8 @@ RSpec.describe "member_counts_reports" do
       FileLoader.new(batch_loader: holding_loader).load(mf, skip_header_match: /\A\s*OCN/)
     end
     holding_loader.finalize
+
+    require 'pry'; binding.pry
     true
   end
 
