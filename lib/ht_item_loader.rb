@@ -6,7 +6,7 @@ require "cluster_ht_item"
 # Constructs batches of HtItems from incoming file data
 class HtItemLoader
   def item_from_line(line)
-    fields = line.split(/\t/)
+    fields = line.chomp.split(/\t/)
 
     HtItem.new(
       item_id:         fields[0],
