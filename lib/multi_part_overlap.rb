@@ -31,6 +31,7 @@ class MultiPartOverlap < Overlap
     matching_holdings.where("$or": [{ status: "LM" }, { condition: "BRT" }]).count
   end
 
+  #### FIX THIS ####
   def matching_holdings
     @cluster.holdings.where(organization: @org,
                               "$or": [{ n_enum: @ht_item.n_enum }, { n_enum: "" }])

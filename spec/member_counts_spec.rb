@@ -15,7 +15,7 @@ RSpec.describe "member_counts_reports" do
 
   let(:hathifile) { small_data_file('hathi_books_fake_oclc.tsv') }
   let(:oclc_concordance) { small_data_file('oclc_concordance.txt') }
-  let(:mono_files) { Pathname.new('spec/testdata/small').glob('HT003*').map(&:to_s) }
+  let(:ph_files) { Pathname.new('spec/testdata/small').glob('HT003*.tsv').map(&:to_s) }
 
   def reset_mongo_for_membership_specs
     Cluster.each(&:delete)
@@ -23,8 +23,8 @@ RSpec.describe "member_counts_reports" do
     FileLoader.new(batch_loader: HtItemLoader.new).load(hathifile)
 
     holding_loader = HoldingLoader.new(update: false)
-    mono_files.each do |mf|
-      FileLoader.new(batch_loader: holding_loader).load(mf, skip_header_match: /\A\s*OCN/)
+    ph_files.each do |phf|
+      FileLoader.new(batch_loader: holding_loader).load(phf, skip_header_match: /\A\s*OCN/)
     end
     holding_loader.finalize
 
