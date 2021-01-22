@@ -9,11 +9,11 @@ HFileLine = Struct.new(:ht_item, :holdings, keyword_init: true) do
   def mms
     item_id = ht_item.item_id
     if item_id =~ /mono/
-      'mono'
+      'spm'
     elsif item_id =~ /mpm/
-      'multi'
+      'mpm'
     else
-      'serial'
+      'ser'
     end
   end
 end

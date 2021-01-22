@@ -1,0 +1,30 @@
+mdp.mono.1	allow	pd	mono_bib.1		MIU	mono_bib.1	1			70518371	mono_title.1	mono_pub.1	bib	2011-09-15 4:30:52	0	9999	cs	slo	BK	MIU	umich	umich	google	google	anu,bu,cmu
+mdp.mono.2	deny	ic	mono_bib.2		UC	mono_bib.2	2	333110706		74512469	mono_title.2	mono_pub.2	bib	2011-02-05 20:33:48	0	1970	enk	eng	BK	NRLF	universityofcalifornia	universityofcalifornia	google	google	anu,bu,cmu
+mdp.mono.3	allow	pd	mono_bib.3		UC	mono_bib.3	3			76367925	mono_title.3	mono_pub.3	bib	2011-02-05 20:32:24	0	1968	enk	eng	BK	NRLF	universityofcalifornia	universityofcalifornia	google	google	anu,bu,cmu
+mdp.mono.4	deny	ic	mono_bib.4		UC	mono_bib.4	4			72918750/SA/r72	mono_title.4	mono_pub.4	bib	2011-02-05 20:32:27	0	1971	ce	eng	BK	NRLF	universityofcalifornia	universityofcalifornia	google	google	anu,bu,cmu
+mdp.mono.5	allow	pd	mono_bib.5		MIU	mono_bib.5	5			51009585	mono_title.5	mono_pub.5	bib	2011-02-05 20:31:56	0	1951	ilu	eng	BK	MIU	umich	umich	google	google	anu,bu
+mdp.mono.6	deny	ic	mono_bib.6		MIU	mono_bib.6	6			67019738	mono_title.6	mono_pub.6	bib	2011-02-05 20:30:41	0	1967	nyu	eng	BK	MIU	umich	umich	google	google	anu,cmu
+mdp.mono.7	allow	pd	mono_bib.7		MIU	mono_bib.7	7	405047223		72005072	mono_title.7	mono_pub.7	bib	2011-02-05 20:32:14	0	1972	nyu	eng	BK	MIU	umich	umich	google	google	bu,cmu
+mdp.mono.8	deny	ic	mono_bib.8		MIU	mono_bib.8	8			75924273/SA	mono_title.8	mono_pub.8	bib	2011-02-05 20:33:35	0	1971	ii	eng	BK	MIU	umich	umich	google	google	anu
+mdp.mono.9	allow	pd	mono_bib.9		MIU	mono_bib.9	9			68055554	mono_title.9	mono_pub.9	bib	2011-02-06 20:31:16	0	1968	nyu	eng	BK	MIU	umich	umich	google	google	bu
+mdp.mono.10	deny	ic	mono_bib.10		MIU	mono_bib.10	10			72306902	mono_title.10	mono_pub.10	bib	2011-02-05 20:33:28	0	1971	gw	ger	BK	MIU	umich	umich	google	google	cmu
+mdp.mpm.101	allow	pd	mpm_bib.101	1	MIU	mpm_bib.101	101				mpm_title.101	mpm_pub.101	bib	2011-10-01 4:15:00	0	1901	gw	eng	BK	MIU	umich	umich	google	google	anu,bu,cmu
+mdp.mpm.101	deny	ic	mpm_bib.101	2	MIU	mpm_bib.101	101				mpm_title.101	mpm_pub.101	bib	2011-10-02 4:15:00	0	1901	gw	eng	BK	MIU	umich	umich	google	google	anu
+mdp.mpm.102	allow	pd	mpm_bib.102	1	MIU	mpm_bib.102	102				mpm_title.102	mpm_pub.102	bib	2011-10-03 4:15:00	0	1902	gw	eng	BK	MIU	umich	umich	google	google	anu,bu
+mdp.mpm.102	deny	ic	mpm_bib.102	2	MIU	mpm_bib.102	102				mpm_title.102	mpm_pub.102	bib	2011-10-04 4:15:00	0	1902	gw	eng	BK	MIU	umich	umich	google	google	bu
+mdp.mpm.103	allow	pd	mpm_bib.103	1,903	MIU	mpm_bib.103	103				mpm_title.103	mpm_pub.103	bib	2011-10-05 4:15:00	0	1903	gw	eng	BK	MIU	umich	umich	google	google	cmu
+mdp.mpm.103	deny	ic	mpm_bib.103	2	MIU	mpm_bib.103	103				mpm_title.103	mpm_pub.103	bib	2011-10-06 4:15:00	0	1903	gw	eng	BK	MIU	umich	umich	google	google	cmu
+mdp.mpm.103	allow	pd	mpm_bib.103	3	MIU	mpm_bib.103	103				mpm_title.103	mpm_pub.103	bib	2011-10-07 4:15:00	0	1903	gw	eng	BK	MIU	umich	umich	google	google	cmu
+mdp.mpm.104	deny	ic	mpm_bib.104	1	MIU	mpm_bib.104	104				mpm_title.104	mpm_pub.104	bib	2011-10-08 4:15:00	0	1904	gw	eng	BK	MIU	umich	umich	google	google	bu,cmu
+mdp.mpm.105	allow	pd	mpm_bib.105	2	MIU	mpm_bib.105	105				mpm_title.105	mpm_pub.105	bib	2011-10-09 4:15:00	0	1905	gw	eng	BK	MIU	umich	umich	google	google	bu,cmu
+mdp.mpm.106	deny	ic	mpm_bib.106	3	MIU	mpm_bib.106	106				mpm_title.106	mpm_pub.106	bib	2011-10-10 4:15:00	0	1906	gw	eng	BK	MIU	umich	umich	google	google
+mdp.se.201	allow	pd	201	1	MIU	201	201				se_title.201	se_pub.201		2011-10-01 4:15:00	0	2001	gw	eng	SE	MIU	umich	umich	google	google	anu,bu,cmu
+mdp.se.201	deny	ic	201	2	MIU	201	201				se_title.201	se_pub.201		2011-10-02 4:15:00	0	2001	gw	eng	SE	MIU	umich	umich	google	google	anu
+mdp.se.202	allow	pd	202	1	MIU	202	202				se_title.202	se_pub.202		2011-10-03 4:15:00	0	2002	gw	eng	SE	MIU	umich	umich	google	google	anu,bu
+mdp.se.202	deny	ic	202		MIU	202	202				se_title.202	se_pub.202		2011-10-04 4:15:00	0	2002	gw	eng	SE	MIU	umich	umich	google	google	bu
+mdp.se.203	allow	pd	203	1	MIU	203	203				se_title.203	se_pub.203		2011-10-05 4:15:00	0	2003	gw	eng	SE	MIU	umich	umich	google	google	cmu
+mdp.se.203	deny	ic	203	2	MIU	203	203				se_title.203	se_pub.203		2011-10-06 4:15:00	0	2003	gw	eng	SE	MIU	umich	umich	google	google	cmu
+mdp.se.203	allow	pd	203	3	MIU	203	203				se_title.203	se_pub.203		2011-10-07 4:15:00	0	2003	gw	eng	SE	MIU	umich	umich	google	google	cmu
+mdp.se.204	deny	ic	204	1	MIU	204	204				se_title.204	se_pub.204		2011-10-08 4:15:00	0	2004	gw	eng	SE	MIU	umich	umich	google	google	bu,cmu
+mdp.se.204	allow	pd	204	2	MIU	204	204				se_title.204	se_pub.204		2011-10-09 4:15:00	0	2004	gw	eng	SE	MIU	umich	umich	google	google	bu,cmu
+mdp.se.205	deny	ic	205	1	MIU	205	10001				se_title.205	se_pub.205		2011-10-10 4:15:00	0	2005	gw	eng	SE	MIU	umich	umich	google	google

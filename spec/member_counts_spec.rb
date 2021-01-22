@@ -4,15 +4,16 @@ require "spec_helper"
 require 'services'
 require 'cluster'
 require 'file_loader'
-require 'holding_loader'
 require 'ocn_resolution_loader'
-require 'ht_item_loader'
 require_relative 'testdata/small/generate_print_holdings'
+
+require 'member_report'
 
 RSpec.describe "member_counts_reports" do
   let(:oclc_concordance) { Pathname.new(__dir__) + 'testdata' + 'small' +  'oclc_concordance.txt' }
+  let(:serials_file) { Pathname.new(__dir__) +  'testdata' + 'small' + 'serials.txt' }
 
-  def reset_mongo_for_membership_specs
+    def reset_mongo_for_membership_specs
     Cluster.each(&:delete)
     FileLoader.new(batch_loader: OCNResolutionLoader.new).load(oclc_concordance)
     SmallData.load!
@@ -32,12 +33,13 @@ RSpec.describe "member_counts_reports" do
     %w(anu bu cmu).each do |mem|
       Services.ht_members.add_temp(HTMember.new(inst_id: mem, country_code: "us", weight: 1.0))
     end
-
+    Services.register(:serials) { SerialsFile.new(serials_file)}
   end
 
   after(:all) do
     Services.register(:ht_members) { mock_members }
     Services.register(:ht_collections) { mock_collections }
+    Services.register(:serials) { mock_serials }
     Cluster.each(&:delete)
   end
 
