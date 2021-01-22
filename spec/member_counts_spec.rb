@@ -21,7 +21,7 @@ RSpec.describe "member_counts_reports" do
     # Add something for each school that isn't in the hathifile
     %w[anu bu cmu].each do |school|
       2.times do
-        ClusterHolding.new(build(:holding, organization: school)).cluster
+        ClusterHolding.new(build(:holding, organization: school, mono_multi_serial: "mono")).cluster
       end
     end
 
