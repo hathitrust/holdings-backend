@@ -27,6 +27,7 @@ class HtItem
   field :enum_chron, type: String, default: ""
   field :n_enum, type: String, default: ""
   field :n_chron, type: String, default: ""
+  field :n_enum_chron, type: String, default: ""
   field :collection_code, type: String
   field :billing_entity, type: String
 
