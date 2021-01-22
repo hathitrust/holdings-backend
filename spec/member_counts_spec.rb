@@ -18,7 +18,6 @@ RSpec.describe "member_counts_reports" do
     SmallData.load!
 
     # Add something for each school that isn't in the hathifile
-
     %w[anu bu cmu].each do |school|
       2.times do
         ClusterHolding.new(build(:holding, organization: school)).cluster
@@ -43,10 +42,13 @@ RSpec.describe "member_counts_reports" do
   end
 
   describe "Test the reset" do
-    it "doesn't throw an error" do
+    it "reset doesn't throw an error" do
       expect(reset_mongo_for_membership_specs).to be_truthy
       require 'pry'; binding.pry
       true
     end
+
+
+
   end
 end
