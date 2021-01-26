@@ -44,7 +44,7 @@ class HTMembers
   end
 
   def load_from_db
-    Services.holdings_db[:ht_institutions]
+    Services.holdings_db[:ht_billing_members]
       .select(:inst_id, :country_code, :weight, :oclc_sym)
       .as_hash(:inst_id)
       .transform_values {|h| HTMember.new(h) }

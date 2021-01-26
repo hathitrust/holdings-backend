@@ -38,12 +38,12 @@ RSpec.describe HoldingsDB do
   describe "Connecting" do
     it "connects with connection string" do
       c = described_class.connection(connection_string)
-      expect(c.tables).to include(:ht_institutions)
+      expect(c.tables).to include(:ht_billing_members)
     end
 
     it "connects with piecemeal keyword args" do
       c = described_class.connection(user: user, password: password, database: database, host: host)
-      expect(c.tables).to include(:ht_institutions)
+      expect(c.tables).to include(:ht_billing_members)
     end
 
     context "with clean environment" do
@@ -59,13 +59,13 @@ RSpec.describe HoldingsDB do
       it "connects with ENV connection string" do
         ENV["DB_CONNECTION_STRING"] = connection_string
         c                           = described_class.connection
-        expect(c.tables).to include(:ht_institutions)
+        expect(c.tables).to include(:ht_billing_members)
       end
 
       it "connects with ENV settings" do
         set_env
         c = described_class.connection
-        expect(c.tables).to include(:ht_institutions)
+        expect(c.tables).to include(:ht_billing_members)
       end
 
       it "fails as expected with bad env" do
@@ -78,7 +78,7 @@ RSpec.describe HoldingsDB do
         set_env
         ENV["DB_USER"] = "NO_SUCH_USER"
         c = described_class.connection(user: user)
-        expect(c.tables).to include(:ht_institutions)
+        expect(c.tables).to include(:ht_billing_members)
       end
     end
   end
@@ -86,7 +86,7 @@ RSpec.describe HoldingsDB do
   describe "Data is loaded" do
     it "finds all the institutions" do
       c = described_class.connection(user: user, password: password, database: database, host: host)
-      expect(c[:ht_institutions].count).to equal(249)
+      expect(c[:ht_billing_members].count).to equal(197)
     end
   end
 end
