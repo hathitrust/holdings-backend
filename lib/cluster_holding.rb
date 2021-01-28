@@ -22,13 +22,9 @@ class ClusterHolding
     getter.get do |c|
       to_add = []
 
+      common_uuids = check_for_duplicate_uuids!(c.holdings.to_a, @holdings)
       @holdings.each do |holding|
-        if (existing = c.holdings.to_a.find {|h| h.uuid == holding.uuid })
-          next if existing.same_as?(holding)
-
-          raise "Found holding #{existing.inspect} with same UUID " \
-            "but different attributes from update #{holding.inspect}"
-        end
+        next if common_uuids.include? holding.uuid
 
         old_holdings = find_old_holdings(c, holding)
 
@@ -91,6 +87,21 @@ class ClusterHolding
     cluster.large? &&
       (cluster.holdings.to_a.find {|h| h.organization == holding.organization } ||
        to_add.find {|h| h.organization == holding.organization })
+  end
+
+  # Check and see if any items across existing/new holdings share a UUID but no other attributes.
+  # Assumes uuids will not be duplicated within either list
+  # Common case is that there is no overlap
+  def check_for_duplicate_uuids!(existing_holdings, new_holdings)
+    common_uuids = existing_holdings.map(&:uuid) & new_holdings.map(&:uuid) # set intersection
+    common_uuids.each do |uuid|
+      existing = existing_holdings.find {|h| h.uuid == uuid }
+      holding = new_holdings.find {|h| h.uuid == uuid }
+      unless existing.same_as?(holding)
+        raise "Found holding #{existing.inspect} with same UUID " \
+                "but different attributes from update #{holding.inspect}"
+      end
+    end
   end
 
 end
