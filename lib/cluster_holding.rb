@@ -44,7 +44,6 @@ class ClusterHolding
       c.add_holdings(to_add)
     end
   end
-  alias_method :update, :cluster
 
   def delete
     raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1

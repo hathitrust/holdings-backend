@@ -50,6 +50,7 @@ class ClusterGetter
         raise ClusterError, "clusters disappeared, try again" if source.nil?
         next if source._id == @target._id
 
+        # Boolean xor. One and only one is "large"
         if source.large? ^ @target.large?
           warn("Merging into a large cluster. " \
                 "OCNs: [#{source.ocns.join(",")}] and [#{@target.ocns.join(",")}]")

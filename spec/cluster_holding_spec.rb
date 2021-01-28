@@ -56,7 +56,7 @@ RSpec.describe ClusterHolding do
         expect(cluster.holdings.first.date_received).to eq(old_date)
         h2.date_received = Date.today
         h2.uuid = SecureRandom.uuid
-        described_class.new(h2).update
+        described_class.new(h2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.first.date_received).not_to eq(old_date)
         expect(cluster.holdings.first.date_received).to eq(h2.date_received)
@@ -67,7 +67,7 @@ RSpec.describe ClusterHolding do
         Cluster.first.add_holdings(h.clone)
         h2.date_received = Date.today
         h2.uuid = SecureRandom.uuid
-        described_class.new(h2).update
+        described_class.new(h2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.first.date_received).to eq(h2.date_received)
         expect(cluster.holdings.last.date_received).not_to \
@@ -77,7 +77,7 @@ RSpec.describe ClusterHolding do
       it "adds the holding if there is no existing holding" do
         described_class.new(h).cluster
         h2.uuid = SecureRandom.uuid
-        described_class.new(h2).update
+        described_class.new(h2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(2)
       end
@@ -85,7 +85,7 @@ RSpec.describe ClusterHolding do
       it "can update a batch of holdings" do
         described_class.new(batch).cluster
 
-        described_class.new(batch2).update
+        described_class.new(batch2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(2)
         expect(cluster.holdings.all? {|h| h.date_received == Date.today }).to be true
@@ -94,7 +94,7 @@ RSpec.describe ClusterHolding do
       it "does not add additional holdings when re-running a batch" do
         described_class.new(batch).cluster
 
-        described_class.new(batch.map(&:dup)).update
+        described_class.new(batch.map(&:dup)).cluster
 
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(2)
@@ -104,14 +104,14 @@ RSpec.describe ClusterHolding do
         described_class.new(batch).cluster
 
         h2.date_received = Date.today
-        expect { described_class.new(h2).update }.to raise_exception(/same UUID/)
+        expect { described_class.new(h2).cluster }.to raise_exception(/same UUID/)
       end
 
       it "raises an error with different attributes but same uuid" do
         described_class.new(batch).cluster
 
         h2 = build(:holding, ocn: h.ocn, uuid: h.uuid)
-        expect { described_class.new(h2).update }.to raise_exception(/same UUID/)
+        expect { described_class.new(h2).cluster }.to raise_exception(/same UUID/)
       end
     end
 
@@ -121,7 +121,7 @@ RSpec.describe ClusterHolding do
         c.save
         dupes = [build(:holding, organization: "umich", ocn: c.ocns.first),
                  build(:holding, organization: "umich", ocn: c.ocns.first)]
-        described_class.new(dupes).update
+        described_class.new(dupes).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(1)
       end
@@ -136,7 +136,7 @@ RSpec.describe ClusterHolding do
                        date_received: Date.today),
                  build(:holding, organization: "umich", ocn: c.ocns.first,
                        date_received: Date.today)]
-        described_class.new(dupes).update
+        described_class.new(dupes).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(1)
         expect(cluster.holdings.first.date_received).to eq(Date.today)
@@ -150,7 +150,7 @@ RSpec.describe ClusterHolding do
         h2 = h.dup
         h2.date_received = Date.today
         h2.uuid = SecureRandom.uuid
-        described_class.new(h2).update
+        described_class.new(h2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.first.date_received).to eq(h2.date_received)
         expect(cluster.holdings.last.date_received).to \
@@ -208,10 +208,10 @@ RSpec.describe ClusterHolding do
       new2.date_received = current_date
       new2.uuid = SecureRandom.uuid
       # replaces first old record
-      described_class.new(new1).update
+      described_class.new(new1).cluster
       # adds new record
       new2.status = "WD"
-      described_class.new(new2).update
+      described_class.new(new2).cluster
       c.save
       expect(Cluster.first.holdings.size).to eq(3)
       described_class.delete_old_holdings(old1.organization, new2.date_received)
@@ -232,7 +232,7 @@ RSpec.describe ClusterHolding do
       new_copy = h.clone
       new_copy.date_received = new_date
       new_copy.uuid = SecureRandom.uuid
-      c = described_class.new(new_copy).update
+      c = described_class.new(new_copy).cluster
       c.save
       clust = Cluster.first
       expect(clust.holdings.pluck(:date_received)).to \
