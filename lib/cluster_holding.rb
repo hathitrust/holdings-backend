@@ -8,6 +8,8 @@ class ClusterHolding
 
   def initialize(*holdings)
     @holdings = holdings.flatten
+    raise ArgumentError, "Must have holdings to cluster" unless @holdings.any?
+
     @ocn = @holdings.first.ocn
 
     if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
