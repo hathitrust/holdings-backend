@@ -16,33 +16,24 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `ht_institutions`
+-- Table structure for table `ht_billing_members`
 --
 
 CREATE DATABASE IF NOT EXISTS `ht_repository`;
 
 USE `ht_repository`;
 
-DROP TABLE IF EXISTS `ht_institutions`;
+DROP TABLE IF EXISTS `ht_billing_members`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `ht_institutions` (
-  `inst_id` varchar(64) DEFAULT NULL,
-  `grin_instance` varchar(8) DEFAULT NULL,
-  `name` varchar(256) NOT NULL DEFAULT ' ',
-  `domain` varchar(32) NOT NULL DEFAULT ' ',
-  `us` tinyint(1) NOT NULL DEFAULT 0,
-  `mapto_domain` varchar(32) DEFAULT NULL,
-  `mapto_inst_id` varchar(32) DEFAULT NULL,
-  `mapto_name` varchar(256) DEFAULT NULL,
-  `mapto_entityID` varchar(256) DEFAULT NULL,
-  `enabled` tinyint(1) NOT NULL DEFAULT 0,
-  `entityID` varchar(256) DEFAULT NULL,
+CREATE TABLE `ht_billing_members` (
+  `inst_id` varchar(32) DEFAULT NULL,
+  `parent_inst_id` varchar(32) DEFAULT NULL,
+  `weight` decimal(4,2) DEFAULT NULL,
   `oclc_sym` varchar(10) DEFAULT NULL,
-  `weight` decimal(4,2) NOT NULL DEFAULT 1.00,
+  `marc21_sym` varchar(10) DEFAULT NULL,
   `country_code` char(2) NOT NULL DEFAULT 'us',
-  KEY `ht_institutions_inst_id` (`inst_id`),
-  KEY `ht_institutions_mapto_inst_id` (`mapto_inst_id`)
+  `status` smallint(6) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --
