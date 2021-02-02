@@ -74,7 +74,7 @@ RSpec.describe ClusterHtItem do
       cluster = described_class.new(item).cluster
       expect(cluster.ht_items.first._parent.id).to eq(empty_cluster.id)
       expect(cluster.ht_items.to_a.size).to eq(1)
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
     end
 
     it "creates a new cluster if no match is found" do
@@ -82,7 +82,7 @@ RSpec.describe ClusterHtItem do
       empty_cluster.save
       new_cluster = described_class.new(new_item).cluster
       expect(new_cluster.id).not_to eq(empty_cluster.id)
-      expect(Cluster.each.to_a.size).to eq(2)
+      expect(Cluster.count).to eq(2)
     end
 
     it "merges two or more clusters" do
@@ -94,7 +94,7 @@ RSpec.describe ClusterHtItem do
       # ht with ocns overlapping both
       overlapping_item = build(:ht_item, ocns: c.ocns+second_c.ocns)
       cluster = described_class.new(overlapping_item).cluster
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
       expect(cluster.ht_items.to_a.size).to eq(3)
     end
 
@@ -121,7 +121,7 @@ RSpec.describe ClusterHtItem do
       cluster = described_class.new(no_ocn).cluster
       cluster2 = described_class.new(no_ocn2).cluster
       expect(cluster).not_to eq(cluster2)
-      expect(Cluster.each.to_a.size).to eq(2)
+      expect(Cluster.count).to eq(2)
     end
 
     context "with HT2 as an update to HT" do
@@ -130,7 +130,7 @@ RSpec.describe ClusterHtItem do
       it "removes the old cluster" do
         first = described_class.new(item).cluster
         described_class.new(update_item).cluster
-        expect(Cluster.each.to_a.size).to eq(1)
+        expect(Cluster.count).to eq(1)
         new_cluster = Cluster.each.to_a.first
         expect(new_cluster).not_to eq(first)
         expect(new_cluster.ht_items.first).to eq(update_item)
@@ -154,10 +154,29 @@ RSpec.describe ClusterHtItem do
       ocnless_cluster = described_class.new(no_ocn).cluster
       ocnless_cluster.save
       empty_cluster.save
-      expect(Cluster.each.to_a.size).to eq(2)
+      expect(Cluster.count).to eq(2)
       updated_item = build(:ht_item, item_id: no_ocn.item_id, ocns: empty_cluster.ocns)
       described_class.new(updated_item).cluster
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
+    end
+
+    it "reclusters when an HTItem changes an OCN" do
+      c = described_class.new(batch).cluster
+      expect(c.ht_items.count).to eq(2)
+      item2.ocns = [item2.ocns.first + 1]
+      c = described_class.new(item2).cluster
+      expect(c.ht_items.count).to eq(1)
+    end
+
+    it "reclusters when an HTItem loses it's glue" do
+      item2.ocns << 1
+      described_class.new(item).cluster
+      described_class.new(item2).cluster
+      expect(Cluster.count).to eq(1)
+      #remove the glue from item2
+      item2.ocns = [1]
+      described_class.new(item2).cluster
+      expect(Cluster.count).to eq(2)
     end
 
     it "can add an HTItem to a cluster with a concordance rule" do
@@ -179,9 +198,9 @@ RSpec.describe ClusterHtItem do
 
     it "removes the cluster if it's only that htitem" do
       described_class.new(item).cluster
-      expect(Cluster.each.to_a.size).to eq(1)
+      expect(Cluster.count).to eq(1)
       described_class.new(item).delete
-      expect(Cluster.each.to_a.size).to eq(0)
+      expect(Cluster.count).to eq(0)
     end
 
     it "creates a new cluster without the ht_item" do
