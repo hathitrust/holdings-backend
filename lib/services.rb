@@ -6,6 +6,7 @@ require "ht_collections"
 require "ht_members"
 require "serials_file"
 require "logger"
+require "large_clusters"
 
 Services = Canister.new
 Services.register(:"mongo!") do
@@ -22,3 +23,4 @@ Services.register(:logger) do
 end
 
 Services.register(:serials) { SerialsFile.new(ENV["SERIALS_FILE"]) }
+Services.register(:large_clusters) { LargeClusters.new }

@@ -5,10 +5,9 @@ require "cluster_holding"
 
 # Constructs batches of Holdings from incoming file data
 class HoldingLoader
-  def initialize(update: false)
+  def initialize
     @organization = nil
     @current_date = nil
-    @update = update
   end
 
   def item_from_line(line)
@@ -19,11 +18,7 @@ class HoldingLoader
   end
 
   def load(batch)
-    if @update
-      ClusterHolding.new(batch).update
-    else
-      ClusterHolding.new(batch).cluster
-    end
+    ClusterHolding.new(batch).cluster
   end
 
   def finalize

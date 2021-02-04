@@ -15,7 +15,7 @@ class CalculateFormat
   #
   # @param ht_item, the HT item to calculate the format on.
   def item_format(ht_item)
-    if matching_serial? ht_item
+    if matching_serial?(ht_item) || @cluster.large?
       "ser"
     elsif cluster_has_item_with_enum_chron_and_same_ht_bib_key? ht_item
       "mpm"
