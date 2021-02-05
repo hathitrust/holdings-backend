@@ -173,7 +173,7 @@ RSpec.describe ClusterHtItem do
       described_class.new(item).cluster
       described_class.new(item2).cluster
       expect(Cluster.count).to eq(1)
-      #remove the glue from item2
+      # remove the glue from item2
       item2.ocns = [1]
       described_class.new(item2).cluster
       expect(Cluster.count).to eq(2)

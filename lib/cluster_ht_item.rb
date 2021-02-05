@@ -67,9 +67,11 @@ class ClusterHtItem
     Services.logger.debug "Cluster #{cluster.inspect}: " \
       "adding ht_items #{ht_items.inspect} with ocns #{@ocns}"
     to_append = []
+    ocns_updated = false
     ht_items.each do |item|
       if (existing_item = cluster.ht_item(item.item_id))
         Services.logger.debug "updating existing item with id #{item.item_id}"
+        ocns_updated = true unless existing_item.ocns == item.ocns
         existing_item.update_attributes(item.to_hash)
       else
         ClusterHtItem.new(item).delete
@@ -80,6 +82,8 @@ class ClusterHtItem
     unless to_append.empty?
       cluster.add_ht_items(to_append)
     end
+
+    Reclusterer.new(cluster).recluster if ocns_updated
   end
 
 end
