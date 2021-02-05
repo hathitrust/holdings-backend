@@ -23,6 +23,6 @@ module EnumChron
     ec_parser.parse(enum_chron)
     self.n_enum  = ec_parser.normalized_enum || ""
     self.n_chron = ec_parser.normalized_chron || ""
-    self.n_enum_chron = [n_enum, n_chron].join(" ").sub(/^ $/, "")
+    self.n_enum_chron = [n_enum, n_chron].join("\t").sub(/^\t$/, "")
   end
 end

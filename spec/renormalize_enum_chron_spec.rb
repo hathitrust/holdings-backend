@@ -20,7 +20,7 @@ RSpec.describe "Renormalize Enumchrons" do
       expect(h.n_enum_chron).to be_nil
 
       renormalize(h)
-      expect(h.n_enum_chron).to eq("1 ")
+      expect(h.n_enum_chron).to eq("1\t")
     end
   end
 

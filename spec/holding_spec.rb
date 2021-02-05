@@ -22,7 +22,7 @@ RSpec.describe Holding do
     holding = build(:holding, enum_chron: "v.1 Jul 1999")
     expect(holding.n_enum).to eq("1")
     expect(holding.n_chron).to eq("Jul 1999")
-    expect(holding.n_enum_chron).to eq("1 Jul 1999")
+    expect(holding.n_enum_chron).to eq("1\tJul 1999")
   end
 
   it "does nothing if given an empty enum_chron" do

@@ -97,7 +97,7 @@ RSpec.describe Cluster do
     describe "#item_enum_chrons" do
       it "collects all item enum_chrons in the cluster" do
         c = described_class.first
-        expect(c.item_enum_chrons).to eq(["3 "])
+        expect(c.item_enum_chrons).to eq(["3\t"])
       end
     end
 

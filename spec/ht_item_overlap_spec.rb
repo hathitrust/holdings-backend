@@ -65,8 +65,8 @@ RSpec.describe HtItemOverlap do
                    billing_entity: "ucr")
       ClusterHtItem.new(mpm2).cluster.tap(&:save)
       c.reload
-      overlap = described_class.new(c.ht_items.where(n_enum_chron: "2 ").first)
-      expect(overlap.ht_item.n_enum_chron).to eq("2 ")
+      overlap = described_class.new(c.ht_items.where(n_enum_chron: "2\t").first)
+      expect(overlap.ht_item.n_enum_chron).to eq("2\t")
       expect(overlap.organizations_with_holdings).not_to include("umich")
     end
 
