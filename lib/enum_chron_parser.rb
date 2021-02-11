@@ -58,6 +58,7 @@ class EnumChronParser
     str.gsub!(" - ", "-")
     str.tr! "(", " "
     str.tr! ")", " "
+    str.tr!("\t", " ")
     # remove spaces after dots except when followed by a date
     newstr = dot_sub(str)
     # recover the 'n.s.' pattern

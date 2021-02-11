@@ -21,7 +21,8 @@ class HtItemOverlap
       (@cluster.org_enum_chrons.keys + [@ht_item.billing_entity]).uniq
     else
       # ht_items match on enum and holdings without enum
-      (@cluster.holding_enum_chron_orgs[""] + @cluster.holding_enum_chron_orgs[@ht_item.n_enum] +
+      (@cluster.holding_enum_chron_orgs[""] +
+      @cluster.holding_enum_chron_orgs[@ht_item.n_enum_chron] +
       @cluster.organizations_with_holdings_but_no_matches + [@ht_item.billing_entity]).uniq
     end
   end

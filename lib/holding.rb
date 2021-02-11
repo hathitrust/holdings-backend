@@ -16,6 +16,7 @@ class Holding
   field :enum_chron, type: String, default: ""
   field :n_enum, type: String, default: ""
   field :n_chron, type: String, default: ""
+  field :n_enum_chron, type: String, default: ""
   field :status, type: String
   field :condition, type: String
   field :gov_doc_flag, type: Boolean
