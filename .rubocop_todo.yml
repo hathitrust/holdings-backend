@@ -22,6 +22,7 @@ Metrics/AbcSize:
     - 'lib/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub_fields.rb'
+    - 'lib/cluster_ht_item.rb'
 
 Layout/LineLength:
   Exclude:
