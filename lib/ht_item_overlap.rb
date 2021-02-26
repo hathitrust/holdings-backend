@@ -18,11 +18,11 @@ class HtItemOverlap
   def organizations_with_holdings
     if @cluster.format != "mpm"
       # all orgs with a holding hold every spm or ser in cluster
-      (@cluster.org_enum_chrons.keys + [@ht_item.billing_entity]).uniq
+      (@cluster.org_enums.keys + [@ht_item.billing_entity]).uniq
     else
       # ht_items match on enum and holdings without enum
-      (@cluster.holding_enum_chron_orgs[""] +
-      @cluster.holding_enum_chron_orgs[@ht_item.n_enum_chron] +
+      (@cluster.holding_enum_orgs[""] +
+      @cluster.holding_enum_orgs[@ht_item.n_enum] +
       @cluster.organizations_with_holdings_but_no_matches + [@ht_item.billing_entity]).uniq
     end
   end

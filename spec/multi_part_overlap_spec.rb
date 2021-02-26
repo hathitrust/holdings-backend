@@ -6,9 +6,9 @@ require "multi_part_overlap"
 RSpec.describe MultiPartOverlap do
   let(:c) { build(:cluster) }
   let(:ht_w_ec) { build(:ht_item, ocns: c.ocns, bib_fmt: "mpm", enum_chron: "1", n_enum: "1") }
-  let(:ht_wo_ec) { build(:ht_item, ocns: c.ocns, bib_fmt: "mpm", enum_chron: "1", n_enum: "") }
+  let(:ht_wo_ec) { build(:ht_item, ocns: c.ocns, bib_fmt: "mpm", enum_chron: "", n_enum: "") }
   let(:h_w_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "1", n_enum: "1") }
-  let(:h_wo_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "1", n_enum: "") }
+  let(:h_wo_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "", n_enum: "") }
   let(:h_wrong_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "2", n_enum: "2") }
   let(:h_lm) do
     build(:holding,
@@ -34,29 +34,38 @@ RSpec.describe MultiPartOverlap do
   end
 
   describe "#matching_holdings" do
-    it "finds holdings that match on enum chron" do
+    it "finds holdings that match on enum" do
       cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
-    it "finds holdings with no enum chron" do
+    it "finds holdings with no enum" do
       cluster = ClusterHolding.new(h_wo_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_wo_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
-    it "does not find holdings with enum when ht item has no enum chron" do
-      ht_w_ec.update_attributes(n_enum_chron: "")
+    it "does not find holdings with enum when ht item has no enum" do
+      ht_w_ec.update_attributes(n_enum: "")
       cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(0)
     end
 
-    it "does not find holdings with the wrong enum chron" do
+    it "chron is ignored for matching purposes" do
+      ht_w_ec.update_attributes(n_chron: "Aug")
+      ht_w_ec.update_attributes(n_enum_chron: "\tAug")
+      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
+      expect(h_w_ec.n_enum_chron).not_to eq(ht_w_ec.n_enum_chron)
+      expect(overlap.matching_holdings.count).to eq(1)
+    end
+
+    it "does not find holdings with the wrong enum" do
       cluster = ClusterHolding.new(h_wrong_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_wrong_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
