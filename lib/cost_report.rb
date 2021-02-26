@@ -123,7 +123,7 @@ class CostReport
   end
 
   def extra_per_member
-    total_ic_costs(:hathitrust) / (Services.ht_members.members.keys - ['hathitrust']).count
+    total_ic_costs(:hathitrust) / (Services.ht_members.members.keys - ["hathitrust"]).count
   end
 
   def total_cost_for_member(member)
