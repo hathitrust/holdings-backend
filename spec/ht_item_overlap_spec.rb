@@ -65,8 +65,8 @@ RSpec.describe HtItemOverlap do
                    billing_entity: "ucr")
       ClusterHtItem.new(mpm2).cluster.tap(&:save)
       c.reload
-      overlap = described_class.new(c.ht_items.where(n_enum_chron: "2\t").first)
-      expect(overlap.ht_item.n_enum_chron).to eq("2\t")
+      overlap = described_class.new(c.ht_items.where(n_enum: "2").first)
+      expect(overlap.ht_item.n_enum).to eq("2")
       expect(overlap.organizations_with_holdings).not_to include("umich")
     end
 
@@ -78,13 +78,26 @@ RSpec.describe HtItemOverlap do
       expect(overlap.organizations_with_holdings.count).to eq(4)
     end
 
-    it "matches if holding enum_chron is ''" do
+    it "matches if holding enum is ''" do
       empty_holding = build(:holding,
                             ocn: c.ocns.first,
                             organization: "upenn",
                             enum_chron: "",
                             n_enum: "")
       ClusterHolding.new(empty_holding).cluster.tap(&:save)
+      c.reload
+      overlap = described_class.new(c.ht_items.first)
+      expect(overlap.organizations_with_holdings).to include("upenn")
+    end
+
+    it "matches if holding enum is '', but chron exists" do
+      almost_empty_holding = build(:holding,
+                                   ocn: c.ocns.first,
+                                   organization: "upenn",
+                                   enum_chron: "Aug",
+                                   n_enum: "",
+                                   n_chron: "Aug")
+      ClusterHolding.new(almost_empty_holding).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.first)
       expect(overlap.organizations_with_holdings).to include("upenn")

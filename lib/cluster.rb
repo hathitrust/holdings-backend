@@ -73,28 +73,28 @@ class Cluster
                                   ht_items.pluck(:billing_entity)).uniq
   end
 
-  def item_enum_chrons
-    @item_enum_chrons ||= ht_items.pluck(:n_enum_chron).uniq
+  def item_enums
+    @item_enums ||= ht_items.pluck(:n_enum).uniq
   end
 
-  # Maps enumchrons to list of orgs that have a holding with that enumchron
-  def holding_enum_chron_orgs
-    @holding_enum_chron_orgs ||= holdings.group_by(&:n_enum_chron)
+  # Maps enums to list of orgs that have a holding with that enum
+  def holding_enum_orgs
+    @holding_enum_chron_orgs ||= holdings.group_by(&:n_enum)
       .transform_values {|holdings| holdings.map(&:organization) }
       .tap {|h| h.default = [] }
     @holding_enum_chron_orgs
   end
 
-  def org_enum_chrons
-    @org_enum_chrons ||= holdings.group_by(&:organization)
-      .transform_values {|holdings| holdings.map(&:n_enum_chron) }
+  def org_enums
+    @org_enums ||= holdings.group_by(&:organization)
+      .transform_values {|holdings| holdings.map(&:n_enum) }
       .tap {|h| h.default = [] }
   end
 
   # Orgs that don't have "" enum chron or an enum chron found in the items
   def organizations_with_holdings_but_no_matches
-    org_enum_chrons.reject do |_org, enums|
-      enums.include?(" ") || (enums & item_enum_chrons).any?
+    org_enums.reject do |_org, enums|
+      enums.include?(" ") || (enums & item_enums).any?
     end.keys
   end
 

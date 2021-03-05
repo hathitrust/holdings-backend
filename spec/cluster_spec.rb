@@ -94,24 +94,24 @@ RSpec.describe Cluster do
       end
     end
 
-    describe "#item_enum_chrons" do
-      it "collects all item enum_chrons in the cluster" do
+    describe "#item_enums" do
+      it "collects all item enums in the cluster" do
         c = described_class.first
-        expect(c.item_enum_chrons).to eq(["3\t"])
+        expect(c.item_enums).to eq(["3"])
       end
     end
 
-    describe "#holding_enum_chron_orgs" do
-      it "maps enumchrons to member holdings" do
+    describe "#holding_enum_orgs" do
+      it "maps enums to member holdings" do
         c = described_class.first
-        expect(c.holding_enum_chron_orgs[h1.n_enum_chron]).to eq([h1.organization])
+        expect(c.holding_enum_orgs[h1.n_enum]).to eq([h1.organization])
       end
     end
 
-    describe "#org_enum_chrons" do
-      it "maps orgs to their enum_chrons" do
+    describe "#org_enums" do
+      it "maps orgs to their enums" do
         c = described_class.first
-        expect(c.org_enum_chrons[h1.organization]).to eq([h1.n_enum_chron, h2.n_enum_chron])
+        expect(c.org_enums[h1.organization]).to eq([h1.n_enum, h2.n_enum])
       end
     end
 
