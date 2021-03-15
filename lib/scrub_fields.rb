@@ -237,14 +237,14 @@ class ScrubFields
     # Get the name of the calling method
     cmeth = caller_locations[0].label
     count_x("#{cmeth}:#{str}")
+
     output
   end
 
   # Directly throws :rejected_value
   def reject_value(reason, val)
-    @logger.warn [reason, val].join(":")
     count_x("rejected: #{reason}")
-    throw :rejected_value
+    raise ColValError, [reason, val].join(":")
   end
 
   # May indirectly throw :rejected_value

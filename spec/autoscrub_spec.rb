@@ -4,8 +4,8 @@ require "autoscrub"
 RSpec.describe Autoscrub do
   let(:member_id) { "haverford" }
   let(:autoscrub) { described_class.new(member_id) }
-  let(:data_dir) { __dir__ + "../testdata" }
-
+  let(:data_dir) { __dir__ + "/../testdata" }
+  
   describe "member_id handling" do
     it "recognizes an existing member" do
       expect(autoscrub.valid_member_id?(member_id)).to be(true)
@@ -27,20 +27,30 @@ RSpec.describe Autoscrub do
 
   describe "input file name" do
     it "accepts a valid filename" do
-      ["haverford_mono_full_20200101_headerless.tsv",
-       "haverford_mono_full_20200101_headerless.tsv.gz",
-       "haverford_mono_full_20200101.tsv"].each do |good_fn|
-         expect(autoscrub.valid_filename?(good_fn)).to be(true)
-       end
+      expect(
+        autoscrub.valid_filename?(
+          "#{data_dir}/haverford_mono_full_20200101_headerless.tsv"
+        )
+      ).to be(true)
+      expect(
+        autoscrub.valid_filename?(
+          "#{data_dir}/haverford_mono_full_20200101_headerless.tsv.gz"
+        )
+      ).to be(true)
+      expect(
+        autoscrub.valid_filename?(
+          "#{data_dir}/haverford_mono_full_20200101.tsv"
+        )
+      ).to be(true)
     end
 
     it "rejects an invalid filename" do
-      ["1234rford_mono_full_55556677.tsv",
-       "haverford_yolo_full_55556677.tsv",
-       "haverford_mono_half_55556677.tsv",
-       "haverford_mono_full_July4-1776.tsv",
-       "haverford_mono_full_55556677.txt",
-       "bc_mono_full_55556677.#{(["la"]*10).join(".")}.tsv.gz"].each do |bad_fn|
+      ["#{data_dir}/1234rford_mono_full_55556677.tsv",
+       "#{data_dir}/haverford_yolo_full_55556677.tsv",
+       "#{data_dir}/haverford_mono_half_55556677.tsv",
+       "#{data_dir}/haverford_mono_full_July4-1776.tsv",
+       "#{data_dir}/haverford_mono_full_55556677.txt",
+       "#{data_dir}/bc_mono_full_55556677.#{(["la"]*10).join(".")}.tsv.gz"].each do |bad_fn|
          expect(autoscrub.valid_filename?(bad_fn)).to be(false)
        end
     end
@@ -319,7 +329,7 @@ RSpec.describe Autoscrub do
   it "allows well formed files" do
     expect(
       autoscrub.well_formed_file?(
-        "haverford_mono_full_20200101_header.tsv"
+        "#{data_dir}/haverford_mono_full_20200101_header.tsv"
     )
 ).to be(true)
   end
@@ -327,8 +337,8 @@ RSpec.describe Autoscrub do
   # Now testing that all the parts fit together.
   it "rejects files that are not well formed" do
     [
-      "haverford_mono_full_20200101_headerless.tsv",
-      "haverford_mono_full_20200101_notab.tsv",
+      "#{data_dir}/haverford_mono_full_20200101_headerless.tsv",
+      "#{data_dir}/haverford_mono_full_20200101_notab.tsv",
       "/dev/null"
     ].each do |fn|
       expect(autoscrub.well_formed_file?(fn)).to be(false)
@@ -348,7 +358,7 @@ RSpec.describe Autoscrub do
   end
 
   it "does not process holdings when member id does not match member id of file" do
-    cornell_file = "cornell_mono_full_20200324_head100.tsv"
+    cornell_file = "#{data_dir}/cornell_mono_full_20200324_head100.tsv"
     expect(
       described_class.new("someone_else", cornell_file).scrub_files
     ).to eq(cornell_file => false)
@@ -358,11 +368,10 @@ RSpec.describe Autoscrub do
     # TODO: clean up to remove relative paths;
     # consider putting some stuff in a temporary directory for testing e.g. w/ tmpdir
 
-    let(:testfile_id) { "cornell_mono_full_20200324_head100" }
-    let(:fixtures_path) { File.dirname(__FILE__) + "/../testdata" }
-    let(:session_log) { "#{fixtures_path}/session_cornell_#{today}.log.txt" }
-    let(:holdings_log) { "#{fixtures_path}/#{testfile_id}_#{today}.log.txt" }
-    let(:holdings_file) { "#{fixtures_path}/#{testfile_id}.tsv" }
+    let(:testfile_id) { "#{data_dir}/cornell_mono_full_20200324_head100" }
+    let(:session_log) { "#{data_dir}/session_cornell_#{today}.log.txt" }
+    let(:holdings_log) { "#{testfile_id}_#{today}.log.txt" }
+    let(:holdings_file) { "#{testfile_id}.tsv" }
     let(:today) { Time.now.strftime("%Y%m%d") }
 
     def scrub_testdata

@@ -7,21 +7,9 @@ require "services"
 require "json"
 require "securerandom"
 require_relative "scrub_fields"
-
-class FileNameError < StandardError
-end
-
-class WellFormedFileError < StandardError
-end
-
-class WellFormedHeaderError < StandardError
-end
-
-class MemberIdError < StandardError
-end
-
-class ColValError < StandardError
-end
+require "member_holding"
+require "member_holding_file"
+require "custom_errors"
 
 #
 # "Scrubs", as in validates and extracts, member-submitted holdings files.
@@ -36,8 +24,7 @@ end
 #
 class Autoscrub
   # Todo: read these dir paths from config/env?
-  DATA_DIR = "#{__dir__}/../data/new"
-  LOG_DIR  = "#{__dir__}/../testdata"
+  LOG_DIR  = "#{__dir__}/../log/autoscrub"
 
   SPEC_REGEXP = {
     # A single regex for file name pass/fail.
@@ -143,7 +130,7 @@ class Autoscrub
   def scrub_file(f)
     # TODO: extract a single-file scrubber to a separate class
     unless valid_filename?(File.basename(f))
-      raise FileNameError.new "Invalid file name"
+      raise "Invalid file name"
     end
 
     @out_file = get_out_file(f)
@@ -204,8 +191,11 @@ class Autoscrub
   # Check that a filename conforms to spec.
   def valid_filename?(filename)
     # If it matches, perfect, we don't need to analyze or report.
+    log("Check filename #{filename}")
+
     if filename.start_with?(@member_id) &&
-        SPEC_REGEXP[:FILENAME].match?(filename)
+       SPEC_REGEXP[:FILENAME].match?(filename)
+      log("Filename #{filename} OK!")
       return true
     end
 
@@ -227,7 +217,7 @@ class Autoscrub
       "rest\t\"#{rest.join(" ")}\"\t#{analyze_rest(rest)}"
     ].join("\n"))
 
-    false
+    return false
   end
 
   def analyze_member_id(str)
@@ -300,12 +290,12 @@ class Autoscrub
     "not ok, must end in .tsv or .tsv.gz"
   end
 
-  # Opens a new outfile in DATA_DIR with a name based on the infile
+  # Opens a new outfile with a name based on the infile
   def get_out_file(filename)
     out_filename = filename.gsub(/^.+\//, "").gsub(/\.gz$/, "")
     out_filename.concat(".out.ndj")
-    slog("Opening output file #{DATA_DIR}/#{out_filename}")
-    File.open("#{DATA_DIR}/#{out_filename}", "w")
+    slog("Opening output file #{out_filename}")
+    File.open("out_filename", "w")
   end
 
   # Opens a new logfile in LOG_DIR with a name based on the infile
@@ -315,27 +305,6 @@ class Autoscrub
     log_filename.concat("_#{today}.log.txt")
     slog("Opening log file #{LOG_DIR}/#{log_filename}")
     File.open("#{LOG_DIR}/#{log_filename}", "w")
-  end
-
-  # Opens a text file (optionally zipped) and yields one chomped
-  # line at a time (together with line number)
-  # That's right, chomp not strip, since we care about empty cols too.
-  def read_file(filename)
-    line_no = 0
-
-    # Any filename or relative path will be relative to DATA_DIR
-    # but absolute paths are absolute.
-    file_path = "#{DATA_DIR}/#{filename}"
-    if filename.include?("/")
-      file_path = filename
-    end
-
-    (filename.end_with?(".gz") ? Zlib::GzipReader : File)
-      .open(file_path).each_line do |line|
-        line_no += 1
-        line.chomp!
-        yield line, line_no
-      end
   end
 
   # Given filename, determine mono|multi|serial.
@@ -352,40 +321,15 @@ class Autoscrub
 
   # Check that a file has a header line, consistent number
   # of cols, lines that are not too long.
-  def well_formed_file?(filename)
-    # mono|multi|serial
-    item_type = get_item_type(filename)
-    # Stores which col is where, based on header line.
-    col_map = {}
+  def well_formed_file?(file_path)
+    holding_file = MemberHoldingFile.new(file_path)
 
-    read_file(filename) do |line, line_no|
-      cols = line.split("\t")
-      # Header line:
-      # Get col_map if valid
-      # use col map in checking the rest of the lines
-      if line_no == 1
-        unless well_formed_header?(cols, item_type)
-          log("File rejected: header not OK.")
-          return false
-        end
-        # header was ok, set col_map
-        log("Header OK.")
-        col_map = get_col_map(cols, item_type)
-      else
-        # All other lines:
-        unless well_formed_line?(cols, item_type, col_map)
-          log("Malformed line.")
-          return false
-        end
-      end
+    holding_file.each_holding do |holding|
+      output(holding.to_json) unless holding.nil?
     end
+    
+    holding_file.error_count.zero?
 
-    if col_map.empty?
-      log("File rejected: header empty.")
-      return false
-    end
-
-    true
   end
 
   # Check that a given line conforms with the header
@@ -393,7 +337,7 @@ class Autoscrub
   # Reject lines with no good OCN.
   # arg item_type not used and could/should be removed
   def well_formed_line?(cols, item_type, col_map)
-    line_hash = {}
+    holding = MemberHolding.new
 
     if cols.size != col_map.keys.size
       log("Wrong number of cols (expected #{col_map.keys.size}, got #{cols.size})")
@@ -406,38 +350,13 @@ class Autoscrub
         log("No usable OCNs in #{cols[i]} reject line [#{cols.join("\t")}]")
         return false
       end
-      line_hash[col_type] = validated_val
+      holding.public_send("#{col_type}=",validated_val)
     end
 
-    line_hash["organization"] = @member_id
-    line_hash["date_received"] = Time.new.strftime("%Y-%m-%d")
-    line_hash["uuid"] = SecureRandom.uuid
-    line_hash["mono_multi_serial"] = item_type
-    output(line_hash.to_json)
+    holding.organization = @member_id
+    holding.mono_multi_serial = item_type
+    output(holding.to_json)
     true
-  end
-
-  # Based on col type, pass on to the right method
-  # to check if col val makes sense
-  def check_col_val(col_type, col_val)
-    case col_type
-    when "oclc"
-      @scrubfields.ocn(col_val)
-    when "local_id"
-      @scrubfields.local_id(col_val)
-    when "status"
-      @scrubfields.status(col_val)
-    when "condition"
-      @scrubfields.condition(col_val)
-    when "govdoc"
-      @scrubfields.govdoc(col_val)
-    when "enumchron"
-      @scrubfields.enumchron(col_val)
-    when "issn"
-      @scrubfields.issn(col_val)
-    else
-      raise ColValError, "check_col_val cannot handle column type #{col_type} (#{col_val})"
-    end
   end
 
   # Check that the header line is present,
