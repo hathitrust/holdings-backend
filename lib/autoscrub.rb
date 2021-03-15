@@ -7,6 +7,8 @@ require "services"
 require "json"
 require "securerandom"
 require_relative "scrub_fields"
+require "member_holding"
+require "member_holding_file"
 
 class FileNameError < StandardError
 end
@@ -353,39 +355,49 @@ class Autoscrub
   # Check that a file has a header line, consistent number
   # of cols, lines that are not too long.
   def well_formed_file?(filename)
-    # mono|multi|serial
-    item_type = get_item_type(filename)
-    # Stores which col is where, based on header line.
-    col_map = {}
+    filepath = filename.start_with?('/') ? filename : File.join(DATA_DIR,filename)
 
-    read_file(filename) do |line, line_no|
-      cols = line.split("\t")
-      # Header line:
-      # Get col_map if valid
-      # use col map in checking the rest of the lines
-      if line_no == 1
-        unless well_formed_header?(cols, item_type)
-          log("File rejected: header not OK.")
-          return false
-        end
-        # header was ok, set col_map
-        log("Header OK.")
-        col_map = get_col_map(cols, item_type)
-      else
-        # All other lines:
-        unless well_formed_line?(cols, item_type, col_map)
-          log("Malformed line.")
-          return false
-        end
-      end
+    holding_file = MemberHoldingFile.new(filepath)
+
+    holding_file.each_holding do |holding|
+      output(holding.to_json) unless holding.nil?
     end
 
-    if col_map.empty?
-      log("File rejected: header empty.")
-      return false
-    end
-
-    true
+    !holding_file.error_count.zero?
+#
+#    # mono|multi|serial
+#    item_type = get_item_type(filename)
+#    # Stores which col is where, based on header line.
+#    col_map = {}
+#
+#    read_file(filename) do |line, line_no|
+#      cols = line.split("\t")
+#      # Header line:
+#      # Get col_map if valid
+#      # use col map in checking the rest of the lines
+#      if line_no == 1
+#        unless well_formed_header?(cols, item_type)
+#          log("File rejected: header not OK.")
+#          return false
+#        end
+#        # header was ok, set col_map
+#        log("Header OK.")
+#        col_map = get_col_map(cols, item_type)
+#      else
+#        # All other lines:
+#        unless well_formed_line?(cols, item_type, col_map)
+#          log("Malformed line.")
+#          return false
+#        end
+#      end
+#    end
+#
+#    if col_map.empty?
+#      log("File rejected: header empty.")
+#      return false
+#    end
+#
+#    true
   end
 
   # Check that a given line conforms with the header
@@ -393,7 +405,7 @@ class Autoscrub
   # Reject lines with no good OCN.
   # arg item_type not used and could/should be removed
   def well_formed_line?(cols, item_type, col_map)
-    line_hash = {}
+    holding = MemberHolding.new
 
     if cols.size != col_map.keys.size
       log("Wrong number of cols (expected #{col_map.keys.size}, got #{cols.size})")
@@ -406,14 +418,12 @@ class Autoscrub
         log("No usable OCNs in #{cols[i]} reject line [#{cols.join("\t")}]")
         return false
       end
-      line_hash[col_type] = validated_val
+      holding.public_send("#{col_type}=",validated_val)
     end
 
-    line_hash["organization"] = @member_id
-    line_hash["date_received"] = Time.new.strftime("%Y-%m-%d")
-    line_hash["uuid"] = SecureRandom.uuid
-    line_hash["mono_multi_serial"] = item_type
-    output(line_hash.to_json)
+    holding.organization = @member_id
+    holding.mono_multi_serial = item_type
+    output(holding.to_json)
     true
   end
 
