@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
+
 require "zlib"
+require "services"
+require "json"
+require "securerandom"
 require_relative "scrub_fields"
 
 class FileNameError < StandardError
@@ -31,7 +36,7 @@ end
 #
 class Autoscrub
   # Todo: read these dir paths from config/env?
-  DATA_DIR = "#{__dir__}/../testdata"
+  DATA_DIR = "#{__dir__}/../data/new"
   LOG_DIR  = "#{__dir__}/../testdata"
 
   SPEC_REGEXP = {
@@ -103,22 +108,24 @@ class Autoscrub
 
   # DRY code for output, log, slog
   # Writes to handle if you can, otherwise to stdout
-  def p_file_or_stderr(handle, str)
+  def p_file_or_stderr(handle, str, clean=false)
     time        = Time.new.strftime("%Y-%m-%d %H:%M:%S")
     caller_loc  = caller_locations[1]
     caller_meth = caller_loc.label
     log_prefix  = "#{time} | .#{caller_meth} |"
 
+    msg = clean ? str : "#{log_prefix} #{str}"
+    
     if handle.nil?
-      Services.logger.info "#{log_prefix} #{str}"
+      Services.logger.info msg
     else
-      handle.puts("#{log_prefix} #{str}")
+      handle.puts msg
     end
   end
 
   # Writes string to @out_file, if defined, else to STDOUT.
   def output(str)
-    p_file_or_stderr(@out_file, str)
+    p_file_or_stderr(@out_file, str, true)
   end
 
   # Writes string to @log_file, if defined, else to STDERR.
@@ -135,7 +142,9 @@ class Autoscrub
 
   def scrub_file(f)
     # TODO: extract a single-file scrubber to a separate class
-    raise FileNameError unless valid_filename?(File.basename(f))
+    unless valid_filename?(File.basename(f))
+      raise FileNameError.new "Invalid file name"
+    end
 
     @out_file = get_out_file(f)
     @log_file = get_log_file(f)
@@ -364,11 +373,17 @@ class Autoscrub
         col_map = get_col_map(cols, item_type)
       else
         # All other lines:
-        return false unless well_formed_line?(cols, item_type, col_map)
+        unless well_formed_line?(cols, item_type, col_map)
+          log("Malformed line.")
+          return false
+        end
       end
     end
 
-    return false if col_map.empty?
+    if col_map.empty?
+      log("File rejected: header empty.")
+      return false
+    end
 
     true
   end
@@ -377,7 +392,7 @@ class Autoscrub
   # and that the values are OK given the column.
   # Reject lines with no good OCN.
   # arg item_type not used and could/should be removed
-  def well_formed_line?(cols, _item_type, col_map)
+  def well_formed_line?(cols, item_type, col_map)
     line_hash = {}
 
     if cols.size != col_map.keys.size
@@ -394,7 +409,11 @@ class Autoscrub
       line_hash[col_type] = validated_val
     end
 
-    output(line_hash)
+    line_hash["organization"] = @member_id
+    line_hash["date_received"] = Time.new.strftime("%Y-%m-%d")
+    line_hash["uuid"] = SecureRandom.uuid
+    line_hash["mono_multi_serial"] = item_type
+    output(line_hash.to_json)
     true
   end
 
@@ -494,6 +513,7 @@ class Autoscrub
 end
 
 if $PROGRAM_NAME == __FILE__
+  # Call thus: Autoscrub.new(member_id, *LIST_OF_FILE_PATHS)
   member_id = ARGV.shift
   as = Autoscrub.new(member_id, *ARGV)
   as.scrub_files
