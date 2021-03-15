@@ -4,6 +4,7 @@ require "mongoid"
 require "ht_members"
 require "services"
 require "enum_chron"
+require "json"
 
 # A member holding
 class Holding
@@ -69,6 +70,10 @@ class Holding
     new(rec)
   end
 
+  def self.new_from_scrubbed_file_line(line)
+    rec = JSON.parse(line)
+  end
+  
   # Is false when any field other than date_received or uuid is not the same
   #
   # @param other, another holding
