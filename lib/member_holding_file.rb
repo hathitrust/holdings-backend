@@ -54,6 +54,9 @@ class MemberHoldingFile
     @filename = File.basename(path)
     @error_count = 0
 
+    @item_type = get_item_type_from_filename()
+    @member_id = get_member_id_from_filename()
+    
     # get a file
     # check filename for member_id, item_type etc.
     # parse header & set up the column map
@@ -65,9 +68,6 @@ class MemberHoldingFile
   end
   
   def parse
-    @item_type = get_item_type_from_filename()
-    @member_id = get_member_id_from_filename()
-
     unless valid_filename?
       raise FileNameError, "Invalid filename #{@filename}"
     end

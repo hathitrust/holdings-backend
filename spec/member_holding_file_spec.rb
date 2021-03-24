@@ -74,8 +74,16 @@ RSpec.describe MemberHoldingFile do
     ).to eq([])
   end
   
-  it "can read a file" do
-    expect{ok_header_mhf.parse}.not_to raise_error
+  it "can read a file and yield MemberHolding records" do
+    expect{ok_header_mhf.parse {|record|} }.not_to raise_error
+
+    expect{
+      ok_header_mhf.parse do |record|
+        unless record.is_a?(MemberHolding)
+          raise "yielded something else"
+        end
+      end
+    }.not_to raise_error
   end
 
   it "cannot read a bad file" do
