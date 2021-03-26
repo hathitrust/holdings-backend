@@ -11,9 +11,7 @@ module ConcordanceValidation
   # Hash maps of raw to resolved and resolved to raw.
   # Associated validation methods.
   class Concordance
-    attr_accessor :raw_to_resolved
-    attr_accessor :resolved_to_raw
-    attr_accessor :infile
+    attr_accessor :raw_to_resolved, :resolved_to_raw, :infile
 
     def initialize(infile)
       @infile = infile
@@ -43,7 +41,7 @@ module ConcordanceValidation
     def detect_cycles(out_edges, in_edges)
       # build a list of start nodes, nodes without an incoming edge
       start_nodes = []
-      out_edges.keys.each do |o|
+      out_edges.each_key do |o|
         start_nodes << o unless in_edges.key? o
       end
 
@@ -73,15 +71,11 @@ module ConcordanceValidation
       ocns_checked = []
       while ocns_to_check.any?
         ocn = ocns_to_check.pop
-        if @raw_to_resolved[ocn].any?
-          out_edges[ocn] = @raw_to_resolved[ocn].clone
-        end
+        out_edges[ocn] = @raw_to_resolved[ocn].clone if @raw_to_resolved[ocn].any?
         @raw_to_resolved[ocn].each do |to_ocn|
           ocns_to_check << to_ocn unless ocns_checked.include? to_ocn
         end
-        if @resolved_to_raw[ocn].any?
-          in_edges[ocn] = @resolved_to_raw[ocn].clone
-        end
+        in_edges[ocn] = @resolved_to_raw[ocn].clone if @resolved_to_raw[ocn].any?
         @resolved_to_raw[ocn].each do |from_ocn|
           ocns_to_check << from_ocn unless ocns_checked.include? from_ocn
         end
@@ -104,14 +98,10 @@ module ConcordanceValidation
       resolved = @raw_to_resolved[ocn].clone
       loop do
         # only one ocn and it is a terminal
-        if (resolved.count == 1) && terminal_ocn?(resolved.first)
-          return resolved.first
-        end
+        return resolved.first if (resolved.count == 1) && terminal_ocn?(resolved.first)
 
         # multiple ocns, but they are all terminal
-        if resolved.all? { |o| terminal_ocn? o }
-          raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(', ')}"
-        end
+        raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(', ')}" if resolved.all? { |o| terminal_ocn? o }
 
         # find more ocns in the chain
         resolved.each do |o|
@@ -132,9 +122,7 @@ module ConcordanceValidation
     def self.numbers_tab_numbers(infile)
       grepper = infile.match?(/\.gz$/) ? 'zgrep' : 'grep'
       line_count = `#{grepper} -cvP '^[0-9]+\t[0-9]+$' #{infile}`
-      unless line_count.to_i.zero?
-        raise "Invalid format. #{line_count.to_i} line(s) are malformed."
-      end
+      raise "Invalid format. #{line_count.to_i} line(s) are malformed." unless line_count.to_i.zero?
     end
   end
 end
@@ -142,11 +130,11 @@ end
 if $PROGRAM_NAME == __FILE__
   fin = ARGV.shift
   fout = ARGV.shift
-  log = File.open(fout + '.log', 'w')
+  log = File.open("#{fout}.log", 'w')
   fout = File.open(fout, 'w')
 
   c = ConcordanceValidation::Concordance.new(fin)
-  c.raw_to_resolved.keys.each do |raw|
+  c.raw_to_resolved.each_key do |raw|
     next if c.raw_to_resolved[raw].count.zero?
 
     begin

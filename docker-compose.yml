@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+
+  dev:
+    build: .
+    volumes:
+      - .:/usr/src/app
+      - gem_cache:/gems
+volumes:
+  gem_cache:
+  data_db:

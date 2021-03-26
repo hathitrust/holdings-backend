@@ -20,6 +20,9 @@ function logmsg {
 
 logmsg "started";
 
+script_dir=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+cd "$script_dir" 
+
 data_dir="../data";
 
 # Assume concordance files, old and new, are given as args, full path.
