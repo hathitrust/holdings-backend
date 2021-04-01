@@ -42,6 +42,13 @@ if __FILE__ == $PROGRAM_NAME
   org = ARGV.shift
 
   cost_report = CostReport.new(org, lines: BATCH_SIZE, logger: logger)
+  puts "Target cost: #{cost_report.target_cost}"
+  puts "Num volumes: #{cost_report.num_volumes}"
+  puts "Num pd volumes: #{cost_report.num_pd_volumes}"
+  puts "Cost per volume: #{cost_report.cost_per_volume}"
+  puts "Total weight: #{cost_report.total_weight}"
+  puts "PD Cost: #{cost_report.pd_cost}"
+  puts "Num members: #{Services.ht_members.members.count}"
 
   puts to_tsv(cost_report)
   logger.info waypoint.final_line
