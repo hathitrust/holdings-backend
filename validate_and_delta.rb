@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 def post_to_holdings_channel(msg)
-  system("curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"#{msg}\"}' https://hooks.slack.com/services/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")
+  system("curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"#{msg}\"}' #{ENV['SLACK_URL']}")
 end
 
 # Check the concordance directory for new concordance files.
