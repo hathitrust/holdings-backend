@@ -9,8 +9,14 @@ class HTMember
 
   def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil)
     @inst_id = inst_id
+    raise ArgumentError, "Must have institution id" unless @inst_id
+
     @country_code = country_code
     @weight = weight
+    if @weight.nil? || (@weight < 0) || (@weight > 10)
+      raise ArgumentError, "Weight must be between 0 and 10"
+    end
+
     @oclc_sym = oclc_sym
   end
 end

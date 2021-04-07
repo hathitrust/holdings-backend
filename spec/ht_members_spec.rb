@@ -74,4 +74,17 @@ RSpec.describe HTMembers do
       expect(described_class.new.members.key?("temp")).to be false
     end
   end
+
+  describe HTMember do
+    describe "#initialize" do
+      it "raises an error if no inst_id" do
+        expect { described_class.new(inst_id: nil) }.to raise_exception("Must have institution id")
+      end
+
+      it "raises an error if no weight" do
+        expect { described_class.new(inst_id: "example", weight: nil) }.to \
+          raise_exception("Weight must be between 0 and 10")
+      end
+    end
+  end
 end
