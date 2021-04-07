@@ -35,6 +35,7 @@ RSpec.describe "CompileCostReports" do
   let(:ht_mpm2) do
     build(:ht_item,
           ocns: ht_mpm1.ocns,
+          ht_bib_key: ht_mpm1.ht_bib_key,
           enum_chron: "",
           collection_code: "PU",
           access: "deny")

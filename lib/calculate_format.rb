@@ -45,7 +45,7 @@ class CalculateFormat
 
   def cluster_has_item_with_enum_chron_and_same_ht_bib_key?(ht_item)
     @cluster.ht_items.any? do |ht|
-      ht.ht_bib_key == ht_item.ht_bib_key && !ht.enum_chron.empty?
+      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum_chron.empty?
     end
   end
 

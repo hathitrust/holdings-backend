@@ -31,7 +31,14 @@ RSpec.describe CalculateFormat do
       ht_spm.ht_bib_key = ht_mpm.ht_bib_key
       c.ht_items << ht_mpm
       c.ht_items << ht_spm
-      expect(described_class.new(c).item_format(ht_mpm)).to eq("mpm")
+      expect(described_class.new(c).item_format(ht_spm)).to eq("mpm")
+    end
+
+    it "is NOT an MPM just because another ht item in the cluster has an enum_chron" do
+      ht_spm.ht_bib_key = "not ht_mpm's bib key"
+      c.ht_items << ht_mpm
+      c.ht_items << ht_spm
+      expect(described_class.new(c).item_format(ht_spm)).to eq("spm")
     end
 
     it "is a SER if it is found in the serials file" do
