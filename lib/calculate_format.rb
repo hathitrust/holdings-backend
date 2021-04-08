@@ -17,7 +17,7 @@ class CalculateFormat
   def item_format(ht_item)
     if matching_serial?(ht_item) || @cluster.large?
       "ser"
-    elsif cluster_has_item_with_enum_chron_and_same_ht_bib_key? ht_item
+    elsif cluster_has_item_with_enum_and_same_ht_bib_key? ht_item
       "mpm"
     else
       "spm"
@@ -43,9 +43,9 @@ class CalculateFormat
     @cluster.ht_items.any? {|ht| item_format(ht) == format }
   end
 
-  def cluster_has_item_with_enum_chron_and_same_ht_bib_key?(ht_item)
+  def cluster_has_item_with_enum_and_same_ht_bib_key?(ht_item)
     @cluster.ht_items.any? do |ht|
-      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum_chron.empty?
+      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum.empty?
     end
   end
 
