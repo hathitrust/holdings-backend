@@ -20,21 +20,29 @@ RSpec.describe CalculateFormat do
       expect(described_class.new(c).item_format(ht_spm)).to eq("spm")
     end
 
-    it "is a MPM if it or another item has enum_chron" do
+    it "is a MPM if it or another item has enum" do
       c_mpm = ClusterHtItem.new(ht_mpm).cluster
       expect(
         described_class.new(c_mpm).item_format(ht_mpm)
       ).to eq("mpm")
     end
 
-    it "is a MPM if another ht item on this record has enum_chron" do
+    it "is NOT an MPM if it has a chron but no enum" do
+      ht_chron = build(:ht_item, enum_chron: "1994")
+      c_chron = ClusterHtItem.new(ht_chron).cluster
+      expect(
+        described_class.new(c_chron).item_format(ht_chron)
+      ).to eq("spm")
+    end
+
+    it "is a MPM if another ht item on this record has enum" do
       ht_spm.ht_bib_key = ht_mpm.ht_bib_key
       c.ht_items << ht_mpm
       c.ht_items << ht_spm
       expect(described_class.new(c).item_format(ht_spm)).to eq("mpm")
     end
 
-    it "is NOT an MPM just because another ht item in the cluster has an enum_chron" do
+    it "is NOT an MPM just because another ht item in the cluster has an enum" do
       ht_spm.ht_bib_key = "not ht_mpm's bib key"
       c.ht_items << ht_mpm
       c.ht_items << ht_spm

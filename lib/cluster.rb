@@ -79,10 +79,10 @@ class Cluster
 
   # Maps enums to list of orgs that have a holding with that enum
   def holding_enum_orgs
-    @holding_enum_chron_orgs ||= holdings.group_by(&:n_enum)
+    @holding_enum_orgs ||= holdings.group_by(&:n_enum)
       .transform_values {|holdings| holdings.map(&:organization) }
       .tap {|h| h.default = [] }
-    @holding_enum_chron_orgs
+    @holding_enum_orgs
   end
 
   def org_enums
