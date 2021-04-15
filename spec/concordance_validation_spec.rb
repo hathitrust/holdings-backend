@@ -9,7 +9,7 @@ describe 'numbers_tab_numbers' do
       Concordance.numbers_tab_numbers(
         'spec/data/letters_tab_letters.tsv'
       )
-    end .to \
+    end.to \
       raise_error('Invalid format. 2 line(s) are malformed.')
   end
 

@@ -22,3 +22,11 @@ Code for generating a delta file based on an old and a new concordance.
 `bash comm_concordance_delta.sh <old_concordance> <new_concordance>`
 
 Output written to data/comm_diff.txt
+
+## K8s Cronjob
+`kubectl create -f cron_job.yaml`
+
+Runs `validate_and_delta.rb` daily at 2300UTC, which is presumed EOD for the parties involved.
+`validate_and_delta.rb` checks the concordance directory for new un-validated concordance files, validates them and diffs with a previous concordance.
+Posts a message to the slack channel so we know there is an update to be loaded. 
+It does NOT attempt to update the concordance as it may conflict with reporting operations. This would require more complicated orchestration of jobs.
