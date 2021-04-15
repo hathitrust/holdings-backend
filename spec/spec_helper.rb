@@ -54,6 +54,7 @@ RSpec.configure do |config|
     Services.register(:ht_members) { mock_members }
     Services.register(:ht_collections) { mock_collections }
     Services.register(:serials) { mock_serials }
+    Services.register(:hathifile_path) { nil }
     Services.register(:large_clusters) { mock_large_clusters }
 
     Services.register(:logger) do

@@ -24,3 +24,4 @@ end
 
 Services.register(:serials) { SerialsFile.new(ENV["SERIALS_FILE"]) }
 Services.register(:large_clusters) { LargeClusters.new }
+Services.register(:hathifile_path) { Pathname.new(ENV["HATHIFILE_PATH"]) }
