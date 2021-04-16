@@ -51,9 +51,11 @@ RSpec.describe HoldingsDB do
         old_env = ENV.to_h
         wipe_env
 
-        example.run
-
-        old_env.each {|k, v| ENV[k] = v }
+        begin
+          example.run
+        ensure
+          old_env.each {|k, v| ENV[k] = v }
+        end
       end
 
       it "connects with ENV connection string" do

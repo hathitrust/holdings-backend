@@ -18,6 +18,9 @@ class HoldingsDB < SimpleDelegator
 
   def initialize(connection_string = ENV["DB_CONNECTION_STRING"], **kwargs)
     @rawdb = self.class.connection(connection_string, **kwargs)
+    # Always check that we're actually connected and reconnect if necessary
+    @rawdb.extension(:connection_validator)
+    @rawdb.pool.connection_validation_timeout = -1
     super(@rawdb)
   end
 

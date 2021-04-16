@@ -9,21 +9,15 @@ RSpec.describe Hathifile do
   let(:expected_filename) { Pathname.new("/tmp/hathifiles/hathi_upd_20210401.txt.gz") }
 
   around(:each) do |example|
-    old_hathifile_path = Services.hathifile_path
     old_logger = Services.logger
-    Services.register(:hathifile_path) { Pathname.new("/tmp/hathifiles") }
-    Services.register(:logger) { logger }
-    example.run
-    Services.register(:hathifile_path) { old_hathifile_path }
-    Services.register(:logger) { old_logger }
-  end
-
-  before(:each) do
-    HoldingsFile.truncate
-  end
-
-  after(:each) do
-    HoldingsFile.truncate
+    begin
+      Services.register(:logger) { logger }
+      HoldingsFile.db.transaction(rollback: :always, auto_savepoint: true) do
+        example.run
+      end
+    ensure
+      Services.register(:logger) { old_logger }
+    end
   end
 
   it "computes the path for an update file" do

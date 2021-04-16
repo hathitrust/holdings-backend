@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "ht_collections"
-require "dotenv"
 
 RSpec.describe HTCollections do
   let(:mock_data) do
@@ -36,9 +36,12 @@ RSpec.describe HTCollections do
     # Ensure we have a clean database connection for each test
     around(:each) do |example|
       old_holdings_db = Services.holdings_db
-      Services.register(:holdings_db) { HoldingsDB.connection }
-      example.run
-      Services.register(:holdings_db) { old_holdings_db }
+      begin
+        Services.register(:holdings_db) { HoldingsDB.connection }
+        example.run
+      ensure
+        Services.register(:holdings_db) { old_holdings_db }
+      end
     end
 
     let(:ht_collections) { described_class.new }

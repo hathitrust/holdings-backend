@@ -4,12 +4,10 @@ require "spec_helper"
 require "holdings_file"
 
 RSpec.describe HoldingsFile do
-  before(:each) do
-    described_class.truncate
-  end
-
-  after(:each) do
-    described_class.truncate
+  around(:each) do |example|
+    described_class.db.transaction(rollback: :always, auto_savepoint: true) do
+      example.run
+    end
   end
 
   it "can persist data about a holdings file" do
