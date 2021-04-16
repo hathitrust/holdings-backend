@@ -84,18 +84,19 @@ class MemberHoldingFile
 
     parts = fn.split("_")
     member_id = parts.first
+
     if SPEC_RX[:MEMBER_ID].match(member_id)
       return member_id
     else
-      raise FileNameError, "Did not find a member_id in filename"
+      raise FileNameError, "Did not find a member_id in filename (#{fn})"
     end
   end
 
   def get_item_type_from_filename(fn = @filename)
-    if SPEC_RX[:ITEM_TYPE_CONTEXT].match(filename)
+    if SPEC_RX[:ITEM_TYPE_CONTEXT].match(fn)
       return Regexp.last_match(1)
     else
-      raise FileNameError, "Did not find item_type in filename"
+      raise FileNameError, "Did not find item_type in filename (#{fn})"
     end
   end
 

@@ -11,19 +11,22 @@ MemberHoldingHeaderFactory generates one of its subclasses.
 
 class MemberHoldingHeader
   attr_reader :opt_header_cols, :req_header_cols, :col_map
-  
+
   def initialize(header_line)
     @header_line = header_line
     @header_line.chomp!
     @cols = @header_line.downcase.split("\t")
+    @cols.each do |col|
+      col.gsub!(/\s+/, '')
+    end
     # Required header columns for all files
     @req_header_cols = ["oclc", "local_id"]
   end
-  
+
   def possible_cols
     @req_header_cols + @opt_header_cols
   end
-    
+
   # Check that the header line is present,
   # contains all required fields, optionally optional fields,
   # and nothing else. Returns a [] of violations for logging.
@@ -37,12 +40,13 @@ class MemberHoldingHeader
     end
 
     # Note any cols that are not required/optional and ignore
-    illegal_cols = (@cols - (@req_header_cols + @opt_header_cols))    
-    unless illegal_cols.empty?
+    illegal_cols = (@cols - (@req_header_cols + @opt_header_cols))
 
-      violations << "The following cols are not allowed:" +
+    if !illegal_cols.empty?
+
+      violations << "The following cols are not allowed for a #{self.class}:\n" +
                     illegal_cols.join(",") +
-                    ", given header_line #{@header_line}"
+                    "\n... given header_line #{@header_line}"
     end
 
     return violations
@@ -61,14 +65,14 @@ class MemberHoldingHeader
     end
 
     if col_map.empty?
-      raise WellFormedHeaderError, "Header is empty."
+      raise WellFormedHeaderError, "Found no usable column headers among #{@cols.join(' ')}"
     end
 
     violations = check_violations()
     unless violations.empty?
       puts violations.join("\n")
     end
-    
+
     return col_map
   end
 

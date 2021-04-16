@@ -72,6 +72,7 @@ class Holding
 
   def self.new_from_scrubbed_file_line(line)
     rec = JSON.parse(line)
+    new(rec)
   end
   
   # Is false when any field other than date_received or uuid is not the same

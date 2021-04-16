@@ -53,12 +53,11 @@ RSpec.describe MemberHoldingFile do
 
   it "checks a whole filename" do
     expect(ok_mhf.valid_filename?).to be(true)
-    expect(bad_mhf.valid_filename?).to be(false)
   end
 
   it "rejects a bad filename for the right reason" do
-    expect(MemberHoldingFile.new(bad_fn_1).valid_filename?).to be(false)
-    expect(MemberHoldingFile.new(bad_fn_2).valid_filename?).to be(false)
+    expect{MemberHoldingFile.new(bad_fn_1).valid_filename?}.to raise_error(FileNameError)
+    expect{MemberHoldingFile.new(bad_fn_2).valid_filename?}.to raise_error(FileNameError)
     expect(MemberHoldingFile.new(bad_fn_3).valid_filename?).to be(false)
     expect(MemberHoldingFile.new(bad_fn_4).valid_filename?).to be(false)
     expect(MemberHoldingFile.new(bad_fn_5).valid_filename?).to be(false)
