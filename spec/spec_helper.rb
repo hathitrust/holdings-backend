@@ -4,6 +4,8 @@
 # require only those files we need to run our tests.
 require "bundler/setup"
 
+ENV["MONGOID_ENV"] = "test"
+
 require "factory_bot"
 require "simplecov"
 require "mongoid"
@@ -12,10 +14,11 @@ require "fixtures/collections"
 require "fixtures/mock_serials"
 require "fixtures/large_clusters"
 require "pry"
+require "settings"
 require "services"
 SimpleCov.start
 
-Mongoid.load!("mongoid.yml", :test)
+Mongoid.load!("mongoid.yml", Settings.environment)
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"
@@ -54,7 +57,6 @@ RSpec.configure do |config|
     Services.register(:ht_members) { mock_members }
     Services.register(:ht_collections) { mock_collections }
     Services.register(:serials) { mock_serials }
-    Services.register(:hathifile_path) { nil }
     Services.register(:large_clusters) { mock_large_clusters }
 
     Services.register(:logger) do

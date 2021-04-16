@@ -11,8 +11,7 @@ require_relative "../bin/export_overlap_report"
 require "tempfile"
 
 RSpec.describe "overlap_report_import_to_mysql" do
-  let(:connection_string) { "mysql2://ht_repository:ht_repository@mariadb/ht_repository" }
-  let(:connection) { HoldingsDB.new(connection_string) }
+  let(:connection) { HoldingsDB.new }
   let(:load_script) { Pathname.new(__dir__).parent + "bin" + "load_overlap_report_to_database.rb" }
 
   def tempfilepath

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster_overlap"
 
 RSpec.describe ClusterOverlap do

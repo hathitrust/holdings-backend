@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "cluster"
 require "cluster_ht_item"
 require "large_clusters"
 require "large_cluster_error"
-require "spec_helper"
 
 RSpec.describe LargeClusters do
   let(:mock_data) { [1_759_445, 8_878_489].to_set }
@@ -21,9 +21,8 @@ RSpec.describe LargeClusters do
   end
 
   describe "#load_large_clusters" do
-    it "pulls the list of ocns from the ENV file" do
-      ENV["LARGE_CLUSTER_OCNS"] = "/tmp/large_cluster_ocns.txt"
-      `echo "1001117803" > /tmp/large_cluster_ocns.txt`
+    it "pulls the list of ocns from the configured file" do
+      `echo "1001117803" > #{Settings.large_cluster_ocns}`
       large_clusters = described_class.new
       expect(large_clusters.ocns).to include(1_001_117_803)
     end

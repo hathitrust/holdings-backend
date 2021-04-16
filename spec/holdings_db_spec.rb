@@ -16,70 +16,57 @@ RSpec.describe HoldingsDB do
                                host: host)
   end
 
-  let(:env_mapping) do
-    { "DB_USER"     => user,
-      "DB_PASSWORD" => password,
-      "DB_HOST"     => host,
-      "DB_DATABASE" => database,
-      "DB_ADAPTER"  => "mysql2" }
-  end
-
-  def wipe_env
-    env_mapping.each_key {|x| ENV.delete(x) }
-    ENV.delete("DB_CONNECTION_STRING")
-  end
-
-  def set_env
-    env_mapping.each_pair do |k, v|
-      ENV[k] = v
-    end
+  let(:opts) do
+    { user:     user,
+      password: password,
+      host:     host,
+      database: database,
+      adapter:  "mysql2" }
   end
 
   describe "Connecting" do
-    it "connects with connection string" do
-      c = described_class.connection(connection_string)
+    it "connects with url" do
+      c = described_class.connection(url: connection_string)
       expect(c.tables).to include(:ht_billing_members)
     end
 
-    it "connects with piecemeal keyword args" do
-      c = described_class.connection(user: user, password: password, database: database, host: host)
+    it "connects with opts" do
+      c = described_class.connection(opts: opts)
       expect(c.tables).to include(:ht_billing_members)
     end
 
-    context "with clean environment" do
+    context "with clean settings" do
       around :each do |example|
-        old_env = ENV.to_h
-        wipe_env
+        old_db_setting = Settings.database
+        Settings.database = nil
 
         begin
           example.run
         ensure
-          old_env.each {|k, v| ENV[k] = v }
+          Settings.database = old_db_setting
         end
       end
 
-      it "connects with ENV connection string" do
-        ENV["DB_CONNECTION_STRING"] = connection_string
-        c                           = described_class.connection
-        expect(c.tables).to include(:ht_billing_members)
-      end
-
-      it "connects with ENV settings" do
-        set_env
+      it "connects with url" do
+        Settings.database = { url: connection_string }
         c = described_class.connection
         expect(c.tables).to include(:ht_billing_members)
       end
 
-      it "fails as expected with bad env" do
-        set_env
-        ENV["DB_USER"] = "NO_SUCH_USER"
+      it "connects with keyword options" do
+        Settings.database = { opts: opts }
+        c = described_class.connection
+        expect(c.tables).to include(:ht_billing_members)
+      end
+
+      it "fails as expected with bad user" do
+        Settings.database = { opts: opts.merge(user: "NO_SUCH_USER") }
         expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
       end
 
-      it "allows override of ENV" do
-        set_env
-        ENV["DB_USER"] = "NO_SUCH_USER"
-        c = described_class.connection(user: user)
+      it "provided opts override settings" do
+        Settings.database = { opts: opts.merge(user: "NO_SUCH_USER") }
+        c = described_class.connection(opts: opts)
         expect(c.tables).to include(:ht_billing_members)
       end
     end
@@ -87,7 +74,7 @@ RSpec.describe HoldingsDB do
 
   describe "Data is loaded" do
     it "finds all the institutions" do
-      c = described_class.connection(user: user, password: password, database: database, host: host)
+      c = described_class.connection
       expect(c[:ht_billing_members].count).to equal(197)
     end
   end

@@ -1,3 +1,4 @@
+require "spec_helper"
 require "autoscrub"
 
 RSpec.describe Autoscrub do

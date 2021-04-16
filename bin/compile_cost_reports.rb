@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
+require "services"
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
@@ -11,7 +10,7 @@ require "utils/ppnum"
 require "cost_report"
 require "ht_item_overlap"
 
-Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"])
+Services.mongo!
 
 def to_tsv(report)
   tsv = []

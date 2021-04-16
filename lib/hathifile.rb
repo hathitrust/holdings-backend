@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "services"
+require "settings"
 require "holdings_file"
 
 # Responsible for locating and loading a single Hathifile, a file containing
@@ -45,7 +47,7 @@ class Hathifile
   end
 
   def filename_for(date)
-    Services.hathifile_path + "hathi_upd_#{date.strftime("%Y%m%d")}.txt.gz"
+    Pathname.new(Settings.hathifile_path) + "hathi_upd_#{date.strftime("%Y%m%d")}.txt.gz"
   end
 
 end

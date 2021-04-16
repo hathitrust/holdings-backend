@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "serial_overlap"
 
 RSpec.describe SerialOverlap do

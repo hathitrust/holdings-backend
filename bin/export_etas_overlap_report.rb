@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
+require "services"
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
@@ -12,7 +11,7 @@ require "zinzout"
 require "cluster_overlap"
 require "etas_overlap"
 
-Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"])
+Services.mongo!
 
 def open_report(org, date, path)
   File.open("#{path}/#{org}_#{date}.tsv", "w")
@@ -20,7 +19,7 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   date_of_report = Time.now.strftime("%Y-%m-%d")
-  report_path = ENV["path_to_etas_overlap_reports"]
+  report_path = Settings.etas_overlap_reports_path
   Dir.mkdir(report_path) unless File.exist?(report_path)
   reports = {}
 
