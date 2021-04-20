@@ -5,7 +5,7 @@ require "file_mutex"
 require "fileutils"
 
 RSpec.describe FileMutex do
-  let(:path) { "/tmp/holdings_file_mutex" }
+  let(:path) { "/tmp/file_mutex" }
   let(:mutex) { described_class.new(path) }
 
   before(:each) { FileUtils.rm_f(path) }

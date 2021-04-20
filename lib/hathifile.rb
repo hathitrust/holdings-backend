@@ -2,7 +2,7 @@
 
 require "services"
 require "settings"
-require "holdings_file"
+require "loaded_file"
 
 # Responsible for locating and loading a single Hathifile, a file containing
 # HtItems represented as tab-separated values.
@@ -43,7 +43,7 @@ class Hathifile
   attr_reader :logger
 
   def mark_loaded
-    HoldingsFile.from_object(self).save
+    LoadedFile.from_object(self).save
   end
 
   def filename_for(date)

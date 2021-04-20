@@ -13,7 +13,7 @@
 class HathifileManager
 
   def initialize(hathifile_factory: ->(date) { Hathifile.new(date) },
-    last_loaded: HoldingsFile.latest(type: "hathifile").produced,
+    last_loaded: LoadedFile.latest(type: "hathifile").produced,
     loading_flag: Services.loading_flag)
     @hathifile_factory = hathifile_factory
     @loading_flag = loading_flag

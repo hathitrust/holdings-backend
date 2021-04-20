@@ -12,7 +12,7 @@ RSpec.describe Hathifile do
     old_logger = Services.logger
     begin
       Services.register(:logger) { logger }
-      HoldingsFile.db.transaction(rollback: :always, auto_savepoint: true) do
+      LoadedFile.db.transaction(rollback: :always, auto_savepoint: true) do
         example.run
       end
     ensure
@@ -46,7 +46,7 @@ RSpec.describe Hathifile do
 
       it "records the item in the database" do
         hathifile.load(loader: fake_loader)
-        expect(HoldingsFile.first.filename).to eq(expected_filename.to_s)
+        expect(LoadedFile.first.filename).to eq(expected_filename.to_s)
       end
 
       it "returns truthy" do
@@ -73,7 +73,7 @@ RSpec.describe Hathifile do
 
       it "does not record the item in the database" do
         hathifile.load(loader: fake_loader)
-        expect(HoldingsFile.count).to eq(0)
+        expect(LoadedFile.count).to eq(0)
       end
 
       it "returns falsey" do
