@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "services"
+
 =begin
 
 Context: This class is responsible for knowing the internals
@@ -65,12 +67,13 @@ class MemberHoldingHeader
     end
 
     if col_map.empty?
-      raise WellFormedHeaderError, "Found no usable column headers among #{@cols.join(' ')}"
+      raise WellFormedHeaderError,
+            "Found no usable column headers among #{@cols.join(' ')}"
     end
 
     violations = check_violations()
     unless violations.empty?
-      puts violations.join("\n")
+      Services.scrub_logger.warn(violations.join("\n"))
     end
 
     return col_map

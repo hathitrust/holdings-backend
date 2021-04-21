@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
+require "services"
 require "member_holding_file"
 require "scrub_output_structure"
-require "logger"
-require "services"
+require "utils/waypoint"
 
 =begin Usage:
 
@@ -16,40 +16,61 @@ Autoscrub.new(file_path)
 Commandline:
 bundle exec ruby lib/autoscrub.rb <file_path_1...n>
 
-Location of output and log files determined by ScrubOutputStructure. 
+Location of output and log files determined by ScrubOutputStructure.
 
 =end
 
 class AutoScrub
   def initialize(path)
     @path = path
-
+        
     @member_holding_file = MemberHoldingFile.new(@path)
-    @member_id           = @member_holding_file.member_id    
+    @member_id           = @member_holding_file.member_id
     @output_struct       = ScrubOutputStructure.new(@member_id)
     @item_type           = @member_holding_file.get_item_type_from_filename()
     @output_dir          = @output_struct.date_subdir!("output")
     @log_dir             = @output_struct.date_subdir!("log")
 
-    logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}.log")
+    # Once we have @member_id and @item_type,
+    # build a log path and re-register the service logger to log to that path
+    logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}.log")    
+    Services.register(:scrub_logger) {
+      lgr = Logger.new(logger_path)
+      # Show time, file:lineno, level for each log message
+      lgr.formatter    = proc do |severity, datetime, progname, msg|
+        fileLine       = caller(2)[4].split(':')[0,2].join(':')
+        "#{datetime.to_s[0,19]} | #{fileLine} | #{severity} | #{msg}\n"
+      end
+      lgr
+    }
+    
+    Services.scrub_logger.info("INIT")
     Services.logger.info("Logging to #{logger_path}")
-    @logger = Logger.new(logger_path)
   end
 
   def run
-    @logger.info("Started scrubbing #{@path}")
+    Services.scrub_logger.info("Started scrubbing #{@path}")
     begin
+      tot_lines  = `wc -l #{@path}`.match(/^(\d+)/)[0].to_i
+      batch_size = tot_lines < 100 ? 100 : tot_lines / 100
+      waypoint   = Utils::Waypoint.new(batch_size)
+
       out_file_path = File.join(@output_dir, "#{@member_id}_#{@item_type}.ndj")
       out_file      = File.open(out_file_path, "w")
-      @logger.info("Outputting to #{out_file_path}")
+      Services.scrub_logger.info("Outputting to #{out_file_path}")
       @member_holding_file.parse do |holding|
-        out_file.puts(holding.to_json)
+        out_file.puts(holding.to_json)                  
+        waypoint.incr
+        waypoint.on_batch do |wp|
+          Services.scrub_logger.info(wp.batch_line)
+        end
       end
       out_file.close()
     rescue StandardError => err
-      @logger.error(err)
+      Services.scrub_logger.error(err)
+      exit 1
     end
-    @logger.info("Finished scrubbing #{@path}")
+    Services.scrub_logger.info("Finished scrubbing #{@path}")
   end
 
 end

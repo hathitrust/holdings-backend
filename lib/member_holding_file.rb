@@ -5,6 +5,7 @@ require 'services'
 require "member_holding_header_factory"
 require "custom_errors"
 require "member_holding"
+require "scrub_fields"
 
 =begin
 
@@ -56,7 +57,7 @@ class MemberHoldingFile
 
     @item_type = get_item_type_from_filename()
     @member_id = get_member_id_from_filename()
-    
+
     # get a file
     # check filename for member_id, item_type etc.
     # parse header & set up the column map
@@ -64,17 +65,26 @@ class MemberHoldingFile
   end
 
   def log(str)
-    Services.logger.info(str)
+    Services.scrub_logger.info(str)
   end
-  
+
   def parse
     unless valid_filename?
       raise FileNameError, "Invalid filename #{@filename}"
     end
 
+    scrub_stats = Services.scrub_stats
+
     each_holding do |holding|
       yield holding
-    end    
+    end
+
+    log("Scrub stats:")
+    scrub_stats.keys.sort.each do |ssk|
+      log("#{ssk}\t#{scrub_stats[ssk]}")
+    end
+
+    scrub_stats = {}
   end
 
   def get_member_id_from_filename(fn = @filename)
@@ -86,6 +96,7 @@ class MemberHoldingFile
     member_id = parts.first
 
     if SPEC_RX[:MEMBER_ID].match(member_id)
+      log("OK member_id #{member_id} in filename #{@filename}")
       return member_id
     else
       raise FileNameError, "Did not find a member_id in filename (#{fn})"
@@ -94,7 +105,9 @@ class MemberHoldingFile
 
   def get_item_type_from_filename(fn = @filename)
     if SPEC_RX[:ITEM_TYPE_CONTEXT].match(fn)
-      return Regexp.last_match(1)
+      item_type = Regexp.last_match(1)
+      log("OK item_type (#{item_type}) from filename (#{@filename})")
+      return item_type
     else
       raise FileNameError, "Did not find item_type in filename (#{fn})"
     end
@@ -114,17 +127,19 @@ class MemberHoldingFile
     (f_member_id, f_item_type, f_update_type, f_date_str, *f_rest) =
       @filename.split(SPEC_RX[:FILENAME_PART_DELIM])
 
-    log([
-      "Processing of #{@filename} failed due to filename errors.",
-      "Filename must match the template:",
-      "<member_id>_<item_type>_<update_type>_<date_str>_<rest>",
-      "Filename was analyzed as:",
-      "member_id\t\"#{f_member_id}\"\t#{analyze_member_id(f_member_id)}",
-      "item_type\t\"#{f_item_type}\"\t#{analyze_item_type(f_item_type)}",
-      "update_type\t\"#{f_update_type}\"\t#{analyze_update_type(f_update_type)}",
-      "date_str\t\"#{f_date_str}\"\t#{analyze_date_str(f_date_str)}",
-      "rest\t\"#{f_rest.join(" ")}\"\t#{analyze_rest(f_rest)}"
-    ].join("\n"))
+    log(
+      [
+        "Processing of #{@filename} failed due to filename errors.",
+        "Filename must match the template:",
+        "<member_id>_<item_type>_<update_type>_<date_str>_<rest>",
+        "Filename was analyzed as:",
+        "member_id\t\"#{f_member_id}\"\t#{analyze_member_id(f_member_id)}",
+        "item_type\t\"#{f_item_type}\"\t#{analyze_item_type(f_item_type)}",
+        "update_type\t\"#{f_update_type}\"\t#{analyze_update_type(f_update_type)}",
+        "date_str\t\"#{f_date_str}\"\t#{analyze_date_str(f_date_str)}",
+        "rest\t\"#{f_rest.join(" ")}\"\t#{analyze_rest(f_rest)}"
+      ].join("\n")
+    )
 
     return false
   end
@@ -176,7 +191,7 @@ class MemberHoldingFile
       return "ok"
     end
 
-    "not ok, must end in .tsv or .tsv.gz"
+    return "not ok, must end in .tsv or .tsv.gz"
   end
 
   def each_holding
@@ -192,9 +207,8 @@ class MemberHoldingFile
 
     holding = MemberHolding.new(col_map)
     holding.parse_str(line)
-    holding.organization = @member_id
+    holding.organization      = @member_id
     holding.mono_multi_serial = @item_type
-
     return holding
   end
 

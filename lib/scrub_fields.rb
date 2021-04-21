@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "enum_chron_parser"
+require "services"
+require "enum_chron_parser"
 
 #
 # This class knows how to extract and validate certain values
@@ -62,26 +63,9 @@ class ScrubFields
 
   attr_accessor :logger
 
-  def initialize(logger = Services.logger)
-    # Store counts of events here using count_x(event)
-    # and when you're done you can log stats_to_str()
-    @stats  = {}
-    @logger = logger
-  end
-
-  def stats_to_str
-    @stats.keys.map do |k|
-      [k, @stats[k]].join(":")
-    end.join("\n")
-  end
-
-  def clear_stats
-    @stats = {}
-  end
-
   def count_x(x)
-    @stats[x] ||= 0
-    @stats[x]  += 1
+    Services.scrub_stats[x] ||= 0
+    Services.scrub_stats[x]  += 1
   end
 
   # Given a string, determines which valid ocns are in it,
@@ -96,7 +80,11 @@ class ScrubFields
 
     if candidates.size > MAX_NUM_ITEMS
       count_x(:too_many_ocns)
-      @logger.error "Too many items (#{candidates.size}) in ocn #{str}"
+      Services.scrub_logger.error "Too many items (#{candidates.size}) in ocn #{str}"
+    end
+
+    if candidates.size > 1
+      count_x(:multi_ocn_record)
     end
 
     # DO WHILE MAYBE COMEFROM reject_value
@@ -160,12 +148,12 @@ class ScrubFields
     candidates = str.split(LOCAL_ID_SPLIT_DELIM)
 
     if candidates.size > 1
-      @logger.warn "there are #{candidates.size} candidates in this local_id"
-      # maybe throw something??
+      Services.scrub_logger.warn "there are #{candidates.size} candidates in this local_id"
+      # TODO: maybe throw something??
     end
 
     if candidates.size > MAX_NUM_ITEMS
-      @logger.error "in fact lots of items #{candidates.size} in local_id #{str}"
+      Services.scrub_logger.error "in fact lots of items #{candidates.size} in local_id #{str}"
       # maybe definitely throw something??
     end
 
@@ -173,8 +161,11 @@ class ScrubFields
       catch(:rejected_value) do
         candidate.size > LOCAL_ID_MAX_LEN &&
           reject_value(
-            format("local_id too long (%i > max %i)", candidate.size,
-                   LOCAL_ID_MAX_LEN),
+            format(
+              "local_id too long (%i > max %i)",
+              candidate.size,
+              LOCAL_ID_MAX_LEN
+            ),
             candidate
           )
         output << candidate
@@ -229,13 +220,18 @@ class ScrubFields
 
   # DRY code for the status, condition and govdoc functions
   def simple_matcher(rx, str)
-    output = []
-    str.strip!
-    m = rx.match(str)
-    output << m[0] unless m.nil?
-
     # Get the name of the calling method
-    cmeth = caller_locations[0].label
+    cmeth  = caller_locations[0].label
+    output = []
+    str    = str.strip
+    match  = rx.match(str)
+
+    if match.nil?
+      Services.scrub_logger.warn "bad #{cmeth} value: #{str}"
+    else
+      output << match[0]
+    end
+
     count_x("#{cmeth}:#{str}")
 
     output

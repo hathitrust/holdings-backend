@@ -3,7 +3,7 @@
 require 'securerandom'
 require 'json'
 require 'services'
-require_relative "scrub_fields"
+require "scrub_fields"
 require "custom_errors"
 
 class MemberHolding
@@ -21,7 +21,7 @@ class MemberHolding
   end
 
   def log(str)
-    Services.logger.info(str)
+    Services.scrub_logger.info(str)
   end
 
   # Takes a line from a member holding file
@@ -76,13 +76,8 @@ class MemberHolding
             "cannot handle column type #{col_type} (value: #{col_val})"
     end
   end
-
   
   def to_json
-    # TODO: input uses 'ocn', not 'oclc'; 
-    #       gov_doc_flag, not 'govdoc';
-    #       enum_chron, not enumchron
-
     {
       ocn:               @ocn,
       local_id:          @local_id,
@@ -100,10 +95,4 @@ class MemberHolding
     }.to_json
   end
 
-  # accept a incoming line
-  # produce scrubbed JSON
-
-  # parse scrubbed JSON to Holding??
-
-  # extracting individual fields as objects with validation methods?
 end
