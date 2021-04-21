@@ -88,6 +88,7 @@ class ScrubOutputStructure
         "member_dir"    => member_dir.path,
         "member_log"    => member_log.path,
         "member_output" => member_output.to_path,
+        "latest_output" => latest("output").to_path,
       }
     )
   end
