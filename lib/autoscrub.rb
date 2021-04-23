@@ -54,9 +54,13 @@ class AutoScrub
       tot_lines  = `wc -l #{@path}`.match(/^(\d+)/)[0].to_i
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       waypoint   = Utils::Waypoint.new(batch_size)
+      datetime   = Time.new.strftime("%F-%T")
 
-      out_file_path = File.join(@output_dir, "#{@member_id}_#{@item_type}.ndj")
-      out_file      = File.open(out_file_path, "w")
+      out_file_path = File.join(
+        @output_dir,
+        "#{@member_id}_#{@item_type}_#{datetime}.ndj"
+      )
+      out_file = File.open(out_file_path, "w")
       Services.scrub_logger.info("Outputting to #{out_file_path}")
       @member_holding_file.parse do |holding|
         out_file.puts(holding.to_json)                  
