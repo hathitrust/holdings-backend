@@ -3,10 +3,10 @@ production:
     default:
       database: holdings
       hosts:
-        - "<%= ENV['MONGODB_HOST'] %>"
+        - "<%= Settings.mongodb.host %>"
       options:
         user: holdings
-        password: "<%= ENV['MONGODB_PASSWORD'] %>"
+        password: "<%= Settings.mongodb.password %>"
         auth_source: admin
   options:
     raise_not_found_error: false

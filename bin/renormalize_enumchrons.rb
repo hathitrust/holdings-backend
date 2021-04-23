@@ -1,16 +1,14 @@
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
+require "services"
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "utils/waypoint"
 require "utils/ppnum"
 require "cluster"
-require "services"
 
-Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"])
+Services.mongo!
 
 def renormalize(item)
   item.normalize_enum_chron

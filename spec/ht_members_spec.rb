@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "ht_members"
-require "dotenv"
 
 RSpec.describe HTMembers do
   let(:mock_data) do
@@ -54,8 +54,11 @@ RSpec.describe HTMembers do
     around(:each) do |example|
       old_holdings_db = Services.holdings_db
       Services.register(:holdings_db) { HoldingsDB.connection }
-      example.run
-      Services.register(:holdings_db) { old_holdings_db }
+      begin
+        example.run
+      ensure
+        Services.register(:holdings_db) { old_holdings_db }
+      end
     end
 
     it "can fetch data from the database" do

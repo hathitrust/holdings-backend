@@ -16,8 +16,11 @@ class HoldingsDB < SimpleDelegator
   attr_reader :rawdb
   attr_accessor :connection_string
 
-  def initialize(connection_string = ENV["DB_CONNECTION_STRING"], **kwargs)
-    @rawdb = self.class.connection(connection_string, **kwargs)
+  def initialize
+    @rawdb = self.class.connection
+    # Always check that we're actually connected and reconnect if necessary
+    @rawdb.extension(:connection_validator)
+    @rawdb.pool.connection_validation_timeout = -1
     super(@rawdb)
   end
 
@@ -71,42 +74,14 @@ class HoldingsDB < SimpleDelegator
                 FIELDS TERMINATED BY '\t' ESCAPED BY ''")
   end
 
-  # #connection will take
-  #  * a full connection string (passed here OR in the environment
-  #    variable MYSQL_CONNECTION_STRING)
-  #  * a set of named arguments, drawn from those passed in and the
-  #    environment. Arguments are those supported by Sequel.
-  #
-  # Environment variables are mapped as follows:
-  #
-  #   user: DB_USER
-  #   password: DB_PASSWORD
-  #   host: DB_HOST
-  #   port: DB_PORT
-  #   database: DB_DATABASE
-  #   adapter: DB_ADAPTER
-  #
-  # Easiest is to pass in a full connection string, but you can set useful defaults
-  # in the environment and then pass in only what you want to change (e.g., get a
-  # different database by just doing `HoldingDB.connect(database: 'otherDB')`)
-  #
-  # @example
-  # # Accept all from env
-  # DB = HoldingsDB.connect
-  # # Full connection string
-  # DB = HoldingsDB.connect('mysql2://username:password@host:3435/myDatabase')
-  # DB = HoldingsDB.connect(user: 'otheruser', password: 'herPassword') # change user
-  def self.connection(connection_string = ENV["DB_CONNECTION_STRING"],
-    **kwargs)
+  # Connection connects to the database using the connection information
+  # specified by Settings.database, which should contain keyword parameters
+  # matching those taken by Sequel.connect.
+  def self.connection(config = {})
+    conn_opts = conn_opts(merge_config(config))
+
     begin
-      if !connection_string.nil?
-        Sequel.connect(connection_string)
-      else
-        db_args = gather_db_args(kwargs).merge(
-          config_local_infile: true
-        )
-        Sequel.connect(**db_args)
-      end
+      Sequel.connect(*conn_opts)
     rescue Sequel::DatabaseConnectionError => e
       Services.logger.error "Error trying to connect"
       raise e
@@ -114,18 +89,29 @@ class HoldingsDB < SimpleDelegator
   end
 
   class << self
+
     private
 
-    def gather_db_args(args)
-      [:user, :password, :host,
-       :port, :database, :adapter].each do |db_arg|
-         args[db_arg] ||= ENV["DB_#{db_arg.to_s.upcase}"]
-       end
+    def conn_opts(config)
+      local_infile = { config_local_infile: 1 }
+      url = config[:url]
+      opts = config[:opts]
+      if url
+        [url, local_infile]
+      elsif opts
+        [local_infile.merge(opts)]
+      else
+        []
+      end
+    end
 
-      args[:host] ||= "localhost"
-      args[:adapter] ||= :mysql2
+    # Merge url, opts, or db settings from a hash into our config
+    def merge_config(config)
+      merged_config = Settings.database.to_hash
+      merged_config[:url]  = config[:url]  if config.key?(:url)
+      merged_config[:opts] = config[:opts] if config.key?(:opts)
 
-      args
+      merged_config
     end
   end
 

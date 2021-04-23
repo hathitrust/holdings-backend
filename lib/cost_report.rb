@@ -8,7 +8,7 @@ require "services"
 class CostReport
   attr_accessor :organization, :logger, :maxlines, :target_cost
 
-  def initialize(org = nil, cost: ENV["target_cost"], lines: 1_000_000, logger: Services.logger)
+  def initialize(org = nil, cost: Settings.target_cost, lines: 1_000_000, logger: Services.logger)
     @organization = org
     @target_cost = Float(cost)
     @maxlines = lines

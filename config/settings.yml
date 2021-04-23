@@ -1,0 +1,11 @@
+serials_file: <%= ENV["SERIALS_FILE"] %>
+hathifile_path: <%= ENV["HATHIFILE_PATH"] %>
+large_cluster_ocns: <%= ENV["LARGE_CLUSTER_OCNS"] %>
+database:
+  url: <%= ENV["DB_CONNECTION_STRING"] %>
+mongodb:
+  host: <%= ENV["MONGODB_HOST"] %>
+  password: <%= ENV["MONGODB_PASSWORD"] %>
+target_cost: <%= ENV["TARGET_COST"] %>
+etas_overlap_reports_path: <%= ENV["ETAS_OVERLAP_REPORTS_PATH"] %>
+

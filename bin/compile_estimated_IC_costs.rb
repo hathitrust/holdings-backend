@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
+require "services"
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
@@ -12,7 +11,7 @@ require "zinzout"
 require "ht_item_overlap"
 require "cost_report"
 
-Mongoid.load!("mongoid.yml", ENV["MONGOID_ENV"] || :development)
+Services.mongo!
 
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000

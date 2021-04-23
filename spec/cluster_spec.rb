@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-
 require "cluster"
+
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
