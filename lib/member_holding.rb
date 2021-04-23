@@ -28,7 +28,7 @@ class MemberHolding
   # and populates a MemberHolding-object
   def parse_str(str)
     if str.nil? || str.class != String || str.empty?
-      raise ColValError, "bad str"
+      raise ColValError, "bad str (class #{str.class}): #{str}"
     end
     cols = str.split("\t")
     if cols.size != @col_map.keys.size

@@ -17,6 +17,9 @@ class MemberHoldingHeader
   def initialize(header_line)
     @header_line = header_line
     @header_line.chomp!
+    
+    log("Getting header information from: #{header_line}")
+
     @cols = @header_line.downcase.split("\t")
     @cols.each do |col|
       col.gsub!(/\s+/, '')
@@ -25,6 +28,10 @@ class MemberHoldingHeader
     @req_header_cols = ["oclc", "local_id"]
   end
 
+  def log(str)
+    Services.scrub_logger.info(str)
+  end
+  
   def possible_cols
     @req_header_cols + @opt_header_cols
   end
@@ -45,10 +52,14 @@ class MemberHoldingHeader
     illegal_cols = (@cols - (@req_header_cols + @opt_header_cols))
 
     if !illegal_cols.empty?
-
-      violations << "The following cols are not allowed for a #{self.class}:\n" +
-                    illegal_cols.join(",") +
-                    "\n... given header_line #{@header_line}"
+      allowed_cols = (@req_header_cols + @opt_header_cols).join(', ')
+      violations << [
+        "The following cols are not allowed for a #{self.class}:",
+        illegal_cols.join(","),
+        "... given header_line:",
+        @header_line,
+        "Allowed cols are: #{allowed_cols}"
+      ].join("\n")
     end
 
     return violations

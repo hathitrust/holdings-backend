@@ -2,6 +2,7 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "services"
+require "custom_errors"
 require "member_holding_file"
 require "scrub_output_structure"
 require "utils/waypoint"
@@ -21,6 +22,10 @@ Location of output and log files determined by ScrubOutputStructure.
 =end
 
 class AutoScrub
+
+  # Won't put in accessors unless we find a solid case for running this
+  # by another ruby class.
+
   def initialize(path)
     @path = path
         
@@ -38,7 +43,7 @@ class AutoScrub
       lgr = Logger.new(logger_path)
       # Show time, file:lineno, level for each log message
       lgr.formatter    = proc do |severity, datetime, progname, msg|
-        fileLine       = caller(2)[4].split(':')[0,2].join(':')
+        fileLine       = caller(0)[4].split(':')[0,2].join(':')
         "#{datetime.to_s[0,19]} | #{fileLine} | #{severity} | #{msg}\n"
       end
       lgr
@@ -70,8 +75,13 @@ class AutoScrub
         end
       end
       out_file.close()
+    rescue CustomError => err
+      Services.scrub_logger.warn(err)
     rescue StandardError => err
-      Services.scrub_logger.error(err)
+      # Any uncaught error that isn't a CustomError should be fatal
+      # and is a sign that error handling needs to be improved.
+      Services.scrub_logger.fatal(err)
+      Services.scrub_logger.info("Premature exit, exit status 1.")
       exit 1
     end
     Services.scrub_logger.info("Finished scrubbing #{@path}")
