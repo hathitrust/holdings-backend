@@ -8,7 +8,7 @@ ENV["MONGOID_ENV"] = "test"
 
 require "factory_bot"
 require "simplecov"
-require "mongoid"
+require "webmock/rspec"
 require "fixtures/members"
 require "fixtures/collections"
 require "fixtures/mock_serials"
