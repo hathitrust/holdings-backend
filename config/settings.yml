@@ -1,8 +1,8 @@
 serials_file: <%= ENV["SERIALS_FILE"] %>
 hathifile_path: <%= ENV["HATHIFILE_PATH"] %>
-large_cluster_ocns: <%= ENV["LARGE_CLUSTER_OCNS"] %>
+large_cluster_ocns: /usr/src/app/config/large_cluster_ocns.txt
 database:
-  url: <%= ENV["DB_CONNECTION_STRING"] %>
+  url: <%= ENV["MYSQL_CONNECTION_STRING"] %>
 mongodb:
   host: <%= ENV["MONGODB_HOST"] %>
   password: <%= ENV["MONGODB_PASSWORD"] %>
