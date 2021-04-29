@@ -29,9 +29,10 @@ RSpec.describe Overlap do
   describe "#to_hash" do
     it "returns a mostly empty hash" do
       overlap_hash = described_class.new(c, h.organization, ht).to_hash
-      expect(overlap_hash).to eq(cluster_id: c._id.to_s,
+      expect(overlap_hash).to eq(lock_id: c._id.to_s, cluster_id: c._id.to_s,
           volume_id: ht.item_id,
           member_id: h.organization,
+          n_enum: "",
           copy_count: "",
           brt_count: "",
           wd_count: "",
@@ -44,6 +45,34 @@ RSpec.describe Overlap do
     it "finds all matching holdings for an org" do
       overlap = described_class.new(c, "umich", ht)
       expect(overlap.matching_holdings.pluck(:organization)).to eq(["umich", "umich"])
+    end
+  end
+
+  describe "#lock_id" do
+    let(:cluster) { build(:cluster, _id: "a_cluster_id") }
+    let(:ht_item) { build(:ht_item, ocns: cluster.ocns) }
+
+    it "computes a lock id for an SPM" do
+      overlap = described_class.new(cluster, "an_org", ht_item)
+      expect(cluster.format).to eq("spm")
+      expect(overlap.lock_id).to eq("a_cluster_id")
+    end
+
+    it "computes a lock id for an MPM" do
+      ht_item.n_enum = "V.1"
+      cluster = ClusterHtItem.new(ht_item).cluster
+      overlap = described_class.new(cluster, "an_org", ht_item)
+      expect(cluster.format).to eq("mpm")
+      expect(overlap.lock_id).to eq("#{cluster._id}:V.1")
+    end
+
+    it "computes a lock id for an SER" do
+      ht_item.n_enum = "V.1"
+      Services.serials.bibkeys.add(ht_item.ht_bib_key.to_i)
+      cluster = ClusterHtItem.new(ht_item).cluster
+      overlap = described_class.new(cluster, "an_org", ht_item)
+      expect(cluster.format).to eq("ser")
+      expect(overlap.lock_id).to eq(ht_item.item_id)
     end
   end
 end
