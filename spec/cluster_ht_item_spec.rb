@@ -150,41 +150,93 @@ RSpec.describe ClusterHtItem do
       end
     end
 
-    it "reclusters an HTItem that gains an OCN" do
-      ocnless_cluster = described_class.new(no_ocn).cluster
-      ocnless_cluster.save
-      empty_cluster.save
-      expect(Cluster.count).to eq(2)
-      updated_item = build(:ht_item, item_id: no_ocn.item_id, ocns: empty_cluster.ocns)
-      described_class.new(updated_item).cluster
-      expect(Cluster.count).to eq(1)
+    context "without concordance rules" do
+      it "reclusters an HTItem that gains an OCN" do
+        ocnless_cluster = described_class.new(no_ocn).cluster
+        ocnless_cluster.save
+        empty_cluster.save
+        expect(Cluster.count).to eq(2)
+        updated_item = build(:ht_item, item_id: no_ocn.item_id, ocns: empty_cluster.ocns)
+        described_class.new(updated_item).cluster
+        expect(Cluster.count).to eq(1)
+      end
+
+      it "reclusters when an HTItem changes an OCN" do
+        c = described_class.new(batch).cluster
+        expect(c.ht_items.count).to eq(2)
+        item2.ocns = [item2.ocns.first + 1]
+        c = described_class.new(item2).cluster
+        expect(c.ht_items.count).to eq(1)
+      end
+
+      it "reclusters when an HTItem loses it's glue" do
+        item2.ocns << 1
+        described_class.new(item).cluster
+        described_class.new(item2).cluster
+        expect(Cluster.count).to eq(1)
+        # remove the glue from item2
+        item2.ocns = [1]
+        described_class.new(item2).cluster
+        expect(Cluster.count).to eq(2)
+      end
     end
 
-    it "reclusters when an HTItem changes an OCN" do
-      c = described_class.new(batch).cluster
-      expect(c.ht_items.count).to eq(2)
-      item2.ocns = [item2.ocns.first + 1]
-      c = described_class.new(item2).cluster
-      expect(c.ht_items.count).to eq(1)
-    end
+    context "with concordance rules" do
+      it "can add an HTItem" do
+        resolution = build(:ocn_resolution)
+        htitem = build(:ht_item, ocns: [resolution.deprecated])
+        create(:cluster, ocns: resolution.ocns, ocn_resolutions: [resolution])
+        c = described_class.new(htitem).cluster
+        expect(c.valid?).to be true
+      end
 
-    it "reclusters when an HTItem loses it's glue" do
-      item2.ocns << 1
-      described_class.new(item).cluster
-      described_class.new(item2).cluster
-      expect(Cluster.count).to eq(1)
-      # remove the glue from item2
-      item2.ocns = [1]
-      described_class.new(item2).cluster
-      expect(Cluster.count).to eq(2)
-    end
+      it "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
+        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        htitem = build(:ht_item, ocns: [2, 3])
+        old_cluster = create(:cluster, ocns: [1, 2, 3],
+               ocn_resolutions: [resolution],
+               ht_items: [htitem])
 
-    it "can add an HTItem to a cluster with a concordance rule" do
-      resolution = build(:ocn_resolution)
-      htitem = build(:ht_item, ocns: [resolution.deprecated])
-      create(:cluster, ocns: resolution.ocns, ocn_resolutions: [resolution])
-      c = described_class.new(htitem).cluster
-      expect(c.valid?).to be true
+        htitem.ocns = [2]
+
+        described_class.new(htitem).cluster
+        new_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(new_cluster._id).not_to eq(old_cluster._id)
+      end
+
+      it "does not recluster if an HTItem loses an OCN that is in the concordance" do
+        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        htitem = build(:ht_item, ocns: [1, 2])
+        old_cluster = create(:cluster, ocns: [1, 2],
+               ocn_resolutions: [resolution],
+               ht_items: [htitem])
+
+        htitem.ocns = [2]
+
+        described_class.new(htitem).cluster
+        new_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(new_cluster._id).to eq(old_cluster._id)
+      end
+
+      it "does not recluster if an HTItem changes from one OCN to another in the concordance" do
+        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        htitem = build(:ht_item, ocns: [1])
+        old_cluster = create(:cluster, ocns: [1, 2],
+               ocn_resolutions: [resolution],
+               ht_items: [htitem])
+
+        htitem.ocns = [2]
+
+        described_class.new(htitem).cluster
+        new_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(new_cluster._id).to eq(old_cluster._id)
+      end
     end
   end
 
