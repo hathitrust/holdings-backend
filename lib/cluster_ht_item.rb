@@ -3,6 +3,7 @@
 require "cluster"
 require "reclusterer"
 require "cluster_getter"
+require "ht_item_cluster_getter"
 require "retryable"
 require "set"
 
@@ -22,7 +23,11 @@ class ClusterHtItem
     end
   end
 
-  def cluster(getter: ClusterGetter.new(@ocns))
+  def cluster(getter: cluster_getter)
+    # For the case where there are no OCNs, ClusterGetter always creates a new
+    # cluster. We might want to first consider searching by item ID when there
+    # are no OCNs.
+
     getter.get do |cluster|
       update_or_add_ht_items(cluster)
     end
@@ -60,13 +65,21 @@ class ClusterHtItem
 
   attr_reader :ht_items, :ocns
 
+  def cluster_getter
+    if ocns.empty?
+      HtItemClusterGetter.new(*ht_items)
+    else
+      ClusterGetter.new(ocns)
+    end
+  end
+
   def cluster_with_htitem(htitem)
     Cluster.with_ht_item(htitem).first
   end
 
   def update_or_add_ht_items(cluster)
     Services.logger.debug "Cluster #{cluster.inspect}: " \
-      "adding ht_items #{ht_items.inspect} with ocns #{@ocns}"
+      "adding ht_items #{ht_items.inspect} with ocns #{ocns}"
     to_append = []
     needs_reclustering = false
     ht_items.each do |item|
