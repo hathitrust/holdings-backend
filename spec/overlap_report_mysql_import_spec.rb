@@ -49,8 +49,8 @@ RSpec.describe "overlap_report_import_to_mysql" do
       expect(lines.size).to equal(3)
     end
 
-    it "has lines with 8 columns" do
-      expect(lines.map(&:size)).to all(be == 8)
+    it "has lines with 10 columns" do
+      expect(lines.map(&:size)).to all(be == 10)
     end
   end
 

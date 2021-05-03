@@ -18,8 +18,10 @@ Mongoid.load!("mongoid.yml", :test)
 BATCH_SIZE = 10_000
 
 def overlap_line(overlap_hash)
-  [overlap_hash[:cluster_id],
+  [overlap_hash[:lock_id],
+   overlap_hash[:cluster_id],
    overlap_hash[:volume_id],
+   overlap_hash[:n_enum],
    overlap_hash[:member_id],
    overlap_hash[:copy_count],
    overlap_hash[:brt_count],
