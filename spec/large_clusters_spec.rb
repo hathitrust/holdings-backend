@@ -32,8 +32,7 @@ RSpec.describe LargeClusters do
     # A change in the OCNs of ht_items' OCNs or ocn_resolutions can result in a recluster.
     # Reclustering a "large cluster" will result in a cluster with incomplete holdings.
     let(:ht1) { build(:ht_item, ocns: [large_clusters.ocns.first]) }
-    let(:ht2) { build(:ht_item, ocns: [large_clusters.ocns.first]) }
-    let(:ht3) { build(:ht_item, ocns: [1]) }
+    let(:ht2) { build(:ht_item, ocns: [large_clusters.ocns.first, 1]) }
 
     it "does not raise an error when performing a simple update" do
       ClusterHtItem.new(ht1).cluster
@@ -46,6 +45,8 @@ RSpec.describe LargeClusters do
       ClusterHtItem.new(ht1).cluster
       ClusterHtItem.new(ht2).cluster
       expect(Cluster.first.ht_items.count).to eq(2)
+      # ht2 previously glued large_clusters.ocns.first and 1 together, so
+      # changing to just 1 requires reclustering
       ht2.ocns = [1]
       expect do
         ClusterHtItem.new(ht2).cluster
