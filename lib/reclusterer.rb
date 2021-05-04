@@ -32,10 +32,24 @@ class Reclusterer
   private
 
   def recluster_components
-    @cluster.ocn_resolutions.each {|r| ClusterOCNResolution.new(r.dup).cluster.save }
-    @cluster.holdings.each {|h| ClusterHolding.new(h.dup).cluster.save }
-    # TODO: group and batch by OCN
-    @cluster.ht_items.each {|h| ClusterHtItem.new(h.dup).cluster.save }
+    @cluster.ocn_resolutions
+      .each {|r| ClusterOCNResolution.new(r.dup).cluster.save }
+    recluster_ht_items
+    recluster_holdings
+  end
+
+  def recluster_ht_items
+    @cluster.ht_items
+      .sort_by(&:ocns)
+      .chunk_while {|item1, item2| item1.batch_with?(item2) }
+      .each {|batch| ClusterHtItem.new(*batch.map(&:dup)).cluster.save }
+  end
+
+  def recluster_holdings
+    @cluster.holdings
+      .sort_by(&:ocn)
+      .chunk_while {|item1, item2| item1.batch_with?(item2) }
+      .each {|batch| ClusterHolding.new(*batch.map(&:dup)).cluster.save }
   end
 
 end
