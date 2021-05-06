@@ -64,8 +64,8 @@ class ScrubFields
   attr_accessor :logger
 
   def count_x(x)
-    Services.scrub_stats[x] ||= 0
-    Services.scrub_stats[x]  += 1
+    Services.scrub_stats[x.to_sym] ||= 0
+    Services.scrub_stats[x.to_sym]  += 1
   end
 
   # Given a string, determines which valid ocns are in it,
@@ -78,23 +78,27 @@ class ScrubFields
     str.strip!
     candidates = str.split(OCN_SPLIT_DELIM)
 
+    # TODO: maybe we don't care about this?
+    # I've found it to be a good indicator that the record wasn't
+    # exported properly, but there are legit cases of this I guess.
     if candidates.size > MAX_NUM_ITEMS
       count_x(:too_many_ocns)
-      Services.scrub_logger.error "Too many items (#{candidates.size}) in ocn #{str}"
+      Services.scrub_logger.warn "Too many ocns (#{candidates.size}) in ocn #{str}"
     end
 
     if candidates.size > 1
       count_x(:multi_ocn_record)
     end
 
-    # DO WHILE MAYBE COMEFROM reject_value
+    # PLEASE DO WHILE MAYBE COMEFROM reject_value
     candidates.each do |candidate|
       catch(:rejected_value) do
         numeric_part = capture_numeric(candidate)
         candidate.strip!
 
-        # Try to find a reason to reject the candidate ocn
-        # Any time reject_value triggers, go ^^ to the catch.
+        # Try to find a reason to reject the candidate ocn.
+        # Any time reject_value triggers, it throws :rejected_value
+        # and we go back up to the catch statement inside the each-loop.
         candidate.nil? &&
           reject_value("ocn is nil")
 
@@ -133,7 +137,7 @@ class ScrubFields
       end
     end
 
-    # Not resolving OCNs at this point.
+    # Not resolving OCNs at this point, just taking the uniq numbers.
     output.uniq!
     output
   end
@@ -239,7 +243,7 @@ class ScrubFields
 
   # Directly throws :rejected_value
   def reject_value(reason, val = "")
-    count_x("rejected: #{reason} (#{val})")
+    count_x("value rejected: #{reason} (#{val})")
     throw :rejected_value
   end
 

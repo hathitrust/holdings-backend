@@ -78,7 +78,8 @@ class AutoScrub
       # Any uncaught error that isn't a CustomError should be fatal
       # and is a sign that error handling needs to be improved.
       Services.scrub_logger.fatal(e)
-      Services.scrub_logger.info("Premature exit, exit status 1.")
+      Services.scrub_logger.fatal(e.backtrace.join("\n"))
+      Services.scrub_logger.fatal("Premature exit, exit status 1.")
       exit 1
     end
     Services.scrub_logger.info("Finished scrubbing #{@path}")
