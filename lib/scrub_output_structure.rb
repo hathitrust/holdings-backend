@@ -73,24 +73,28 @@ class ScrubOutputStructure
   end
 
   def latest(subdir)
-    base_dir = mkdir!(validate_subdir(subdir))
+    base_dir      = mkdir!(validate_subdir(subdir))
     latest_subdir = base_dir.children.select{ |str|
       str =~ /\d\d\d\d-\d\d-\d\d/
     }.sort.last
 
-    return Dir.new(File.join(base_dir, latest_subdir))
+    return latest_subdir.nil? ?
+             nil : Dir.new(File.join(base_dir, latest_subdir))
   end
   
   def to_json
-    JSON.generate(
-      {
-        "member_id"     => member_id,
-        "member_dir"    => member_dir.path,
-        "member_log"    => member_log.path,
-        "member_output" => member_output.to_path,
-        "latest_output" => latest("output").to_path,
-      }
-    )
+    dir_hash = {
+      "member_id"     => member_id,
+      "member_dir"    => member_dir.path,
+      "member_log"    => member_log.path,
+      "member_output" => member_output.to_path,
+    }
+
+    unless latest("output").nil?
+      dir_hash["latest_output"] = latest("output").to_path
+    end
+
+    JSON.generate(dir_hash)
   end
 
   # private private private private private private private 
