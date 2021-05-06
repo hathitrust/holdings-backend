@@ -1,47 +1,42 @@
 # frozen_string_literal: true
 
-=begin
-
-Sets up a directory structure for storing autoscrub output files:
-
-data/
-- member_data/
-- - x/
-- - - log/
-- - - output/
-
-Where log and output are generated upon init.
-They can have dated subdirs.
-
-- - - log/
-- - - - 2020-01-01/
-- - - - 2020-02-01/
-- - - output/
-- - - - 2020-01-01/
-- - - - 2020-02-01/
-
-Create dated subdirs for member x (using current date):
-
-sos = ScrubOutputStructure.new("xyz")
-
-sos.date_subdir!("output") # -> Dir
-sos.date_subdir!("log")    # -> Dir
-
-Get latest exising subdir for log or output:
-
-sos.latest("log")    # -> Dir
-sos.latest("output") # -> Dir
-
-=end
-
 require "pathname"
 require "json"
 
+# Sets up a directory structure for storing autoscrub output files:
+#
+# data/
+# - member_data/
+# - - x/
+# - - - log/
+# - - - output/
+#
+# Where log and output are generated upon init.
+# They can have dated subdirs.
+#
+# - - - log/
+# - - - - 2020-01-01/
+# - - - - 2020-02-01/
+# - - - output/
+# - - - - 2020-01-01/
+# - - - - 2020-02-01/
+#
+# Create dated subdirs for member x (using current date):
+#
+# sos = ScrubOutputStructure.new("xyz")
+#
+# sos.date_subdir!("output") # -> Dir
+# sos.date_subdir!("log")    # -> Dir
+#
+# Get latest exising subdir for log or output:
+#
+# sos.latest("log")    # -> Dir
+# sos.latest("output") # -> Dir
 class ScrubOutputStructure
+  VALID_SUBDIR   = ["log", "output"].freeze
+  VALID_DATE_STR = /^\d\d\d\d-\d\d-\d\d$/.freeze
+  DATE_STR       = /\d\d\d\d-\d\d-\d\d/.freeze
 
-  VALID_SUBDIR   = ["log", "output"]
-  VALID_DATE_STR = /^\d\d\d\d-\d\d-\d\d$/
-  
   attr_reader :member_id, :member_dir, :member_log, :member_output
 
   def initialize(member_id)
@@ -74,20 +69,21 @@ class ScrubOutputStructure
 
   def latest(subdir)
     base_dir      = mkdir!(validate_subdir(subdir))
-    latest_subdir = base_dir.children.select{ |str|
-      str =~ /\d\d\d\d-\d\d-\d\d/
-    }.sort.last
+    latest_subdir = base_dir.children.select {|str| str.match?(DATE_STR) }.max
 
-    return latest_subdir.nil? ?
-             nil : Dir.new(File.join(base_dir, latest_subdir))
+    if latest_subdir.nil?
+      return nil
+    else
+      return Dir.new(File.join(base_dir, latest_subdir))
+    end
   end
-  
+
   def to_json
     dir_hash = {
       "member_id"     => member_id,
       "member_dir"    => member_dir.path,
       "member_log"    => member_log.path,
-      "member_output" => member_output.to_path,
+      "member_output" => member_output.to_path
     }
 
     unless latest("output").nil?
@@ -97,7 +93,7 @@ class ScrubOutputStructure
     JSON.generate(dir_hash)
   end
 
-  # private private private private private private private 
+  # private private private private private private private
   private
 
   def validate_subdir(str)
@@ -110,15 +106,15 @@ class ScrubOutputStructure
 
   # Allows 2020-50-50 and isn't Y100K-proof but hey
   def validate_date_str(str)
-    if str =~ VALID_DATE_STR
+    if str.match?(VALID_DATE_STR)
       return str
     else
       raise "invalid date str: #{str}"
     end
   end
-  
+
   def mkbase!
-    mkdir!()
+    mkdir!
   end
 
   def mklog!
@@ -128,7 +124,7 @@ class ScrubOutputStructure
   def mkoutput!
     mkdir!("output")
   end
-  
+
   def mkdir!(*parts)
     path_parts = [__dir__, "..", "data", "member_data", @member_id] + parts
     pathname   = Pathname.new(File.join(path_parts)).expand_path
@@ -136,7 +132,7 @@ class ScrubOutputStructure
 
     return Dir.new(pathname)
   end
-  
+
 end
 
 if $PROGRAM_NAME == __FILE__

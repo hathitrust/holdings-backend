@@ -3,26 +3,21 @@
 require "custom_errors"
 require "member_holding_header"
 
-=begin
-
-Usage:
-
-MemberHoldingHeaderFactory.new("mono", header_str)
-  .get_instance # -> MonoHoldingHeader
-
-MemberHoldingHeaderFactory.new("multi", header_str)
-  .get_instance # -> MultiHoldingHeader
-
-MemberHoldingHeaderFactory.new("serial", header_str)
-  .get_instance # -> SerialHoldingHeader
-
-=end
-
+# Usage:
+#
+# MemberHoldingHeaderFactory.new("mono", header_str)
+#   .get_instance # -> MonoHoldingHeader
+#
+# MemberHoldingHeaderFactory.new("multi", header_str)
+#   .get_instance # -> MultiHoldingHeader
+#
+# MemberHoldingHeaderFactory.new("serial", header_str)
+#   .get_instance # -> SerialHoldingHeader
 class MemberHoldingHeaderFactory
   MON = "mono"
   MUL = "multi"
   SER = "serial"
-  
+
   def initialize(item_type, header_line)
     @item_type   = item_type
     @header_line = header_line

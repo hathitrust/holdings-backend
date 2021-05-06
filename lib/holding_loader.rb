@@ -7,11 +7,10 @@ require "cluster_holding"
 class HoldingLoader
 
   def self.get_for(filename)
-    case
-    when filename.end_with?(".tsv") then
-      HoldingLoaderTsv.new()
-    when filename.end_with?(".ndj") then
-      HoldingLoaderNdj.new()
+    if filename.end_with?(".tsv")
+      HoldingLoaderTsv.new
+    elsif filename.end_with?(".ndj")
+      HoldingLoaderNdj.new
     else
       raise "given an invalid file extension"
     end
@@ -22,7 +21,7 @@ class HoldingLoader
     @current_date = nil
   end
 
-  def item_from_line(line)
+  def item_from_line(_line)
     raise "override me"
   end
 
@@ -39,10 +38,6 @@ end
 
 ## Subclass that only overrides item_from_line
 class HoldingLoaderTsv < HoldingLoader
-  def initialize
-    super
-  end
-
   def item_from_line(line)
     Holding.new_from_holding_file_line(line).tap do |h|
       @organization ||= h.organization
@@ -53,10 +48,6 @@ end
 
 ## Subclass that only overrides item_from_line
 class HoldingLoaderNdj < HoldingLoader
-  def initialize
-    super
-  end
-
   def item_from_line(line)
     Holding.new_from_scrubbed_file_line(line).tap do |h|
       @organization ||= h.organization
@@ -64,4 +55,3 @@ class HoldingLoaderNdj < HoldingLoader
     end
   end
 end
-

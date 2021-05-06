@@ -1,25 +1,21 @@
 # frozen_string_literal: true
 
-=begin
+# A collection of custom error classes, bare.
+# Put a short usage note inside each error,
+# even if the name makes it obvious what it do.
 
-A collection of custom error classes, bare.
-Put a short usage note inside each error, 
-even if the name makes it obvious what it do.
+# Usage:
 
-Usage:
-
-require "custom_errors"
-...
-raise SuperSpecificError.new("out of cheese")
-...
-expect{fridge.empty()}.to raise_error(SuperSpecificError)
-
-=end
+# require "custom_errors"
+# ...
+# raise SuperSpecificError.new("out of cheese")
+# ...
+# expect{fridge.empty()}.to raise_error(SuperSpecificError)
 
 class CustomError < StandardError
   # Never raise this, raise a subclass
 end
-  
+
 class FileNameError < CustomError
   # When a file is named wrong
 end

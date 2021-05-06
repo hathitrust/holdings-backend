@@ -74,7 +74,7 @@ class Holding
     rec = JSON.parse(line)
     new(rec)
   end
-  
+
   # Is false when any field other than date_received or uuid is not the same
   #
   # @param other, another holding

@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
-require 'securerandom'
-require 'json'
-require 'services'
+require "securerandom"
+require "json"
+require "services"
 require "scrub_fields"
 require "custom_errors"
 
+# Represents the information in one line from a member holding file
 class MemberHolding
   attr_accessor :oclc, :local_id, :organization, :status, :condition,
-    :enumchron, :mono_multi_serial, :issn, :govdoc
+                :enumchron, :mono_multi_serial, :issn, :govdoc
 
   attr_reader :uuid, :date_received, :n_enum, :n_chron, :violations
 
@@ -30,11 +31,12 @@ class MemberHolding
     if str.nil? || str.class != String || str.empty?
       raise ColValError, "bad str (class #{str.class}): #{str}"
     end
+
     cols = str.split("\t")
     if cols.size != @col_map.keys.size
-      @violations << "Wrong number of cols " +
-                     "(expected #{@col_map.keys.size}, got #{cols.size})"
-      
+      @violations << "Wrong number of cols " \
+        "(expected #{@col_map.keys.size}, got #{cols.size})"
+
     end
 
     @col_map.each do |col_type, col_no|
@@ -47,7 +49,6 @@ class MemberHolding
 
   # started with a copy of check_col_val
   def set(col_type, col_val)
-
     if col_val.nil? || col_val.class != String
       raise ColValError,
             "col_val for col_type #{col_type} empty/nil/wrong class"
@@ -69,7 +70,7 @@ class MemberHolding
       @gov_doc_flag = @scrubfields.govdoc(col_val)
     when "enumchron"
       @enum_chron = col_val
-      normalized = @scrubfields.enumchron(col_val) 
+      normalized = @scrubfields.enumchron(col_val)
       @n_enum  = normalized[0]
       @n_chron = normalized[1]
     when "issn"
@@ -79,7 +80,7 @@ class MemberHolding
             "cannot handle column type #{col_type} (value: #{col_val})"
     end
   end
-  
+
   def to_json
     {
       ocn:               @ocn,

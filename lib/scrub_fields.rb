@@ -96,10 +96,10 @@ class ScrubFields
         # Try to find a reason to reject the candidate ocn
         # Any time reject_value triggers, go ^^ to the catch.
         candidate.nil? &&
-          reject_value("ocn is nil", "")
+          reject_value("ocn is nil")
 
         candidate.empty? &&
-          reject_value("ocn is empty", "")
+          reject_value("ocn is empty")
 
         EXPONENTIAL.match?(candidate) &&
           reject_value("ocn is in exponential format", candidate)
@@ -225,7 +225,7 @@ class ScrubFields
     output = []
     str    = str.strip
     unless str.empty?
-      match  = rx.match(str)
+      match = rx.match(str)
       if match.nil?
         Services.scrub_logger.warn "bad #{cmeth} value: \"#{str}\""
       else
@@ -238,8 +238,8 @@ class ScrubFields
   end
 
   # Directly throws :rejected_value
-  def reject_value(reason, val)
-    count_x("rejected: #{reason}")
+  def reject_value(reason, val = "")
+    count_x("rejected: #{reason} (#{val})")
     throw :rejected_value
   end
 
