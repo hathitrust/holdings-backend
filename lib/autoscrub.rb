@@ -55,18 +55,20 @@ class AutoScrub
 
   def run
     Services.scrub_logger.info("Started scrubbing #{@path}")
-    begin
-      tot_lines  = `wc -l #{@path}`.match(/^(\d+)/)[0].to_i
-      batch_size = tot_lines < 100 ? 100 : tot_lines / 100
-      waypoint   = Utils::Waypoint.new(batch_size)
-      datetime   = Time.new.strftime("%F-%T")
 
-      out_file_path = File.join(
-        @output_dir,
-        "#{@member_id}_#{@item_type}_#{datetime}.ndj"
-      )
-      out_file = File.open(out_file_path, "w")
-      Services.scrub_logger.info("Outputting to #{out_file_path}")
+    # We're committed to running on a *nix machine anyways, right?
+    tot_lines  = `wc -l #{@path}`.match(/^(\d+)/)[0].to_i
+    batch_size = tot_lines < 100 ? 100 : tot_lines / 100
+    waypoint   = Utils::Waypoint.new(batch_size)
+    datetime   = Time.new.strftime("%F-%T").gsub(":", "")
+    
+    out_file_path = File.join(
+      @output_dir,
+      "#{@member_id}_#{@item_type}_#{datetime}.ndj"
+    )
+    out_file = File.open(out_file_path, "w")
+    Services.scrub_logger.info("Outputting to #{out_file_path}")
+    begin
       @member_holding_file.parse do |holding|
         out_file.puts(holding.to_json)                  
         waypoint.incr
@@ -75,8 +77,6 @@ class AutoScrub
         end
       end
       out_file.close()
-    rescue CustomError => err
-      Services.scrub_logger.warn(err)
     rescue StandardError => err
       # Any uncaught error that isn't a CustomError should be fatal
       # and is a sign that error handling needs to be improved.
