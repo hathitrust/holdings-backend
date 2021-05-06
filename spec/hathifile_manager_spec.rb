@@ -21,7 +21,25 @@ RSpec.describe HathifileManager do
       end
     end
 
-    context "when there are new files" do
+    context "when there is one new file" do
+      let(:last_loaded) { Date.today - 1 }
+
+      it "tries to load the new file" do
+        todays_file = double(:todays)
+
+        allow(hathifile_factory).to receive(:call)
+          .with(Date.today)
+          .and_return(todays_file)
+
+        allow(loading_flag).to receive(:with_lock).and_yield
+
+        expect(todays_file).to receive(:load).and_return(true)
+
+        loader.try_load
+      end
+    end
+
+    context "when there are two new files" do
       let(:last_loaded) { Date.today - 2 }
 
       let(:yesterdays_file) { double(:yesterdays) }

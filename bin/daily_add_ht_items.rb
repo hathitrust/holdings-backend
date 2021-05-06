@@ -16,5 +16,4 @@ Services.register(:logger) do
   Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
 end
 
->>>>>>> a08cd02... Remove extraneous multi_logger
 HathifileManager.new.try_load

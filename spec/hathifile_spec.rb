@@ -5,7 +5,7 @@ require "hathifile"
 
 RSpec.describe Hathifile do
   let(:logger) { double(:logger, info: true) }
-  let(:hathifile) { described_class.new(Date.parse("2021-04-01")) }
+  let(:hathifile) { described_class.new(Date.parse("2021-04-02")) }
   let(:expected_filename) { Pathname.new("/tmp/hathifiles/hathi_upd_20210401.txt.gz") }
 
   around(:each) do |example|
@@ -72,8 +72,8 @@ RSpec.describe Hathifile do
       end
 
       it "does not record the item in the database" do
-        hathifile.load(loader: fake_loader)
-        expect(LoadedFile.count).to eq(0)
+        expect { hathifile.load(loader: fake_loader) }
+          .not_to change(LoadedFile, :count)
       end
 
       it "returns falsey" do
