@@ -224,14 +224,14 @@ class ScrubFields
     cmeth  = caller_locations[0].label
     output = []
     str    = str.strip
-    match  = rx.match(str)
-
-    if match.nil?
-      Services.scrub_logger.warn "bad #{cmeth} value: #{str}"
-    else
-      output << match[0]
+    unless str.empty?
+      match  = rx.match(str)
+      if match.nil?
+        Services.scrub_logger.warn "bad #{cmeth} value: \"#{str}\""
+      else
+        output << match[0]
+      end
     end
-
     count_x("#{cmeth}:#{str}")
 
     output
