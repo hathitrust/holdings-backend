@@ -92,7 +92,7 @@ class MemberHoldingFile
       raise FileNameError, "Empty filename"
     end
 
-    parts = fn.split("_")
+    parts     = fn.split("_")
     member_id = parts.first
 
     if SPEC_RX[:MEMBER_ID].match(member_id)
@@ -145,29 +145,26 @@ class MemberHoldingFile
   end
 
   def analyze_member_id(str)
-    err_msg = "must be all a-z+"
-    not_nil_and_match(str, SPEC_RX[:MEMBER_ID], err_msg)
+    not_nil_and_match(str, SPEC_RX[:MEMBER_ID])
   end
 
   def analyze_item_type(str)
-    err_msg = "must be mono|multi|serial"
-    not_nil_and_match(str, SPEC_RX[:ITEM_TYPE], err_msg)
+    not_nil_and_match(str, SPEC_RX[:ITEM_TYPE])
   end
 
   def analyze_update_type(str)
-    err_msg = "must be full|partial"
-    not_nil_and_match(str, SPEC_RX[:UPDATE_TYPE], err_msg)
+    not_nil_and_match(str, SPEC_RX[:UPDATE_TYPE])
   end
 
   def analyze_date_str(str)
-    err_msg = "must be 8 digits"
-    not_nil_and_match(str, SPEC_RX[:DATE], err_msg)
+    not_nil_and_match(str, SPEC_RX[:DATE])
   end
 
   # Shortcut for the analyze_x methods above.
   # Checks that str is not nil, and matches regexp
   # otherwise issues a warning.
-  def not_nil_and_match(str, regexp, warning)
+  def not_nil_and_match(str, regexp)
+    warning = "must match #{regexp}"
     if str.nil?
       "must not be empty, and #{warning}"
     elsif regexp.match?(str)
