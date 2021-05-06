@@ -193,7 +193,11 @@ class MemberHoldingFile
 
   def each_holding
     read_file do |line, line_no, col_map|
-      yield item_from_line(line, col_map)
+      begin
+        yield item_from_line(line, col_map)
+      rescue BadRecordError => bre
+        log("Rejected record #{filename}:#{line_no}, #{bre.message}")
+      end
     end
   end
 
@@ -203,7 +207,12 @@ class MemberHoldingFile
     end
 
     holding = MemberHolding.new(col_map)
-    holding.parse_str(line)
+    all_ok  = holding.parse_str(line)
+
+    unless all_ok
+      raise BadRecordError.new holding.violations.join(" // ")
+    end
+    
     holding.organization      = @member_id
     holding.mono_multi_serial = @item_type
     return holding

@@ -240,7 +240,7 @@ class ScrubFields
   # Directly throws :rejected_value
   def reject_value(reason, val)
     count_x("rejected: #{reason}")
-    raise ColValError, [reason, val].join(":")
+    throw :rejected_value
   end
 
   # May indirectly throw :rejected_value

@@ -56,6 +56,9 @@ class MemberHolding
     case col_type
     when "oclc"
       @ocn = @scrubfields.ocn(col_val)
+      if @ocn.empty?
+        @violations << "No valid OCN"
+      end
     when "local_id"
       @local_id = @scrubfields.local_id(col_val)
     when "status"

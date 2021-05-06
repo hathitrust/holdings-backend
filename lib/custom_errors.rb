@@ -43,3 +43,7 @@ end
 class ItemTypeError < CustomError
   # When an invalid item type is used
 end
+
+class BadRecordError < CustomError
+  # When there is enough wrong with a record to outright reject it
+end
