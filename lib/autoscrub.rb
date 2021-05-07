@@ -83,6 +83,10 @@ class AutoScrub
       exit 1
     end
     Services.scrub_logger.info("Finished scrubbing #{@path}")
+    FileUtils.mv(out_file_path, @output_struct.member_ready_to_load)
+    Services.scrub_logger.info(
+      "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
+    )
   end
 
 end

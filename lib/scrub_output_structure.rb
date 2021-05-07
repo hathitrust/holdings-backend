@@ -11,15 +11,18 @@ require "json"
 # - - - log/
 # - - - output/
 #
-# Where log and output are generated upon init.
+# ... where x is the member_id.
+# Subdirs (loaded, log, output, ready_to_load) are generated upon init.
 # They can have dated subdirs.
 #
+# - - - loaded/
 # - - - log/
 # - - - - 2020-01-01/
 # - - - - 2020-02-01/
 # - - - output/
 # - - - - 2020-01-01/
 # - - - - 2020-02-01/
+# - - - ready_to_load/
 #
 # Create dated subdirs for member x (using current date):
 #
@@ -33,11 +36,12 @@ require "json"
 # sos.latest("log")    # -> Dir
 # sos.latest("output") # -> Dir
 class ScrubOutputStructure
-  VALID_SUBDIR   = ["log", "output"].freeze
+  VALID_SUBDIR   = ["log", "output", "ready_to_load", "loaded"].freeze
   VALID_DATE_STR = /^\d\d\d\d-\d\d-\d\d$/.freeze
   DATE_STR       = /\d\d\d\d-\d\d-\d\d/.freeze
 
-  attr_reader :member_id, :member_dir, :member_log, :member_output
+  attr_reader :member_id, :member_dir, :member_log, :member_output,
+              :member_ready_to_load, :member_loaded
 
   def initialize(member_id)
     unless member_id.is_a?(String)
@@ -48,6 +52,8 @@ class ScrubOutputStructure
     @member_dir    = mkbase!
     @member_log    = mklog!
     @member_output = mkoutput!
+    @member_ready_to_load = mkready_to_load!
+    @member_loaded = mkloaded!
   end
 
   # A call like:
@@ -83,7 +89,9 @@ class ScrubOutputStructure
       "member_id"     => member_id,
       "member_dir"    => member_dir.path,
       "member_log"    => member_log.path,
-      "member_output" => member_output.to_path
+      "member_output" => member_output.to_path,
+      "member_ready_to_load" => member_ready_to_load.to_path,
+      "member_loaded" => member_loaded.to_path
     }
 
     unless latest("output").nil?
@@ -123,6 +131,14 @@ class ScrubOutputStructure
 
   def mkoutput!
     mkdir!("output")
+  end
+
+  def mkready_to_load!
+    mkdir!("ready_to_load")
+  end
+  
+  def mkloaded!
+    mkdir!("loaded")
   end
 
   def mkdir!(*parts)
