@@ -10,7 +10,8 @@
         ip: '10.255.10.143'
       },
       schedules: {
-        hathifiles: "0 9 * * *"
+        hathifiles: "0 9 * * *",
+        concordance: "0 23 * * * ",
       },
       runAs: {
         runAsUser: 1000,

@@ -1,7 +1,7 @@
 (import 'ksonnet-util/kausal.libsonnet') +
-(import './external_ip_service.libsonnet') +
 (import './config.libsonnet') +
 (import './holdings_container.libsonnet') +
+(import './holdings_services.libsonnet') +
 {
   local cronJob = $.batch.v1beta1.cronJob,
   local cronJobSchedule(schedule) = { spec+: { schedule: schedule } },
@@ -15,14 +15,16 @@
    + { spec+: { concurrencyPolicy: 'Forbid' } }
    + { spec+: { jobTemplate+: { spec+: { template+: { spec+: { securityContext+: config.runAs } } } } } },
 
-  holdings: {
-    mysql: $.phineas.external_ip_service.new("mysql",config.mysql.ip,config.mysql.port),
-    mysql_htdev: $.phineas.external_ip_service.new("mysql-htdev",config.mysql_dev.ip,config.mysql_dev.port),
+  holdings+: {
 
-    hathifiles_loader: holdings_cron_job('hathifiles-loader',['bundle','exec','bin/daily_add_ht_items.rb'])
-     + cronJobSchedule(config.schedules.hathifiles)
-    # holdings_loader: holdings_cron_job('holdings-loader','run-holdings-loader'),
-    # concordance_loader: holdings_cron_job('concordance-loader','run-concordance-loader'),
+    hathifiles: holdings_cron_job('hathifiles-loader',['bundle','exec','bin/daily_add_ht_items.rb'])
+     + cronJobSchedule(config.schedules.hathifiles),
+
+    #    concordance: holdings_cron_job('validate-concordance',
+    #      ['/bin/sh','-c','date; ruby validate_and_delta.rb /htprep/holdings/concordance'])
+    #     + cronJobSchedule(config.schedules.concordance)
+
+    # holdings_loader: holdings_cron_job('holdings-loader','TBD'),
 
     # TODO:
     #   - cost report job (on-demand)
