@@ -151,25 +151,7 @@ RSpec.describe ClusterHtItem do
     end
 
     context "without concordance rules" do
-      it "reclusters an HTItem that gains an OCN" do
-        ocnless_cluster = described_class.new(no_ocn).cluster
-        ocnless_cluster.save
-        empty_cluster.save
-        expect(Cluster.count).to eq(2)
-        updated_item = build(:ht_item, item_id: no_ocn.item_id, ocns: empty_cluster.ocns)
-        described_class.new(updated_item).cluster
-        expect(Cluster.count).to eq(1)
-      end
-
-      it "reclusters when an HTItem changes an OCN" do
-        c = described_class.new(batch).cluster
-        expect(c.ht_items.count).to eq(2)
-        item2.ocns = [item2.ocns.first + 1]
-        c = described_class.new(item2).cluster
-        expect(c.ht_items.count).to eq(1)
-      end
-
-      it "reclusters when an HTItem loses it's glue" do
+      it "reclusters when an HTItem in the cluster loses an OCN" do
         item2.ocns << 1
         described_class.new(item).cluster
         described_class.new(item2).cluster
@@ -237,6 +219,93 @@ RSpec.describe ClusterHtItem do
         expect(Cluster.count).to eq(1)
         expect(new_cluster._id).to eq(old_cluster._id)
       end
+
+      it "does not recluster if the HTItem had only one OCN" do
+        htitem = build(:ht_item, ocns: [3])
+
+        old_cluster = create(:cluster, ocns: [1, 2, 3],
+               ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+               ht_items: [htitem,
+                          build(:ht_item, ocns: [1, 3])])
+
+        htitem.ocns = [1]
+
+        described_class.new(htitem).cluster
+        new_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(new_cluster._id).to eq(old_cluster._id)
+      end
+    end
+
+    context "when HTItem is moving clusters" do
+      it "deletes the old cluster for an OCN-less HTItem that gains an OCN" do
+        ocnless_cluster = described_class.new(no_ocn).cluster
+        ocnless_cluster.save
+        empty_cluster.save
+        expect(Cluster.count).to eq(2)
+        updated_item = build(:ht_item, item_id: no_ocn.item_id, ocns: empty_cluster.ocns)
+        described_class.new(updated_item).cluster
+        expect(Cluster.count).to eq(1)
+      end
+
+      it "reclusters the old cluster if the old HTItem has multiple OCNs not in the concordance" do
+        htitem = build(:ht_item, ocns: [1, 2])
+        old_cluster = create(:cluster, ocns: [1, 2],
+               ht_items: [htitem, build(:ht_item, ocns: [1]), build(:ht_item, ocns: [2])])
+
+        htitem.ocns = [3]
+        described_class.new(htitem).cluster
+
+        expect(Cluster.count).to eq(3)
+        reclustered = Cluster.for_ocns([1]).first
+        expect(reclustered._id).not_to eq(old_cluster._id)
+        expect(reclustered.ocns).to contain_exactly(1)
+      end
+
+      it "does not recluster the old cluster if the old HTItem has only one OCN" do
+        htitem = build(:ht_item, ocns: [1])
+        another_htitem = build(:ht_item, ocns: [1])
+
+        old_cluster = create(:cluster, ocns: [1],
+               ht_items: [htitem, another_htitem])
+
+        htitem.ocns = [2]
+        described_class.new(htitem).cluster
+
+        same_old_cluster = Cluster.with_ht_item(another_htitem).first
+        expect(Cluster.count).to eq(2)
+        expect(same_old_cluster._id).to eq(old_cluster._id)
+      end
+
+      it "deletes the old cluster if it becomes empty when an HTItem changes OCN" do
+        htitem = build(:ht_item, ocns: [1])
+
+        old_cluster = create(:cluster, ocns: [1], ht_items: [htitem])
+
+        htitem.ocns = [2]
+
+        described_class.new(htitem).cluster
+        new_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(new_cluster._id).not_to eq(old_cluster._id)
+      end
+
+      it "does not recluster if all the old HTItems's OCNs are covered by concordance rules" do
+        htitem = build(:ht_item, ocns: [1, 2])
+        old_cluster = create(:cluster, ocns: [1, 2],
+               ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+               ht_items: [htitem, build(:ht_item, ocns: [1])])
+
+        htitem.ocns = [3]
+
+        described_class.new(htitem).cluster
+        same_old_cluster = Cluster.for_ocns([1]).first
+
+        expect(Cluster.count).to eq(2)
+        expect(same_old_cluster._id).to eq(old_cluster._id)
+      end
     end
   end
 
@@ -253,15 +322,6 @@ RSpec.describe ClusterHtItem do
       expect(Cluster.count).to eq(1)
       described_class.new(item).delete
       expect(Cluster.count).to eq(0)
-    end
-
-    it "creates a new cluster without the ht_item" do
-      described_class.new(item).cluster
-      cluster = described_class.new(item2).cluster
-      expect(cluster.ht_items.to_a.size).to eq(2)
-      described_class.new(item).delete
-      expect(Cluster.each.to_a.first.ht_items.to_a.size).to eq(1)
-      expect(Cluster.each.to_a.first).not_to eq(cluster)
     end
 
     it "won't delete multiple items" do

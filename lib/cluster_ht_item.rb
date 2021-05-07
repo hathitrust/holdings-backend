@@ -46,17 +46,12 @@ class ClusterHtItem
     Retryable.with_transaction do
       if (cluster = cluster_with_htitem(ht_item))
         Services.logger.debug "removing old htitem #{ht_item.item_id}"
-        cluster.ht_item(ht_item.item_id).delete
+        old_item = cluster.ht_item(ht_item.item_id)
+        old_item.delete
 
-        # Note that technically we only need to do this if there were multiple
-        # OCNs for that HT item and nothing else binds the cluster together.
-        # It may be worth optimizing not to do this if the htitem has only
-        # one OCN, since that will be the common case. Not sure if it's worth
-        # optimizing away if there are multiple OCNs (i.e. doing the check to
-        # see if anything else binds the cluster together). In general the
-        # operation is probably rare enough that we don't need to worry about
-        # this for the time being.
-        Reclusterer.new(cluster).recluster
+        Reclusterer.new(cluster).recluster if needs_recluster?(cluster, old_item.ocns)
+
+        cluster.delete if cluster.empty?
       end
     end
   end
@@ -98,17 +93,23 @@ class ClusterHtItem
     Reclusterer.new(cluster).recluster if needs_reclustering
   end
 
-  def needs_recluster?(cluster, current_ocns, new_ocns)
-    # Before updating the HTItem, we will have already merged all the ocns in
-    # new_ocns into the cluster. We only need to recluster (i.e. potentially
-    # split) if current_ocns has OCNs that are in NEITHER the new_ocns NOR the
-    # concordance rules.
+  def needs_recluster?(cluster, old_ocns, new_ocns = [])
+    # We only need to recluster (i.e. potentially split) if the item could have
+    # been the 'glue' holding multiple OCNs together. The following situations
+    # mean an HTItem cannot be glue, so we don't need to recluster:
+    #
+    # - There was 0 or 1 old OCN (so it couldn't have been 'glue')
+    # - old_ocns are all in concordance rules (so this item is not the 'glue')
+    # - old_ocns are a subset of the new ocns (if there are any), so the item
+    #   stays in this cluster and remains glue
 
-    current_ocns = current_ocns.to_set
     new_ocns = new_ocns.to_set
+    old_ocns = old_ocns.to_set
     concordance_ocns = cluster.ocn_resolutions.collect(&:ocns).flatten.to_set
 
-    !(current_ocns.subset?(new_ocns) || current_ocns.subset?(concordance_ocns))
+    !(old_ocns.count <= 1 ||
+      old_ocns.subset?(new_ocns) ||
+      old_ocns.subset?(concordance_ocns))
   end
 
 end
