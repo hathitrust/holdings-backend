@@ -8,7 +8,6 @@ RSpec.describe CalculateFormat do
   let(:ht_mpm) { build(:ht_item, enum_chron: "V.1") }
   let(:ht_ser) { build(:ht_item, enum_chron: "V.1") }
   let(:c) { create(:cluster, ocns: ht_spm.ocns) }
-  let(:s) { build(:serial, record_id: ht_ser.ht_bib_key, ocns: ht_ser.ocns) }
 
   def add_serial(ht_item)
     Services.serials.bibkeys.add(ht_item.ht_bib_key.to_i)
