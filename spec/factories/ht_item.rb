@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ht_item"
+
 FactoryBot.define do
   factory :ht_item do
     ocns { [rand(1_000_000)] }

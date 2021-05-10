@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "securerandom"
+require "holding"
 
 FactoryBot.define do
   factory :holding do
