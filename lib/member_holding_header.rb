@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Naming/AccessorMethodName
+
 require "services"
 
 # Context: This class is responsible for knowing the internals
@@ -10,8 +12,7 @@ class MemberHoldingHeader
   attr_reader :opt_header_cols, :req_header_cols, :col_map
 
   def initialize(header_line)
-    @header_line = header_line
-    @header_line.chomp!
+    @header_line = header_line.chomp
 
     log("Getting header information from: #{header_line}")
 
@@ -57,7 +58,7 @@ class MemberHoldingHeader
       ].join("\n")
     end
 
-    return violations
+    violations
   end
 
   # Given a split header line like [a,b,c]
@@ -82,10 +83,12 @@ class MemberHoldingHeader
       Services.scrub_logger.warn(violations.join("\n"))
     end
 
-    return col_map
+    col_map
   end
 
 end
+
+# rubocop:enable Naming/AccessorMethodName
 
 # Subclass for monos
 class MonoHoldingHeader < MemberHoldingHeader

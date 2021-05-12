@@ -70,6 +70,7 @@ class ScrubFields
 
   # Given a string, determines which valid ocns are in it,
   # and returns them as a uniq'd array of Integers.
+  # rubocop:disable Metrics/PerceivedComplexity
   def ocn(str)
     output = []
     return output if str.nil?
@@ -141,6 +142,7 @@ class ScrubFields
     output.uniq!
     output
   end
+  # rubocop:enable Metrics/PerceivedComplexity
 
   # Given a string, checks if there are any valid-looking local_ids
   # and returns it/them as an array of strings.

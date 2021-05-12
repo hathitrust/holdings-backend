@@ -29,11 +29,11 @@ end
 Services.register(:serials) { SerialsFile.new(Settings.serials_file) }
 
 # Re-register with path once you know it.
-Services.register(:scrub_logger) {
+Services.register(:scrub_logger) do
   Logger.new($stderr)
-}
+end
 
-Services.register(:scrub_stats) { Hash.new }
+Services.register(:scrub_stats) { {} }
 
 Services.register(:large_clusters) { LargeClusters.new }
 Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }

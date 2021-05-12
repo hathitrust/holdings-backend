@@ -44,10 +44,12 @@ class MemberHolding
       set(col_type, cols[col_no])
     end
 
-    return @violations.empty?
+    @violations.empty?
   end
 
-  # started with a copy of check_col_val
+  # Given a column name and a value, sets the proper attribute
+  # via ScrubFields
+  # rubocop:disable Metrics/MethodLength
   def set(col_type, col_val)
     if col_val.nil? || col_val.class != String
       raise ColValError,
@@ -80,8 +82,9 @@ class MemberHolding
             "cannot handle column type #{col_type} (value: #{col_val})"
     end
   end
+  # rubocop:enable Metrics/MethodLength
 
-  def to_json
+  def to_json(*_args)
     {
       ocn:               @ocn,
       local_id:          @local_id,

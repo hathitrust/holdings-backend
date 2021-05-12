@@ -9,15 +9,11 @@ require "utils/waypoint"
 
 # Usage:
 # Takes a member-submitted holdings file, writes a .ndj file.
-
 # Programatically:
 # Autoscrub.new(file_path)
-
 # Commandline:
 # bundle exec ruby lib/autoscrub.rb <file_path_1...n>
-
 # Location of output and log files determined by ScrubOutputStructure.
-
 class AutoScrub
 
   # Won't put in accessors unless we find a solid case for running this

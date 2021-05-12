@@ -1,19 +1,14 @@
+# frozen_string_literal: true
+
 require "scrub_output_structure"
 require "custom_errors"
 
 RSpec.describe ScrubOutputStructure do
-  let(:test) {ScrubOutputStructure.new("test")}
+  let(:test) { described_class.new("test") }
 
   it "makes a new dir structure" do
     expect(test.member_id).to eq("test")
-
-    expect(Dir.exist?(test.member_dir)).to be(true)
-    expect(test.member_dir).to be_a(Dir)
-
-    expect(Dir.exist?(test.member_log)).to be(true)
     expect(test.member_log).to be_a(Dir)
-    
-    expect(Dir.exist?(test.member_output)).to be(true)
     expect(test.member_output).to be_a(Dir)
   end
 
@@ -23,15 +18,12 @@ RSpec.describe ScrubOutputStructure do
   end
 
   it "creates a datestamped subdir for log or output" do
-    expect(test.date_subdir!("log")).to be_a(Dir)
     expect(Dir.exist?(test.date_subdir!("log"))).to be(true)
-
-    expect(test.date_subdir!("output")).to be_a(Dir)
     expect(Dir.exist?(test.date_subdir!("output"))).to be(true)
   end
 
   it "does not let you create any other subdirs" do
-    expect{test.date_subdir!("foo")}.to raise_error(StandardError)
+    expect { test.date_subdir!("foo") }.to raise_error(StandardError)
   end
 
   it "gives you the latest-datest subdir (by string sort)" do
@@ -47,13 +39,13 @@ RSpec.describe ScrubOutputStructure do
     # don't look
     expect(test.date_subdir!("log", "2020-50-50")).to be_a(Dir)
     # should fail
-    expect{test.date_subdir!("log", "JAN 1ST LAST YEAR")}.to raise_error(StandardError)
+    expect { test.date_subdir!("log", "JAN 1ST LAST YEAR") }.to raise_error(StandardError)
   end
-  
+
   # last
   it "removes itself" do
     expect(Dir.exist?(test.member_dir)).to be(true)
-    expect(test.remove_recursive!).to be(true)    
-    expect(Dir.exist?(test.member_dir)).to be(false)    
-  end  
+    expect(test.remove_recursive!).to be(true)
+    expect(Dir.exist?(test.member_dir)).to be(false)
+  end
 end

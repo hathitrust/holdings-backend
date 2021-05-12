@@ -24,6 +24,7 @@ class MemberHoldingHeaderFactory
   end
 
   # Return a proper subclass of MemberHoldingHeader
+  # rubocop:disable Naming/AccessorMethodName
   def get_instance
     case @item_type
     when MON
@@ -36,4 +37,5 @@ class MemberHoldingHeaderFactory
       raise ItemTypeError, "#{@item_type} is not a valid item_type"
     end
   end
+  # rubocop:enable Naming/AccessorMethodName
 end

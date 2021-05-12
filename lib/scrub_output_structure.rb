@@ -78,20 +78,20 @@ class ScrubOutputStructure
     latest_subdir = base_dir.children.select {|str| str.match?(DATE_STR) }.max
 
     if latest_subdir.nil?
-      return nil
+      nil
     else
-      return Dir.new(File.join(base_dir, latest_subdir))
+      Dir.new(File.join(base_dir, latest_subdir))
     end
   end
 
-  def to_json
+  def to_json(*_args)
     dir_hash = {
-      "member_id"     => member_id,
-      "member_dir"    => member_dir.path,
-      "member_log"    => member_log.path,
-      "member_output" => member_output.to_path,
+      "member_id"            => member_id,
+      "member_dir"           => member_dir.path,
+      "member_log"           => member_log.path,
+      "member_output"        => member_output.to_path,
       "member_ready_to_load" => member_ready_to_load.to_path,
-      "member_loaded" => member_loaded.to_path
+      "member_loaded"        => member_loaded.to_path
     }
 
     unless latest("output").nil?
@@ -106,7 +106,7 @@ class ScrubOutputStructure
 
   def validate_subdir(str)
     if VALID_SUBDIR.include?(str)
-      return str
+      str
     else
       raise "invalid subdir name: #{str}"
     end
@@ -115,7 +115,7 @@ class ScrubOutputStructure
   # Allows 2020-50-50 and isn't Y100K-proof but hey
   def validate_date_str(str)
     if str.match?(VALID_DATE_STR)
-      return str
+      str
     else
       raise "invalid date str: #{str}"
     end
@@ -136,7 +136,7 @@ class ScrubOutputStructure
   def mkready_to_load!
     mkdir!("ready_to_load")
   end
-  
+
   def mkloaded!
     mkdir!("loaded")
   end
@@ -146,7 +146,7 @@ class ScrubOutputStructure
     pathname   = Pathname.new(File.join(path_parts)).expand_path
     FileUtils.mkdir_p(pathname)
 
-    return Dir.new(pathname)
+    Dir.new(pathname)
   end
 
 end

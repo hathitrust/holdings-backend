@@ -1,15 +1,16 @@
-require 'member_holding'
-require "custom_errors"
-require 'json'
+# frozen_string_literal: true
 
+require "member_holding"
+require "custom_errors"
+require "json"
 
 RSpec.describe MemberHolding do
   let(:test_data) { __dir__ + "/../testdata" }
-  let(:ok_min_hed) {{"oclc"=>0, "local_id"=>1}}
-  let(:ok_min_str) {"123\t456"}
-  let(:ok_min_hold) {MemberHolding.new(ok_min_hed)}
+  let(:ok_min_hed) { { "oclc"=>0, "local_id"=>1 } }
+  let(:ok_min_str) { "123\t456" }
+  let(:ok_min_hold) { described_class.new(ok_min_hed) }
 
-  let(:ok_max_hed) {
+  let(:ok_max_hed) do
     {
       "oclc"      => 0,
       "local_id"  => 1,
@@ -18,19 +19,19 @@ RSpec.describe MemberHolding do
       "enumchron" => 4,
       "govdoc"    => 5
     }
-  }
-  let(:ok_max_str)  {"123\tb456\tCH\tBRT\tv.1, 2020\t0"}
-  let(:bad_max_str) {"123\tb456\tXX\tXXX\tv.1, 2020\t0"}
-  let(:ok_max_hold){MemberHolding.new(ok_max_hed)}
+  end
+  let(:ok_max_str)  { "123\tb456\tCH\tBRT\tv.1, 2020\t0" }
+  let(:bad_max_str) { "123\tb456\tXX\tXXX\tv.1, 2020\t0" }
+  let(:ok_max_hold) { described_class.new(ok_max_hed) }
 
-  let(:bad_min_str) {"FAIL_ME\t456"}
+  let(:bad_min_str) { "FAIL_ME\t456" }
 
   it "creates a MemberHolding (min fields example)" do
-    expect(ok_min_hold).to be_a(MemberHolding)
+    expect(ok_min_hold).to be_a(described_class)
   end
 
   it "creates a MemberHolding (max fields example)" do
-    expect(ok_max_hold).to be_a(MemberHolding)
+    expect(ok_max_hold).to be_a(described_class)
   end
 
   it "parses a string (min example)" do
@@ -62,7 +63,7 @@ RSpec.describe MemberHolding do
   end
 
   it "raises an error if given a bad col type" do
-    expect{ok_min_hold.parse_str("")}.to raise_error(ColValError)
+    expect { ok_min_hold.parse_str("") }.to raise_error(ColValError)
   end
 
   it "returns false if given a record with a bad ocn" do

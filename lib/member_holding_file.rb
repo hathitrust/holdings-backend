@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# rubocop:disable Metrics/ClassLength
+
 require "zinzout"
 require "services"
 require "member_holding_header_factory"
@@ -62,16 +64,14 @@ class MemberHoldingFile
     Services.scrub_logger.info(str)
   end
 
-  def parse
+  def parse(&block)
     unless valid_filename?
       raise FileNameError, "Invalid filename #{@filename}"
     end
 
     scrub_stats = Services.scrub_stats
 
-    each_holding do |holding|
-      yield holding
-    end
+    each_holding(&block)
 
     log("Scrub stats:")
     scrub_stats.keys.sort.each do |ssk|
@@ -91,7 +91,7 @@ class MemberHoldingFile
 
     if SPEC_RX[:MEMBER_ID].match(member_id)
       log("OK member_id #{member_id} in filename #{@filename}")
-      return member_id
+      member_id
     else
       raise FileNameError, "Did not find a member_id in filename (#{fn_str})"
     end
@@ -101,7 +101,7 @@ class MemberHoldingFile
     if SPEC_RX[:ITEM_TYPE_CONTEXT].match(fn_str)
       item_type = Regexp.last_match(1)
       log("OK item_type (#{item_type}) from filename (#{@filename})")
-      return item_type
+      item_type
     else
       raise FileNameError, "Did not find item_type in filename (#{fn_str})"
     end
@@ -133,7 +133,7 @@ class MemberHoldingFile
       "rest\t\"#{f_rest.join(" ")}\"\t#{analyze_rest(f_rest)}"
     ].join("\n")
     log(msg)
-    return false
+    false
   end
 
   def analyze_member_id(str)
@@ -180,7 +180,7 @@ class MemberHoldingFile
       return "ok"
     end
 
-    return "not ok, must end in .tsv or .tsv.gz"
+    "not ok, must end in .tsv or .tsv.gz"
   end
 
   def each_holding
@@ -202,12 +202,12 @@ class MemberHoldingFile
     all_ok  = holding.parse_str(line)
 
     unless all_ok
-      raise BadRecordError.new(holding.violations.join(" // "))
+      raise BadRecordError, holding.violations.join(" // ")
     end
 
     holding.organization      = @member_id
     holding.mono_multi_serial = @item_type
-    return holding
+    holding
   end
 
   def read_file
@@ -226,3 +226,5 @@ class MemberHoldingFile
   end
 
 end
+
+# rubocop:enable Metrics/ClassLength
