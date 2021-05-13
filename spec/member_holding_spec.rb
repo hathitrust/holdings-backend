@@ -35,11 +35,11 @@ RSpec.describe MemberHolding do
   end
 
   it "parses a string (min example)" do
-    expect(ok_min_hold.parse_str(ok_min_str)).to be(true)
+    expect(ok_min_hold.parse(ok_min_str)).to be(true)
   end
 
   it "parses a string (max example)" do
-    expect(ok_max_hold.parse_str(ok_max_str)).to be(true)
+    expect(ok_max_hold.parse(ok_max_str)).to be(true)
   end
 
   it "sees no violations when parsing an ok string (min example)" do
@@ -51,28 +51,28 @@ RSpec.describe MemberHolding do
   end
 
   it "produces valid json (min example)" do
-    ok_min_hold.parse_str(ok_min_str)
+    ok_min_hold.parse(ok_min_str)
     json_str = ok_min_hold.to_json
     expect(JSON.parse(json_str)).to be_a(Hash)
   end
 
   it "produces valid json (max example)" do
-    ok_max_hold.parse_str(ok_max_str)
+    ok_max_hold.parse(ok_max_str)
     json_str = ok_max_hold.to_json
     expect(JSON.parse(json_str)).to be_a(Hash)
   end
 
   it "raises an error if given a bad col type" do
-    expect { ok_min_hold.parse_str("") }.to raise_error(ColValError)
+    expect { ok_min_hold.parse("") }.to raise_error(ColValError)
   end
 
   it "returns false if given a record with a bad ocn" do
-    expect(ok_min_hold.parse_str(bad_min_str)).to be(false)
+    expect(ok_min_hold.parse(bad_min_str)).to be(false)
   end
 
   it "returns true if given a record with a bad status/condition etc" do
     # because those are not reason enough to reject the record, just the value
     # and should show up as warnings in the log
-    expect(ok_max_hold.parse_str(bad_max_str)).to be(true)
+    expect(ok_max_hold.parse(bad_max_str)).to be(true)
   end
 end

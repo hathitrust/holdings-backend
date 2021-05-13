@@ -24,8 +24,8 @@ class MemberHoldingHeader
     @req_header_cols = ["oclc", "local_id"]
   end
 
-  def log(str)
-    Services.scrub_logger.info(str)
+  def log(msg)
+    Services.scrub_logger.info(msg)
   end
 
   def possible_cols

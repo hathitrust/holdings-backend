@@ -45,7 +45,7 @@ class ScrubOutputStructure
 
   def initialize(member_id)
     unless member_id.is_a?(String)
-      raise "member_id must be a string"
+      raise ArgumentError, "member_id must be a string"
     end
 
     @member_id     = member_id
@@ -65,12 +65,6 @@ class ScrubOutputStructure
       validate_subdir(subdir),
       validate_date_str(date_str)
     )
-  end
-
-  # Remove the dir that belongs to @member_id and everything under it.
-  def remove_recursive!
-    FileUtils.remove_dir(member_dir.path)
-    true
   end
 
   def latest(subdir)
@@ -108,7 +102,7 @@ class ScrubOutputStructure
     if VALID_SUBDIR.include?(str)
       str
     else
-      raise "invalid subdir name: #{str}"
+      raise ArgumentError, "invalid subdir name: #{str}"
     end
   end
 
@@ -117,7 +111,7 @@ class ScrubOutputStructure
     if str.match?(VALID_DATE_STR)
       str
     else
-      raise "invalid date str: #{str}"
+      raise ArgumentError, "invalid date str: #{str}"
     end
   end
 

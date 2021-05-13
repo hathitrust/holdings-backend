@@ -6,6 +6,10 @@ require "custom_errors"
 RSpec.describe ScrubOutputStructure do
   let(:test) { described_class.new("test") }
 
+  after(:each) do
+    FileUtils.remove_dir(described_class.new("test").member_dir)
+  end
+
   it "makes a new dir structure" do
     expect(test.member_id).to eq("test")
     expect(test.member_log).to be_a(Dir)
@@ -40,12 +44,5 @@ RSpec.describe ScrubOutputStructure do
     expect(test.date_subdir!("log", "2020-50-50")).to be_a(Dir)
     # should fail
     expect { test.date_subdir!("log", "JAN 1ST LAST YEAR") }.to raise_error(StandardError)
-  end
-
-  # last
-  it "removes itself" do
-    expect(Dir.exist?(test.member_dir)).to be(true)
-    expect(test.remove_recursive!).to be(true)
-    expect(Dir.exist?(test.member_dir)).to be(false)
   end
 end

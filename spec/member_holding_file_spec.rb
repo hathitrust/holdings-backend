@@ -36,21 +36,21 @@ RSpec.describe MemberHoldingFile do
   let(:ok_hed_mul) { ["oclc", "local_id", "status", "condition", "enumchron", "govdoc"] }
 
   it "finds member_id in filename" do
-    expect(ok_mhf.get_member_id_from_filename(ok_fn)).to eq(ok_mem)
-    expect(ok_mhf.get_member_id_from_filename).to eq(ok_mem)
+    expect(ok_mhf.member_id_from_filename(ok_fn)).to eq(ok_mem)
+    expect(ok_mhf.member_id_from_filename).to eq(ok_mem)
   end
 
   it "raises error if no member_id in filename" do
-    expect { ok_mhf.get_member_id_from_filename("") }.to raise_error(FileNameError)
-    expect { ok_mhf.get_member_id_from_filename(nil) }.to raise_error(FileNameError)
+    expect { ok_mhf.member_id_from_filename("") }.to raise_error(FileNameError)
+    expect { ok_mhf.member_id_from_filename(nil) }.to raise_error(FileNameError)
   end
 
   it "finds item type in filename" do
-    expect(ok_mhf.get_item_type_from_filename).to eq(ok_itype)
+    expect(ok_mhf.item_type_from_filename).to eq(ok_itype)
   end
 
   it "raises error if no item_type in filename" do
-    expect { bad_mhf.get_item_type_from_filename }.to raise_error(FileNameError)
+    expect { bad_mhf.item_type_from_filename }.to raise_error(FileNameError)
   end
 
   it "checks a whole filename" do

@@ -6,11 +6,11 @@ require "cluster_holding"
 # Constructs batches of Holdings from incoming file data
 class HoldingLoader
 
-  def self.get_for(filename)
+  def self.for(filename)
     if filename.end_with?(".tsv")
-      HoldingLoaderTsv.new
+      HoldingLoaderTSV.new
     elsif filename.end_with?(".ndj")
-      HoldingLoaderNdj.new
+      HoldingLoaderNDJ.new
     else
       raise "given an invalid file extension"
     end
@@ -37,7 +37,7 @@ class HoldingLoader
 end
 
 ## Subclass that only overrides item_from_line
-class HoldingLoaderTsv < HoldingLoader
+class HoldingLoaderTSV < HoldingLoader
   def item_from_line(line)
     Holding.new_from_holding_file_line(line).tap do |h|
       @organization ||= h.organization
@@ -47,7 +47,7 @@ class HoldingLoaderTsv < HoldingLoader
 end
 
 ## Subclass that only overrides item_from_line
-class HoldingLoaderNdj < HoldingLoader
+class HoldingLoaderNDJ < HoldingLoader
   def item_from_line(line)
     Holding.new_from_scrubbed_file_line(line).tap do |h|
       @organization ||= h.organization

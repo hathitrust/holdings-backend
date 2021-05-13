@@ -8,10 +8,11 @@ require "custom_errors"
 
 # Represents the information in one line from a member holding file
 class MemberHolding
-  attr_accessor :oclc, :local_id, :organization, :status, :condition,
-                :enumchron, :mono_multi_serial, :issn, :govdoc
+  attr_accessor :organization, :mono_multi_serial
 
-  attr_reader :uuid, :date_received, :n_enum, :n_chron, :violations
+  attr_reader :ocn, :local_id, :status, :condition, :enum_chron, :issn,
+              :gov_doc_flag, :uuid, :date_received, :n_enum, :n_chron,
+              :violations
 
   def initialize(col_map = {})
     @col_map       = col_map
@@ -21,14 +22,14 @@ class MemberHolding
     @uuid          = SecureRandom.uuid
   end
 
-  def log(str)
-    Services.scrub_logger.info(str)
+  def log(msg)
+    Services.scrub_logger.info(msg)
   end
 
   # Takes a line from a member holding file
   # and populates a MemberHolding-object
-  def parse_str(str)
-    if str.nil? || str.class != String || str.empty?
+  def parse(str)
+    if str.nil? || str.empty?
       raise ColValError, "bad str (class #{str.class}): #{str}"
     end
 
@@ -36,7 +37,6 @@ class MemberHolding
     if cols.size != @col_map.keys.size
       @violations << "Wrong number of cols " \
         "(expected #{@col_map.keys.size}, got #{cols.size})"
-
     end
 
     @col_map.each do |col_type, col_no|
@@ -51,9 +51,8 @@ class MemberHolding
   # via ScrubFields
   # rubocop:disable Metrics/MethodLength
   def set(col_type, col_val)
-    if col_val.nil? || col_val.class != String
-      raise ColValError,
-            "col_val for col_type #{col_type} empty/nil/wrong class"
+    if col_val.nil?
+      raise ColValError, "col_val for col_type #{col_type} is nil"
     end
 
     case col_type
@@ -86,19 +85,19 @@ class MemberHolding
 
   def to_json(*_args)
     {
-      ocn:               @ocn,
-      local_id:          @local_id,
+      ocn:               ocn,
+      local_id:          local_id,
       organization:      organization,
-      status:            @status,
-      condition:         @condition,
-      enum_chron:        @enum_chron,
+      status:            status,
+      condition:         condition,
+      enum_chron:        enum_chron,
       mono_multi_serial: mono_multi_serial,
-      issn:              @issn,
-      gov_doc_flag:      @gov_doc_flag,
-      uuid:              @uuid,
-      date_received:     @date_received,
-      n_enum:            @n_enum,
-      n_chron:           @n_chron
+      issn:              issn,
+      gov_doc_flag:      gov_doc_flag,
+      uuid:              uuid,
+      date_received:     date_received,
+      n_enum:            n_enum,
+      n_chron:           n_chron
     }.to_json
   end
 

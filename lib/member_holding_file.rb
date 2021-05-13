@@ -51,8 +51,8 @@ class MemberHoldingFile
     @filename = File.basename(path)
     @error_count = 0
 
-    @item_type = get_item_type_from_filename
-    @member_id = get_member_id_from_filename
+    @item_type = item_type_from_filename
+    @member_id = member_id_from_filename
 
     # get a file
     # check filename for member_id, item_type etc.
@@ -60,8 +60,8 @@ class MemberHoldingFile
     # check individual lines
   end
 
-  def log(str)
-    Services.scrub_logger.info(str)
+  def log(msg)
+    Services.scrub_logger.info(msg)
   end
 
   def parse(&block)
@@ -81,7 +81,7 @@ class MemberHoldingFile
     scrub_stats = {}
   end
 
-  def get_member_id_from_filename(fn_str = @filename)
+  def member_id_from_filename(fn_str = @filename)
     if fn_str.nil? || fn_str.empty?
       raise FileNameError, "Empty filename"
     end
@@ -97,7 +97,7 @@ class MemberHoldingFile
     end
   end
 
-  def get_item_type_from_filename(fn_str = @filename)
+  def item_type_from_filename(fn_str = @filename)
     if SPEC_RX[:ITEM_TYPE_CONTEXT].match(fn_str)
       item_type = Regexp.last_match(1)
       log("OK item_type (#{item_type}) from filename (#{@filename})")
@@ -136,20 +136,20 @@ class MemberHoldingFile
     false
   end
 
-  def analyze_member_id(str)
-    not_nil_and_match(str, SPEC_RX[:MEMBER_ID])
+  def analyze_member_id(potential_member_id)
+    not_nil_and_match(potential_member_id, SPEC_RX[:MEMBER_ID])
   end
 
-  def analyze_item_type(str)
-    not_nil_and_match(str, SPEC_RX[:ITEM_TYPE])
+  def analyze_item_type(potential_item_type)
+    not_nil_and_match(potential_item_type, SPEC_RX[:ITEM_TYPE])
   end
 
-  def analyze_update_type(str)
-    not_nil_and_match(str, SPEC_RX[:UPDATE_TYPE])
+  def analyze_update_type(potential_update_type)
+    not_nil_and_match(potential_update_type, SPEC_RX[:UPDATE_TYPE])
   end
 
-  def analyze_date_str(str)
-    not_nil_and_match(str, SPEC_RX[:DATE])
+  def analyze_date_str(potential_date_str)
+    not_nil_and_match(potential_date_str, SPEC_RX[:DATE])
   end
 
   # Shortcut for the analyze_x methods above.
@@ -166,8 +166,10 @@ class MemberHoldingFile
     end
   end
 
-  # We allow the 'rest' to contain arbitrary labels, it just has to end
-  # with our required file extension(s).
+  # 'rest' is the remaining part of the filename, after the required
+  # parts, and includes the required file extension(s).
+  # This is so we can allow umich_mono_full_20201230.tsv
+  # as well as              umich_mono_full_20201230_fix_pt2.tsv.gz
   def analyze_rest(arr)
     return "must not be empty" if arr.empty?
 
@@ -194,12 +196,12 @@ class MemberHoldingFile
   end
 
   def item_from_line(line, col_map)
-    if line.nil? || line.class != String || line.empty?
-      raise "bad line"
+    if line.nil? || line.empty?
+      raise "bad line (nil/empty)"
     end
 
     holding = MemberHolding.new(col_map)
-    all_ok  = holding.parse_str(line)
+    all_ok  = holding.parse(line)
 
     unless all_ok
       raise BadRecordError, holding.violations.join(" // ")
@@ -212,9 +214,7 @@ class MemberHoldingFile
 
   def read_file
     Zinzout.zin(filepath) do |fh|
-      header = MemberHoldingHeaderFactory
-        .new(@item_type, fh.readline)
-        .get_instance
+      header  = MemberHoldingHeaderFactory.for(@item_type, fh.readline)
       col_map = header.get_col_map
       line_no = 0
       fh.each_line do |line|

@@ -12,7 +12,7 @@ RSpec.describe MemberHoldingHeaderFactory do
   let(:min_ok_hed) { "oclc\tlocal_id" }
 
   def check_class(item_type, hed)
-    MemberHoldingHeaderFactory.new(item_type, hed).get_instance
+    MemberHoldingHeaderFactory.for(item_type, hed)
   end
 
   it "returns the correct subclass" do
@@ -26,8 +26,7 @@ RSpec.describe MemberHoldingHeaderFactory do
   end
 
   it "returns a col map (hash)" do
-    mhh_fac = described_class.new(mon, min_ok_hed)
-    mhh     = mhh_fac.get_instance
+    mhh = described_class.for(mon, min_ok_hed)
     col_map = mhh.get_col_map
     expect(col_map.keys.size).to be(2)
     expect(col_map["oclc"]).to be(0)
@@ -36,13 +35,11 @@ RSpec.describe MemberHoldingHeaderFactory do
 
   it "reports violations" do
     # none expected
-    mhh_fac = described_class.new(mon, min_ok_hed)
-    mhh     = mhh_fac.get_instance
+    mhh = described_class.for(mon, min_ok_hed)
     expect(mhh.check_violations.empty?).to be(true)
 
     # some expected
-    mhh_fac = described_class.new(mon, failme)
-    mhh     = mhh_fac.get_instance
+    mhh = described_class.for(mon, failme)
     expect(mhh.check_violations.empty?).to be(false)
   end
 end

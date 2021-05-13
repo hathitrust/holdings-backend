@@ -24,7 +24,7 @@ RSpec.describe HoldingLoader do
   end
 
   describe "#item_from_line" do
-    let(:holding) { described_class.get_for(".tsv").item_from_line(line) }
+    let(:holding) { described_class.for(".tsv").item_from_line(line) }
 
     it { expect(holding).to be_a(Holding) }
     it { expect(holding.ocn).to eq 123 }
