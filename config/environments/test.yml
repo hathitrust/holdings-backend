@@ -1,3 +1,5 @@
 serials_file: /tmp/serials_file
 hathifile_path: /tmp/hathifiles
 large_cluster_ocns: /tmp/large_cluster_ocns.txt
+loading_flag_path: /tmp/loading_flag
+slack_endpoint: http://slack.test/endpoint

@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+require "services"
+require "date"
+require "hathifile"
+require "loaded_file"
+
 # Usage: HathifileManger.new.try_load
 #
 # Loads incremental daily Hathifiles that have not yet been loaded into the
@@ -34,7 +39,7 @@ class HathifileManager
 
   def any_to_load?
     if last_loaded == Date.today
-      Services.logger.info("Today's Hathifile is already loaded, not loading anything")
+      Services.logger.info("Most recent Hathifile is already loaded, not loading anything")
       false
     else
       true

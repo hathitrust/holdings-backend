@@ -33,6 +33,16 @@ RSpec.describe FileMutex do
         mutex.with_lock {}
         expect(File).not_to exist(path)
       end
+
+      it "removes the file after running the block if the block raises an exception" do
+        begin
+          mutex.with_lock { raise "an exception" }
+        rescue RuntimeError
+          nil
+        end
+
+        expect(File).not_to exist(path)
+      end
     end
   end
 end

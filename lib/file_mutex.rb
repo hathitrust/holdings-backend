@@ -21,8 +21,11 @@ class FileMutex
       raise MutexHeldException, "#{path} exists, cannot lock"
     else
       FileUtils.touch(path)
-      yield
-      FileUtils.rm(path)
+      begin
+        yield
+      ensure
+        FileUtils.rm(path)
+      end
     end
   end
 end

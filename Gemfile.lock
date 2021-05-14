@@ -9,12 +9,16 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
+    addressable (2.7.0)
+      public_suffix (>= 2.0.2, < 5.0)
     ast (2.4.1)
     bson (4.10.0)
     byebug (11.1.3)
     canister (0.9.1)
     coderay (1.1.3)
     concurrent-ruby (1.1.7)
+    crack (0.4.5)
+      rexml
     deep_merge (1.2.1)
     diff-lcs (1.4.4)
     docile (1.3.2)
@@ -25,6 +29,16 @@ GEM
       activesupport (>= 5.0.0)
     faker (2.17.0)
       i18n (>= 1.6, < 2)
+    faraday (1.4.1)
+      faraday-excon (~> 1.1)
+      faraday-net_http (~> 1.0)
+      faraday-net_http_persistent (~> 1.1)
+      multipart-post (>= 1.2, < 3)
+      ruby2_keywords (>= 0.0.4)
+    faraday-excon (1.1.0)
+    faraday-net_http (1.0.1)
+    faraday-net_http_persistent (1.1.0)
+    hashdiff (1.0.1)
     i18n (1.8.5)
       concurrent-ruby (~> 1.0)
     method_source (1.0.0)
@@ -34,6 +48,7 @@ GEM
     mongoid (7.1.2)
       activemodel (>= 5.1, < 6.1)
       mongo (>= 2.7.0, < 3.0.0)
+    multipart-post (2.1.1)
     mysql2 (0.5.3)
     parallel (1.19.2)
     parser (2.7.2.0)
@@ -44,6 +59,7 @@ GEM
     pry-byebug (3.9.0)
       byebug (~> 11.0)
       pry (~> 0.13.0)
+    public_suffix (4.0.6)
     rainbow (3.0.0)
     regexp_parser (1.8.2)
     rexml (3.2.5)
@@ -77,6 +93,7 @@ GEM
     rubocop-rspec (1.43.2)
       rubocop (~> 0.87)
     ruby-progressbar (1.10.1)
+    ruby2_keywords (0.0.4)
     sequel (5.37.0)
     simplecov (0.19.0)
       docile (~> 1.1)
@@ -86,6 +103,10 @@ GEM
     tzinfo (1.2.7)
       thread_safe (~> 0.1)
     unicode-display_width (1.7.0)
+    webmock (3.12.2)
+      addressable (>= 2.3.6)
+      crack (>= 0.3.2)
+      hashdiff (>= 0.4.0, < 2.0.0)
     yard (0.9.25)
     zeitwerk (2.4.0)
     zinzout (0.1.0)
@@ -99,6 +120,7 @@ DEPENDENCIES
   ettin
   factory_bot
   faker
+  faraday
   mongo
   mongoid
   mysql2
@@ -110,8 +132,9 @@ DEPENDENCIES
   rubocop-rspec
   sequel
   simplecov
+  webmock
   yard
   zinzout
 
 BUNDLED WITH
-   2.2.14
+   2.2.16
