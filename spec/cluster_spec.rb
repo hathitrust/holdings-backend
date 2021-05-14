@@ -59,6 +59,28 @@ RSpec.describe Cluster do
     end
   end
 
+  describe "#last_modified" do
+    let(:c1) { build(:cluster) }
+
+    it "doesn't have last_modified if unsaved" do
+      expect(c1.last_modified).to be_nil
+    end
+
+    it "has last_modified if it is saved" do
+      now = Time.now.utc
+      c1.save
+      expect(c1.last_modified).to be > now
+    end
+
+    it "updates last_modified when it is saved" do
+      c1.save
+      first_timestamp = c1.last_modified
+      c1.save
+      second_timestamp = c1.last_modified
+      expect(first_timestamp).to be < second_timestamp
+    end
+  end
+
   describe "#save" do
     let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
     let(:c2) { build(:cluster, ocns: [ocn2]) }

@@ -19,6 +19,7 @@ class Cluster
   include Mongoid::Document
   store_in collection: "clusters"
   field :ocns
+  field :last_modified, type: DateTime
   embeds_many :holdings, class_name: "Holding"
   embeds_many :ht_items, class_name: "HtItem"
   embeds_many :ocn_resolutions, class_name: "OCNResolution"
@@ -33,6 +34,8 @@ class Cluster
   }
   scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
   scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
+
+  before_save {|c| c.last_modified = Time.now.utc }
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
