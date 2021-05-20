@@ -17,14 +17,14 @@ RSpec.describe "overlap_report" do
     ClusterHtItem.new(ht2).cluster.tap(&:save)
   end
 
-  describe "full_report" do
+  describe "report" do
     it "generates the correct report for the holding org" do
       h2 = h.dup
       h2.condition = "BRT"
       Cluster.first.add_holdings(h2).tap(&:save)
       cid = Cluster.first._id
       expect do
-        full_report(h.organization)
+        report(h.organization)
       end.to output(
         "#{cid}\t#{cid}\t#{ht.item_id}\t#{ht.n_enum}\t#{h.organization}\t2\t1\t0\t0\t1\n"
       ).to_stdout
@@ -36,7 +36,7 @@ RSpec.describe "overlap_report" do
       cid1 = cluster1._id
       cid2 = cluster2._id
       expect do
-        full_report("not_same_as_holding")
+        report("not_same_as_holding")
       end.to output(
         %(#{cid1}\t#{cid1}\t#{ht.item_id}\t#{ht.n_enum}\tnot_same_as_holding\t1\t0\t0\t0\t0
 #{cid2}\t#{cid2}\t#{ht2.item_id}\t#{ht2.n_enum}\tnot_same_as_holding\t1\t0\t0\t0\t0\n)

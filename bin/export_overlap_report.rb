@@ -12,6 +12,8 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "cluster_overlap"
+require "pry"
+require "pp"
 
 Mongoid.load!("mongoid.yml", :test)
 
@@ -30,7 +32,7 @@ def overlap_line(overlap_hash)
    overlap_hash[:access_count]].join("\t")
 end
 
-def full_report(org)
+def report(org)
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
@@ -46,6 +48,19 @@ def full_report(org)
 end
 
 if __FILE__ == $PROGRAM_NAME
+  require 'optparse'
+  
+  options = {}
+  OptionParser.new do |opts|
+    opts.on("-f", "--full",
+      "Produce overlap records for all matching clusters. Default: Clusters modified in last 36 hours") do |f|
+      options.full = f
+    end
+    opts.on("-o", "--organization", "Limit overlap records to a particular organization.") do |org|
+      options.organization = org || ''
+    end
+  end
+
   org = ARGV.shift
-  full_report(org).join("\n")
+  report(org)
 end
