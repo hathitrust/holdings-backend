@@ -48,16 +48,19 @@ def report(org)
 end
 
 if __FILE__ == $PROGRAM_NAME
-  require 'optparse'
-  
+  require "optparse"
+
   options = {}
   OptionParser.new do |opts|
-    opts.on("-f", "--full",
-      "Produce overlap records for all matching clusters. Default: Clusters modified in last 36 hours") do |f|
+    opts.on(
+      "-f",
+      "--full",
+      "Produce overlaps for all matching clusters. Default: Clusters modified last 36 hours"
+    ) do |f|
       options.full = f
     end
     opts.on("-o", "--organization", "Limit overlap records to a particular organization.") do |org|
-      options.organization = org || ''
+      options.organization = org || ""
     end
   end
 

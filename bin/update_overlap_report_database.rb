@@ -25,13 +25,13 @@ def org
 end
 
 def upsert(overlap)
-  rec = overlap_table.where(:volume_id => overlap[:volume_id], :member_id => overlap[:member_id])
-  if 1 != rec.update(overlap)
+  rec = overlap_table.where(volume_id: overlap[:volume_id], member_id: overlap[:member_id])
+  if rec.update(overlap) != 1
     overlap_table.insert(overlap)
   end
 end
 
-# Default: Now - 36 hours 
+# Default: Now - 36 hours
 cutoff_date = Date.today - 1.5
 
 unless ARGV.empty?
@@ -44,12 +44,12 @@ BATCH_SIZE = 1_000
 waypoint = Utils::Waypoint.new(BATCH_SIZE)
 
 logger = Services.logger
-Cluster.where("ht_items.0": { "$exists": 1},
-              last_modified: {"$gt":cutoff_date}).no_timeout.each do |c|
-  ClusterOverlap.new(c, org).each do |overlap|
-    waypoint.incr
-    upsert(overlap)
-    waypoint.on_batch {|wp| logger.info wp.batch_line }
-  end
-end
-logger.info waypoint.final_line 
+Cluster.where("ht_items.0": { "$exists": 1 },
+              last_modified: { "$gt": cutoff_date }).no_timeout.each do |c|
+                ClusterOverlap.new(c, org).each do |overlap|
+                  waypoint.incr
+                  upsert(overlap)
+                  waypoint.on_batch {|wp| logger.info wp.batch_line }
+                end
+              end
+logger.info waypoint.final_line
