@@ -9,13 +9,13 @@ This attempts to describe what this system actually does. This does not attempt 
 : Collection of HT Items, Holdings, and Concordance pairs united by a list of OCNs determined to be equivalent.
 
 **Bib Record**
-: A preferred record from the Zephir clustering system containing one or more HT Items. Has a single Hathitrust record ID.
+: A preferred record from Zephir containing one or more HT Items with a single Hathitrust record ID.
 
 **HT Item**
 : Volume ID and associated metadata taken from the [Hathifiles](https://www.hathitrust.org/hathifiles).
 
 **Print Serials List**
-: List of Record Ids determined to be serials by some unknown UMich process. List is limited to those held by UMich.
+: List of Record Ids determined to be serials by some unknown UMich process performed by Automation, Indexing, and Metadata. List is limited to those held by UMich.
 
 **Large Clusters**
 : Clusters large enough that they create implementation problems. Identified by an OCN, there are currently 11 on the list.
@@ -100,15 +100,17 @@ The Cluster Format is used in the overlap calculations. It is derived from the I
 
 
 ## HT Item Overlap ##
-Determining who holds a particular in-copyright HT Item.
+This is a description of the process by which the system determines who holds a particular in-copyright HT Item. 
 
-For HT Items in **clusters** that are not MPM, all organizations with a holding in the cluster and the billing entity for the HT Item are allocated a share. 
+For HT Items in **clusters** that are not MPM, an institution is considered to hold the HT Item and is allocated a share for it if either of the following are true:
+- It is the billing entity for the HT Item (i.e. the depositor of an HT Item is always assumed to hold it)
+- It submitted a holding that is in the cluster
 
-For HT Items in **clusters** that are MPM, the process is more complicated. Organizations with holdings:
-- Organizations with holdings with empty **n_enum**. The reverse is **not** true; i.e. Items with empty n_enum don't match everything.
-- Organizations with holdings with an **n_enum** matching the **n_enum** of the Item.
-- Organizations with **holdings** in the cluster with **n_enum** that don't match any of the **n_enum** found in any of the HT Items in the cluster. [^2]
-- Billing entity for the HT Item.
+For HT Items in **clusters** that are MPM, the process is more complicated. An institution is considered to hold the item and is allocated a share if any of the following are true:
+- It is the billing entity for the HT Item.
+- It has a holding in the cluster with an **n_enum** matching the **n_enum** of the HT Item.
+- It has a holding in the cluster with an empty **n_enum**. The reverse is **not** true: holdings with empty n_enums match all HT Items in an MPM cluster; but HT Items with empty n_enums match only holdings with empty n_enums.
+- It has holdings in the cluster, but none of the reported **n_enum** match any of the **n_enum** found in any of the HT Items in the cluster. That is, if no holdings n_enums match, then this is assumed to be a data problem, and the institution is considered to hold all of the items in the cluster. [^2]
 
 **NB**: Billing entities apply only to the HT Item they are on. For example, a billing entity on an HT Item with an empty n_enum will **not** match other HT Items in the cluster.
 
