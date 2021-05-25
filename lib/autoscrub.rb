@@ -18,6 +18,7 @@ class AutoScrub
 
   # Won't put in accessors unless we find a solid case for running this
   # by another ruby class.
+  attr_reader :output_struct
 
   def initialize(path)
     @path = path
@@ -25,7 +26,7 @@ class AutoScrub
     @member_holding_file = MemberHoldingFile.new(@path)
     @member_id           = @member_holding_file.member_id
     @output_struct       = ScrubOutputStructure.new(@member_id)
-    @item_type           = @member_holding_file.get_item_type_from_filename
+    @item_type           = @member_holding_file.item_type_from_filename
     @output_dir          = @output_struct.date_subdir!("output")
     @log_dir             = @output_struct.date_subdir!("log")
 
