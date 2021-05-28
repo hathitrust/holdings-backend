@@ -13,6 +13,7 @@ class ClusterHtItem
   def initialize(*ht_items)
     @ht_items = ht_items.flatten
     @ocns = @ht_items.first.ocns
+    @any_updated = false
 
     if @ht_items.count > 1 && @ht_items.any? {|h| !h.batch_with?(@ht_items.first) }
       raise ArgumentError, "OCN for each HTItem in batch must match"
@@ -81,7 +82,11 @@ class ClusterHtItem
       if (existing_item = cluster.ht_item(item.item_id))
         Services.logger.debug "updating existing item with id #{item.item_id}"
         needs_reclustering = needs_recluster?(cluster, existing_item.ocns, item.ocns)
-        existing_item.update_attributes(item.to_hash)
+
+        if (item_attrs = item.to_hash) != existing_item.to_hash
+          existing_item.update_attributes(item_attrs)
+          @any_updated = true
+        end
       else
         ClusterHtItem.new(item).delete
         to_append << item
@@ -89,6 +94,7 @@ class ClusterHtItem
     end
 
     cluster.add_ht_items(to_append) unless to_append.empty?
+    cluster.save if @any_updated
 
     Reclusterer.new(cluster).recluster if needs_reclustering
   end

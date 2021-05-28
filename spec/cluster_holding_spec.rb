@@ -29,6 +29,12 @@ RSpec.describe ClusterHolding do
         expect(Cluster.count).to eq(1)
       end
 
+      it "updates cluster last modified date" do
+        orig_last_modified = c.last_modified
+        cluster = described_class.new(h).cluster
+        expect(cluster.last_modified).to be > orig_last_modified
+      end
+
       it "creates a new cluster if no match is found" do
         expect(described_class.new(build(:holding)).cluster.id).not_to eq(c.id)
         expect(Cluster.count).to eq(2)
@@ -72,6 +78,15 @@ RSpec.describe ClusterHolding do
         expect(cluster.holdings.first.date_received).to eq(h2.date_received)
         expect(cluster.holdings.last.date_received).not_to \
           eq(h2.date_received)
+      end
+
+      it "updates cluster last modified date" do
+        cluster = described_class.new(h).cluster
+        orig_last_modified = cluster.last_modified
+        h2.date_received = Date.today
+        h2.uuid = SecureRandom.uuid
+        updated = described_class.new(h2).cluster
+        expect(updated.last_modified).to be > orig_last_modified
       end
 
       it "adds the holding if there is no existing holding" do

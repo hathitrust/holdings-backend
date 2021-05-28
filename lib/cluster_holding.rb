@@ -11,6 +11,7 @@ class ClusterHolding
     raise ArgumentError, "Must have holdings to cluster" unless @holdings.any?
 
     @ocn = @holdings.first.ocn
+    @any_updated = false
 
     if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
       raise ArgumentError, "OCN for each holding in batch must match"
@@ -40,6 +41,7 @@ class ClusterHolding
       end
 
       c.add_holdings(to_add)
+      c.save if @any_updated
     end
   end
 
@@ -73,6 +75,7 @@ class ClusterHolding
   def update_holding(old, new)
     old.update_attributes(date_received: new.date_received,
                           uuid: new.uuid)
+    @any_updated = true
   end
 
   def find_old_holdings(cluster, holding)
