@@ -6,7 +6,7 @@ require "cluster"
 
 RSpec.describe Holding do
   let(:c) { create(:cluster) }
-  let(:h) { build(:holding) }
+  let(:h) { build(:holding, :all_fields) }
   let(:h2) { h.clone }
 
   it "does not have a parent" do
@@ -33,13 +33,21 @@ RSpec.describe Holding do
   end
 
   describe "#==" do
-    it "== is true if all fields match except date_received" do
+    it "== is true if all fields match except date_received and uuid" do
       h2.date_received = Date.yesterday
+      h2.uuid = SecureRandom.uuid
       expect(h == h2).to be(true)
     end
 
     it "== is true if all fields match including date_received" do
       expect(h == h2).to be(true)
+    end
+
+    (described_class.fields.keys - ["date_received", "uuid", "_id"]).each do |attr|
+      it "== is false if #{attr} doesn't match" do
+        h2[attr] = nil
+        expect(h == h2).to be(false)
+      end
     end
   end
 

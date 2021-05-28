@@ -41,7 +41,6 @@ class ClusterHolding
       end
 
       c.add_holdings(to_add)
-      c.save if @any_updated
     end
   end
 
@@ -75,7 +74,6 @@ class ClusterHolding
   def update_holding(old, new)
     old.update_attributes(date_received: new.date_received,
                           uuid: new.uuid)
-    @any_updated = true
   end
 
   def find_old_holdings(cluster, holding)

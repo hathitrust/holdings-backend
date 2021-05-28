@@ -11,6 +11,15 @@ FactoryBot.define do
     mono_multi_serial { ["mono", "multi", "serial"].sample }
     date_received { Date.today }
     condition { "" }
+    issn {}
+    status {}
     uuid { SecureRandom.uuid }
+    gov_doc_flag { [true, false].sample }
+
+    trait :all_fields do
+      issn { format("%04d-%04d", rand(1000), rand(1000)) }
+      status { ["CH", "LM", "WD"].sample }
+      condition { "BRT" }
+    end
   end
 end

@@ -28,6 +28,8 @@ class Holding
   field :uuid, type: String
   field :issn, type: String
 
+  EQUALITY_EXCLUDED_FIELDS = ["_id", "uuid", "date_received"].freeze
+
   embedded_in :cluster
 
   validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
@@ -75,25 +77,22 @@ class Holding
     new(rec)
   end
 
-  # Is false when any field other than date_received or uuid is not the same
+  # Is false when any field other than _id, date_received or uuid is not the
+  # same
   #
   # @param other, another holding
   def ==(other)
-    ocn == other.ocn &&
-      organization == other.organization &&
-      local_id == other.local_id &&
-      enum_chron == other.enum_chron &&
-      status == other.status &&
-      condition == other.condition &&
-      gov_doc_flag == other.gov_doc_flag &&
-      mono_multi_serial == other.mono_multi_serial
+    (fields.keys - EQUALITY_EXCLUDED_FIELDS)
+      .all? {|attr| public_send(attr) == other.public_send(attr) }
   end
 
-  # Is true when all fields match
+  # Is true when all fields match except for _id
   #
   # @param other, another holding
   def same_as?(other)
-    (self == other) && (date_received == other.date_received) && (uuid == other.uuid)
+    (self == other) &&
+      (date_received == other.date_received) &&
+      (uuid == other.uuid)
   end
 
   def batch_with?(other)
