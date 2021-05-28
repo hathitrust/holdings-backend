@@ -1,9 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "services"
-
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
+require "services"
+require "settings"
 require "bundler/setup"
 require "utils/waypoint"
 require "utils/ppnum"
