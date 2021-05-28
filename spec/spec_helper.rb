@@ -64,4 +64,16 @@ RSpec.configure do |config|
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }
     end
   end
+
+  config.around(:each, type: "loaded_file") do |example|
+    old_logger = Services.logger
+    begin
+      Services.register(:logger) { logger }
+      LoadedFile.db.transaction(rollback: :always, auto_savepoint: true) do
+        example.run
+      end
+    ensure
+      Services.register(:logger) { old_logger }
+    end
+  end
 end

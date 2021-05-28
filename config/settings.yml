@@ -1,5 +1,6 @@
 serials_file: <%= ENV["SERIALS_FILE"] %>
 hathifile_path: <%= ENV["HATHIFILE_PATH"] %>
+concordance_path: <%= ENV["CONCORDANCE_PATH"] %>
 large_cluster_ocns: /usr/src/app/config/large_cluster_ocns.txt
 database:
   url: <%= ENV["MYSQL_CONNECTION_STRING"] %>

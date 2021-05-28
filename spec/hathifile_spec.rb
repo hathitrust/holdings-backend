@@ -3,22 +3,10 @@
 require "spec_helper"
 require "hathifile"
 
-RSpec.describe Hathifile do
+RSpec.describe Hathifile, type: "loaded_file" do
   let(:logger) { double(:logger, info: true) }
   let(:hathifile) { described_class.new(Date.parse("2021-04-02")) }
   let(:expected_filename) { Pathname.new("/tmp/hathifiles/hathi_upd_20210401.txt.gz") }
-
-  around(:each) do |example|
-    old_logger = Services.logger
-    begin
-      Services.register(:logger) { logger }
-      LoadedFile.db.transaction(rollback: :always, auto_savepoint: true) do
-        example.run
-      end
-    ensure
-      Services.register(:logger) { old_logger }
-    end
-  end
 
   it "computes the path for an update file" do
     expect(hathifile.filename).to eq(expected_filename)
