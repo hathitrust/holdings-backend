@@ -4,6 +4,7 @@ require "mongoid"
 require "ht_members"
 require "services"
 require "enum_chron"
+require "json"
 
 # A member holding
 class Holding
@@ -66,6 +67,11 @@ class Holding
 
   def self.new_from_holding_file_line(line)
     rec = holding_to_record(line.chomp)
+    new(rec)
+  end
+
+  def self.new_from_scrubbed_file_line(line)
+    rec = JSON.parse(line)
     new(rec)
   end
 
