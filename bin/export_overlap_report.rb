@@ -35,19 +35,17 @@ def full_report(org)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
-  report = []
   ClusterOverlap.matching_clusters(org).each do |c|
     ClusterOverlap.new(c, org).each do |overlap|
       waypoint.incr
-      report << overlap_line(overlap.to_hash)
+      puts overlap_line(overlap.to_hash)
       waypoint.on_batch {|wp| logger.info wp.batch_line }
     end
   end
   logger.info waypoint.final_line
-  report
 end
 
 if __FILE__ == $PROGRAM_NAME
   org = ARGV.shift
-  puts full_report(org).join("\n")
+  full_report(org).join("\n")
 end
