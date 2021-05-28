@@ -76,6 +76,7 @@ The Cluster Format is used in the overlap calculations. It is derived from the I
 
 **Total Weight**
 : The sum of member weights found in the `ht_billing_members` table of the holdings database. **Which process/system has ownership of this table?**
+  The Executive Director assigns member weights based on a [formula](https://www.hathitrust.org/Cost) approved by the membership in 2019. The calculation for system members can be found [here](https://docs.google.com/spreadsheets/d/1C74IUynslWOSCAkdlcLO8jgRDvuXq-JcQUsyapD9JEI/edit?usp=sharing).
 
 **Public Domain Cost**
 : Cost Per Volume * Number of Public Domain Volumes (see Public Domain vs In-Copyright)
