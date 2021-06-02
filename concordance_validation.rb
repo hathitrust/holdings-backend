@@ -24,6 +24,8 @@ module ConcordanceValidation
         raw_to_resolved[raw.to_i] << resolved.to_i if raw != resolved
         resolved_to_raw[resolved.to_i] << raw.to_i if raw != resolved
       end
+      @raw_to_resolved.default_proc = ->(_,_) { nil }
+      @resolved_to_raw.default_proc = ->(_,_) { nil }
     end
 
     def file_handler
@@ -71,11 +73,11 @@ module ConcordanceValidation
       ocns_checked = []
       while ocns_to_check.any?
         ocn = ocns_to_check.pop
-        out_edges[ocn] = @raw_to_resolved[ocn].clone if @raw_to_resolved[ocn].any?
+        out_edges[ocn] = @raw_to_resolved[ocn].clone if @raw_to_resolved[ocn]&.any?
         @raw_to_resolved[ocn].each do |to_ocn|
           ocns_to_check << to_ocn unless ocns_checked.include? to_ocn
         end
-        in_edges[ocn] = @resolved_to_raw[ocn].clone if @resolved_to_raw[ocn].any?
+        in_edges[ocn] = @resolved_to_raw[ocn].clone if @resolved_to_raw[ocn]&.any?
         @resolved_to_raw[ocn].each do |from_ocn|
           ocns_to_check << from_ocn unless ocns_checked.include? from_ocn
         end
