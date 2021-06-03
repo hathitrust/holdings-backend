@@ -4,6 +4,20 @@ def post_to_holdings_channel(msg)
   system("curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"#{msg}\"}' #{ENV['SLACK_URL']}")
 end
 
+def review_logs(log_file)
+  multiple_ocns_count = 0
+  errors = []
+  File.open(log_file).each do |line|
+    if line =~ /resolves to multiple ocns/
+      multiple_ocns_count += 1 
+    else
+      errors << line
+    end
+  end
+  errors << "#{multiple_ocns_count} resolved to multiple OCNS."
+  errors
+end
+
 # Check the concordance directory for new concordance files.
 # Validate any new files.
 # Compute deltas of new concordance with pre-existing validated concordance.
@@ -27,6 +41,8 @@ dates_to_validate.each do |date|
   puts "Validating #{fin}"
   validated = system("bundle exec ruby concordance_validation.rb #{fin} #{fout} > results.tmp")
   post_to_holdings_channel("Validated #{fin}.") if validated
+  error_msg = review_logs("#{date}_concordance_validated.tsv.log").join("\n")
+  post_to_holdings_channel(error_msg)
   gzipped = system("gzip #{fout}")
 end
 
