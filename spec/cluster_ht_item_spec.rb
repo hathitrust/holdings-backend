@@ -77,6 +77,14 @@ RSpec.describe ClusterHtItem do
       expect(Cluster.count).to eq(1)
     end
 
+    it "updates the last_modified_date when adding an htitem" do
+      empty_cluster.save
+      orig_last_modified = empty_cluster.last_modified
+      cluster = described_class.new(item).cluster
+
+      expect(cluster.last_modified).to be > orig_last_modified
+    end
+
     it "creates a new cluster if no match is found" do
       new_item = build(:ht_item)
       empty_cluster.save
@@ -147,6 +155,24 @@ RSpec.describe ClusterHtItem do
         expect(
           Cluster.each.to_a.first.ht_items.first.to_hash
         ).to eq(update_item.to_hash)
+      end
+
+      it "changes update_date when a relevant attribute changes" do
+        first = described_class.new(item).cluster
+        first_last_modified = first.last_modified
+
+        updated = described_class.new(update_item).cluster
+
+        expect(updated.last_modified).to be > first_last_modified
+      end
+
+      it "does not change cluster update when no attributes change" do
+        first = described_class.new(item).cluster
+        first_last_modified = first.last_modified
+
+        updated = described_class.new(item).cluster
+
+        expect(updated.last_modified).to eq(first_last_modified)
       end
     end
 

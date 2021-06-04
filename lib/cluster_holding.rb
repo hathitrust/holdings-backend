@@ -11,6 +11,7 @@ class ClusterHolding
     raise ArgumentError, "Must have holdings to cluster" unless @holdings.any?
 
     @ocn = @holdings.first.ocn
+    @any_updated = false
 
     if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
       raise ArgumentError, "OCN for each holding in batch must match"

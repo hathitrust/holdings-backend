@@ -43,6 +43,13 @@ RSpec.describe ClusterOCNResolution do
       expect(Cluster.count).to eq(1)
     end
 
+    it "updates modified date when adding OCN Resolution" do
+      c.save
+      orig_last_modified = c.last_modified
+      cluster = described_class.new(resolution).cluster
+      expect(cluster.last_modified).to be > orig_last_modified
+    end
+
     it "creates a new cluster if no match is found" do
       c.save
       new_cluster = described_class.new(build(:ocn_resolution)).cluster

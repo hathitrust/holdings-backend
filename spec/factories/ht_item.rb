@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ht_item"
+require "faker"
 
 FactoryBot.define do
   factory :ht_item do
