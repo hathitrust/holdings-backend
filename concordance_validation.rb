@@ -74,11 +74,11 @@ module ConcordanceValidation
       while ocns_to_check.any?
         ocn = ocns_to_check.pop
         out_edges[ocn] = @raw_to_resolved[ocn].clone if @raw_to_resolved[ocn]&.any?
-        @raw_to_resolved[ocn].each do |to_ocn|
+        @raw_to_resolved[ocn]&.each do |to_ocn|
           ocns_to_check << to_ocn unless ocns_checked.include? to_ocn
         end
         in_edges[ocn] = @resolved_to_raw[ocn].clone if @resolved_to_raw[ocn]&.any?
-        @resolved_to_raw[ocn].each do |from_ocn|
+        @resolved_to_raw[ocn]&.each do |from_ocn|
           ocns_to_check << from_ocn unless ocns_checked.include? from_ocn
         end
         ocns_checked << ocn
@@ -91,7 +91,7 @@ module ConcordanceValidation
     # @param ocn to check
     # @return true if it doesn't resolve to something
     def terminal_ocn?(ocn)
-      @raw_to_resolved[ocn].count.zero?
+      @raw_to_resolved[ocn].nil? || @raw_to_resolved[ocn].count.zero?
     end
 
     # Find the terminal ocn for a given ocn
