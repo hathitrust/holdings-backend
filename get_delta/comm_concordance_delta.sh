@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Description:
 # This script takes 2 oclc concordance files, one old and one new.
 # Each is inflated, and records that say x->x are discarded.
