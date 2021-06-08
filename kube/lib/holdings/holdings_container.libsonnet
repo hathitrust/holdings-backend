@@ -1,6 +1,7 @@
 (import 'ksonnet-util/kausal.libsonnet') +
 (import './config.libsonnet') +
 {
+  local container = $.core.v1.container,
   local env = $.core.v1.container.envType,
   local port = $.core.v1.containerPort,
   local volumeMount = $.core.v1.volumeMount,
@@ -64,28 +65,28 @@
 
   holdings_container:: {
     new(name,command): $.core.v1.container.new(name, images.client)
-               .withCommand(command)
-               .withEnv([
+               + container.withCommand(command)
+               + container.withEnv([
                   env.fromSecretRef("MONGODB_PASSWORD","holdings-mongodb","mongodb-password"),
                   env.fromSecretRef("MYSQL_PASSWORD","holdings-mysql","mysql-password"),
                   env.new("MONGOID_ENV","production"),
                   env.new("TZ","America/Detroit")
                ])
-               .withVolumeMounts(volumeMounts)
-               .withImagePullPolicy('Always'),
+               + container.withVolumeMounts(volumeMounts)
+               + container.withImagePullPolicy('Always'),
     volumes: volumes
   },
 
   mongo_backup_container:: {
     new(name): $.core.v1.container.new(name, images.mongo_backup)
-             .withCommand('/usr/local/bin/backup_mongo_rotate.sh')
-             .withEnv([
+             + container.withCommand('/usr/local/bin/backup_mongo_rotate.sh')
+             + container.withEnv([
                 env.fromSecretRef("MONGODB_ROOT_PASSWORD","holdings-mongodb","mongodb-root-password"),
                 env.new("MONGODB_HOST",config.mongo.host),
                 env.new("BACKUP_HOME",config.mongo.backup_home)
              ])
-             .withVolumeMounts([htprep_volume_mount])
-             .withImagePullPolicy('Always'),
+             + container.withVolumeMounts([htprep_volume_mount])
+             + container.withImagePullPolicy('Always'),
     volumes: [ htprep_volume ]
   }
 }
