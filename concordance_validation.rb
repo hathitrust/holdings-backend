@@ -91,7 +91,7 @@ module ConcordanceValidation
     # @param ocn to check
     # @return true if it doesn't resolve to something
     def terminal_ocn?(ocn)
-      @raw_to_resolved[ocn].nil? || @raw_to_resolved[ocn].count.zero?
+      !@raw_to_resolved.has_key? ocn
     end
 
     # Find the terminal ocn for a given ocn
