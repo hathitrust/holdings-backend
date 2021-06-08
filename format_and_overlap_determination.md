@@ -120,7 +120,7 @@ HT Item HScores are held in a frequency table separated by member and **HT Item*
 
 [^1]: System only uses n_enum which is likely wrong, but n_chron and n_enum_chron exist so changes should be easy.
 
-[^2]: This can lead to cases where a member providing more data or HT ingesting more HT Items can reduce access/cost.
+[^2]: This can lead to cases where a member providing more data or HT ingesting more HT Items can reduce access/cost. That is, if the institution or HT adds a record that does match, they will no longer be allocated a share of those that don't.
 
 [^3]: Implementation detail: `<member> => <format> : <num of orgs that hold a thing> : <frequency>`
 Total hscore for a particular member and format is thus  ∑(1 / number of orgs * frequency). This doubles as a data structure for overlap histograms which is why it is more complicated than it needs to be for only cost allocation.
