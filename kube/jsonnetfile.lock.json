@@ -8,18 +8,18 @@
           "subdir": "ksonnet-util"
         }
       },
-      "version": "cb8787cd974c4291ee6aa2c17f211010429da554",
-      "sum": "TGgjbv8oGfmMNjfvcgxi2cX9RAJKGZnYGLEhzK2wNjM="
+      "version": "cfe6607241392d8ec430d425209f0f365b72bf52",
+      "sum": "jelt5QWEerVPLHHZN6Ga0B4OQ/MLBl+OLj3kVzTET+Y="
     },
     {
       "source": {
         "git": {
-          "remote": "https://github.com/ksonnet/ksonnet-lib.git",
-          "subdir": "ksonnet.beta.4"
+          "remote": "https://github.com/jsonnet-libs/k8s-alpha.git",
+          "subdir": "1.20"
         }
       },
-      "version": "0d2f82676817bbf9e4acf6495b2090205f323b9f",
-      "sum": "ur22hPQq0JAPBxm8hNMcwjumj4MkozDwOKiGZvVMYh4="
+      "version": "b3200f1ead8ebb74932673a41748194950564686",
+      "sum": "vBKn8panEGMMEWBvedIOmyE048Oyx/5BuNP8+zrBjX8="
     }
   ],
   "legacyImports": false
