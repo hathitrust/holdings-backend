@@ -5,17 +5,21 @@
 {
   local env = $.core.v1.container.envType,
   local cronJob = $.batch.v1beta1.cronJob,
+  local cronJobTemplateSpec = cronJob.spec.jobTemplate.spec.template.spec,
+  local cronJobSecurityContext = cronJobTemplateSpec.securityContext,
   local cronJobSchedule(schedule) = { spec+: { schedule: schedule } },
   local config = $._config.holdings,
   local images = $._images.holdings,
 
   local holdings_cron_job(name,containers,schedule,volumes) =
     cronJob.new( name=name, containers=containers )
-     .withVolumes(volumes)
-     .withRestartPolicy('OnFailure')
-   + { spec+: { concurrencyPolicy: 'Forbid' } }
-   + { spec+: { jobTemplate+: { spec+: { template+: { spec+: { securityContext+: config.runAs } } } } } }
-   + { spec+: { schedule: schedule } },
+   + cronJob.spec.withConcurrencyPolicy('Forbid')
+   + cronJob.spec.withSchedule(schedule),
+   + cronJobTemplateSpec.withRestartPolicy('OnFailure')
+   + cronJobTemplateSpec.withVolumes(volumes)
+   + cronJobSecurityContext.withRunAsUser(config.runAs.runAsUser)
+   + cronJobSecurityContext.withRunAsGroup(config.runAs.runAsGroup)
+   + cronJobSecurityContext.withFsGroup(config.runAs.fsGroup)
 
   holdings+: {
 

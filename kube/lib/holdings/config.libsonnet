@@ -28,7 +28,7 @@
 
   _images+:: {
     holdings: {
-      client: 'hathitrust/holdings-client:latest',
+      client: 'ghcr.io/hathitrust/holdings-client-unstable',
       mongo_backup: 'hathitrust/mongo-backup'
     }
   },
