@@ -28,7 +28,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: 'hathitrust/holdings-client-unstable:${{ github.sha }}, hathitrust/holdings-client-unstable:latest'
+          tags: 'ghcr.io/hathitrust/holdings-client-unstable:${{ github.sha }}, ghcr.io/hathitrust/holdings-client-unstable:latest'
           file: Dockerfile.prod
 
       - name: Image digest
