@@ -29,7 +29,7 @@ spec:
           value: production
         - name: TZ
           value: America/Detroit
-        image: ghcr.io/hathitrust/holdings/client-unstable:latest
+        image: ghcr.io/hathitrust/holdings-client-unstable:latest
         imagePullPolicy: Always
         name: holdings-client
         volumeMounts:

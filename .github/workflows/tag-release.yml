@@ -20,8 +20,8 @@ jobs:
 
     - name: Tag latest release in DockerHub
       run: |
-        docker pull hathitrust/holdings-client-unstable:${{ github.sha }}
-        docker tag hathitrust/holdings-client-unstable:${{ github.sha }} hathitrust/holdings-client:${{ github.event.release.tag_name }}
-        docker tag hathitrust/holdings-client-unstable:${{ github.sha }} hathitrust/holdings-client:latest
-        docker push hathitrust/holdings-client:${{ github.event.release.tag_name }}
-        docker push hathitrust/holdings-client:latest
+        docker pull ghcr.io/hathitrust/holdings-client-unstable:${{ github.sha }}
+        docker tag ghcr.io/hathitrust/holdings-client-unstable:${{ github.sha }} ghcr.io/hathitrust/holdings-client:${{ github.event.release.tag_name }}
+        docker tag ghcr.io/hathitrust/holdings-client-unstable:${{ github.sha }} ghcr.io/hathitrust/holdings-client:latest
+        docker push ghcr.io/hathitrust/holdings-client:${{ github.event.release.tag_name }}
+        docker push ghcr.io/hathitrust/holdings-client:latest
