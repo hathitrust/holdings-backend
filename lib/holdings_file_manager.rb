@@ -20,6 +20,7 @@ require "loaded_file"
 class HoldingsFileManager
 
   def initialize(holdings_file_factory: ->(path) { HoldingsFile.new(path) },
+                 autoscrub: ->(path) { AutoScrub.new(path).run },
                  loading_flag: Services.loading_flag,
                  scrub_path: holdings_path("new"),
                  member_data_path: holdings_path("member_data"))
@@ -30,17 +31,14 @@ class HoldingsFileManager
   end
 
   def try_scrub
-    # TODO: use Autoscrub directly here?
     # TODO: record member & date of submission?
+    # TODO: move to "seen" directory
     Dir.glob(scrub_path / "*.tsv") do |scrub_file|
-      holdings_file_factory.call(scrub_file).scrub
+      autoscrub.call(scrub_file)
     end
   end
 
   def try_load
-    require 'pry'
-    binding.pry
-
     return unless files_to_load.any?
 
     # TODO: decide what we want the locking semantics to be -- are multiple
