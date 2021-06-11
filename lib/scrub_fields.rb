@@ -52,7 +52,7 @@ class ScrubFields
   end
 
   LOCAL_ID_MAX_LEN = 50
-  MAX_NUM_ITEMS    = 10 # rather arbitrary
+  MAX_NUM_ITEMS    = 25 # rather arbitrary
 
   STATUS    = /^(CH|LM|WD)$/.freeze
   CONDITION = /^BRT$/.freeze
@@ -77,7 +77,7 @@ class ScrubFields
     # exported properly, but there are legit cases of this I guess.
     if candidates.size > MAX_NUM_ITEMS
       count_x(:too_many_ocns)
-      Services.scrub_logger.warn "Too many ocns (#{candidates.size}) in ocn #{str}"
+      Services.scrub_logger.warn "A lot of ocns (#{candidates.size}) in ocn #{str}"
     end
 
     if candidates.size > 1

@@ -52,7 +52,10 @@ class MemberHolding
   # rubocop:disable Metrics/MethodLength
   def set(col_type, col_val)
     if col_val.nil?
-      raise ColValError, "col_val for col_type #{col_type} is nil"
+      Services.scrub_logger.warn(
+        "col_val for col_type #{col_type} is nil"
+      )
+      col_val = ""
     end
 
     case col_type

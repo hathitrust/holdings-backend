@@ -16,6 +16,9 @@ clear
 
 delim="----------"
 
+data_dir=`realpath $script_path/../data/`
+mkdir --verbose -p $data_dir
+
 files_to_scrub_dir=`realpath $script_path/../data/new/`
 mkdir --verbose -p $files_to_scrub_dir
 
@@ -31,7 +34,7 @@ load_command="bundle exec ruby $load_path"
 member_data_dir=`realpath $script_path/../data/member_data/`
 
 # Check files_to_scrub_dir for files to scrub.
-files_to_scrub="ls -w1 $files_to_scrub_dir/*.tsv"
+files_to_scrub="ls -w1 $files_to_scrub_dir/*.tsv $files_to_scrub_dir/*.tsv.gz"
 echo -e "new files:\n$files_to_scrub"
 eval "$files_to_scrub" | while read new_file ; do
     echo "$scrub_command $new_file"

@@ -50,18 +50,21 @@ class AutoScrub
   def run
     Services.scrub_logger.info("Started scrubbing #{@path}")
 
-    # We're committed to running on a *nix machine anyways, right?
-    tot_lines  = `wc -l #{@path}`.match(/^(\d+)/)[0].to_i
+    # Figure out batch size for 100 batches.
+    tot_lines  = count_file_lines
     batch_size = tot_lines < 100 ? 100 : tot_lines / 100
+    Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
     waypoint   = Utils::Waypoint.new(batch_size)
-    datetime   = Time.new.strftime("%F-%T").delete(":")
 
+    # Set up output file
+    datetime   = Time.new.strftime("%F-%T").delete(":")
     out_file_path = File.join(
       @output_dir,
       "#{@member_id}_#{@item_type}_#{datetime}.ndj"
     )
     out_file = File.open(out_file_path, "w")
     Services.scrub_logger.info("Outputting to #{out_file_path}")
+
     begin
       @member_holding_file.parse do |holding|
         out_file.puts(holding.to_json)
@@ -84,6 +87,13 @@ class AutoScrub
     Services.scrub_logger.info(
       "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
     )
+  end
+
+  private
+
+  def count_file_lines
+    # zcat -f works as plain cat if @path is not in gzip format.
+    `zcat -f #{@path} | wc -l`.match(/^(\d+)/)[0].to_i
   end
 
 end
