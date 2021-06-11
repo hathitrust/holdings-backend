@@ -1,4 +1,5 @@
 serials_file: /tmp/serials_file
+concordance_path: /tmp/concordance
 hathifile_path: /tmp/hathifiles
 large_cluster_ocns: /tmp/large_cluster_ocns.txt
 loading_flag_path: /tmp/loading_flag
