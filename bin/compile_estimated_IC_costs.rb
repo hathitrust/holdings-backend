@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "services"
-
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "utils/waypoint"
@@ -10,6 +8,7 @@ require "utils/ppnum"
 require "zinzout"
 require "ht_item_overlap"
 require "cost_report"
+require "services"
 
 Services.mongo!
 
@@ -17,11 +16,14 @@ if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
   logger = Logger.new($stderr)
+  cost_report = CostReport.new
+  logger.info "Target Cost: #{cost_report.target_cost}"
+  logger.info "Cost per volume: #{cost_report.cost_per_volume}"
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
   ocn_file = ARGV.shift
   h_share_total = 0.0
-  ht_items_seen = []
+  ht_items_seen = Set.new
 
   File.open(ocn_file).each do |line|
     ocn = line.to_i
@@ -36,7 +38,7 @@ if __FILE__ == $PROGRAM_NAME
       next unless ht_item.access == "deny"
 
       # Multiple OCLCs can map to the same cluster, but we only want them once
-      next if ht_items_seen.include? ht_item.item_id
+      next if ht_items_seen.include?(ht_item.item_id)
 
       ht_items_seen << ht_item.item_id
 
@@ -48,8 +50,6 @@ if __FILE__ == $PROGRAM_NAME
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   end
   logger.info waypoint.final_line
-
-  cost_report = CostReport.new
 
   puts "Total Estimated IC Cost:#{h_share_total * cost_report.cost_per_volume}"
 end
