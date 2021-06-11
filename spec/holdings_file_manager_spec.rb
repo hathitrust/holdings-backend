@@ -82,7 +82,7 @@ RSpec.describe HoldingsFileManager do
     end
 
     context "when there are two new files" do
-      include_context "with files", 2, "member_data/inst/to_load", "ndj"
+      include_context "with files", 2, "member_data/inst/ready_to_load", "ndj"
 
       before(:each) do
         allow(loading_flag).to receive(:with_lock).and_yield
