@@ -8,10 +8,10 @@ require "custom_errors"
 
 # Represents the information in one line from a member holding file
 class MemberHolding
-  attr_accessor :organization, :mono_multi_serial
+  attr_accessor :organization, :mono_multi_serial, :ocn, :uuid
 
-  attr_reader :ocn, :local_id, :status, :condition, :enum_chron, :issn,
-              :gov_doc_flag, :uuid, :date_received, :n_enum, :n_chron,
+  attr_reader :local_id, :status, :condition, :enum_chron, :issn,
+              :gov_doc_flag, :date_received, :n_enum, :n_chron,
               :violations
 
   def initialize(col_map = {})
@@ -85,6 +85,24 @@ class MemberHolding
     end
   end
   # rubocop:enable Metrics/MethodLength
+
+  # In case a MemberHolding.ocn has more than one value, we need to
+  # explode into 1 MemberHolding per ocn.
+  def explode_ocn
+    siblings = []
+
+    return [self] if ocn.size == 1
+
+    log("Exploding OCNs: #{ocn.join(",")}")
+    @ocn.each do |ocn|
+      doppel      = clone
+      doppel.ocn  = ocn
+      doppel.uuid = SecureRandom.uuid
+      siblings << doppel
+    end
+
+    siblings
+  end
 
   def to_json(*_args)
     {

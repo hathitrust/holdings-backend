@@ -26,6 +26,8 @@ RSpec.describe MemberHolding do
 
   let(:bad_min_str) { "FAIL_ME\t456" }
 
+  let(:explode_ocn_str) { "1,2,3\t456" }
+
   it "creates a MemberHolding (min fields example)" do
     expect(ok_min_hold).to be_a(described_class)
   end
@@ -91,5 +93,15 @@ RSpec.describe MemberHolding do
     # because those are not reason enough to reject the record, just the value
     # and should show up as warnings in the log
     expect(ok_max_hold.parse(bad_max_str)).to be(true)
+  end
+
+  it "explodes a line with multiple OCNs to a corresponding number of objects" do
+    # 1 ocn, does not explode
+    ok_min_hold.parse(ok_min_str)
+    expect(ok_min_hold.explode_ocn.size).to be(1)
+
+    # 3 ocns, explodes into 3
+    ok_min_hold.parse(explode_ocn_str)
+    expect(ok_min_hold.explode_ocn.size).to be(3)
   end
 end

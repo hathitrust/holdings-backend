@@ -185,10 +185,11 @@ class MemberHoldingFile
     "not ok, must end in .tsv or .tsv.gz"
   end
 
-  def each_holding
+  def each_holding(&block)
     read_file do |line, line_no, col_map|
       begin
-        yield item_from_line(line, col_map)
+        # May be more than one, if multiple ocns
+        item_from_line(line, col_map).each(&block)
       rescue BadRecordError => e
         log("Rejected record #{filename}:#{line_no}, #{e.message}")
       end
@@ -201,6 +202,7 @@ class MemberHoldingFile
     end
 
     holding = MemberHolding.new(col_map)
+
     all_ok  = holding.parse(line)
 
     unless all_ok
@@ -209,7 +211,8 @@ class MemberHoldingFile
 
     holding.organization      = @member_id
     holding.mono_multi_serial = @item_type
-    holding
+
+    holding.explode_ocn
   end
 
   def read_file
