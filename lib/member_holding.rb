@@ -91,7 +91,10 @@ class MemberHolding
   def explode_ocn
     siblings = []
 
-    return [self] if ocn.size == 1
+    if ocn.size == 1
+      @ocn = ocn.first
+      return [self]
+    end
 
     log("Exploding OCNs: #{ocn.join(",")}")
     @ocn.each do |ocn|
