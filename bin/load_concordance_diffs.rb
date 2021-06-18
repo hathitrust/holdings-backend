@@ -6,6 +6,7 @@ require "bundler/setup"
 require "services"
 require "ocn_concordance_diffs"
 require "utils/multi_logger"
+require "date"
 
 Services.mongo!
 
@@ -16,8 +17,10 @@ date_to_load = ARGV[0]
 
 raise "Usage: #{$PROGRAM_NAME} YYYY-mm-dd" unless date_to_load
 
+BATCH_SIZE = 250_000
+
 Services.register(:logger) do
   Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
 end
 
-OCNConcordanceDiffs.new(date_to_load).try_load
+OCNConcordanceDiffs.new(Date.parse(date_to_load)).load

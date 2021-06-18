@@ -4,7 +4,7 @@ require "services"
 require "settings"
 require "loaded_file"
 require "file_loader"
-require "ht_item_loader"
+require "ocn_resolution_loader"
 
 # Responsible for locating and loading a pair of diffs from an OCN concordance.
 # Both files contain OCNResolutions represented as deprecated, resolved pairs
@@ -21,7 +21,7 @@ class OCNConcordanceDiffs
     @logger = logger
   end
 
-  def load(loader: FileLoader.new(batch_loader: OCNResolutionLoader.new))
+  def load(loader: FileLoader.new(batch_loader: OCNResolutionLoader.new, batch_size: BATCH_SIZE))
     begin
       logger.info("Started loading #{delete_filename}")
       loader.load_deletes(delete_filename)
