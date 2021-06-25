@@ -96,7 +96,7 @@ class Cluster
 
   # Orgs that don't have "" enum chron or an enum chron found in the items
   def organizations_with_holdings_but_no_matches
-    org_enums.reject do |_org, enums|
+    @organizations_with_holdings_but_no_matches ||= org_enums.reject do |_org, enums|
       enums.include?(" ") || (enums & item_enums).any?
     end.keys
   end
