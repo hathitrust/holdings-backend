@@ -17,7 +17,7 @@ RSpec.describe "update_overlap_table" do
     ClusterHtItem.new(ht2).cluster.tap(&:save)
 
     Services.register(:holdings_db) { HoldingsDB.connection }
-    Services.holdings_db[:holdings_htitem_htmember].delete
+    Services.holdings_db[:holdings_htitem_htmember_etas_overlap].delete
   end
 
   describe "#overlap_table" do
@@ -35,6 +35,7 @@ RSpec.describe "update_overlap_table" do
     end
 
     it "updates an existing overlap in the table" do
+      expect(overlap_table.count).to eq(0)
       cfirst = Cluster.first
       upsert_cluster(cfirst, Services.logger, Utils::Waypoint.new)
       expect(overlap_table.count).to eq(2)

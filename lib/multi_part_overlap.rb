@@ -33,7 +33,7 @@ class MultiPartOverlap < Overlap
 
   def matching_holdings
     @cluster.holdings.where(organization: @org,
-                            "$or": [{ n_enum: @ht_item.n_enum }, { n_enum: "" }])
+                            "$or": [{ n_enum: @ht_item.n_enum }, { n_enum: "" }]).no_timeout
   end
 
 end

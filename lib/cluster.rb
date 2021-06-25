@@ -101,6 +101,44 @@ class Cluster
     end.keys
   end
 
+  def copy_counts
+    @copy_counts ||= holdings.group_by(&:organization).transform_values(&:size)
+    @copy_counts.default = 0
+    @copy_counts
+  end
+
+  def brt_counts
+    @brt_counts ||= holdings_by_org
+      .transform_values {|hs| hs.select {|holding| holding.condition == "BRT" }.size }
+    @brt_counts.default = 0
+    @brt_counts
+  end
+
+  def wd_counts
+    @wd_counts ||= holdings_by_org
+      .transform_values {|hs| hs.select {|holding| holding.status == "WD" }.size }
+    @wd_counts.default = 0
+    @wd_counts
+  end
+
+  def lm_counts
+    @lm_counts ||= holdings_by_org
+      .transform_values {|hs| hs.select {|holding| holding.status == "LM" }.size }
+    @lm_counts.default = 0
+    @lm_counts
+  end
+
+  def access_counts
+    @access_counts ||= holdings_by_org
+      .transform_values {|hs| hs.select(&:brt_lm_access?).size }
+    @access_counts.default = 0
+    @access_counts
+  end
+
+  def holdings_by_org
+    @holdings_by_org ||= holdings.group_by(&:organization)
+  end
+
   def push_to_field(field, items)
     return if items.empty?
 

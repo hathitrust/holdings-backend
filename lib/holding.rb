@@ -45,6 +45,10 @@ class Holding
     set_member_data
   end
 
+  def brt_lm_access?
+    condition == "BRT" || status == "LM"
+  end
+
   # Convert a tsv line from a validated holding file into a record like hash
   #
   # @param holding_line, a tsv line

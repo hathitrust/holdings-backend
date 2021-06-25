@@ -21,7 +21,7 @@ class Overlap
   end
 
   def matching_holdings
-    @cluster.holdings.where(organization: @org)
+    @cluster.holdings_by_org[@org] || []
   end
 
   def to_hash
