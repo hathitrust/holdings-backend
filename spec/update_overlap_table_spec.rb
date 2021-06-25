@@ -41,7 +41,7 @@ RSpec.describe "update_overlap_table" do
       expect(overlap_table.count).to eq(2)
       cfirst.holdings.each(&:delete)
       cfirst.save
-      upsert_cluster(cfirst, Services.logger, Utils::Waypoint.new)
+      upsert_cluster(Cluster.first, Services.logger, Utils::Waypoint.new)
       expect(overlap_table.count).to eq(1)
     end
   end

@@ -101,6 +101,7 @@ class Cluster
     end.keys
   end
 
+  # These counts will be incorrect if set prior to holdings/ht_items changes
   def copy_counts
     @copy_counts ||= holdings.group_by(&:organization).transform_values(&:size)
     @copy_counts.default = 0
