@@ -29,6 +29,7 @@ class Cluster
         partial_filter_expression: { ocns: { :$gt => 0 } })
   index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
   index({ "ocn_resolutions.ocns": 1 }, unique: true, sparse: true)
+  index({ last_modified: 1 })
   scope :for_resolution, lambda {|resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
