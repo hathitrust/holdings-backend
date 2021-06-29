@@ -41,8 +41,6 @@ if __FILE__ == $PROGRAM_NAME
     cutoff_date = Date.parse(ARGV.shift)
   end
 
-  cluster_ids_to_update = []
-
   BATCH_SIZE = 100_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
 
@@ -50,14 +48,8 @@ if __FILE__ == $PROGRAM_NAME
   cutoff_date_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
   logger.info "Upserting clusters last_modified after #{cutoff_date_str} to #{TABLENAME}"
   Cluster.where("ht_items.0": { "$exists": 1 },
-                "$or": [{ last_modified: { "$gt": cutoff_date } },
-                        { last_modified: { "$exists": 0 } }]).no_timeout.each do |cluster|
-                          cluster_ids_to_update << cluster._id
-                        end
-  # logger.info
-  logger.info "#{cluster_ids_to_update.count} clusters to process."
-  cluster_ids_to_update.each do |cid|
-    upsert_cluster(Cluster.find_by(_id: cid), logger, waypoint)
-  end
+                last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
+                  upsert_cluster(cluster, logger, waypoint)
+                end
   logger.info waypoint.final_line
 end

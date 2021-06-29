@@ -13,6 +13,7 @@
         hathifiles: "5 9 * * *",
         concordance: "0 23 * * * ",
         mongo_backup: "0 8 * * 6",
+        etas_overlap: "0 10 * * *",
       },
       runAs: {
         runAsUser: 1000,

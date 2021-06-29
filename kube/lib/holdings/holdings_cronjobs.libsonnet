@@ -48,6 +48,14 @@
     #   - cost report job (on-demand)
     #   - prod holdings exporter
 
+    # ETAS Overlap
+    etas_overlap: etas_overlap_cron_job(
+      name  'etas-overlap-loader',
+      containers = [ $.holdings_container.new('etas-overlap-loader',
+                    ['bundle', 'exec', 'bin/update_overlap_table.rb']) ],
+      volumes = $.holdings_container.volumes,
+      schedule = config.schedules.etas_overlap
+    )
 
   },
 }
