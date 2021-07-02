@@ -30,7 +30,6 @@ class ClusterHolding
         next if common_uuids.include? holding.uuid
 
         old_holdings = find_old_holdings(c, holding)
-
         if old_holdings.any?
           old_holdings.each {|old| update_holding(old, holding) }
         elsif duplicate_large_cluster_holding? c, holding, to_add
@@ -39,7 +38,6 @@ class ClusterHolding
           to_add << holding
         end
       end
-
       c.add_holdings(to_add)
     end
   end
@@ -82,7 +80,10 @@ class ClusterHolding
         h.organization == holding.organization && h.date_received != holding.date_received
       end
     else
-      [cluster.holdings.to_a.find {|h| h == holding && h.date_received != holding.date_received }]
+      # Build a fast lookup for holdings
+      # {update_key1: h1, update_key2: h2, ...}
+      @cluster_holdings_lookup ||= cluster.holdings.group_by(&:update_key)
+      [@cluster_holdings_lookup[holding.update_key]&.find{|h| h.date_received != holding.date_received}]
     end
   end
 
