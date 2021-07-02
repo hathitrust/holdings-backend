@@ -97,13 +97,21 @@ class ClusterHolding
   # Assumes uuids will not be duplicated within either list
   # Common case is that there is no overlap
   def check_for_duplicate_uuids!(existing_holdings, new_holdings)
-    common_uuids = existing_holdings.map(&:uuid) & new_holdings.map(&:uuid) # set intersection
+
+    existing_by_uuid = existing_holdings.group_by(&:uuid)
+    new_by_uuid      = new_holdings.group_by(&:uuid)
+    common_uuids     = existing_by_uuid.keys & new_by_uuid.keys
+
     common_uuids.each do |uuid|
-      existing = existing_holdings.find {|h| h.uuid == uuid }
-      holding = new_holdings.find {|h| h.uuid == uuid }
-      unless existing.same_as?(holding)
-        raise "Found holding #{existing.inspect} with same UUID " \
-                "but different attributes from update #{holding.inspect}"
+      existing = existing_by_uuid[uuid]
+      new_holding = new_by_uuid[uuid]
+
+      raise "There should be EXACTLY one holding with that UUID #{uuid}" unless existing.length == 1
+      raise "There should be EXACTLY one holding with that UUID #{uuid}" unless new_holding.length == 1
+
+      unless existing.first.same_as?(new_holding.first)
+        raise "Found holding #{existing.first.inspect} with same UUID " \
+                "but different attributes from update #{new_holding.first.inspect}"
       end
     end
   end
