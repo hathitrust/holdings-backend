@@ -83,7 +83,11 @@ class ClusterHolding
       # Build a fast lookup for holdings
       # {update_key1: h1, update_key2: h2, ...}
       @cluster_holdings_lookup ||= cluster.holdings.group_by(&:update_key)
-      [@cluster_holdings_lookup[holding.update_key]&.find{|h| h.date_received != holding.date_received}]
+      [
+        @cluster_holdings_lookup[holding.update_key]&.find do |h|
+          h.date_received != holding.date_received
+        end
+      ]
     end
   end
 
@@ -97,7 +101,6 @@ class ClusterHolding
   # Assumes uuids will not be duplicated within either list
   # Common case is that there is no overlap
   def check_for_duplicate_uuids!(existing_holdings, new_holdings)
-
     existing_by_uuid = existing_holdings.group_by(&:uuid)
     new_by_uuid      = new_holdings.group_by(&:uuid)
     common_uuids     = existing_by_uuid.keys & new_by_uuid.keys
@@ -106,8 +109,13 @@ class ClusterHolding
       existing = existing_by_uuid[uuid]
       new_holding = new_by_uuid[uuid]
 
-      raise "There should be EXACTLY one holding with that UUID #{uuid}" unless existing.length == 1
-      raise "There should be EXACTLY one holding with that UUID #{uuid}" unless new_holding.length == 1
+      unless existing.length == 1
+        raise "There should be EXACTLY one holding with that UUID #{uuid}"
+      end
+
+      unless new_holding.length == 1
+        raise "There should be EXACTLY one holding with that UUID #{uuid}"
+      end
 
       unless existing.first.same_as?(new_holding.first)
         raise "Found holding #{existing.first.inspect} with same UUID " \
