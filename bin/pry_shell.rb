@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "services"
 require "cluster"
@@ -9,5 +11,8 @@ require "pry"
 # $ bundle exec ruby bin/pry_shell.rb
 
 Services.mongo!
+
+# rubocop:disable Lint/Debugger
 binding.pry
 puts "Running pry shell."
+# rubocop:enable Lint/Debugger
