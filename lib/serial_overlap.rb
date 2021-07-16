@@ -7,7 +7,7 @@ require "overlap"
 class SerialOverlap < Overlap
 
   def copy_count
-    cc = @cluster.holdings.where(organization: @org).count
+    cc = @cluster.copy_counts[@org]
     if !cc.zero? || @ht_item.billing_entity == @org
       1
     else

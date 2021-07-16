@@ -6,7 +6,7 @@ require "overlap"
 class SinglePartOverlap < Overlap
 
   def copy_count
-    cc = @cluster.holdings.where(organization: @org).count
+    cc = @cluster.copy_counts[@org]
     if cc.zero? && @ht_item.billing_entity == @org
       1
     else
@@ -15,22 +15,20 @@ class SinglePartOverlap < Overlap
   end
 
   def brt_count
-    @cluster.holdings.where(organization: @org, condition: "BRT").count
+    @cluster.brt_counts[@org]
   end
 
   def wd_count
-    @cluster.holdings.where(organization: @org, status: "WD").count
+    @cluster.wd_counts[@org]
   end
 
   def lm_count
-    @cluster.holdings.where(organization: @org, status: "LM").count
+    @cluster.lm_counts[@org]
   end
 
   # Number of holdings with brt or lm
   def access_count
-    @cluster.holdings.where(
-      organization: @org, "$or": [{ status: "LM" }, { condition: "BRT" }]
-    ).count
+    @cluster.access_counts[@org]
   end
 
 end

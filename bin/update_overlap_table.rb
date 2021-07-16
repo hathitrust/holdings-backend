@@ -14,7 +14,7 @@ require "date"
 
 Services.mongo!
 
-TABLENAME = :holdings_htitem_htmember
+TABLENAME = :holdings_htitem_htmember_etas_overlap
 def overlap_table
   Services.holdings_db[TABLENAME]
 end
@@ -41,12 +41,12 @@ if __FILE__ == $PROGRAM_NAME
     cutoff_date = Date.parse(ARGV.shift)
   end
 
-  puts "Upserting clusters last_modified after #{cutoff_date.strftime("%Y-%m-%d %H:%M:%S")}"
-
-  BATCH_SIZE = 1_000
+  BATCH_SIZE = 100_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
 
   logger = Services.logger
+  cutoff_date_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
+  logger.info "Upserting clusters last_modified after #{cutoff_date_str} to #{TABLENAME}"
   Cluster.where("ht_items.0": { "$exists": 1 },
                 last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
                   upsert_cluster(cluster, logger, waypoint)
