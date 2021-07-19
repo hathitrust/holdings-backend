@@ -30,7 +30,6 @@ class ClusterHolding
         next if common_uuids.include? holding.uuid
 
         old_holdings = find_old_holdings(c, holding)
-
         if old_holdings.any?
           old_holdings.each {|old| update_holding(old, holding) }
         elsif duplicate_large_cluster_holding? c, holding, to_add
@@ -39,7 +38,6 @@ class ClusterHolding
           to_add << holding
         end
       end
-
       c.add_holdings(to_add)
     end
   end
@@ -82,7 +80,14 @@ class ClusterHolding
         h.organization == holding.organization && h.date_received != holding.date_received
       end
     else
-      [cluster.holdings.to_a.find {|h| h == holding && h.date_received != holding.date_received }]
+      # Build a fast lookup for holdings
+      # {update_key1: h1, update_key2: h2, ...}
+      @cluster_holdings_lookup ||= cluster.holdings.group_by(&:update_key)
+      [
+        @cluster_holdings_lookup[holding.update_key]&.find do |h|
+          h.date_received != holding.date_received
+        end
+      ]
     end
   end
 
@@ -96,13 +101,25 @@ class ClusterHolding
   # Assumes uuids will not be duplicated within either list
   # Common case is that there is no overlap
   def check_for_duplicate_uuids!(existing_holdings, new_holdings)
-    common_uuids = existing_holdings.map(&:uuid) & new_holdings.map(&:uuid) # set intersection
+    existing_by_uuid = existing_holdings.group_by(&:uuid)
+    new_by_uuid      = new_holdings.group_by(&:uuid)
+    common_uuids     = existing_by_uuid.keys & new_by_uuid.keys
+
     common_uuids.each do |uuid|
-      existing = existing_holdings.find {|h| h.uuid == uuid }
-      holding = new_holdings.find {|h| h.uuid == uuid }
-      unless existing.same_as?(holding)
-        raise "Found holding #{existing.inspect} with same UUID " \
-                "but different attributes from update #{holding.inspect}"
+      existing = existing_by_uuid[uuid]
+      new_holding = new_by_uuid[uuid]
+
+      unless existing.length == 1
+        raise "There should be EXACTLY one holding with that UUID #{uuid}"
+      end
+
+      unless new_holding.length == 1
+        raise "There should be EXACTLY one holding with that UUID #{uuid}"
+      end
+
+      unless existing.first.same_as?(new_holding.first)
+        raise "Found holding #{existing.first.inspect} with same UUID " \
+                "but different attributes from update #{new_holding.first.inspect}"
       end
     end
   end

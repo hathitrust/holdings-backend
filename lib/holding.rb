@@ -103,6 +103,12 @@ class Holding
     ocn == other.ocn
   end
 
+  # Turn a holding into a hash key for quick lookup
+  # in e.g. cluster_holding.find_old_holdings.
+  def update_key
+    as_document.slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS)).hash
+  end
+
   private
 
   def set_member_data
