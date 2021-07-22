@@ -13,41 +13,83 @@ require "etas_overlap"
 
 Services.mongo!
 
-def open_report(org, date, path)
-  File.open("#{path}/#{org}_#{date}.tsv", "w")
+# Generates overlap reports for 1 or all members
+class EtasMemberOverlapReport
+  attr_accessor :reports, :date_of_report, :report_path, :organization
+
+  def initialize(organization = nil)
+    @reports = {}
+    @date_of_report = Time.now.strftime("%Y-%m-%d")
+    @report_path = Settings.etas_overlap_reports_path || "tmp_reports"
+    Dir.mkdir(@report_path) unless File.exist?(@report_path)
+    @organization = organization
+  end
+
+  def open_report(org, date)
+    File.open("#{report_path}/#{org}_#{date}.tsv", "w")
+  end
+
+  def report_for_org(org)
+    unless reports.key?(org)
+      reports[org] = open_report(org, date_of_report)
+    end
+    reports[org]
+  end
+
+  def clusters_with_holdings
+    if organization.nil?
+      Cluster.where("holdings.0": { "$exists": 1 }).no_timeout
+    else
+      Cluster.where("holdings.organization": organization).no_timeout
+    end
+  end
+
+  def write_record(holding, format, access, rights)
+    etas_record = ETASOverlap.new(ocn: holding[:ocn],
+                    local_id: holding[:local_id],
+                    item_type: format,
+                    access: access,
+                    rights: rights)
+    report_for_org(holding[:organization]).puts etas_record
+  end
+
+  def missed_holdings(cluster, holdings_matched)
+    if organization.nil?
+      cluster.holdings - holdings_matched.to_a
+    else
+      cluster.holdings.group_by(&:organization)[organization] - holdings_matched.to_a
+    end
+  end
+
+  def write_overlaps(cluster, organization)
+    holdings_matched = Set.new
+    ClusterOverlap.new(cluster, organization).each do |overlap|
+      overlap.matching_holdings.each do |holding|
+        holdings_matched << holding
+        write_record(holding, cluster.format, overlap.ht_item.access, overlap.ht_item.rights)
+      end
+    end
+    holdings_matched
+  end
+
+  def run
+    clusters_with_holdings.each do |c|
+      # No ht_items means an empty line for each holding
+      unless c.ht_items.any?
+        c.holdings.each {|holding| write_record(holding, c.format, "", "") }
+        next
+      end
+      holdings_matched = write_overlaps(c, organization)
+      missed_holdings(c, holdings_matched).each do |holding|
+        write_record(holding, c.format, "", "")
+      end
+    end
+  end
 end
 
 if __FILE__ == $PROGRAM_NAME
-  date_of_report = Time.now.strftime("%Y-%m-%d")
-  report_path = Settings.etas_overlap_reports_path
-  Dir.mkdir(report_path) unless File.exist?(report_path)
-  reports = {}
-
-  BATCH_SIZE = 10_000
-  waypoint = Utils::Waypoint.new(BATCH_SIZE)
-  logger = Logger.new($stderr)
-  logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
-
+  # optional
   org = ARGV.shift
-  ClusterOverlap.matching_clusters(org).each do |c|
-    ClusterOverlap.new(c, org).each do |overlap|
-      waypoint.incr
-      overlap.matching_holdings.each do |holding|
-        unless reports.key?(holding[:organization])
-          reports[holding[:organization]] = open_report(holding[:organization],
-                                                        date_of_report,
-                                                        report_path)
-        end
-        etas_record = ETASOverlap.new(ocn: holding[:ocn],
-                                      local_id: holding[:local_id],
-                                      item_type: c.format,
-                                      access: overlap.ht_item.access,
-                                      rights: overlap.ht_item.rights)
-
-        reports[holding[:organization]].puts etas_record
-      end
-      waypoint.on_batch {|wp| logger.info wp.batch_line }
-    end
-  end
-  logger.info waypoint.final_line
+  rpt = EtasMemberOverlapReport.new(org)
+  rpt.run
 end
