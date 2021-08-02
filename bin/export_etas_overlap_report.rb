@@ -5,9 +5,6 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "services"
 require "settings"
 require "bundler/setup"
-require "utils/waypoint"
-require "utils/ppnum"
-require "zinzout"
 require "cluster_overlap"
 require "etas_overlap"
 
@@ -44,6 +41,20 @@ class EtasMemberOverlapReport
     end
   end
 
+  def missed_holdings(cluster, holdings_matched)
+    if organization.nil?
+      cluster.holdings - holdings_matched.to_a
+    else
+      cluster.holdings.group_by(&:organization)[organization] - holdings_matched.to_a
+    end
+  end
+
+  # Creates an overlap record and writes to the appropriate org file
+  #
+  # @param holding [Holding] the holdings provides the ocn, local_id, and organization
+  # @param format  [String] the cluster format, 'mpm', 'spm', 'ser', or 'ser/spm'
+  # @param access  [String] 'allow' or 'deny' for the associated item
+  # @param rights  [String] the rights for the associated item
   def write_record(holding, format, access, rights)
     etas_record = ETASOverlap.new(ocn: holding[:ocn],
                     local_id: holding[:local_id],
@@ -51,14 +62,6 @@ class EtasMemberOverlapReport
                     access: access,
                     rights: rights)
     report_for_org(holding[:organization]).puts etas_record
-  end
-
-  def missed_holdings(cluster, holdings_matched)
-    if organization.nil?
-      cluster.holdings - holdings_matched.to_a
-    else
-      cluster.holdings.group_by(&:organization)[organization] - holdings_matched.to_a
-    end
   end
 
   def write_overlaps(cluster, organization)
