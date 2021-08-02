@@ -31,5 +31,6 @@ group :development do
   gem "rubocop"
   gem "rubocop-performance"
   gem "rubocop-rspec"
+  gem "ruby-prof"
   gem "yard"
 end

@@ -7,7 +7,9 @@ class MultiPartOverlap < Overlap
 
   def copy_count
     cc = matching_holdings.count
-    if cc.zero? && @ht_item.billing_entity == @org
+    if cc.zero? &&
+        (@ht_item.billing_entity == @org ||
+         @cluster.organizations_with_holdings_but_no_matches.include?(@org))
       1
     else
       cc
@@ -15,25 +17,26 @@ class MultiPartOverlap < Overlap
   end
 
   def brt_count
-    matching_holdings.where(condition: "BRT").count
+    matching_holdings.count {|h| h[:condition] == "BRT" }
   end
 
   def wd_count
-    matching_holdings.where(status: "WD").count
+    matching_holdings.count {|h| h[:status] == "WD" }
   end
 
   def lm_count
-    matching_holdings.where(status: "LM").count
+    matching_holdings.count {|h| h[:status] == "LM" }
   end
 
   # Number of holdings with brt or lm
   def access_count
-    matching_holdings.where("$or": [{ status: "LM" }, { condition: "BRT" }]).count
+    matching_holdings.count {|h| h[:status] == "LM" or h[:condition] == "BRT" }
   end
 
   def matching_holdings
-    @cluster.holdings.where(organization: @org,
-                            "$or": [{ n_enum: @ht_item.n_enum }, { n_enum: "" }])
+    @matching_holdings ||= @cluster.holdings_by_org[@org]
+      &.select {|h| h[:n_enum] == @ht_item.n_enum or h[:n_enum] == "" }
+    @matching_holdings ||= []
   end
 
 end

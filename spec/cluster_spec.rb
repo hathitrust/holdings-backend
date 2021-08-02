@@ -107,6 +107,9 @@ RSpec.describe Cluster do
       ClusterHolding.new(h1).cluster.tap(&:save)
       ClusterHolding.new(h2).cluster.tap(&:save)
       ClusterHtItem.new(ht1).cluster.tap(&:save)
+      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich")).cluster.tap(&:save)
+      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich")).cluster.tap(&:save)
+      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "smu")).cluster.tap(&:save)
     end
 
     describe "#organizations_in_cluster" do
@@ -163,6 +166,30 @@ RSpec.describe Cluster do
         ClusterHolding.new(h3).cluster.tap(&:save)
         c = described_class.where(ocns: ocn1).first
         expect(c.organizations_with_holdings_but_no_matches).to include("ualberta")
+      end
+    end
+
+    describe "#holdings_by_org" do
+      it "collates holdings by org" do
+        c = described_class.where(ocns: ocn2).first
+        expect(c.holdings_by_org["umich"].size).to eq(2)
+        expect(c.holdings_by_org["smu"].size).to eq(1)
+      end
+    end
+
+    describe "#copy_counts" do
+      it "counts holdings per org" do
+        c = described_class.where(ocns: ocn2).first
+        expect(c.copy_counts["umich"]).to eq(2)
+        expect(c.copy_counts["smu"]).to eq(1)
+      end
+
+      xit "cached counts should be invalidated when holdings/ht_items are changed" do
+        c = described_class.where(ocns: ocn2).first
+        expect(c.copy_counts["umich"]).to eq(2)
+        c.holdings.map(&:delete)
+        expect(c.holdings.size).to eq(0)
+        expect(c.copy_counts["umich"]).to eq(0)
       end
     end
   end

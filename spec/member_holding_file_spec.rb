@@ -69,14 +69,17 @@ RSpec.describe MemberHoldingFile do
     end
   end
 
-  it "turns a line into a MemberHolding" do
-    expect(
-      ok_header_mhf.item_from_line("123\t123", ok_col_map)
-    ).to be_a(MemberHolding)
+  it "turns a line into an array of MemberHolding(s)" do
+    value = ok_header_mhf.item_from_line("123\t123", ok_col_map)
+    expect(value).to be_a(Array)
+    expect(value.first).to be_a(MemberHolding)
+    expect(value.first.violations).to eq([])
+  end
 
-    expect(
-      ok_header_mhf.item_from_line("123\t123", ok_col_map).violations
-    ).to eq([])
+  it "explodes a line with multiple ocns into one MemberHolding per ocn" do
+    value = ok_header_mhf.item_from_line("1,2,3\t123", ok_col_map)
+    expect(value).to be_a(Array)
+    expect(value.size).to be(3)
   end
 
   it "can read a file and yield MemberHolding records" do

@@ -99,6 +99,13 @@ RSpec.describe MultiPartOverlap do
       mpo = described_class.new(c, "different_org", ht_w_ec)
       expect(mpo.copy_count).to be(1)
     end
+
+    it "returns 1 copy if org has a non-matching holding" do
+      nmh = build(:holding, ocn: ht_w_ec.ocns.first, n_enum: "not matched")
+      cluster = ClusterHolding.new(nmh).cluster.tap(&:save)
+      mpo = described_class.new(cluster, nmh.organization, ht_w_ec)
+      expect(mpo.copy_count).to be(1)
+    end
   end
 
   describe "#brt_count" do

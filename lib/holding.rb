@@ -45,6 +45,10 @@ class Holding
     set_member_data
   end
 
+  def brt_lm_access?
+    condition == "BRT" || status == "LM"
+  end
+
   # Convert a tsv line from a validated holding file into a record like hash
   #
   # @param holding_line, a tsv line
@@ -97,6 +101,12 @@ class Holding
 
   def batch_with?(other)
     ocn == other.ocn
+  end
+
+  # Turn a holding into a hash key for quick lookup
+  # in e.g. cluster_holding.find_old_holdings.
+  def update_key
+    as_document.slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS)).hash
   end
 
   private

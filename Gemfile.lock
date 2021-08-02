@@ -9,7 +9,7 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2, >= 2.2.2)
-    addressable (2.7.0)
+    addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     ast (2.4.1)
     bson (4.10.0)
@@ -92,6 +92,7 @@ GEM
       rubocop-ast (>= 0.4.0)
     rubocop-rspec (1.43.2)
       rubocop (~> 0.87)
+    ruby-prof (1.4.3)
     ruby-progressbar (1.10.1)
     ruby2_keywords (0.0.4)
     sequel (5.37.0)
@@ -130,6 +131,7 @@ DEPENDENCIES
   rubocop
   rubocop-performance
   rubocop-rspec
+  ruby-prof
   sequel
   simplecov
   webmock
@@ -137,4 +139,4 @@ DEPENDENCIES
   zinzout
 
 BUNDLED WITH
-   2.2.16
+   2.2.20
