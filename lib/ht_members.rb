@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "mysql2"
 require "services"
 
@@ -73,4 +74,9 @@ class HTMembers
     @members[member.inst_id] = member
   end
 
+end
+
+# If called from commandline, dump all members to stdout as one inst_id per line.
+if $PROGRAM_NAME == __FILE__
+  puts HTMembers.new.members.keys
 end
