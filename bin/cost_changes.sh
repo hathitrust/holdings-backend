@@ -1,32 +1,35 @@
 #!/bin/bash
-# MW Nov 2017.
+# MW Nov 2017, updated Aug 2021.
 # Attempting to automate the construction of the cost report so that it
 # takes as little manual work as possible. Re-creates the whole cost
-# history from scratch each time, and outputs 3 separate report files.
+# history from scratch each time, and outputs 4 separate report files.
 # Be aware that this will slurp up any cost report under <input_dir>
 # so don't let experimental ones sit around when running this.
 
 # Args:
-# Takes a dir where the costreports are located as 1st arg
+# Takes a dir where the costreports are located as 1st arg,
 # and a dir where to put the outfiles           as 2nd arg.
 
 # Usage:
 # $ bash ./bin/cost_changes.sh <input_dir> <output_dir>
 
-in_dir=$1
-out_dir=$2
+in_dir=$1;
+out_dir=$2;
+mkdir -p $out_dir;
 ymd=`date +'%Y-%m-%d'`;
 
+# Set up output files.
 totals_file="$out_dir/append_totals_$ymd.tsv";
 diff_file="$out_dir/diff_totals_$ymd.tsv";
 diffp_file="$out_dir/diff_percent_totals_$ymd.tsv";
+hilites_file="$out_dir/hilites_$ymd.tsv";
 
 # Get all current members.
-member_list=`bundle exec ruby bin/get_all_members.rb | tr '\n' '|'`;
+member_list=`bundle exec ruby bin/get_all_members.rb | grep -v 'hathitrust' | tr '\n' '|'`;
 keep_lines="^($member_list";
-keep_lines+="_header)\t";
+keep_lines+="_header|member_id)\t";
 
-# Putting it all together.
+# Get all reports (recursively) from $in_dir
 all_reports=`find $in_dir -regex '.*/costreport_[0-9]+.tsv$' | sort -n | tr '\n' ' '`;
 
 # Find all totals files and append them.
@@ -44,6 +47,12 @@ function diff_percent_totals () {
     perl ./bin/append_sheets.pl --f=0,-1 --header --op='%' $all_reports;
 }
 
+# The last column from the other 3 output files.
+function hilites () {
+    echo -e "member_id\ttotal\tdiff\tdiff_pct";
+    perl ./bin/append_sheets.pl --f=0,-1 $totals_file $diff_file $diffp_file | grep -v '_header';
+}
+
 # Header values are full file path. Shorten to just the date part.
 function clean_header () {
     sed -r 's/[^\t]+?_([0-9]+).tsv/\1/g';
@@ -53,8 +62,10 @@ function clean_header () {
 append_totals       | clean_header | grep -P $keep_lines > $totals_file;
 diff_totals         | clean_header | grep -P $keep_lines > $diff_file;
 diff_percent_totals | clean_header | grep -P $keep_lines > $diffp_file;
+hilites             |                grep -P $keep_lines > $hilites_file;
 
 echo "Wrote these files:";
 echo $totals_file;
 echo $diff_file;
 echo $diffp_file;
+echo $hilites_file;
