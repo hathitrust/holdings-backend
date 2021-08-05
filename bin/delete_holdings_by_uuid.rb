@@ -34,18 +34,8 @@ ARGV.each do |path|
     next unless DIGIT_RX.match?(c_ocns)
     next unless UUID_RX.match?(h_uuid)
 
-    Cluster.find_by(ocns: c_ocns.to_i).holdings.select {|h| h.uuid == h_uuid }.each do |mh|
-      puts ["deleting:", mh.to_json].join("\t")
-      mh.delete
-      org_counts[org] ||= 0
-      org_counts[org] += 1
-    end
+    Cluster.collection.update_one({ 'ocns' => c_ocns.to_i }, { '$pull' => { 'holdings' => { '$and' => [ { 'organization' => org }, { 'uuid' => h_uuid } ] } } } )
   end
   inf.close
   puts waypoint.final_line
-end
-
-puts "summary:"
-org_counts.each do |org, count|
-  puts "#{org}\t#{count}"
 end
