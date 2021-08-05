@@ -27,7 +27,7 @@ class Synchronizer
   end
 end
 
-class InstrumentedClusterGetter < ClusterGetter
+class InstrumentedClusterGetter < Clustering::ClusterGetter
 
   def initialize(ocns, synchronizer)
     super(ocns)
@@ -46,7 +46,7 @@ class InstrumentedClusterGetter < ClusterGetter
 
 end
 
-class InstrumentedClusterHtItem < ClusterHtItem
+class InstrumentedClusterHtItem < Clustering::ClusterHtItem
 
   def with_synchronizer(synchronizer)
     tap { @synchronizer = synchronizer }

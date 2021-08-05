@@ -3,7 +3,7 @@
 require "spec_helper"
 require "cluster_holding"
 
-RSpec.describe ClusterHolding do
+RSpec.describe Clustering::ClusterHolding do
   let(:h) { build(:holding) }
   let(:batch) { [h, build(:holding, ocn: h.ocn)] }
   let(:c) { create(:cluster, ocns: [h.ocn]) }

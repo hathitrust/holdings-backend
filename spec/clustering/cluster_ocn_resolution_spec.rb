@@ -3,7 +3,7 @@
 require "spec_helper"
 require "cluster_ocn_resolution"
 
-RSpec.describe ClusterOCNResolution do
+RSpec.describe Clustering::ClusterOCNResolution do
   let(:resolution) { build(:ocn_resolution) }
   let(:resolution2) { build(:ocn_resolution, resolved: resolution.resolved) }
 
@@ -118,7 +118,7 @@ RSpec.describe ClusterOCNResolution do
         [resolution.deprecated,
          resolution.resolved,
          resolution2.deprecated].each do |ocn|
-           ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
+           Clustering::ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
          end
       end
 
