@@ -17,9 +17,9 @@ RSpec.describe ClusterOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(spm).cluster.tap(&:save)
-    ClusterHolding.new(holding).cluster.tap(&:save)
-    ClusterHolding.new(holding2).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
   end
 
   describe "#each" do
@@ -50,9 +50,9 @@ RSpec.describe ClusterOverlap do
 
     before(:each) do
       Cluster.each(&:delete)
-      ClusterHolding.new(h).cluster.tap(&:save)
-      ClusterHtItem.new(ht).cluster.tap(&:save)
-      ClusterHtItem.new(ht2).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
     end
 
     it "finds them all if org is nil" do

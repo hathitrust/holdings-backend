@@ -37,10 +37,10 @@ RSpec.describe HtItemOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(mpm).cluster.tap(&:save)
-    ClusterHolding.new(holding).cluster.tap(&:save)
-    ClusterHolding.new(holding2).cluster.tap(&:save)
-    ClusterHolding.new(non_match_holding).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(non_match_holding).cluster.tap(&:save)
   end
 
   describe "#organizations_with_holdings" do
@@ -63,7 +63,7 @@ RSpec.describe HtItemOverlap do
                    enum_chron: "2",
                    n_enum: "2",
                    billing_entity: "ucr")
-      ClusterHtItem.new(mpm2).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(mpm2).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.where(n_enum: "2").first)
       expect(overlap.ht_item.n_enum).to eq("2")
@@ -71,7 +71,7 @@ RSpec.describe HtItemOverlap do
     end
 
     it "only returns unique organizations" do
-      ClusterHolding.new(holding).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
       c.reload
       expect(CalculateFormat.new(c).cluster_format).to eq("mpm")
       overlap = described_class.new(c.ht_items.first)
@@ -84,7 +84,7 @@ RSpec.describe HtItemOverlap do
                             organization: "upenn",
                             enum_chron: "",
                             n_enum: "")
-      ClusterHolding.new(empty_holding).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(empty_holding).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.first)
       expect(overlap.organizations_with_holdings).to include("upenn")
@@ -97,7 +97,7 @@ RSpec.describe HtItemOverlap do
                                    enum_chron: "Aug",
                                    n_enum: "",
                                    n_chron: "Aug")
-      ClusterHolding.new(almost_empty_holding).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(almost_empty_holding).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.first)
       expect(overlap.organizations_with_holdings).to include("upenn")
@@ -109,7 +109,7 @@ RSpec.describe HtItemOverlap do
                          billing_entity: "ucr",
                          enum_chron: "",
                          n_enum: "")
-      ClusterHtItem.new(empty_mpm).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(empty_mpm).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.where(enum_chron: "").first)
       expect(overlap.organizations_with_holdings).to eq([non_match_holding.organization,
@@ -139,7 +139,7 @@ RSpec.describe HtItemOverlap do
     end
 
     it "assigns an h_share to hathitrust for KEIO items" do
-      ClusterHtItem.new(keio_item).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(keio_item).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.last)
       expect(c.ht_items.last.billing_entity).to eq("hathitrust")
@@ -148,7 +148,7 @@ RSpec.describe HtItemOverlap do
     end
 
     it "assigns an h_share to UCM as it would anyone else" do
-      ClusterHtItem.new(ucm_item).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ucm_item).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.last)
       expect(c.ht_items.last.billing_entity).to eq("ucm")

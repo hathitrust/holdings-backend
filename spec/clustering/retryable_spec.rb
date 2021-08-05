@@ -5,7 +5,7 @@ require "services"
 require "cluster"
 require "retryable"
 require "cluster_error"
-require "cluster_ht_item"
+require "clustering/cluster_ht_item"
 
 RSpec.describe Retryable do
   before(:each) do
@@ -25,7 +25,7 @@ RSpec.describe Retryable do
     def update_htitem
       # HTItem will move to new cluster
       htitem.ocns = htitem.ocns.map {|o| o + 1 }
-      ClusterHtItem.new(htitem).cluster
+      Clustering::ClusterHtItem.new(htitem).cluster
     end
 
     it "rolls back changes when transaction fails" do

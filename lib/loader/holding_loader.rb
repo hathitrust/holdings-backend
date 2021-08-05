@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "cluster_holding"
+require "clustering/cluster_holding"
 
 module Loader
 
@@ -27,12 +27,12 @@ module Loader
     end
 
     def load(batch)
-      ClusterHolding.new(batch).cluster
+      Clustering::ClusterHolding.new(batch).cluster
     end
 
     def finalize
       if @update
-        ClusterHolding.delete_old_holdings(@organization, @current_date)
+        Clustering::ClusterHolding.delete_old_holdings(@organization, @current_date)
       end
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_holding"
+require "clustering/cluster_holding"
 require_relative "../bin/renormalize_enumchrons"
 
 RSpec.describe "Renormalize Enumchrons" do
@@ -10,7 +10,7 @@ RSpec.describe "Renormalize Enumchrons" do
   before(:each) do
     Cluster.each(&:delete)
     h.n_enum_chron = nil
-    ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
   end
 
   describe "#renormalize" do
@@ -28,7 +28,7 @@ RSpec.describe "Renormalize Enumchrons" do
     it "find holdings and ht items with enum chrons" do
       ht = build(:ht_item, enum_chron: "1", ocns: [h.ocn])
       ht.n_enum_chron = nil
-      ClusterHtItem.new(ht).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
       expect(records_with_enum_chrons.each.to_a.size).to eq(2)
       expect(records_with_enum_chrons.count(&:n_enum_chron)).to eq(0)
       records_with_enum_chrons {|i| renormalize(i) }

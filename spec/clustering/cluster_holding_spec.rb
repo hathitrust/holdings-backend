@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_holding"
+require "clustering/cluster_holding"
 
 RSpec.describe Clustering::ClusterHolding do
   let(:h) { build(:holding) }

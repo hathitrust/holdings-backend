@@ -2,7 +2,7 @@
 
 require "cluster"
 require "reclusterer"
-require "cluster_getter"
+require "clustering/cluster_getter"
 require "ht_item_cluster_getter"
 require "retryable"
 require "set"

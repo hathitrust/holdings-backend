@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "clusterable/ht_item"
-require "cluster_ht_item"
+require "clustering/cluster_ht_item"
 
 module Loader
 
@@ -23,7 +23,7 @@ module Loader
     end
 
     def load(batch)
-      ClusterHtItem.new(batch).cluster
+      Clustering::ClusterHtItem.new(batch).cluster
     end
   end
 end

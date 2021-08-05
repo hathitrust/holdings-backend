@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_holding"
+require "clustering/cluster_holding"
+require "clustering/cluster_ht_item"
 require "single_part_overlap"
 
 RSpec.describe SinglePartOverlap do
@@ -26,10 +27,10 @@ RSpec.describe SinglePartOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHolding.new(h2).cluster.tap(&:save)
-    ClusterHolding.new(h3).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
     c.reload
   end
 

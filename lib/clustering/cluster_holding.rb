@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "cluster"
-require "cluster_getter"
+require "clustering/cluster_getter"
 
 module Clustering
 

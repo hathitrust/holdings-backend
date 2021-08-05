@@ -30,19 +30,19 @@ RSpec.describe MultiPartOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(ht_w_ec).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_w_ec).cluster.tap(&:save)
   end
 
   describe "#matching_holdings" do
     it "finds holdings that match on enum" do
-      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
     it "finds holdings with no enum" do
-      cluster = ClusterHolding.new(h_wo_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_wo_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_wo_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
@@ -50,7 +50,7 @@ RSpec.describe MultiPartOverlap do
 
     it "does not find holdings with enum when ht item has no enum" do
       ht_w_ec.update_attributes(n_enum: "")
-      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(0)
@@ -59,21 +59,21 @@ RSpec.describe MultiPartOverlap do
     it "chron is ignored for matching purposes" do
       ht_w_ec.update_attributes(n_chron: "Aug")
       ht_w_ec.update_attributes(n_enum_chron: "\tAug")
-      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(h_w_ec.n_enum_chron).not_to eq(ht_w_ec.n_enum_chron)
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
     it "does not find holdings with the wrong enum" do
-      cluster = ClusterHolding.new(h_wrong_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_wrong_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, h_wrong_ec.organization, ht_w_ec)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(0)
     end
 
     it "does not find holdings if they have the wrong organization" do
-      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       overlap = described_class.new(cluster, "not_an_org", ht_w_ec)
       expect(overlap.matching_holdings.count).to eq(0)
     end
@@ -81,14 +81,14 @@ RSpec.describe MultiPartOverlap do
 
   describe "#copy_count" do
     it "provides the correct copy count" do
-      ClusterHolding.new(h_w_ec).cluster.tap(&:save)
-      cluster = ClusterHolding.new(h_lm).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_lm).cluster.tap(&:save)
       mpo = described_class.new(cluster, h_w_ec.organization, ht_w_ec)
       expect(mpo.copy_count).to eq(2)
     end
 
     it "returns 0 copies if wrong organization" do
-      cluster = ClusterHolding.new(h_w_ec).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_w_ec).cluster.tap(&:save)
       mpo = described_class.new(cluster, "not_an_org", ht_w_ec)
       expect(mpo.copy_count).to be(0)
     end
@@ -102,7 +102,7 @@ RSpec.describe MultiPartOverlap do
 
     it "returns 1 copy if org has a non-matching holding" do
       nmh = build(:holding, ocn: ht_w_ec.ocns.first, n_enum: "not matched")
-      cluster = ClusterHolding.new(nmh).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(nmh).cluster.tap(&:save)
       mpo = described_class.new(cluster, nmh.organization, ht_w_ec)
       expect(mpo.copy_count).to be(1)
     end
@@ -110,7 +110,7 @@ RSpec.describe MultiPartOverlap do
 
   describe "#brt_count" do
     it "provides the correct brt count" do
-      cluster = ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
       mpo = described_class.new(cluster, h_brt_wd.organization, ht_w_ec)
       expect(mpo.brt_count).to eq(1)
     end
@@ -118,7 +118,7 @@ RSpec.describe MultiPartOverlap do
 
   describe "#wd_count" do
     it "provides the correct wd count" do
-      cluster = ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
       mpo = described_class.new(cluster, h_brt_wd.organization, ht_w_ec)
       expect(mpo.wd_count).to eq(1)
     end
@@ -126,7 +126,7 @@ RSpec.describe MultiPartOverlap do
 
   describe "#lm_count" do
     it "provides the correct lm count" do
-      cluster = ClusterHolding.new(h_lm).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_lm).cluster.tap(&:save)
       mpo = described_class.new(cluster, h_lm.organization, ht_w_ec)
       expect(mpo.lm_count).to eq(1)
     end
@@ -134,8 +134,8 @@ RSpec.describe MultiPartOverlap do
 
   describe "#access_count" do
     it "provides the correct access count" do
-      ClusterHolding.new(h_lm).cluster.tap(&:save)
-      cluster = ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_lm).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(h_brt_wd).cluster.tap(&:save)
       mpo = described_class.new(cluster, h_brt_wd.organization, ht_w_ec)
       expect(mpo.access_count).to eq(2)
     end

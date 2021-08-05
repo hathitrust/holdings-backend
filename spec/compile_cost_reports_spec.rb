@@ -62,17 +62,17 @@ RSpec.describe "CompileCostReports" do
   before(:each) do
     Cluster.each(&:delete)
     Services.register(:ht_members) { mock_members }
-    ClusterHtItem.new(ht_serial).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
     Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
-    ClusterHtItem.new(ht_spm).cluster.tap(&:save)
-    ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)
-    ClusterHtItem.new(ht_mpm2).cluster.tap(&:save)
-    ClusterHtItem.new(ht_spm_pd).cluster.tap(&:save)
-    ClusterHolding.new(holding_serial1).cluster.tap(&:save)
-    ClusterHolding.new(holding_serial2).cluster.tap(&:save)
-    ClusterHolding.new(holding_mpm).cluster.tap(&:save)
-    ClusterHolding.new(texas_mpm).cluster.tap(&:save)
-    ClusterHolding.new(umich_mpm).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_mpm2).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht_spm_pd).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding_serial1).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding_serial2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding_mpm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(texas_mpm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(umich_mpm).cluster.tap(&:save)
   end
 
   it "computes the correct hscores" do

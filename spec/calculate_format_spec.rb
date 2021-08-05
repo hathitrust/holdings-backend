@@ -19,7 +19,7 @@ RSpec.describe CalculateFormat do
     end
 
     it "is a MPM if it or another item has enum" do
-      c_mpm = ClusterHtItem.new(ht_mpm).cluster
+      c_mpm = Clustering::ClusterHtItem.new(ht_mpm).cluster
       expect(
         described_class.new(c_mpm).item_format(ht_mpm)
       ).to eq("mpm")
@@ -27,7 +27,7 @@ RSpec.describe CalculateFormat do
 
     it "is NOT an MPM if it has a chron but no enum" do
       ht_chron = build(:ht_item, enum_chron: "1994")
-      c_chron = ClusterHtItem.new(ht_chron).cluster
+      c_chron = Clustering::ClusterHtItem.new(ht_chron).cluster
       expect(
         described_class.new(c_chron).item_format(ht_chron)
       ).to eq("spm")
@@ -57,7 +57,7 @@ RSpec.describe CalculateFormat do
     end
 
     it "is a SER if it is in the list of large cluster ocns" do
-      c_mpm = ClusterHtItem.new(ht_mpm).cluster
+      c_mpm = Clustering::ClusterHtItem.new(ht_mpm).cluster
       Services.large_clusters.ocns.add(ht_mpm.ocns.first)
       expect(described_class.new(c_mpm).item_format(ht_mpm)).to eq("ser")
     end

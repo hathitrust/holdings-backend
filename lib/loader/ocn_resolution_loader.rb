@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "clusterable/ocn_resolution"
-require "cluster_ocn_resolution"
+require "clustering/cluster_ocn_resolution"
 
 module Loader
 
@@ -13,11 +13,11 @@ module Loader
     end
 
     def load(batch)
-      ClusterOCNResolution.new(batch).cluster
+      Clustering::ClusterOCNResolution.new(batch).cluster
     end
 
     def delete(item)
-      ClusterOCNResolution.new(item).delete
+      Clustering::ClusterOCNResolution.new(item).delete
     end
   end
 end

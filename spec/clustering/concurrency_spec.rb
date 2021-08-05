@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "services"
-require "cluster_ht_item"
+require "clustering/cluster_ht_item"
 require "tmpdir"
 
 class Synchronizer
@@ -146,7 +146,7 @@ RSpec.describe "concurrency" do
 
     let(:first_process) do
       proc do |tmpdir|
-        ClusterHtItem.new(first_ht_item).cluster.save
+        Clustering::ClusterHtItem.new(first_ht_item).cluster.save
 
         syncher = Synchronizer.new(pid: "first",
                                    wait_before: { delete: "second_saved_cluster" },

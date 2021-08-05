@@ -22,7 +22,7 @@ Metrics/AbcSize:
     - 'lib/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub_fields.rb'
-    - 'lib/cluster_ht_item.rb'
+    - 'lib/clustering/cluster_ht_item.rb'
 
 Layout/LineLength:
   Exclude:
@@ -97,7 +97,7 @@ Performance/Caller:
 RSpec/ExampleLength:
   Exclude:
     - 'spec/autoscrub_spec.rb'
-    - 'spec/cluster_holding_spec.rb'
+    - 'spec/clustering/cluster_holding_spec.rb'
 
 RSpec/MultipleExpectations:
   Exclude:

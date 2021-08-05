@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_ht_item"
-require "cluster_holding"
+require "clustering/cluster_ht_item"
+require "clustering/cluster_holding"
 require_relative "../bin/export_overlap_report"
 
 RSpec.describe "overlap_report" do
@@ -12,9 +12,9 @@ RSpec.describe "overlap_report" do
 
   before(:each) do
     Cluster.each(&:delete)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHtItem.new(ht2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
   end
 
   describe "report" do

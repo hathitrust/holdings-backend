@@ -2,26 +2,29 @@
 
 require "cluster"
 
-# Cluster getter for OCN-less HTItems
-#
-# Returns the cluster containing the HTItem or a new cluster if one does not
-# exist.
-class HtItemClusterGetter
-  def initialize(ht_item)
-    @ht_item = ht_item
+module Clustering
 
-    raise ArgumentError, "only for ocnless HTItems" unless @ht_item.ocns.empty?
-  end
+  # Cluster getter for OCN-less HTItems
+  #
+  # Returns the cluster containing the HTItem or a new cluster if one does not
+  # exist.
+  class HtItemClusterGetter
+    def initialize(ht_item)
+      @ht_item = ht_item
 
-  def get
-    Retryable.new.run do
-      try_strategies.tap {|c| yield c if block_given? }
+      raise ArgumentError, "only for ocnless HTItems" unless @ht_item.ocns.empty?
     end
-  end
 
-  private
+    def get
+      Retryable.new.run do
+        try_strategies.tap {|c| yield c if block_given? }
+      end
+    end
 
-  def try_strategies
-    Cluster.with_ht_item(@ht_item).first || Cluster.create(ocns: [])
+    private
+
+    def try_strategies
+      Cluster.with_ht_item(@ht_item).first || Cluster.create(ocns: [])
+    end
   end
 end

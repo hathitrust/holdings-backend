@@ -2,7 +2,7 @@
 
 require "cluster"
 require "reclusterer"
-require "cluster_getter"
+require "clustering/cluster_getter"
 
 module Clustering
 
@@ -25,7 +25,7 @@ module Clustering
     end
 
     def delete
-      raise ArgumentError, "Can only delete one resolution at a time" unless @resolutions.length == 1
+      raise ArgumentError, "Can only delete one resolution at a time" unless @resolutions.count == 1
 
       resolution = @resolutions.first
       return unless Cluster.where(ocns: { "$all": resolution.ocns }).any?

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_getter"
+require "clustering/cluster_getter"
 
 RSpec.describe Clustering::ClusterGetter do
   let(:ocn1) { 5 }

@@ -28,11 +28,11 @@ RSpec.describe SerialOverlap do
     Cluster.each(&:delete)
     c.save
     Services.serials.bibkeys.add(ht.ht_bib_key.to_i)
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHtItem.new(ht2).cluster.tap(&:save)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHolding.new(h2).cluster.tap(&:save)
-    ClusterHolding.new(h3).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
     c.reload
   end
 

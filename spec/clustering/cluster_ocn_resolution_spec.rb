@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_ocn_resolution"
+require "clustering/cluster_ocn_resolution"
 
 RSpec.describe Clustering::ClusterOCNResolution do
   let(:resolution) { build(:ocn_resolution) }

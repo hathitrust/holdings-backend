@@ -6,7 +6,7 @@ require "clusterable/ht_item"
 require "clusterable/commitment"
 require "clusterable/ocn_resolution"
 require "calculate_format"
-require "cluster_ht_item"
+require "clustering/cluster_ht_item"
 require "cluster_error"
 
 # A set of identifiers (e.g. OCLC numbers),
