@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "loaded_file"
+require "loader/loaded_file"
 
 RSpec.describe Loader::LoadedFile do
   around(:each) do |example|

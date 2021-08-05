@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "member_holding_header_factory"
+require "loader/member_holding_header_factory"
 require "custom_errors"
 
 RSpec.describe Loader::MemberHoldingHeaderFactory do

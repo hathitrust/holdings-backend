@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "file_loader"
+require "loader/file_loader"
 
 class FakeItem
   def initialize(line)

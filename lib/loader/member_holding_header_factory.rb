@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "custom_errors"
-require "member_holding_header"
+require "loader/member_holding_header"
 
 module Loader
 

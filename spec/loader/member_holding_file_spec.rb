@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "member_holding_file"
+require "loader/member_holding_file"
 require "custom_errors"
 
 RSpec.describe Loader::MemberHoldingFile do

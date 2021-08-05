@@ -2,9 +2,9 @@
 
 require "services"
 require "settings"
-require "loaded_file"
-require "file_loader"
-require "ht_item_loader"
+require "loader/loaded_file"
+require "loader/file_loader"
+require "loader/ht_item_loader"
 
 module Loader
   # Responsible for locating and loading a single Hathifile, a file containing

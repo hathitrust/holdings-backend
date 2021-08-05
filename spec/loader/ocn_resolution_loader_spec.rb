@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ocn_resolution_loader"
+require "loader/ocn_resolution_loader"
 
 RSpec.describe Loader::OCNResolutionLoader do
   let(:line) do

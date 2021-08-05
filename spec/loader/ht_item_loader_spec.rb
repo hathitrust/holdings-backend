@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_item_loader"
+require "loader/ht_item_loader"
 
 RSpec.describe Loader::HtItemLoader do
   let(:line) do

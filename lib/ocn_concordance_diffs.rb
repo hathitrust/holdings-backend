@@ -2,9 +2,9 @@
 
 require "services"
 require "settings"
-require "loaded_file"
-require "file_loader"
-require "ocn_resolution_loader"
+require "loader/loaded_file"
+require "loader/file_loader"
+require "loader/ocn_resolution_loader"
 
 # Responsible for locating and loading a pair of diffs from an OCN concordance.
 # Both files contain OCNResolutions represented as deprecated, resolved pairs

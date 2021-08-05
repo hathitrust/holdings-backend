@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "services"
 require "custom_errors"
-require "member_holding_file"
+require "loader/member_holding_file"
 require "scrub_output_structure"
 require "utils/waypoint"
 

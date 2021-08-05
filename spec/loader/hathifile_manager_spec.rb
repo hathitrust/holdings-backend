@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "hathifile_manager"
+require "loader/hathifile_manager"
 
 RSpec.describe Loader::HathifileManager do
   describe "#try_load" do

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "holding_loader"
+require "loader/holding_loader"
 
 RSpec.describe Loader::HoldingLoader do
   let(:uuid) { SecureRandom.uuid }

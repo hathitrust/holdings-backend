@@ -4,9 +4,9 @@
 
 require "zinzout"
 require "services"
-require "member_holding_header_factory"
+require "loader/member_holding_header_factory"
 require "custom_errors"
-require "member_holding"
+require "loader/member_holding"
 require "scrub_fields"
 
 module Loader

@@ -2,8 +2,8 @@
 
 require "services"
 require "date"
-require "hathifile"
-require "loaded_file"
+require "loader/hathifile"
+require "loader/loaded_file"
 
 module Loader
 

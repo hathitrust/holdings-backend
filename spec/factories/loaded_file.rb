@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "faker"
-require "loaded_file"
+require "loader/loaded_file"
 
 FactoryBot.define do
   factory :loaded_file, class: "Loader::LoadedFile" do

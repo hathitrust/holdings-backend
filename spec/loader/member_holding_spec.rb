@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "member_holding"
+require "loader/member_holding"
 require "custom_errors"
 require "json"
 

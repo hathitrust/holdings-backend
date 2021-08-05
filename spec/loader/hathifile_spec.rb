@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "hathifile"
+require "loader/hathifile"
 
 RSpec.describe Loader::Hathifile, type: "loaded_file" do
   let(:logger) { double(:logger, info: true) }
