@@ -4,7 +4,7 @@ require "faker"
 require "loaded_file"
 
 FactoryBot.define do
-  factory :loaded_file do
+  factory :loaded_file, class: "Loader::LoadedFile" do
     to_create(&:save)
 
     filename { Faker::File.file_name(ext: ["tsv", "json"].sample) }

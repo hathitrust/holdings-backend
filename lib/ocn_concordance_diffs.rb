@@ -21,7 +21,8 @@ class OCNConcordanceDiffs
     @logger = logger
   end
 
-  def load(loader: FileLoader.new(batch_loader: OCNResolutionLoader.new, batch_size: BATCH_SIZE))
+  def load(loader: Loader::FileLoader.new(batch_loader: OCNResolutionLoader.new,
+                                          batch_size: BATCH_SIZE))
     begin
       logger.info("Started loading #{delete_filename}")
       loader.load_deletes(delete_filename)
@@ -49,7 +50,7 @@ class OCNConcordanceDiffs
   attr_reader :logger
 
   def mark_loaded
-    LoadedFile.from_object(self).save
+    Loader::LoadedFile.from_object(self).save
   end
 
   def filename_for(date)

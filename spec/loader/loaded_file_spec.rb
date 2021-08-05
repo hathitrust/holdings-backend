@@ -3,7 +3,7 @@
 require "spec_helper"
 require "loaded_file"
 
-RSpec.describe LoadedFile do
+RSpec.describe Loader::LoadedFile do
   around(:each) do |example|
     described_class.db.transaction(rollback: :always, auto_savepoint: true) do
       example.run
