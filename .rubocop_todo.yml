@@ -115,4 +115,4 @@ Metrics/PerceivedComplexity:
 # work inside a begin block
 RSpec/InstanceVariable:
   Exclude:
-    - 'spec/file_loader_spec.rb'
+    - 'spec/loader/file_loader_spec.rb'

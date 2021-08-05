@@ -3,7 +3,7 @@
 require "spec_helper"
 require "ocn_resolution_loader"
 
-RSpec.describe OCNResolutionLoader do
+RSpec.describe Loader::OCNResolutionLoader do
   let(:line) do
     [
       "123", # deprecated

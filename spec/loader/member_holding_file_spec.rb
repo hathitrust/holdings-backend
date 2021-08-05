@@ -3,8 +3,8 @@
 require "member_holding_file"
 require "custom_errors"
 
-RSpec.describe MemberHoldingFile do
-  let(:test_data) { __dir__ + "/../testdata" }
+RSpec.describe Loader::MemberHoldingFile do
+  let(:test_data) { __dir__ + "/../../testdata" }
 
   # Vars for tests expected to pass, prefix "ok_"
   let(:ok_mem) { "umich" }
@@ -72,7 +72,7 @@ RSpec.describe MemberHoldingFile do
   it "turns a line into an array of MemberHolding(s)" do
     value = ok_header_mhf.item_from_line("123\t123", ok_col_map)
     expect(value).to be_a(Array)
-    expect(value.first).to be_a(MemberHolding)
+    expect(value.first).to be_a(Loader::MemberHolding)
     expect(value.first.violations).to eq([])
   end
 
@@ -87,7 +87,7 @@ RSpec.describe MemberHoldingFile do
 
     expect  do
       ok_header_mhf.parse do |record|
-        unless record.is_a?(MemberHolding)
+        unless record.is_a?(Loader::MemberHolding)
           raise "yielded something else"
         end
       end

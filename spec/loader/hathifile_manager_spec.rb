@@ -3,7 +3,7 @@
 require "spec_helper"
 require "hathifile_manager"
 
-RSpec.describe HathifileManager do
+RSpec.describe Loader::HathifileManager do
   describe "#try_load" do
     let(:loading_flag) { double(:loading_flag) }
     let(:hathifile_factory) { double(:hathifile_factory) }

@@ -38,7 +38,7 @@ class FakeBatchLoader
   attr_reader :loaded, :deleted
 end
 
-RSpec.describe FileLoader do
+RSpec.describe Loader::FileLoader do
   let(:fh) do
     StringIO.new(<<~DATA)
       thing1

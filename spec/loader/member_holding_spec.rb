@@ -4,7 +4,7 @@ require "member_holding"
 require "custom_errors"
 require "json"
 
-RSpec.describe MemberHolding do
+RSpec.describe Loader::MemberHolding do
   let(:test_data) { __dir__ + "/../testdata" }
   let(:ok_min_hed) { { "oclc"=>0, "local_id"=>1 } }
   let(:ok_min_str) { "123\t456" }

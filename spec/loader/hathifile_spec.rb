@@ -3,7 +3,7 @@
 require "spec_helper"
 require "hathifile"
 
-RSpec.describe Hathifile, type: "loaded_file" do
+RSpec.describe Loader::Hathifile, type: "loaded_file" do
   let(:logger) { double(:logger, info: true) }
   let(:hathifile) { described_class.new(Date.parse("2021-04-02")) }
   let(:expected_filename) { Pathname.new("/tmp/hathifiles/hathi_upd_20210401.txt.gz") }

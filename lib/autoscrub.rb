@@ -23,7 +23,7 @@ class AutoScrub
   def initialize(path)
     @path = path
 
-    @member_holding_file = MemberHoldingFile.new(@path)
+    @member_holding_file = Loader::MemberHoldingFile.new(@path)
     @member_id           = @member_holding_file.member_id
     @output_struct       = ScrubOutputStructure.new(@member_id)
     @item_type           = @member_holding_file.item_type_from_filename

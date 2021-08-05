@@ -3,7 +3,7 @@
 require "member_holding_header_factory"
 require "custom_errors"
 
-RSpec.describe MemberHoldingHeaderFactory do
+RSpec.describe Loader::MemberHoldingHeaderFactory do
   let(:mon) { "mono" }
   let(:mul) { "multi" }
   let(:ser) { "serial" }
@@ -12,13 +12,13 @@ RSpec.describe MemberHoldingHeaderFactory do
   let(:min_ok_hed) { "oclc\tlocal_id" }
 
   def check_class(item_type, hed)
-    MemberHoldingHeaderFactory.for(item_type, hed)
+    Loader::MemberHoldingHeaderFactory.for(item_type, hed)
   end
 
   it "returns the correct subclass" do
-    expect(check_class(mon, min_ok_hed)).to be_a(MonoHoldingHeader)
-    expect(check_class(mul, min_ok_hed)).to be_a(MultiHoldingHeader)
-    expect(check_class(ser, min_ok_hed)).to be_a(SerialHoldingHeader)
+    expect(check_class(mon, min_ok_hed)).to be_a(Loader::MonoHoldingHeader)
+    expect(check_class(mul, min_ok_hed)).to be_a(Loader::MultiHoldingHeader)
+    expect(check_class(ser, min_ok_hed)).to be_a(Loader::SerialHoldingHeader)
   end
 
   it "raises an error given an illegal item_type" do

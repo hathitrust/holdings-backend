@@ -3,7 +3,7 @@
 require "spec_helper"
 require "holding_loader"
 
-RSpec.describe HoldingLoader do
+RSpec.describe Loader::HoldingLoader do
   let(:uuid) { SecureRandom.uuid }
   let(:line) do
     [
