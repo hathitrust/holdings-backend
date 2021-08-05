@@ -2,19 +2,22 @@
 
 require "mongoid"
 
-# A commitment
-class Commitment
-  include Mongoid::Document
-  field :ocn, type: Integer # , type: OCLCNumber
-  field :organization, type: String
+module Clusterable
 
-  embedded_in :cluster
+  # A commitment
+  class Commitment
+    include Mongoid::Document
+    field :ocn, type: Integer # , type: OCLCNumber
+    field :organization, type: String
 
-  def move(new_parent)
-    unless new_parent.id == _parent.id
-      new_parent.commitments << dup
-      delete
+    embedded_in :cluster
+
+    def move(new_parent)
+      unless new_parent.id == _parent.id
+        new_parent.commitments << dup
+        delete
+      end
     end
-  end
 
+  end
 end

@@ -38,7 +38,7 @@ RSpec.describe HtItemLoader do
   describe "#item_from_line" do
     let(:item) { described_class.new.item_from_line(line) }
 
-    it { expect(item).to be_a(HtItem) }
+    it { expect(item).to be_a(Clusterable::HtItem) }
     it { expect(item.ocns).to contain_exactly(99_999) }
     it { expect(item.item_id).to eq "test.123456" }
     it { expect(item.ht_bib_key).to eq 123 }

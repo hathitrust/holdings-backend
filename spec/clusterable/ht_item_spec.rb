@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_item"
+require "clusterable/ht_item"
 require "cluster"
 
-RSpec.describe HtItem do
+RSpec.describe Clusterable::HtItem do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }

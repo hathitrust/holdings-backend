@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ocn_resolution"
+require "clusterable/ocn_resolution"
 
-RSpec.describe OCNResolution do
+RSpec.describe Clusterable::OCNResolution do
   let(:deprecated) { double(:deprecated) }
   let(:resolved) { double(:resolved) }
   let(:another_ocn) { double(:another) }

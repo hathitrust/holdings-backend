@@ -6,8 +6,8 @@ Dotenv.load(".env")
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
-require "ocn_resolution"
-require "holding"
+require "clusterable/ocn_resolution"
+require "clusterable/holding"
 require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"

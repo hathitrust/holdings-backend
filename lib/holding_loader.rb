@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "ht_item"
 require "cluster_holding"
 
 # Constructs batches of Holdings from incoming file data
@@ -39,7 +38,7 @@ end
 ## Subclass that only overrides item_from_line
 class HoldingLoaderTSV < HoldingLoader
   def item_from_line(line)
-    Holding.new_from_holding_file_line(line).tap do |h|
+    Clusterable::Holding.new_from_holding_file_line(line).tap do |h|
       @organization ||= h.organization
       @current_date ||= h.date_received
     end
@@ -49,7 +48,7 @@ end
 ## Subclass that only overrides item_from_line
 class HoldingLoaderNDJ < HoldingLoader
   def item_from_line(line)
-    Holding.new_from_scrubbed_file_line(line).tap do |h|
+    Clusterable::Holding.new_from_scrubbed_file_line(line).tap do |h|
       @organization ||= h.organization
       @current_date ||= h.date_received
     end

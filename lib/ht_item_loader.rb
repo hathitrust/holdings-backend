@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ht_item"
+require "clusterable/ht_item"
 require "cluster_ht_item"
 
 # Constructs batches of HtItems from incoming file data
@@ -8,7 +8,7 @@ class HtItemLoader
   def item_from_line(line)
     fields = line.split(/\t/)
 
-    HtItem.new(
+    Clusterable::HtItem.new(
       item_id:         fields[0],
         ocns:            fields[7].split(",").map(&:to_i),
         ht_bib_key:      fields[3].to_i,

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "holding"
+require "clusterable/holding"
 require "cluster"
 
-RSpec.describe Holding do
+RSpec.describe Clusterable::Holding do
   let(:c) { create(:cluster) }
   let(:h) { build(:holding, :all_fields) }
   let(:h2) { h.clone }

@@ -14,7 +14,7 @@ RSpec.describe OCNResolutionLoader do
   describe "#item_from_line" do
     let(:resolution) { described_class.new.item_from_line(line) }
 
-    it { expect(resolution).to be_a(OCNResolution) }
+    it { expect(resolution).to be_a(Clusterable::OCNResolution) }
     it { expect(resolution.deprecated).to eq 123 }
     it { expect(resolution.resolved).to eq 456 }
   end

@@ -26,7 +26,7 @@ RSpec.describe HoldingLoader do
   describe "#item_from_line" do
     let(:holding) { described_class.for(".tsv").item_from_line(line) }
 
-    it { expect(holding).to be_a(Holding) }
+    it { expect(holding).to be_a(Clusterable::Holding) }
     it { expect(holding.ocn).to eq 123 }
     it { expect(holding.organization).to eq "umich" }
     it { expect(holding.uuid).to eq uuid }

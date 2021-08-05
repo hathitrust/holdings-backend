@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "mongoid"
-require "holding"
-require "ht_item"
-require "commitment"
-require "ocn_resolution"
+require "clusterable/holding"
+require "clusterable/ht_item"
+require "clusterable/commitment"
+require "clusterable/ocn_resolution"
 require "calculate_format"
 require "cluster_ht_item"
 require "cluster_error"
@@ -20,10 +20,10 @@ class Cluster
   store_in collection: "clusters"
   field :ocns
   field :last_modified, type: DateTime
-  embeds_many :holdings, class_name: "Holding"
-  embeds_many :ht_items, class_name: "HtItem"
-  embeds_many :ocn_resolutions, class_name: "OCNResolution"
-  embeds_many :commitments
+  embeds_many :holdings, class_name: "Clusterable::Holding"
+  embeds_many :ht_items, class_name: "Clusterable::HtItem"
+  embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
+  embeds_many :commitments, class_name: "Clusterable::Commitment"
   index({ ocns: 1 },
         unique: true,
         partial_filter_expression: { ocns: { :$gt => 0 } })
