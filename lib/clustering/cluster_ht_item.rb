@@ -3,7 +3,7 @@
 require "cluster"
 require "reclusterer"
 require "clustering/cluster_getter"
-require "ht_item_cluster_getter"
+require "clustering/ht_item_cluster_getter"
 require "retryable"
 require "set"
 
@@ -64,7 +64,7 @@ module Clustering
 
     def cluster_getter
       if ocns.empty?
-        HtItemClusterGetter.new(*ht_items)
+        Clustering::HtItemClusterGetter.new(*ht_items)
       else
         ClusterGetter.new(ocns)
       end

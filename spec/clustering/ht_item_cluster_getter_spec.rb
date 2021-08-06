@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_item_cluster_getter"
+require "clustering/ht_item_cluster_getter"
 
 RSpec.describe Clustering::HtItemClusterGetter do
   let(:no_ocn) { build(:ht_item, ocns: []) }
