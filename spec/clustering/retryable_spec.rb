@@ -3,7 +3,7 @@
 require "spec_helper"
 require "services"
 require "cluster"
-require "retryable"
+require "clustering/retryable"
 require "cluster_error"
 require "clustering/cluster_ht_item"
 

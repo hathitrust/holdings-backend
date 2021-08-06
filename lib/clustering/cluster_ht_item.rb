@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "cluster"
-require "reclusterer"
+require "clustering/reclusterer"
 require "clustering/cluster_getter"
 require "clustering/ht_item_cluster_getter"
-require "retryable"
+require "clustering/retryable"
 require "set"
 
 module Clustering
