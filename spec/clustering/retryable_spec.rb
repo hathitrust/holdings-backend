@@ -7,7 +7,7 @@ require "retryable"
 require "cluster_error"
 require "clustering/cluster_ht_item"
 
-RSpec.describe Retryable do
+RSpec.describe Clustering::Retryable do
   before(:each) do
     Cluster.create_indexes
     Cluster.collection.find.delete_many
