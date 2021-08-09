@@ -12,12 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      -name: Setup tests
-      run: docker-compose build
-      run: docker-compose run --rm dev bundle install
+      - name: Build docker 
+        run: docker-compose build
+
+      - name: Bundle install
+        run: docker-compose run --rm dev bundle install
       
-      -name: Run rubocop
-      run: docker-compose run --rm dev bundle exec rubocop
+      - name: Run rubocop
+        run: docker-compose run --rm dev bundle exec rubocop
       
-      -name: Run tests
-      run: docker-compose run --rm dev bundle exec rspec
+      - name: Run tests
+        run: docker-compose run --rm dev bundle exec rspec

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../concordance_validation'
-include ConcordanceValidation
+Concordance = ConcordanceValidation::Concordance
 
 describe 'numbers_tab_numbers' do
   it 'raises an error if it isn\'t numbers-tab-numbers throughout' do
