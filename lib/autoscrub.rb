@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "services"
 require "custom_errors"
-require "member_holding_file"
+require "loader/member_holding_file"
 require "scrub_output_structure"
 require "utils/waypoint"
 
@@ -23,7 +23,7 @@ class AutoScrub
   def initialize(path)
     @path = path
 
-    @member_holding_file = MemberHoldingFile.new(@path)
+    @member_holding_file = Loader::MemberHoldingFile.new(@path)
     @member_id           = @member_holding_file.member_id
     @output_struct       = ScrubOutputStructure.new(@member_id)
     @item_type           = @member_holding_file.item_type_from_filename

@@ -14,10 +14,10 @@ RSpec.describe EtasMemberOverlapReport do
 
   before(:each) do
     Cluster.each(&:delete)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHolding.new(h2).cluster.tap(&:save)
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHtItem.new(ht2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
     Settings.etas_overlap_reports_path = tmp_dir
     FileUtils.rm_rf(tmp_dir)
   end
@@ -83,8 +83,8 @@ RSpec.describe EtasMemberOverlapReport do
 
     xit "runs large reports" do
       100.times do
-        ClusterHolding.new(build(:holding, ocn: h.ocn)).cluster.tap(&:save)
-        ClusterHtItem.new(build(:ht_item, ocns: [h.ocn])).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(build(:holding, ocn: h.ocn)).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(build(:ht_item, ocns: [h.ocn])).cluster.tap(&:save)
       end
       rpt = described_class.new("umich")
       rpt.run

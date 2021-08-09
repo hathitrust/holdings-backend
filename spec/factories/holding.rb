@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "securerandom"
-require "holding"
+require "clusterable/holding"
 
 FactoryBot.define do
-  factory :holding do
+  factory :holding, class: "Clusterable::Holding" do
     ocn { rand(1_000_000) }
     organization { ["umich", "upenn", "smu"].sample }
     local_id { rand(1_000_000).to_s }

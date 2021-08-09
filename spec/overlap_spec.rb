@@ -19,10 +19,10 @@ RSpec.describe Overlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHolding.new(h2).cluster.tap(&:save)
-    ClusterHolding.new(h3).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
     c.reload
   end
 
@@ -60,7 +60,7 @@ RSpec.describe Overlap do
 
     it "computes a lock id for an MPM" do
       ht_item.n_enum = "V.1"
-      cluster = ClusterHtItem.new(ht_item).cluster
+      cluster = Clustering::ClusterHtItem.new(ht_item).cluster
       overlap = described_class.new(cluster, "an_org", ht_item)
       expect(cluster.format).to eq("mpm")
       expect(overlap.lock_id).to eq("#{cluster._id}:V.1")
@@ -69,7 +69,7 @@ RSpec.describe Overlap do
     it "computes a lock id for an SER" do
       ht_item.n_enum = "V.1"
       Services.serials.bibkeys.add(ht_item.ht_bib_key.to_i)
-      cluster = ClusterHtItem.new(ht_item).cluster
+      cluster = Clustering::ClusterHtItem.new(ht_item).cluster
       overlap = described_class.new(cluster, "an_org", ht_item)
       expect(cluster.format).to eq("ser")
       expect(overlap.lock_id).to eq(ht_item.item_id)

@@ -69,7 +69,7 @@ RSpec.configure do |config|
     old_logger = Services.logger
     begin
       Services.register(:logger) { logger }
-      LoadedFile.db.transaction(rollback: :always, auto_savepoint: true) do
+      Loader::LoadedFile.db.transaction(rollback: :always, auto_savepoint: true) do
         example.run
       end
     ensure

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "cluster"
-require "cluster_ht_item"
+require "clustering/cluster_ht_item"
 require "large_clusters"
 require "large_cluster_error"
 
@@ -35,21 +35,21 @@ RSpec.describe LargeClusters do
     let(:ht2) { build(:ht_item, ocns: [large_clusters.ocns.first, 1]) }
 
     it "does not raise an error when performing a simple update" do
-      ClusterHtItem.new(ht1).cluster
-      ClusterHtItem.new(ht2).cluster
+      Clustering::ClusterHtItem.new(ht1).cluster
+      Clustering::ClusterHtItem.new(ht2).cluster
       ht2.ocns << 1
-      expect { ClusterHtItem.new(ht2).cluster }.not_to raise_error
+      expect { Clustering::ClusterHtItem.new(ht2).cluster }.not_to raise_error
     end
 
     it "raises a LargeClusterError when reclustering a large cluster" do
-      ClusterHtItem.new(ht1).cluster
-      ClusterHtItem.new(ht2).cluster
+      Clustering::ClusterHtItem.new(ht1).cluster
+      Clustering::ClusterHtItem.new(ht2).cluster
       expect(Cluster.first.ht_items.count).to eq(2)
       # ht2 previously glued large_clusters.ocns.first and 1 together, so
       # changing to just 1 requires reclustering
       ht2.ocns = [1]
       expect do
-        ClusterHtItem.new(ht2).cluster
+        Clustering::ClusterHtItem.new(ht2).cluster
       end.to raise_exception(LargeClusterError)
     end
   end
@@ -61,17 +61,17 @@ RSpec.describe LargeClusters do
 
     before(:each) do
       Cluster.each(&:delete)
-      ClusterHtItem.new(ht1).cluster
+      Clustering::ClusterHtItem.new(ht1).cluster
       # @orig_stderr = $stderr
       # $stderr = StringIO.new
     end
 
     it "warns when merging non-large with large clusters" do
       ht2 = build(:ht_item, ocns: [1])
-      ClusterHtItem.new(ht2).cluster
+      Clustering::ClusterHtItem.new(ht2).cluster
       expect(Cluster.count).to eq(2)
       glue = build(:ht_item, ocns: [1, large_clusters.ocns.first])
-      expect { ClusterHtItem.new(glue).cluster }.to \
+      expect { Clustering::ClusterHtItem.new(glue).cluster }.to \
         output("Merging into a large cluster. OCNs: [#{large_clusters.ocns.first}] and [1]\n")
         .to_stderr
       expect(Cluster.count).to eq(1)
@@ -79,11 +79,11 @@ RSpec.describe LargeClusters do
 
     it "is silent when merging 2 large clusters" do
       ht2 = build(:ht_item, ocns: [large_clusters.ocns.to_a.last])
-      ClusterHtItem.new(ht2).cluster
+      Clustering::ClusterHtItem.new(ht2).cluster
       expect(Cluster.count).to eq(2)
       glue = build(:ht_item, ocns: [large_clusters.ocns.to_a.last, large_clusters.ocns.first])
 
-      expect { ClusterHtItem.new(glue).cluster }.not_to output(/Merging/).to_stderr
+      expect { Clustering::ClusterHtItem.new(glue).cluster }.not_to output(/Merging/).to_stderr
       expect(Cluster.count).to eq(1)
     end
   end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "cluster_overlap"
-require "ht_item"
+require "clusterable/ht_item"
 
 # Collects organizations with an HTItem overlap
 class HtItemOverlap

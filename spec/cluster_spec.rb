@@ -104,12 +104,15 @@ RSpec.describe Cluster do
     let(:ht1) { build(:ht_item, ocns: [ocn1], enum_chron: "3", billing_entity: h1.organization) }
 
     before(:each) do
-      ClusterHolding.new(h1).cluster.tap(&:save)
-      ClusterHolding.new(h2).cluster.tap(&:save)
-      ClusterHtItem.new(ht1).cluster.tap(&:save)
-      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich")).cluster.tap(&:save)
-      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich")).cluster.tap(&:save)
-      ClusterHolding.new(build(:holding, ocn: ocn2, organization: "smu")).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h1).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht1).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich"))
+        .cluster.tap(&:save)
+      Clustering::ClusterHolding.new(build(:holding, ocn: ocn2, organization: "umich"))
+        .cluster.tap(&:save)
+      Clustering::ClusterHolding.new(build(:holding, ocn: ocn2, organization: "smu"))
+        .cluster.tap(&:save)
     end
 
     describe "#organizations_in_cluster" do
@@ -143,14 +146,14 @@ RSpec.describe Cluster do
     describe "#organizations_with_holdings_but_no_matches" do
       it "is a list of orgs in the cluster that don't match anything" do
         h3 = build(:holding, ocn: ocn1, enum_chron: "4", organization: "ualberta")
-        ClusterHolding.new(h3).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
         c = described_class.first
         expect(c.organizations_with_holdings_but_no_matches).to include("ualberta")
       end
 
       it "does not include orgs that do have a match" do
         matching_holding = build(:holding, ocn: ocn1, enum_chron: "3")
-        ClusterHolding.new(matching_holding).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(matching_holding).cluster.tap(&:save)
         c = described_class.first
         expect(c.organizations_with_holdings_but_no_matches).not_to \
           include(matching_holding.organization)
@@ -158,12 +161,12 @@ RSpec.describe Cluster do
 
       it "DOES NOT include orgs that only have a billing entity match" do
         ht2 = build(:ht_item, ocns: [ocn1], enum_chron: "5", billing_entity: "ualberta")
-        ClusterHtItem.new(ht2).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
         c = described_class.first
         expect(c.organizations_with_holdings_but_no_matches).not_to include("ualberta")
         # but does if they have a non-matching holding
         h3 = build(:holding, ocn: ocn1, enum_chron: "6", organization: "ualberta")
-        ClusterHolding.new(h3).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
         c = described_class.where(ocns: ocn1).first
         expect(c.organizations_with_holdings_but_no_matches).to include("ualberta")
       end

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "ht_item"
+require "clusterable/ht_item"
 require "faker"
 
 FactoryBot.define do
-  factory :ht_item do
+  factory :ht_item, class: "Clusterable::HtItem" do
     ocns { [rand(1_000_000)] }
     item_id { rand(1_000_000).to_s }
     ht_bib_key { rand(1_000_000) }

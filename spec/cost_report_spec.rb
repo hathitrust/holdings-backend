@@ -2,8 +2,8 @@
 
 require "spec_helper"
 require "cost_report"
-require "cluster_holding"
-require "cluster_ht_item"
+require "clustering/cluster_holding"
+require "clustering/cluster_ht_item"
 
 RSpec.describe CostReport do
   let(:cr) { described_class.new(cost: 10) }
@@ -32,10 +32,10 @@ RSpec.describe CostReport do
     Cluster.each(&:delete)
     c.save
     c2.save
-    ClusterHtItem.new(spm).cluster.tap(&:save)
-    ClusterHtItem.new(mpm).cluster.tap(&:save)
-    ClusterHolding.new(holding).cluster.tap(&:save)
-    ClusterHolding.new(holding2).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
   end
 
   describe "#num_volumes" do
@@ -46,8 +46,9 @@ RSpec.describe CostReport do
 
   describe "#num_pd_volumes" do
     it "counts the number of pd volumes" do
-      ClusterHtItem.new(ht_allow).cluster.tap(&:save)
-      ClusterHtItem.new(build(:ht_item, access: "allow", ocns: ht_allow.ocns)).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht_allow).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, access: "allow", ocns: ht_allow.ocns))
+        .cluster.tap(&:save)
       expect(cr.num_pd_volumes).to eq(2)
     end
   end
@@ -86,7 +87,7 @@ RSpec.describe CostReport do
                       enum_chron: "1",
                       n_enum: "1",
                       billing_entity: "upenn")
-      ClusterHtItem.new(pd_item).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(pd_item).cluster.tap(&:save)
       expect(cr.freq_table[:upenn][:mpm]).to eq({})
     end
   end
@@ -112,7 +113,7 @@ RSpec.describe CostReport do
     end
 
     it "does not find clusters with only access == allow" do
-      ClusterHtItem.new(build(:ht_item, access: "allow")).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, access: "allow")).cluster.tap(&:save)
       expect(described_class.new.matching_clusters.each.to_a.size).to eq(2)
     end
   end
@@ -201,8 +202,8 @@ RSpec.describe CostReport do
       end
 
       it "handles multiple HT copies of the same spm" do
-        ClusterHtItem.new(spm).cluster.tap(&:save)
-        ClusterHtItem.new(ht_copy).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
@@ -210,9 +211,9 @@ RSpec.describe CostReport do
       end
 
       it "handles multiple copies of the same spm and holdings" do
-        ClusterHtItem.new(spm).cluster.tap(&:save)
-        ClusterHtItem.new(ht_copy).cluster.tap(&:save)
-        ClusterHolding.new(spm_holding).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
@@ -220,11 +221,11 @@ RSpec.describe CostReport do
       end
 
       it "multiple holdings lead to one hshare" do
-        ClusterHtItem.new(spm).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
         mpm_holding = spm_holding.clone
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "multi"
-        cluster = ClusterHolding.new(spm_holding).cluster.tap(&:save)
+        cluster = Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
         cluster.add_holdings(mpm_holding).tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
@@ -233,9 +234,9 @@ RSpec.describe CostReport do
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
-        ClusterHtItem.new(spm).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
         ht_copy.billing_entity = "different_cpc"
-        ClusterHtItem.new(ht_copy).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
@@ -249,8 +250,8 @@ RSpec.describe CostReport do
       let(:mpm_wo_ec) { build(:holding, ocn: mpm.ocns.first, organization: "umich") }
 
       it "assigns mpm shares to empty enum chron holdings" do
-        ClusterHtItem.new(mpm).cluster.tap(&:save)
-        ClusterHolding.new(mpm_wo_ec).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(mpm_wo_ec).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
@@ -268,8 +269,8 @@ RSpec.describe CostReport do
       end
 
       it "gives mpm shares when enum_chron does not match anything" do
-        ClusterHtItem.new(mpm).cluster.tap(&:save)
-        ClusterHolding.new(mpm_wrong_ec).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(mpm_wrong_ec).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
@@ -309,10 +310,10 @@ RSpec.describe CostReport do
       end
 
       it "assigns all serials to the member and ht_item billing entities affect hshare" do
-        ClusterHtItem.new(ht_serial).cluster.tap(&:save)
-        ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
         Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
-        ClusterHolding.new(holding_serial).cluster.tap(&:save)
+        Clustering::ClusterHolding.new(holding_serial).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end

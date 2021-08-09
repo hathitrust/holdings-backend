@@ -34,7 +34,7 @@ RSpec.describe OCNConcordanceDiffs, type: "loaded_file" do
 
     it "records the item in the database" do
       concordance_diffs.load(loader: fake_loader)
-      expect(LoadedFile.first.filename).to eq(expected_filename.to_s)
+      expect(Loader::LoadedFile.first.filename).to eq(expected_filename.to_s)
     end
 
     it "returns truthy" do
@@ -51,7 +51,7 @@ RSpec.describe OCNConcordanceDiffs, type: "loaded_file" do
 
       it "does not record the item in the database" do
         expect { concordance_diffs.load(loader: fake_loader) }
-          .not_to change(LoadedFile, :count)
+          .not_to change(Loader::LoadedFile, :count)
       end
 
       it "returns falsey" do

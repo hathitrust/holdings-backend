@@ -2,8 +2,8 @@
 
 require "spec_helper"
 require "cluster_overlap"
-require "cluster_holding"
-require "cluster_ht_item"
+require "clustering/cluster_holding"
+require "clustering/cluster_ht_item"
 require_relative "../bin/update_overlap_table"
 
 RSpec.describe "update_overlap_table" do
@@ -12,9 +12,9 @@ RSpec.describe "update_overlap_table" do
     ht  = build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding")
     ht2 = build(:ht_item, billing_entity: "not_same_as_holding")
     Cluster.each(&:delete)
-    ClusterHolding.new(h).cluster.tap(&:save)
-    ClusterHtItem.new(ht).cluster.tap(&:save)
-    ClusterHtItem.new(ht2).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
 
     Services.register(:holdings_db) { HoldingsDB.connection }
     Services.holdings_db[:holdings_htitem_htmember_etas_overlap].delete
