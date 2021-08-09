@@ -9,7 +9,7 @@ def review_logs(log_file)
   errors = []
   File.open(log_file).each do |line|
     if line =~ /resolves to multiple ocns/
-      multiple_ocns_count += 1 
+      multiple_ocns_count += 1
     else
       errors << line
     end

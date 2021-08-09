@@ -24,8 +24,8 @@ module ConcordanceValidation
         raw_to_resolved[raw.to_i] << resolved.to_i if raw != resolved
         resolved_to_raw[resolved.to_i] << raw.to_i if raw != resolved
       end
-      @raw_to_resolved.default_proc = ->(_,_) { nil }
-      @resolved_to_raw.default_proc = ->(_,_) { nil }
+      @raw_to_resolved.default_proc = ->(_, _) { nil }
+      @resolved_to_raw.default_proc = ->(_, _) { nil }
     end
 
     def file_handler
