@@ -22,28 +22,28 @@ end
 # Validate any new files.
 # Compute deltas of new concordance with pre-existing validated concordance.
 
-concordance_dir = ARGV.shift
+conc_dir = ENV['CONC_HOME']
 
-raw_gzip_files = Dir.glob("#{concordance_dir}/*txt.gz")
+raw_gzip_files = Dir.glob("#{conc_dir}/raw/*txt.gz")
 
 raw_dates = []
 raw_dates = raw_gzip_files.map { |fname| fname.split('/').last.split('_').first }.select { |d| d =~ /^\d+$/ }
 
-validated_files = Dir.glob("#{concordance_dir}/*validated.tsv.gz")
+validated_files = Dir.glob("#{conc_dir}/validated/*validated.tsv.gz")
 validated_dates = validated_files.map { |fname| fname.split('/').last.split('_').first }.select { |d| d =~ /^\d+$/ }
 
 # Validate anything that doesn't have a validated equivalent
 dates_to_validate = raw_dates - validated_dates
 
 dates_to_validate.each do |date|
-  fin = "#{concordance_dir}/#{date}_concordance.txt.gz"
-  fout = "#{concordance_dir}/#{date}_concordance_validated.tsv"
+  fin = "#{conc_dir}/raw/#{date}_concordance.txt.gz"
+  fout = "#{conc_dir}/validated/#{date}_concordance_validated.tsv"
   puts "Validating #{fin}"
-  validated = system("bundle exec ruby concordance_validation.rb #{fin} #{fout} > results.tmp")
+  validated = system("bundle exec ruby concordance_validation.rb #{fin} #{fout} > #{conc_dir}/results.tmp")
   post_to_holdings_channel("Validated #{fin}.") if validated
-  error_msg = review_logs("#{date}_concordance_validated.tsv.log").join("\n")
-  post_to_holdings_channel(error_msg)
   gzipped = system("gzip #{fout}")
+  error_msg = review_logs("#{conc_dir}/validated/#{date}_concordance_validated.tsv.log").join("\n")
+  post_to_holdings_channel(error_msg)
 end
 
 # If we validated anything, find something to compute the deltas against
@@ -52,15 +52,16 @@ if dates_to_validate.any?
   prev_conc = validated_files.max
   # most recent concordance we just validated
   new_conc = "#{dates_to_validate.max}_concordance_validated.tsv.gz"
+  new_conc_w_path = "#{conc_dir}/validated/#{new_conc}"
 
-  puts "Diffing #{prev_conc} and #{new_conc}"
+  post_to_holdings_channel("Diffing #{prev_conc} and #{new_conc_w_path}")
 
   # compute delta
-  deltad = system("./get_delta/comm_concordance_delta.sh #{prev_conc} #{new_conc}")
+  deltad = system("./get_delta/comm_concordance_delta.sh #{prev_conc} #{new_conc_w_path}")
 
-  # move deltas to the concordance_dir
-  system("mv data/comm_diff.txt.adds #{concordance_dir}")
-  system("mv data/comm_diff.txt.deletes #{concordance_dir}")
+  # move deltas to the conc_dir
+  system("mv data/comm_diff.txt.adds #{conc_dir}/diffs/#{dates_to_validate.max}_comm_diff.txt.adds")
+  system("mv data/comm_diff.txt.deletes #{conc_dir}/diffs/#{dates_to_validate.max}_comm_diff.txt.deletes")
 
-  post_to_holdings_channel("Concordance adds and deletes waiting in #{concordance_dir}")
+  post_to_holdings_channel("Concordance adds and deletes waiting in #{conc_dir}/diffs")
 end
