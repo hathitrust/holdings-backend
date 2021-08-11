@@ -1,18 +1,20 @@
 # Steps for performing routine print holdings tasks
 
+This documentation assumes that you have https://github.com/hathitrust/ht_kubernetes checked out and set up, so that you can spin up pods using client_pod.sh, and that /htprep/ is available to your kubernetes pods.
+
 ## Scrub process (old):
 
-Updated the [confluence page on scrubbing](https://tools.lib.umich.edu/confluence/display/LSO/HathiTrust+Print+Holdings+training). It's a lot, but it's what it is. Read section "2.1 Scrubbing" down to but but not including section "2.2 Estimating".
+Read the updated (Aug 2021) [confluence page on scrubbing](https://tools.lib.umich.edu/confluence/display/LSO/HathiTrust+Print+Holdings+training). It's a lot, but it's what it is. Read section "2.1 Scrubbing" down to but but not including section "2.2 Estimating".
 
 ## Run estimate:
 
-The first step is usually to receive or be mentioned on a JIRA ticket by Stewart, Melissa, asking you to run an estimate.
+The first step is usually to receive or be mentioned on a JIRA ticket by Melissa, asking you to run an estimate.
 
-Download and scrub the relevant files. If they are OK, proceed. If not, alert & abort.
+Download and scrub (see section above) the relevant files. If they are OK, proceed. If not, alert & abort.
 
-Extract all the OCNs from the resulting HT003-files to a single file and put in /htprep/holdings/estimates/. This path is called $path_to_ocns in the example below.
+Extract all the OCNs from the resulting HT003-files to a single file and put in /htprep/holdings/estimates/ ($path_to_ocns in the example below).
 
-Spin up a pod that writes to a text file under /htprep/holdings/estimates/. The path to this file is called $output_path in the example below.
+Spin up a pod that writes to a text file under /htprep/holdings/estimates/ ($output_path in the example below).
 
 ```
 bash client_pod.sh podname-yyyymmdd bash -c \
@@ -52,7 +54,12 @@ Adjust the aa..ap range if you change the number of chunks.
 
 ## Run a cost report:
 
-Using https://github.com/hathitrust/ht_kubernetes, replacing XYZ and YYYYMMDD with appropriate values:
+If you recently added a member, before you run a cost report where you expect to see them:
+
+- Make sure they show up in [OTIS](https://babel.hathitrust.org/otis/ht_institutions/).
+- Make sure they are enabled for billing and have the correct weight set.
+
+Then start a pod with:
 
 ```
 bash client_pod.sh costreport-XYZ \ 
