@@ -14,7 +14,7 @@ require "date"
 
 Services.mongo!
 
-TABLENAME = :holdings_htitem_htmember_etas_overlap
+TABLENAME = :holdings_htitem_htmember
 def overlap_table
   Services.holdings_db[TABLENAME]
 end
