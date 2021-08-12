@@ -21,7 +21,7 @@ class OCNConcordanceDiffs
     @logger = logger
   end
 
-  def load(loader: Loader::FileLoader.new(batch_loader: OCNResolutionLoader.new,
+  def load(loader: Loader::FileLoader.new(batch_loader: Loader::OCNResolutionLoader.new,
                                           batch_size: BATCH_SIZE))
     begin
       logger.info("Started loading #{delete_filename}")
@@ -55,7 +55,7 @@ class OCNConcordanceDiffs
 
   def filename_for(date)
     # see date handling from https://github.com/hathitrust/oclc_concordance_validator/pull/5/files
-    Pathname.new(Settings.concordance_path) + "comm_diff_#{date.strftime("%Y-%m-%d")}.txt"
+    Pathname.new(Settings.concordance_path) + "diffs/comm_diff_#{date.strftime("%Y-%m-%d")}.txt"
   end
 
   def add_filename
