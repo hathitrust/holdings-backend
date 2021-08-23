@@ -32,6 +32,11 @@ def upsert_cluster(cluster, logger, waypoint)
   end
 end
 
+def clusters_modified_since(cutoff_date)
+  Cluster.where("ht_items.0": { "$exists": 1 },
+                last_modified: { "$gt": cutoff_date }).no_timeout
+end
+
 if __FILE__ == $PROGRAM_NAME
 
   # Default: Now - 36 hours
@@ -47,9 +52,9 @@ if __FILE__ == $PROGRAM_NAME
   logger = Services.logger
   cutoff_date_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
   logger.info "Upserting clusters last_modified after #{cutoff_date_str} to #{TABLENAME}"
-  Cluster.where("ht_items.0": { "$exists": 1 },
-                last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
-                  upsert_cluster(cluster, logger, waypoint)
-                end
+  clusters_modified_since(cutoff_date).each do |cluster|
+    upsert_cluster(cluster, logger, waypoint)
+  end
+
   logger.info waypoint.final_line
 end
