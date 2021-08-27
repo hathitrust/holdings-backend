@@ -3,12 +3,14 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
-require "file_loader"
-require "ht_item_loader"
+require "loader/file_loader"
+require "loader/ht_item_loader"
 require "services"
 
 Services.mongo!
 Services.logger.info "Updating HT Items."
 
-filename = ARGV[0]
-FileLoader.new(batch_loader: HtItemLoader.new).load(filename)
+if __FILE__ == $PROGRAM_NAME
+  filename = ARGV[0]
+  FileLoader.new(batch_loader: HtItemLoader.new).load(filename)
+end

@@ -4,7 +4,7 @@
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "bundler/setup"
 require "services"
-require "hathifile_manager"
+require "loader/hathifile_manager"
 require "utils/multi_logger"
 
 Services.mongo!
@@ -16,4 +16,6 @@ Services.register(:logger) do
   Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
 end
 
-HathifileManager.new.try_load
+if __FILE__ == $PROGRAM_NAME
+  Loader::HathifileManager.new.try_load
+end
