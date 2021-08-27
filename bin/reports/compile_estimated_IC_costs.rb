@@ -7,7 +7,7 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "ht_item_overlap"
-require "cost_report"
+require "report/cost_report"
 require "services"
 
 Services.mongo!

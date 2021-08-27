@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cost_report"
-require_relative "../bin/compile_cost_reports"
+require "report/cost_report"
+require_relative "../../bin/reports/compile_cost_reports"
 
 RSpec.describe "CompileCostReports" do
   # 4 HT Items

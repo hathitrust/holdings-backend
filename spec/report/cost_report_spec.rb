@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cost_report"
+require "report/cost_report"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 

@@ -37,8 +37,7 @@ module Report
           { '$match': { "ht_items.0": { "$exists": 1 } } },
           { '$group': { _id:         nil,
                         items_count: { "$sum": { "$size": {
-                          "$filter": { input: "$ht_items",
-                                       as:    "item",
+                          "$filter": { input: "$ht_items", as:    "item",
                                        cond:  { "$eq": ["$$item.access", "allow"] } }
                         } } } } }
         ]
@@ -58,8 +57,7 @@ module Report
     end
 
     def pd_cost_for_member(member)
-      member_weight     = Services.ht_members[member.to_s].weight
-      (pd_cost / total_weight) * member_weight
+      (pd_cost / total_weight) * Services.ht_members[member.to_s].weight
     end
 
     def freq_table
