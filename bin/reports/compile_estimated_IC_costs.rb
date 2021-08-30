@@ -7,7 +7,7 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "ht_item_overlap"
-require "cost_report"
+require "report/cost_report"
 require "services"
 
 Services.mongo!
@@ -18,7 +18,7 @@ if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 10_000
   waypoint = Utils::Waypoint.new(BATCH_SIZE)
   logger = Logger.new($stderr)
-  cost_report = CostReport.new
+  cost_report = Report::CostReport.new
   logger.info "Target Cost: #{cost_report.target_cost}"
   logger.info "Cost per volume: #{cost_report.cost_per_volume}"
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"

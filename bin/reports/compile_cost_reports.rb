@@ -6,7 +6,7 @@ require "services"
 require "bundler/setup"
 require "utils/waypoint"
 require "utils/ppnum"
-require "cost_report"
+require "report/cost_report"
 require "ht_item_overlap"
 
 Services.mongo!
@@ -39,7 +39,7 @@ if __FILE__ == $PROGRAM_NAME
 
   org = ARGV.shift
 
-  cost_report = CostReport.new(org, lines: BATCH_SIZE, logger: logger)
+  cost_report = Report::CostReport.new(org, lines: BATCH_SIZE, logger: logger)
   puts "Target cost: #{cost_report.target_cost}"
   puts "Num volumes: #{cost_report.num_volumes}"
   puts "Num pd volumes: #{cost_report.num_pd_volumes}"

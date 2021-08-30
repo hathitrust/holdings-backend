@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clustering/cluster_ht_item"
 require "clustering/cluster_holding"
-require_relative "../bin/export_overlap_report"
+require_relative "../../bin/reports/export_overlap_report"
 
 RSpec.describe "overlap_report" do
   let(:h) { build(:holding) }

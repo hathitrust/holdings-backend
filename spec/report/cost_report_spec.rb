@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cost_report"
+require "report/cost_report"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 
-RSpec.describe CostReport do
+RSpec.describe Report::CostReport do
   let(:cr) { described_class.new(cost: 10) }
   let(:c) { build(:cluster) }
   let(:c2) { build(:cluster) }

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "pp"
-require_relative "../bin/export_etas_overlap_report"
+require_relative "../../bin/reports/export_etas_overlap_report"
 
 RSpec.describe EtasMemberOverlapReport do
   let(:h) { build(:holding) }
