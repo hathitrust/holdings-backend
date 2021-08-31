@@ -47,9 +47,11 @@ if __FILE__ == $PROGRAM_NAME
   logger = Services.logger
   cutoff_date_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
   logger.info "Upserting clusters last_modified after #{cutoff_date_str} to #{TABLENAME}"
-  Cluster.where("ht_items.0": { "$exists": 1 },
-                last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
-                  upsert_cluster(cluster, logger, waypoint)
-                end
+  Cluster.with_session do |_session|
+    Cluster.where("ht_items.0": { "$exists": 1 },
+                  last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
+                    upsert_cluster(cluster, logger, waypoint)
+                  end
+  end
   logger.info waypoint.final_line
 end
