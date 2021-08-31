@@ -45,7 +45,7 @@ spec:
           subPath: large_cluster_ocns.txt
         - mountPath: /htprep
           name: htprep
-      restartPolicy: OnFailure
+      restartPolicy: Never
       securityContext:
         fsGroup: 1190
         runAsGroup: 1191
