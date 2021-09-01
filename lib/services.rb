@@ -7,7 +7,11 @@ require "file_mutex"
 require "logger"
 require "mongoid"
 require "utils/slack_writer"
-require "data_sources"
+require "data_sources/holdings_db"
+require "data_sources/ht_collections"
+require "data_sources/ht_members"
+require "data_sources/large_clusters"
+require "data_sources/serials_file"
 
 Services = Canister.new
 Services.register(:"mongo!") do
