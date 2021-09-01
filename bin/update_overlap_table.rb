@@ -32,6 +32,15 @@ def upsert_cluster(cluster, logger, waypoint)
   end
 end
 
+def keep_alive(session, seconds = 120)
+  Thread.new do
+    loop do
+      sleep(seconds)
+      session.client.command(refreshSessions: [session.session_id])
+    end
+  end
+end
+
 if __FILE__ == $PROGRAM_NAME
 
   # Default: Now - 36 hours
@@ -47,11 +56,13 @@ if __FILE__ == $PROGRAM_NAME
   logger = Services.logger
   cutoff_date_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
   logger.info "Upserting clusters last_modified after #{cutoff_date_str} to #{TABLENAME}"
-  Cluster.with_session do |_session|
+  Cluster.with_session do |session|
+    session_refresh = keep_alive(session)
     Cluster.where("ht_items.0": { "$exists": 1 },
                   last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
                     upsert_cluster(cluster, logger, waypoint)
                   end
+    session_refresh.exit
   end
   logger.info waypoint.final_line
 end
