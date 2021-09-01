@@ -4,7 +4,7 @@ require "services"
 require "set"
 
 # List of ocns for clusters too large to be stored with all holdings records
-class LargeClusters
+class DataSources::LargeClusters
 
   attr_accessor :ocns
 

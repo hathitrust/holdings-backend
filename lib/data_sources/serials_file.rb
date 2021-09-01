@@ -4,7 +4,7 @@ require "set"
 
 # Set of Michigan/HathiTrust record IDs to consider as serials. Derived from
 # data from Michigan ILS
-class SerialsFile
+class DataSources::SerialsFile
 
   def initialize(filename)
     @filename = filename

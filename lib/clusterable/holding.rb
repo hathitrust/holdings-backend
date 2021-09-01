@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "mongoid"
-require "ht_members"
 require "services"
 require "enum_chron"
 require "json"

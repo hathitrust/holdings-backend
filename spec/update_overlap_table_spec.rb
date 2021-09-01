@@ -16,7 +16,7 @@ RSpec.describe "update_overlap_table" do
     Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
 
-    Services.register(:holdings_db) { HoldingsDB.connection }
+    Services.register(:holdings_db) { DataSources::HoldingsDB.connection }
     Services.holdings_db[:holdings_htitem_htmember].delete
   end
 

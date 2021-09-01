@@ -4,7 +4,7 @@ require "mysql2"
 require "services"
 
 # An individual Collection record
-class HTCollection
+class DataSources::HTCollection
   attr_reader :collection, :content_provider_cluster, :responsible_entity,
               :original_from_inst_id, :billing_entity
 
@@ -30,7 +30,7 @@ end
 # content provider cluster, responsible entity, orginal_from_inst_id, and billing entity.
 #
 # We are currently only interested in billing entity for overlap calculations.
-class HTCollections
+class DataSources::HTCollections
   attr_reader :collections
 
   def initialize(collections = load_from_db)
@@ -45,7 +45,7 @@ class HTCollections
               :original_from_inst_id,
               :billing_entity)
       .as_hash(:collection)
-      .transform_values {|h| HTCollection.new(h) }
+      .transform_values {|h| DataSources::HTCollection.new(h) }
   end
 
   def [](collection)

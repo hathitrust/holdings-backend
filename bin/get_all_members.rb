@@ -3,5 +3,5 @@
 
 # Prints all current members to stdout
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
-require "ht_members"
-puts HTMembers.new.members.keys
+require "data_sources/ht_members"
+puts DataSources::HTMembers.new.members.keys

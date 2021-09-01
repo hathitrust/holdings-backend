@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_collections"
+require "data_sources/ht_collections"
 
-RSpec.describe HTCollections do
+RSpec.describe DataSources::HTCollections do
   let(:mock_data) do
     {
-      "EXA" => HTCollection.new(collection: "EXA",
+      "EXA" => DataSources::HTCollection.new(collection: "EXA",
                                 content_provider_cluster: "excluster",
                                 responsible_entity: "example",
                                 original_from_inst_id: "example",
@@ -37,7 +37,7 @@ RSpec.describe HTCollections do
     around(:each) do |example|
       old_holdings_db = Services.holdings_db
       begin
-        Services.register(:holdings_db) { HoldingsDB.connection }
+        Services.register(:holdings_db) { DataSources::HoldingsDB.connection }
         example.run
       ensure
         Services.register(:holdings_db) { old_holdings_db }

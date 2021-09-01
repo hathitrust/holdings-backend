@@ -11,7 +11,7 @@ require "tempfile"
 
 # Backend for connection to MySQL database for production information about
 # holdings and institutions
-class HoldingsDB < SimpleDelegator
+class DataSources::HoldingsDB < SimpleDelegator
 
   attr_reader :rawdb
   attr_accessor :connection_string

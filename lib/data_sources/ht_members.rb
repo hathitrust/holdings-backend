@@ -4,7 +4,7 @@ require "mysql2"
 require "services"
 
 # Information about an individual HathiTrust institution
-class HTMember
+class DataSources::HTMember
   attr_reader :inst_id, :country_code, :weight, :oclc_sym
 
   def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil)
@@ -26,7 +26,7 @@ end
 #
 # Usage:
 #
-#   htm = HTMembers.new()
+#   htm = DataSources::HTMembers.new()
 #   cc = htm["yale"].country_code
 #   wt = htm["harvard"].weight
 #
@@ -35,13 +35,13 @@ end
 #
 # You can also pass in mock data for development/testing purposes:
 #
-#   htm = HTMembers.new({
-#     "haverford" => HTMember.new(inst_id: "haverford", country_code: "us", weight: 0.67)
+#   htm = DataSources::HTMembers.new({
+#     "haverford" => DataSources::HTMember.new(inst_id: "haverford", country_code: "us", weight: 0.67)
 #   })
 #   htm["haverford"].country_code
 #   htm["haverford"].weight
 #
-class HTMembers
+class DataSources::HTMembers
 
   attr_reader :members
 
@@ -53,7 +53,7 @@ class HTMembers
     Services.holdings_db[:ht_billing_members]
       .select(:inst_id, :country_code, :weight, :oclc_sym)
       .as_hash(:inst_id)
-      .transform_values {|h| HTMember.new(h) }
+      .transform_values {|h| DataSources::HTMember.new(h) }
   end
 
   # Given a inst_id, returns a hash of data for that member.
