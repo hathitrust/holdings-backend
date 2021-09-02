@@ -119,4 +119,9 @@ RSpec.describe "CompileCostReports" do
       "utexas	0.0	0.3333333333333333	0.5	0.375	3.0	0.0	1.2083333333333333"
     ].join("\n"))
   end
+
+  it "dumps frequency table upon request" do
+    cr.dump_freq_table("/tmp/freq.txt")
+    expect(File).to exist("/tmp/freq.txt")
+  end
 end
