@@ -2,6 +2,7 @@
 
 require "services"
 require "cluster"
+require "cluster_overlap"
 
 module Report
 
