@@ -3,6 +3,7 @@
 require "services"
 require "cluster"
 require "cluster_overlap"
+require "etas_overlap"
 
 module Report
 
