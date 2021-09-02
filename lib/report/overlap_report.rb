@@ -2,6 +2,7 @@
 
 require "services"
 require "cluster"
+require "cluster_overlap"
 require "utils/waypoint"
 
 module Report

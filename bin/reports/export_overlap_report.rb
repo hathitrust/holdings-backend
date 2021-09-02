@@ -9,11 +9,10 @@ require "bundler/setup"
 require "zinzout"
 require "report/overlap_report"
 
-Mongoid.load!("mongoid.yml", :test)
-
 BATCH_SIZE = 10_000
 
 if __FILE__ == $PROGRAM_NAME
+  Services.mongo!
   require "optparse"
 
   options = {}
