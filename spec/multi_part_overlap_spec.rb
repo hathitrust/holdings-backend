@@ -5,8 +5,8 @@ require "multi_part_overlap"
 
 RSpec.describe MultiPartOverlap do
   let(:c) { build(:cluster) }
-  let(:ht_w_ec) { build(:ht_item, ocns: c.ocns, bib_fmt: "mpm", enum_chron: "1", n_enum: "1") }
-  let(:ht_wo_ec) { build(:ht_item, ocns: c.ocns, bib_fmt: "mpm", enum_chron: "", n_enum: "") }
+  let(:ht_w_ec) { build(:ht_item, :mpm, enum_chron: "1", n_enum: "1", ocns: c.ocns) }
+  let(:ht_wo_ec) { build(:ht_item, :mpm, enum_chron: "", n_enum: "", ocns: c.ocns) }
   let(:h_w_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "1", n_enum: "1") }
   let(:h_wo_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "", n_enum: "") }
   let(:h_wrong_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "2", n_enum: "2") }

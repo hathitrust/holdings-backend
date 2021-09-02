@@ -13,7 +13,6 @@ require "cluster_error"
 # - ocns
 # - holdings
 # - htitems
-# - serials
 # - commitments
 class Cluster
   include Mongoid::Document

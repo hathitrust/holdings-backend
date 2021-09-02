@@ -7,8 +7,8 @@ require "reports/overlap_report"
 
 RSpec.describe "overlap_report" do
   let(:h) { build(:holding) }
-  let(:ht) { build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding", enum_chron: "") }
-  let(:ht2) { build(:ht_item, billing_entity: "not_same_as_holding", enum_chron: "") }
+  let(:ht) { build(:ht_item, :spm, ocns: [h.ocn], billing_entity: "not_same_as_holding") }
+  let(:ht2) { build(:ht_item, :spm, billing_entity: "not_same_as_holding") }
 
   before(:each) do
     Cluster.each(&:delete)

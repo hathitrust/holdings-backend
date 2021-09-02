@@ -7,12 +7,10 @@ require "single_part_overlap"
 
 RSpec.describe SinglePartOverlap do
   let(:c) { build(:cluster) }
-  let(:ht) { build(:ht_item, ocns: c.ocns, bib_fmt: "BK", enum_chron: "") }
+  let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
   let(:ht2) do
-    build(:ht_item,
+    build(:ht_item, :spm,
           ocns: c.ocns,
-          bib_fmt: "BK",
-          enum_chron: "",
           collection_code: "HVD")
   end
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "LM") }

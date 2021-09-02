@@ -13,10 +13,10 @@ class Overlap
     @ht_item = ht_item
   end
 
-  # These methods should return an empty string in the most basic case
+  # These methods should return zero in the most basic case
   ["copy", "brt", "wd", "lm", "access"].each do |method|
     define_method "#{method}_count".to_sym do
-      ""
+      0
     end
   end
 

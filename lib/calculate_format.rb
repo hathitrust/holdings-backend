@@ -3,19 +3,17 @@
 require "cluster"
 
 # Calculates the format for HT Items and OCN Clusters
-# Both are dependent upon loading of the print serials file.
 class CalculateFormat
 
   def initialize(cluster)
     @cluster = cluster
-    @serials = Services.serials
   end
 
   # Calculate format for this particular ht_item in this particular cluster
   #
   # @param ht_item, the HT item to calculate the format on.
   def item_format(ht_item)
-    if matching_serial?(ht_item) || @cluster.large?
+    if ht_item.bib_fmt == "SE" || @cluster.large?
       "ser"
     elsif cluster_has_item_with_enum_and_same_ht_bib_key? ht_item
       "mpm"
@@ -47,10 +45,6 @@ class CalculateFormat
     @cluster.ht_items.any? do |ht|
       ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum.empty?
     end
-  end
-
-  def matching_serial?(ht_item)
-    @serials.matches_htitem?(ht_item)
   end
 
 end

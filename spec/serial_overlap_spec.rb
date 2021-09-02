@@ -5,15 +5,8 @@ require "serial_overlap"
 
 RSpec.describe SerialOverlap do
   let(:c) { build(:cluster) }
-  let(:ht) { build(:ht_item, ocns: c.ocns, bib_fmt: "ser", enum_chron: "") }
-  let(:ht2) do
-    build(:ht_item,
-          ocns: c.ocns,
-          bib_fmt: "ser",
-          enum_chron: "",
-          ht_bib_key: ht.ht_bib_key)
-  end
-  let(:s) { build(:serial, ocns: c.ocns, record_id: ht.ht_bib_key) }
+  let(:ht) { build(:ht_item, :ser, ocns: c.ocns) }
+  let(:ht2) { build(:ht_item, :ser, ocns: c.ocns, ht_bib_key: ht.ht_bib_key) }
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
   let(:h2) do
     build(:holding,
@@ -27,7 +20,6 @@ RSpec.describe SerialOverlap do
   before(:each) do
     Cluster.each(&:delete)
     c.save
-    Services.serials.bibkeys.add(ht.ht_bib_key.to_i)
     Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
     Clustering::ClusterHolding.new(h).cluster.tap(&:save)
