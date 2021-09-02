@@ -18,7 +18,7 @@ Spin up a pod that writes to a text file under `/htprep/holdings/estimates/` (`$
 
 ```
 bash client_pod.sh podname-yyyymmdd bash -c \
-  'bundle exec ruby bin/compile_estimated_IC_costs.rb  $path_to_ocns > $output_path'
+  'bundle exec ruby bin/reports/compile_estimated_IC_costs.rb  $path_to_ocns > $output_path'
 ```
 
 When the pod is done, copy the contents in `$output_path` to the JIRA ticket as an **INTERNAL** response.
@@ -63,7 +63,7 @@ Then start a pod with:
 
 ```
 bash client_pod.sh costreport-XYZ \ 
-  bash -c 'bundle exec ruby bin/compile_cost_reports.rb > \ 
+  bash -c 'bundle exec ruby bin/reports/compile_cost_reports.rb > \ 
   /htprep/holdings/costreports/YYYY/costreport_YYYYMMDD.tsv'
 ```
 
