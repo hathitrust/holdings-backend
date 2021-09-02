@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "autoscrub"
+require "scrub/autoscrub"
 
-RSpec.describe AutoScrub do
+RSpec.describe Scrub::AutoScrub do
   # Set up a minimal OK input file, which should result in success.
   test_file_path = "/tmp/testmember_mono_full_20201230_rspec.tsv"
   test_file = File.open(test_file_path, "w")

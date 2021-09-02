@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "custom_errors"
-require "loader/member_holding_header"
+require "scrub/member_holding_header"
 
-module Loader
+module Scrub
 
   # Usage:
   #

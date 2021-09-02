@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "scrub_output_structure"
+require "scrub/scrub_output_structure"
 require "custom_errors"
 
-RSpec.describe ScrubOutputStructure do
+RSpec.describe Scrub::ScrubOutputStructure do
   let(:test) { described_class.new("test") }
 
   after(:each) do

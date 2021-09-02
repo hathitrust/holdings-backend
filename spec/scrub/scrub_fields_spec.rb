@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "scrub_fields"
+require "scrub/scrub_fields"
 require "services"
 
-RSpec.describe ScrubFields do
+RSpec.describe Scrub::ScrubFields do
   let(:sf) { described_class.new }
 
   it "keeps tally of what was rejected & why" do

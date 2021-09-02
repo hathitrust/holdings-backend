@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "loader/member_holding_file"
+require "scrub/member_holding_file"
 require "custom_errors"
 
-RSpec.describe Loader::MemberHoldingFile do
+RSpec.describe Scrub::MemberHoldingFile do
   let(:test_data) { __dir__ + "/../../testdata" }
 
   # Vars for tests expected to pass, prefix "ok_"
@@ -72,7 +72,7 @@ RSpec.describe Loader::MemberHoldingFile do
   it "turns a line into an array of MemberHolding(s)" do
     value = ok_header_mhf.item_from_line("123\t123", ok_col_map)
     expect(value).to be_a(Array)
-    expect(value.first).to be_a(Loader::MemberHolding)
+    expect(value.first).to be_a(Scrub::MemberHolding)
     expect(value.first.violations).to eq([])
   end
 
@@ -87,7 +87,7 @@ RSpec.describe Loader::MemberHoldingFile do
 
     expect  do
       ok_header_mhf.parse do |record|
-        unless record.is_a?(Loader::MemberHolding)
+        unless record.is_a?(Scrub::MemberHolding)
           raise "yielded something else"
         end
       end

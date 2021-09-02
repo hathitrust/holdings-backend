@@ -4,12 +4,12 @@
 
 require "zinzout"
 require "services"
-require "loader/member_holding_header_factory"
+require "scrub/member_holding_header_factory"
 require "custom_errors"
-require "loader/member_holding"
-require "scrub_fields"
+require "scrub/member_holding"
+require "scrub/scrub_fields"
 
-module Loader
+module Scrub
   # Context:
   # Objects of this class represent files submitted by (prospective)
   # members, to be loaded.

@@ -4,7 +4,7 @@
 
 require "services"
 
-module Loader
+module Scrub
 
   # Context: This class is responsible for knowing the internals
   # of the header line in a member_holding_file.
