@@ -1,0 +1,25 @@
+name: Run CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Build docker 
+        run: docker-compose build
+
+      - name: Bundle install
+        run: docker-compose run --rm dev bundle install
+      
+      - name: Run rubocop
+        run: docker-compose run --rm dev bundle exec rubocop
+      
+      - name: Run tests
+        run: docker-compose run --rm dev bundle exec rspec
