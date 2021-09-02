@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "holdings_db"
+require "data_sources/holdings_db"
 
-RSpec.describe HoldingsDB do
+RSpec.describe DataSources::HoldingsDB do
   let(:connection_string) { "mysql2://ht_repository:ht_repository@mariadb/ht_repository" }
   let(:user) { "ht_repository" }
   let(:password) { "ht_repository" }

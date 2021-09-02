@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_members"
+require "data_sources/ht_members"
 
-RSpec.describe HTMembers do
+RSpec.describe DataSources::HTMembers do
   let(:mock_data) do
     {
-      "example" => HTMember.new(inst_id: "example", country_code: "xx",
+      "example" => DataSources::HTMember.new(inst_id: "example", country_code: "xx",
                                 weight: 3.5, oclc_sym: "ZZZ")
     }
   end
@@ -14,7 +14,7 @@ RSpec.describe HTMembers do
   let(:ht_members) { described_class.new(mock_data) }
 
   let(:temp_member) do
-    HTMember.new(inst_id: "temp", country_code: "zz", weight: 1.0)
+    DataSources::HTMember.new(inst_id: "temp", country_code: "zz", weight: 1.0)
   end
 
   describe "#[]" do
@@ -53,7 +53,7 @@ RSpec.describe HTMembers do
     # Ensure we have a clean database connection for each test
     around(:each) do |example|
       old_holdings_db = Services.holdings_db
-      Services.register(:holdings_db) { HoldingsDB.connection }
+      Services.register(:holdings_db) { DataSources::HoldingsDB.connection }
       begin
         example.run
       ensure
@@ -78,7 +78,7 @@ RSpec.describe HTMembers do
     end
   end
 
-  describe HTMember do
+  describe DataSources::HTMember do
     describe "#initialize" do
       it "raises an error if no inst_id" do
         expect { described_class.new(inst_id: nil) }.to raise_exception("Must have institution id")

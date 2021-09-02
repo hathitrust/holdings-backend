@@ -3,10 +3,10 @@
 require "spec_helper"
 require "cluster"
 require "clustering/cluster_ht_item"
-require "large_clusters"
+require "data_sources/large_clusters"
 require "large_cluster_error"
 
-RSpec.describe LargeClusters do
+RSpec.describe DataSources::LargeClusters do
   let(:mock_data) { [1_759_445, 8_878_489].to_set }
   let(:large_clusters) { described_class.new(mock_data) }
 
