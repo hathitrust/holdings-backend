@@ -36,29 +36,17 @@ module Report
 
     # Execute queries and populate @rows.
     def run
-      populate_rows_with_results(q1, "total_loaded")
-      populate_rows_with_results(q2, "distinct_ocns")
-      # q3 isnt a query like the previous 2.
-      q3 do |org, fmt, count|
-        @rows[org].set("matching_volumes", fmt, count)
-      end
-
+      total_loaded
+      distinct_ocns
+      matching_volumes
       self
     end
 
     private
 
-    # Executes a query and populates the relevant parts of @rows
-    def populate_rows_with_results(query, label)
-      BasicQueryReport.new.aggregate(query) do |res|
-        org = res["_id"]["org"]
-        @rows[org].set(label, res["_id"]["fmt"], res["count"])
-      end
-    end
-
-    # Part 1, count number of loaded holdings records per member & format
-    def q1
-      [
+    # Count number of loaded holdings records per member & format
+    def total_loaded
+      q = [
         { "$match": { "holdings.0": { "$exists": 1 } } },
         { "$project": { "holdings": 1 } },
         { "$unwind": "$holdings" },
@@ -71,11 +59,17 @@ module Report
         } },
         { "$sort": { "_id": 1 } }
       ]
+
+      BasicQueryReport.new.aggregate(q) do |res|
+        org = res["_id"]["org"]
+        fmt = res["_id"]["fmt"]
+        @rows[org].total_loaded[fmt] = res["count"]
+      end
     end
 
-    # Part 2, count number of distinct ocns (that are in HT) in holdings per member & format
-    def q2
-      [
+    # Count number of distinct ocns (that are in HT) in holdings per member & format
+    def distinct_ocns
+      q = [
         { "$match": { "holdings.0": { "$exists": 1 }, "ht_items.0": { "$exists": 1 } } },
         { "$project": { "holdings": 1 } },
         { "$unwind": "$holdings" },
@@ -89,16 +83,22 @@ module Report
         { "$group": { "_id": { "org": "$_id.org", "fmt": "$_id.fmt" }, "count": { "$sum": 1 } } },
         { "$sort": { "_id": 1 } }
       ]
+
+      BasicQueryReport.new.aggregate(q) do |res|
+        org = res["_id"]["org"]
+        fmt = res["_id"]["fmt"]
+        @rows[org].distinct_ocns[fmt] = res["count"]
+      end
     end
 
     # Part 3 relies on the freq table having been dumped to a file
     # when last the cost report was run.
-    def q3
+    def matching_volumes
       unless @cost_report_freq.nil?
         read_freq do |org, data|
           ALT_FORMATS.each do |fmt, alt|
             if data.key?(alt) && @rows.key?(org)
-              yield(org, fmt, data[alt].values.sum)
+              @rows[org].matching_volumes[fmt] = data[alt].values.sum
             end
           end
         end
@@ -119,19 +119,13 @@ module Report
 
   # Represents one row in the MemberCountsReport, with an org as key and a hash of data.
   class MemberCountsRow
-
-    attr_accessor :counts
+    attr_accessor :total_loaded, :distinct_ocns, :matching_volumes
 
     def initialize(org)
-      @org    = org
-      @counts = {}
-
-      MCR_LABELS.each do |label|
-        MCR_FORMATS.each do |fmt|
-          @counts[label]    ||= {}
-          @counts[label][fmt] = 0
-        end
-      end
+      @org              = org
+      @total_loaded     = { MON => 0, MUL => 0, SER => 0 }
+      @distinct_ocns    = { MON => 0, MUL => 0, SER => 0 }
+      @matching_volumes = { MON => 0, MUL => 0, SER => 0 }
     end
 
     # 2-row header, like:
@@ -147,29 +141,12 @@ module Report
       (row1 + ["\n"] + row2).join("\t")
     end
 
-    # Set a value for a given label and format.
-    def set(label, fmt, count)
-      unless @counts.key?(label)
-        raise "bad label #{label}"
-      end
-
-      unless @counts[label].key?(fmt)
-        raise "bad fmt #{fmt} (#{fmt.class})"
-      end
-
-      @counts[label][fmt] = count.to_i
-    end
-
     def to_a
-      MCR_LABELS.map do |label|
-        MCR_FORMATS.map do |fmt|
-          @counts[label][fmt]
-        end
-      end
+      [@total_loaded.values, @distinct_ocns.values, @matching_volumes.values].flatten
     end
 
     def to_s
-      to_a.flatten.join("\t")
+      to_a.join("\t")
     end
   end
 end
