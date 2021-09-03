@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
 require "bundler/setup"
 require "zinzout"
 require "services"
-require "report/estimate_ic"
+require "reports/estimate_ic"
 
 Services.mongo!
 
@@ -16,7 +16,7 @@ if __FILE__ == $PROGRAM_NAME
 
   ocn_file = ARGV.shift
   ocns = File.open(ocn_file).map(&:to_i)
-  est = EstimateIC.new(ocns, BATCH_SIZE)
+  est = Reports::EstimateIC.new(ocns, BATCH_SIZE)
 
   Services.logger.info "Target Cost: #{est.cost_report.target_cost}"
   Services.logger.info "Cost per volume: #{est.cost_report.cost_per_volume}"

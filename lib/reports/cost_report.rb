@@ -4,7 +4,7 @@ require "ht_item_overlap"
 require "utils/waypoint"
 require "services"
 
-module Report
+module Reports
 
   # Generates reports based on h_share
   class CostReport

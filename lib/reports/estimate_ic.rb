@@ -3,9 +3,9 @@
 require "ht_item_overlap"
 require "utils/waypoint"
 require "services"
-require "report/cost_report"
+require "reports/cost_report"
 
-module Report
+module Reports
 
   # Generate IC estimate from a list of OCNS
   class EstimateIC

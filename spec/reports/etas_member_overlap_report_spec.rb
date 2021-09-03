@@ -2,9 +2,9 @@
 
 require "spec_helper"
 require "pp"
-require "report/etas_member_overlap_report"
+require "reports/etas_member_overlap_report"
 
-RSpec.describe Report::EtasMemberOverlapReport do
+RSpec.describe Reports::EtasMemberOverlapReport do
   let(:h) { build(:holding) }
   let(:h2) { build(:holding, organization: "ualberta") }
   let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
