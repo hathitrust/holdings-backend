@@ -24,7 +24,6 @@
 /.rspec
 
 # test coverage
-/spec/reports/
 /coverage
 
 # Emacs backup files

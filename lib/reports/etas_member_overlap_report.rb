@@ -5,7 +5,7 @@ require "cluster"
 require "cluster_overlap"
 require "etas_overlap"
 
-module Report
+module Reports
 
   # Generates overlap reports for 1 or all members
   class EtasMemberOverlapReport
