@@ -2,9 +2,11 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
 require "json"
+require "open-uri"
 require "services"
 
 OCLC_URL = "https://www.oclc.org/apps/oclc/wwg"
+MEMO_LOC = "/tmp/max_ocn.txt"
 ONE_DAY_SEC = 86_400
 
 module Scrub
@@ -21,22 +23,17 @@ module Scrub
     end
 
     def self.memo_loc
-      "/tmp/max_ocn.txt"
+      MEMO_LOC
     end
 
     def ocn
       if File.exist?(MaxOcn.memo_loc)
         @log.info "memo hit"
-        mtime     = File.stat(MaxOcn.memo_loc).mtime.to_i
-        epoch     = Time.now.to_i
-        time_diff = epoch - mtime
-        @log.info "time diff #{time_diff}"
-
-        if time_diff > @age_limit
-          @log.info "memo file too old"
+        if memo_expired?
+          @log.info "... but memo file expired"
           write_file
         else
-          @log.info "memo file still good"
+          @log.info "... and memo file still good"
           read_file
         end
       else
@@ -46,6 +43,14 @@ module Scrub
     end
 
     private
+
+    def memo_expired?
+      mtime     = File.stat(MEMO_LOC).mtime.to_i
+      epoch     = Time.now.to_i
+      time_diff = epoch - mtime
+      @log.info "time diff #{time_diff}"
+      time_diff > @age_limit
+    end
 
     def write_file
       @log.info "writing new memo file"
@@ -60,9 +65,9 @@ module Scrub
     def make_call
       if @mock
         @log.info "mock call"
-        `cat spec/fixtures/max_oclc_response.json`
+        IO.read("spec/fixtures/max_oclc_response.json")
       else
-        `curl -s "#{OCLC_URL}"`
+        URI.open(OCLC_URL).read
       end
     end
 
