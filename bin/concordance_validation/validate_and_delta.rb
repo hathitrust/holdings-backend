@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "settings"
+
 def post_to_holdings_channel(msg)
   system("curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"#{msg}\"}' #{ENV['SLACK_URL']}")
 end
@@ -22,7 +24,7 @@ end
 # Validate any new files.
 # Compute deltas of new concordance with pre-existing validated concordance.
 
-conc_dir = ENV['CONC_HOME']
+conc_dir = Settings.concordance_path 
 
 raw_gzip_files = Dir.glob("#{conc_dir}/raw/*txt.gz")
 
@@ -39,7 +41,7 @@ dates_to_validate.each do |date|
   fin = "#{conc_dir}/raw/#{date}_concordance.txt.gz"
   fout = "#{conc_dir}/validated/#{date}_concordance_validated.tsv"
   puts "Validating #{fin}"
-  validated = system("bundle exec ruby concordance_validation.rb #{fin} #{fout} > #{conc_dir}/results.tmp")
+  validated = system("bundle exec ruby bin/concordance_validation/validate.rb #{fin} #{fout} > #{conc_dir}/results.tmp")
   post_to_holdings_channel("Validated #{fin}.") if validated
   gzipped = system("gzip #{fout}")
   error_msg = review_logs("#{conc_dir}/validated/#{date}_concordance_validated.tsv.log").join("\n")
