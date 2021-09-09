@@ -65,6 +65,15 @@ module Reports
       @freq_table
     end
 
+    # Dump freq table so these computes can be re-used in member_counts_report.
+    def dump_freq_table(path)
+      dump_file = File.open(path, "w")
+      freq_table.sort.each do |org, freq_data|
+        dump_file.puts([org, JSON.generate(freq_data)].join("\t"))
+      end
+      dump_file.close
+    end
+
     def compile_frequency_table
       waypoint = Utils::Waypoint.new(maxlines)
       logger.info("Begin compiling hscore frequency table.")

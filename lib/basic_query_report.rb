@@ -13,6 +13,6 @@ class BasicQueryReport
   # query = { ... }
   # BasicQueryReport.new.aggregate(query) { |result| ... }
   def aggregate(query, &block)
-    Cluster.collection.aggregate(query).each(&block)
+    Cluster.collection.aggregate(query, { "allowDiskUse": true }).each(&block)
   end
 end
