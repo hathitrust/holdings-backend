@@ -53,7 +53,7 @@ Metrics/ClassLength:
     - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub/scrub_fields.rb'
-    - 'lib/cost_report.rb'
+    - 'lib/reports/cost_report.rb'
     - 'lib/cluster.rb'
 
 # Offense count: 6

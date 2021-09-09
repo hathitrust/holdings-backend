@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "report/estimate_ic"
+require "reports/estimate_ic"
 require "clustering/cluster_ht_item"
 
-RSpec.describe Report::EstimateIC do
+RSpec.describe Reports::EstimateIC do
   let(:ht_allow) { build(:ht_item, access: "allow") }
   let(:ht_deny) { build(:ht_item, access: "deny") }
   let(:ocns) { [1, 2, ht_allow.ocns, ht_deny.ocns].flatten }

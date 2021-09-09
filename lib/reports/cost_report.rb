@@ -4,7 +4,7 @@ require "ht_item_overlap"
 require "utils/waypoint"
 require "services"
 
-module Report
+module Reports
 
   # Generates reports based on h_share
   class CostReport
@@ -63,6 +63,15 @@ module Report
     def freq_table
       compile_frequency_table unless @freq_table.any?
       @freq_table
+    end
+
+    # Dump freq table so these computes can be re-used in member_counts_report.
+    def dump_freq_table(path)
+      dump_file = File.open(path, "w")
+      freq_table.sort.each do |org, freq_data|
+        dump_file.puts([org, JSON.generate(freq_data)].join("\t"))
+      end
+      dump_file.close
     end
 
     def compile_frequency_table

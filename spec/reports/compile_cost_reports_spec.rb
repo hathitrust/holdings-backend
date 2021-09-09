@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "report/cost_report"
+require "reports/cost_report"
 require_relative "../../bin/reports/compile_cost_reports"
 
 RSpec.describe "CompileCostReports" do
@@ -10,7 +10,7 @@ RSpec.describe "CompileCostReports" do
   # - 1 spm with 0 holdings
   # - 2 mpm with the same ocns with 1 holding
   # - 1 spm with access = allow
-  let(:cr) { Report::CostReport.new(cost: 5) }
+  let(:cr) { Reports::CostReport.new(cost: 5) }
 
   let(:ht_serial) do
     build(:ht_item,
@@ -118,5 +118,10 @@ RSpec.describe "CompileCostReports" do
       "upenn	0.0	0.3333333333333333	0.0	0.125	1.0	0.0	0.4583333333333333",
       "utexas	0.0	0.3333333333333333	0.5	0.375	3.0	0.0	1.2083333333333333"
     ].join("\n"))
+  end
+
+  it "dumps frequency table upon request" do
+    cr.dump_freq_table("/tmp/freq.txt")
+    expect(File).to exist("/tmp/freq.txt")
   end
 end

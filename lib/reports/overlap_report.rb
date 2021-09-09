@@ -5,7 +5,7 @@ require "cluster"
 require "cluster_overlap"
 require "utils/waypoint"
 
-module Report
+module Reports
 
   # Generates an overlap for a given member including copy counts
   class OverlapReport
