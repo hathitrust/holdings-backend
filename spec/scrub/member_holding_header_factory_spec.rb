@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require "loader/member_holding_header_factory"
+require "scrub/member_holding_header_factory"
 require "custom_errors"
 
-RSpec.describe Loader::MemberHoldingHeaderFactory do
+RSpec.describe Scrub::MemberHoldingHeaderFactory do
   let(:mon) { "mono" }
   let(:mul) { "multi" }
   let(:ser) { "serial" }
@@ -12,13 +12,13 @@ RSpec.describe Loader::MemberHoldingHeaderFactory do
   let(:min_ok_hed) { "oclc\tlocal_id" }
 
   def check_class(item_type, hed)
-    Loader::MemberHoldingHeaderFactory.for(item_type, hed)
+    Scrub::MemberHoldingHeaderFactory.for(item_type, hed)
   end
 
   it "returns the correct subclass" do
-    expect(check_class(mon, min_ok_hed)).to be_a(Loader::MonoHoldingHeader)
-    expect(check_class(mul, min_ok_hed)).to be_a(Loader::MultiHoldingHeader)
-    expect(check_class(ser, min_ok_hed)).to be_a(Loader::SerialHoldingHeader)
+    expect(check_class(mon, min_ok_hed)).to be_a(Scrub::MonoHoldingHeader)
+    expect(check_class(mul, min_ok_hed)).to be_a(Scrub::MultiHoldingHeader)
+    expect(check_class(ser, min_ok_hed)).to be_a(Scrub::SerialHoldingHeader)
   end
 
   it "raises an error given an illegal item_type" do

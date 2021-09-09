@@ -9,19 +9,19 @@
 # Offense count: 1
 Lint/ShadowedException:
   Exclude:
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
 
 # Offense count: 1
 Lint/UselessAssignment:
   Exclude:
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
 
 # Offense count: 3
 Metrics/AbcSize:
   Exclude:
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/scrub_fields.rb'
     - 'lib/clustering/cluster_ht_item.rb'
 
 Layout/LineLength:
@@ -38,9 +38,9 @@ Style/FrozenStringLiteralComment:
 Metrics/BlockLength:
   Exclude:
     # to fix
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/scrub_fields.rb'
     # uncomment in .rubocop.yml when above are fixed
     - 'spec/support/**/*.rb'
     - 'spec/**/*_spec.rb'
@@ -50,9 +50,9 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
   Exclude:
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/scrub_fields.rb'
     - 'lib/reports/cost_report.rb'
     - 'lib/cluster.rb'
 
@@ -60,9 +60,9 @@ Metrics/ClassLength:
 # Configuration parameters: CountComments, ExcludedMethods.
 Metrics/MethodLength:
   Exclude:
-    - 'lib/autoscrub.rb'
+    - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/scrub_fields.rb'
 
 
 # Offense count: 1
@@ -82,15 +82,15 @@ Naming/FileName:
 # AllowedNames: io, id, to, by, on, in, at, ip, db, os
 Naming/MethodParameterName:
   Exclude:
-    - 'lib/autoscrub.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/autoscrub.rb'
+    - 'lib/scrub/scrub_fields.rb'
     - 'lib/utils/ppnum.rb'
 
 # Offense count: 2
 Performance/Caller:
   Exclude:
-    - 'lib/autoscrub.rb'
-    - 'lib/scrub_fields.rb'
+    - 'lib/scrub/autoscrub.rb'
+    - 'lib/scrub/scrub_fields.rb'
 
 # Offense count: 4
 # Configuration parameters: Max.

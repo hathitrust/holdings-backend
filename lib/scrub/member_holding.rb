@@ -3,10 +3,10 @@
 require "securerandom"
 require "json"
 require "services"
-require "scrub_fields"
+require "scrub/scrub_fields"
 require "custom_errors"
 
-module Loader
+module Scrub
 
   # Represents the information in one line from a member holding file
   class MemberHolding
