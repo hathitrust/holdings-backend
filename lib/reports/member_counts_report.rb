@@ -4,7 +4,7 @@ require_relative "../basic_query_report"
 require "data_sources/ht_members"
 require "json"
 
-module Report
+module Reports
   MON = "mono"
   MUL = "multi"
   SER = "serial"

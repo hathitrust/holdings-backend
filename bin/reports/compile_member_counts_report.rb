@@ -5,7 +5,7 @@
 
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
 
-require "report/member_counts_report"
+require "reports/member_counts_report"
 require "fileutils"
 
 def make_outf(output_dir)
@@ -31,10 +31,10 @@ if __FILE__ == $PROGRAM_NAME
   outf = make_outf(output_dir)
 
   # Run report
-  mcr = Report::MemberCountsReport.new(cost_report_freq).run
+  mcr = Reports::MemberCountsReport.new(cost_report_freq).run
 
   # Write report to output
-  outf.puts(Report::MemberCountsRow.header)
+  outf.puts(Reports::MemberCountsRow.header)
   mcr.rows.each do |org, data|
     outf.puts([org, data].join("\t"))
   end

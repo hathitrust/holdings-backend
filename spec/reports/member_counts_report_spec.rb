@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "report/member_counts_report"
-require "report/cost_report"
+require "reports/member_counts_report"
+require "reports/cost_report"
 require_relative "../../bin/reports/compile_member_counts_report"
 
 RSpec.describe "MemberCountsReport" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }
 
   let(:mcr) do
-    Report::MemberCountsReport.new("/dev/null", mokk_members)
+    Reports::MemberCountsReport.new("/dev/null", mokk_members)
   end
 
   let(:rows) { mcr.run.rows }
@@ -35,7 +35,7 @@ RSpec.describe "MemberCountsReport" do
     end
 
     it "represents a row as a MemberCountsRow" do
-      expect(rows["umich"]).to be_a(Report::MemberCountsRow)
+      expect(rows["umich"]).to be_a(Reports::MemberCountsRow)
     end
 
     it "starts out all zeroes" do
@@ -102,7 +102,7 @@ RSpec.describe "MemberCountsReport" do
   describe "matching_volumes" do
     it "reads a freq file and populates report accordingly" do
       freq_file = "spec/fixtures/freq.txt"
-      rows2 = Report::MemberCountsReport.new(freq_file, mokk_members).run.rows
+      rows2 = Reports::MemberCountsReport.new(freq_file, mokk_members).run.rows
       expect(rows2["umich"].matching_volumes["mono"]).to eq(1)
       expect(rows2["umich"].matching_volumes["multi"]).to eq(2)
       expect(rows2["umich"].matching_volumes["serial"]).to eq(1)
