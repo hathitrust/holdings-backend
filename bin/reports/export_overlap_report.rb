@@ -7,7 +7,7 @@ Dotenv.load(".env")
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
 require "bundler/setup"
 require "zinzout"
-require "report/overlap_report"
+require "reports/overlap_report"
 
 BATCH_SIZE = 10_000
 
@@ -30,5 +30,5 @@ if __FILE__ == $PROGRAM_NAME
   end
 
   org = ARGV.shift
-  Report::OverlapReport.new(org, BATCH_SIZE).run
+  Reports::OverlapReport.new(org, BATCH_SIZE).run
 end
