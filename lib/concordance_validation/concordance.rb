@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'zlib'
-require 'pp'
+require "zlib"
+require "pp"
 
 # Concordance validation.
 # Takes a file with <raw ocn> <tab> <resolved ocn>, checks that its ok.
@@ -16,8 +16,8 @@ module ConcordanceValidation
     def initialize(infile)
       @infile = infile
       Concordance.numbers_tab_numbers(infile)
-      @raw_to_resolved = Hash.new { |h, k| h[k] = [] }
-      @resolved_to_raw = Hash.new { |h, k| h[k] = [] }
+      @raw_to_resolved = Hash.new {|h, k| h[k] = [] }
+      @resolved_to_raw = Hash.new {|h, k| h[k] = [] }
       file_handler.open(infile).each do |line|
         # first pass
         raw, resolved = line.chomp.split("\t")
@@ -29,7 +29,7 @@ module ConcordanceValidation
     end
 
     def file_handler
-      if @infile =~ /\.gz$/
+      if /\.gz$/.match?(@infile)
         Zlib::GzipReader
       else
         File
@@ -59,7 +59,7 @@ module ConcordanceValidation
           end
         end
       end
-      raise "Cycles: #{in_edges.keys.sort.join(', ')}" if in_edges.keys.any?
+      raise "Cycles: #{in_edges.keys.sort.join(", ")}" if in_edges.keys.any?
     end
 
     # Given an ocn, compile all related edges
@@ -103,13 +103,15 @@ module ConcordanceValidation
         return resolved.first if (resolved.count == 1) && terminal_ocn?(resolved.first)
 
         # multiple ocns, but they are all terminal
-        raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(', ')}" if resolved.all? { |o| terminal_ocn? o }
+        if resolved.all? {|o| terminal_ocn? o }
+          raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(", ")}"
+        end
 
         # find more ocns in the chain
         resolved.each do |o|
           # it is not terminal so we replace with the ocns it resolves to
           if @raw_to_resolved.key? o
-            resolved.map! { |x| x == o ? @raw_to_resolved[o] : x }.flatten!
+            resolved.map! {|x| x == o ? @raw_to_resolved[o] : x }.flatten!
           end
         end
         resolved.uniq!
@@ -122,7 +124,7 @@ module ConcordanceValidation
     # @param infile file name for the concordance
     # @return raise error if invalid
     def self.numbers_tab_numbers(infile)
-      grepper = infile.match?(/\.gz$/) ? 'zgrep' : 'grep'
+      grepper = infile.match?(/\.gz$/) ? "zgrep" : "grep"
       line_count = `#{grepper} -cvP '^[0-9]+\t[0-9]+$' #{infile}`
       raise "Invalid format. #{line_count.to_i} line(s) are malformed." unless line_count.to_i.zero?
     end

@@ -8,8 +8,8 @@ require "concordance_validation/concordance"
 if $PROGRAM_NAME == __FILE__
   fin = ARGV.shift
   fout = ARGV.shift
-  log = File.open("#{fout}.log", 'w')
-  fout = File.open(fout, 'w')
+  log = File.open("#{fout}.log", "w")
+  fout = File.open(fout, "w")
 
   c = ConcordanceValidation::Concordance.new(fin)
   c.raw_to_resolved.each_key do |raw|
@@ -20,12 +20,12 @@ if $PROGRAM_NAME == __FILE__
       c.detect_cycles(*sub)
     rescue StandardError => e
       log.puts e
-      log.puts "Cycles:#{(sub[0].keys + sub[1].keys).flatten.uniq.join(', ')}"
+      log.puts "Cycles:#{(sub[0].keys + sub[1].keys).flatten.uniq.join(", ")}"
       next
     end
     begin
       # checks for multiple terminal ocns
-      terminal = c.terminal_ocn(raw)
+      _terminal = c.terminal_ocn(raw)
     rescue StandardError => e
       log.puts e
       next

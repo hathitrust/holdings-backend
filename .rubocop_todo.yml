@@ -16,13 +16,14 @@ Lint/UselessAssignment:
   Exclude:
     - 'lib/autoscrub.rb'
 
-# Offense count: 3
+# Offense count: 5
 Metrics/AbcSize:
   Exclude:
     - 'lib/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub_fields.rb'
     - 'lib/clustering/cluster_ht_item.rb'
+    - 'lib/concordance_validation/concordance.rb'
 
 Layout/LineLength:
   Exclude:
