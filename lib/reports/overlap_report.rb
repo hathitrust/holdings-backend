@@ -9,11 +9,11 @@ module Reports
 
   # Generates an overlap for a given member including copy counts
   class OverlapReport
-    attr_accessor :org, :waypoint
 
     def initialize(org = nil, batch_size = 100_000)
       @org = org
       @waypoint = Utils::Waypoint.new(batch_size)
+      @batch_size = batch_size
     end
 
     def overlap_line(overlap_hash)
@@ -31,7 +31,7 @@ module Reports
 
     def run
       logger = Services.logger
-      logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
+      logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum @batch_size}"
 
       ClusterOverlap.matching_clusters(@org).each do |c|
         ClusterOverlap.new(c, @org).each do |overlap|

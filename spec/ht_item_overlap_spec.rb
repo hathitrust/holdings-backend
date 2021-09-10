@@ -6,7 +6,7 @@ require "ht_item_overlap"
 RSpec.describe HtItemOverlap do
   let(:c) { build(:cluster) }
   let(:mpm) do
-    build(:ht_item,
+    build(:ht_item, :mpm,
           ocns: c.ocns,
           enum_chron: "1",
           n_enum: "1",
@@ -58,7 +58,7 @@ RSpec.describe HtItemOverlap do
     end
 
     it "does not include non-matching organizations that match something else" do
-      mpm2 = build(:ht_item,
+      mpm2 = build(:ht_item, :mpm,
                    ocns: c.ocns,
                    enum_chron: "2",
                    n_enum: "2",
@@ -104,7 +104,7 @@ RSpec.describe HtItemOverlap do
     end
 
     it "does not match if ht item enum is ''" do
-      empty_mpm = build(:ht_item,
+      empty_mpm = build(:ht_item, :mpm,
                         ocns: c.ocns,
                          billing_entity: "ucr",
                          enum_chron: "",
@@ -119,14 +119,14 @@ RSpec.describe HtItemOverlap do
 
   describe "#h_share" do
     let(:keio_item) do
-      build(:ht_item,
+      build(:ht_item, :mpm,
             ocns: c.ocns,
             collection_code: "KEIO",
             enum_chron: "1")
     end
 
     let(:ucm_item) do
-      build(:ht_item,
+      build(:ht_item, :mpm,
             ocns: c.ocns,
             collection_code: "UCM",
             enum_chron: "1")

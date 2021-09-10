@@ -11,7 +11,6 @@ require "data_sources/holdings_db"
 require "data_sources/ht_collections"
 require "data_sources/ht_members"
 require "data_sources/large_clusters"
-require "data_sources/serials_file"
 
 Services = Canister.new
 Services.register(:"mongo!") do
@@ -25,8 +24,6 @@ Services.register(:ht_collections) { DataSources::HTCollections.new }
 Services.register(:logger) do
   Logger.new($stderr, level: Logger::INFO)
 end
-
-Services.register(:serials) { DataSources::SerialsFile.new(Settings.serials_file) }
 
 # Re-register with path once you know it.
 Services.register(:scrub_logger) do

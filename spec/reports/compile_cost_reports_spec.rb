@@ -13,27 +13,24 @@ RSpec.describe "CompileCostReports" do
   let(:cr) { Reports::CostReport.new(cost: 5) }
 
   let(:ht_serial) do
-    build(:ht_item,
-          enum_chron: "",
-          bib_fmt: "s",
+    build(:ht_item, :ser,
           collection_code: "MIU",
           access: "deny")
   end
   let(:ht_spm) do
-    build(:ht_item,
-          enum_chron: "",
+    build(:ht_item, :spm,
           collection_code: "MIU",
           access: "deny")
   end
   let(:ht_mpm1) do
-    build(:ht_item,
+    build(:ht_item, :mpm,
           enum_chron: "1",
           n_enum: "1",
           collection_code: "MIU",
           access: "deny")
   end
   let(:ht_mpm2) do
-    build(:ht_item,
+    build(:ht_item, :mpm,
           ocns: ht_mpm1.ocns,
           ht_bib_key: ht_mpm1.ht_bib_key,
           enum_chron: "",
@@ -41,8 +38,7 @@ RSpec.describe "CompileCostReports" do
           access: "deny")
   end
   let(:ht_spm_pd) do
-    build(:ht_item,
-          enum_chron: "",
+    build(:ht_item, :spm,
           collection_code: "MIU",
           access: "allow")
   end
@@ -63,7 +59,6 @@ RSpec.describe "CompileCostReports" do
     Cluster.each(&:delete)
     Services.register(:ht_members) { mock_members }
     Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
-    Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
     Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht_mpm2).cluster.tap(&:save)

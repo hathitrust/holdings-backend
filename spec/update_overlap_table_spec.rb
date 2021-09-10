@@ -9,8 +9,8 @@ require_relative "../bin/update_overlap_table"
 RSpec.describe "update_overlap_table" do
   before(:each) do |_spec|
     h   = build(:holding)
-    ht  = build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding")
-    ht2 = build(:ht_item, billing_entity: "not_same_as_holding")
+    ht  = build(:ht_item, :spm, ocns: [h.ocn], billing_entity: "not_same_as_holding")
+    ht2 = build(:ht_item, :spm, billing_entity: "not_same_as_holding")
     Cluster.each(&:delete)
     Clustering::ClusterHolding.new(h).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)

@@ -10,20 +10,8 @@ RSpec.describe Reports::CostReport do
   let(:cr) { described_class.new(cost: 10) }
   let(:c) { build(:cluster) }
   let(:c2) { build(:cluster) }
-  let(:spm) do
-    build(:ht_item,
-          ocns: c.ocns,
-            enum_chron: "",
-            access: "deny",
-            billing_entity: "smu")
-  end
-  let(:mpm) do
-    build(:ht_item,
-          enum_chron: "1",
-            n_enum: "1",
-            billing_entity: "stanford",
-            access: "deny")
-  end
+  let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: "deny", billing_entity: "smu") }
+  let(:mpm) { build(:ht_item, :mpm, billing_entity: "stanford", access: "deny") }
   let(:ht_allow) { build(:ht_item, access: "allow") }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
@@ -189,8 +177,7 @@ RSpec.describe Reports::CostReport do
 
     describe "multiple HTItem/Holding spms" do
       let(:ht_copy) do
-        build(:ht_item,
-              enum_chron: "",
+        build(:ht_item, :spm,
               ocns: spm.ocns,
               billing_entity: spm.billing_entity,
               access: "deny")
@@ -281,23 +268,16 @@ RSpec.describe Reports::CostReport do
 
     describe "Serials" do
       let(:ht_serial) do
-        build(:ht_item,
-              enum_chron: "1",
-              n_enum: "1",
-              bib_fmt: "s",
+        build(:ht_item, :ser,
               access: "deny")
       end
       let(:ht_serial2) do
-        build(:ht_item,
+        build(:ht_item, :ser,
               ht_bib_key: ht_serial.ht_bib_key,
               ocns: ht_serial.ocns,
-              enum_chron: "2",
-              n_enum: "2",
-              bib_fmt: "s",
               billing_entity: "not_ht_serial.billing_entity",
               access: "deny")
       end
-      let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
       let(:holding_serial) do
         Services.ht_members.add_temp(
           DataSources::HTMember.new(inst_id: "not_a_collection", country_code: "xx", weight: 1.0)
@@ -313,7 +293,6 @@ RSpec.describe Reports::CostReport do
       it "assigns all serials to the member and ht_item billing entities affect hshare" do
         Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
         Clustering::ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
-        Services.serials.bibkeys.add(ht_serial.ht_bib_key.to_i)
         Clustering::ClusterHolding.new(holding_serial).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
           c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
