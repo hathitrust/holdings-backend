@@ -6,7 +6,7 @@ require "overlap"
 RSpec.describe Overlap do
   context "with a cluster with an htitem and holdings" do
     let(:c) { build(:cluster) }
-    let(:ht) { build(:ht_item, ocns: c.ocns) }
+    let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
     let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
     let(:h2) do
       build(:holding,
