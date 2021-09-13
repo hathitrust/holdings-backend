@@ -22,7 +22,7 @@ RSpec.describe CalculateFormat do
     end
 
     it "is NOT an MPM if it has a chron but no enum" do
-      ht_chron = build(:ht_item, enum_chron: "1994")
+      ht_chron = build(:ht_item, bib_fmt: "BK", enum_chron: "1994")
       c_chron = Clustering::ClusterHtItem.new(ht_chron).cluster
       expect(
         described_class.new(c_chron).item_format(ht_chron)
