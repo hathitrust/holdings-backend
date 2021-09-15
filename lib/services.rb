@@ -19,6 +19,7 @@ end
 
 Services.register(:slack_writer) { Utils::SlackWriter.new(Settings.slack_endpoint) }
 Services.register(:holdings_db) { DataSources::HoldingsDB.new }
+Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
 Services.register(:ht_members) { DataSources::HTMembers.new }
 Services.register(:ht_collections) { DataSources::HTCollections.new }
 Services.register(:logger) do
