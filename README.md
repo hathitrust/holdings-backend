@@ -62,30 +62,35 @@ Script command cheat sheet:
 * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb -u
  <filepath>` (update file)
 
-### Loading the OCLC Concordance file
+
+### OCLC Concordance file 
 
 The _oclc concordance file_ is a single file with two columns, each line
 representing a pair of OCLC numbers that should be treated as equivalent.
 
-There are ≈ 60M rows in this file. Depending on your hardware, a full
-load will run into tens-of-hours (40-60 hours on a basic iMac desktop).
+There are ≈ 60M rows in this file. 
 
 The OCLC concordance source file is not for redistribution.
 
-To load the OCLC concordance file:
-  * Get the file from our [private Box account](https://umich.app.box.com/file/643800968350)
-    and put it somewhere under the repository root 
-  * Make sure your docker cluster is up and running 
-    * `docker-compose ps` (run from the repo root) should show mongo running 
-    * `bin/setup_dev.sh` if it's not up
-  * From the root of the repository:
-    * `docker-compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`, where
-      * `docker-compose run` is the command
-      * `--rm` says to fire up a container for this and then tear it back 
-      down so it isn't still running
-      * `<filepath>` is the path _relative to the repository root_
-       of the (full-or-partial) OCLC resoutions file. This file may be gzipped or not. 
+The delta produces a list of adds and a list of deletes.
 
+Get the tsv file from our [private Dropbox account](https://www.dropbox.com/home/ULIB-HATHITRUST%20OPERATIONS/hathitrust-operations/Strategic%20Partners/OCLC/Concordance) into `/htprep/holdings/concordance/raw`.
+
+Before loading into production, the concordance needs to be validated and compared to the previous concordance.
+
+Run `bin/generic_job.sh conc-process bundle exec ruby bin/concordance_validation/validate_and_delta.rb`
+
+The validation takes a tsv file (gzipped or not) and:
+  * checks for correct format
+  * checks for raw OCNs resolving to multiple "terminal" OCNs
+  * checks for cycles
+  * puts a validated concordance into `htprep/holdings/concordance/validated`
+
+The delta compares the most recent validated concordance with the prior and puts 
+`comm_diff_<date_of_run>.txt.adds` and `comm_diff_<date_of_run>.txt.deletes` into `/htprep/holdings/concordance/diffs`.
+
+The adds and deletes can then be loaded into production with:
+`bin/generic_job.sh conc-load bin/load_concordance_diffs.rb <date_of_run>`
 
 ### Loading the HathiFiles
 
@@ -117,3 +122,17 @@ To load a scrubbed file:
   * Add UUIDs for tracking whether the individual line has been processed: `bin ruby/add_uuid.rb infile > outfile`
   * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
 
+
+
+## K8s Cronjob
+`kubectl create -f cron_job.yaml`
+
+Runs `validate_and_delta.rb` daily at 2300UTC, which is presumed EOD for the parties involved.
+`validate_and_delta.rb` checks the concordance directory for new un-validated concordance files, validates them and diffs with a previous concordance.
+Posts a message to the slack channel so we know there is an update to be loaded. 
+It does NOT attempt to update the concordance as it may conflict with reporting operations. This would require more complicated orchestration of jobs.
+
+## One command validation and delta
+`bin/validate_and_delta.sh`
+
+It runs a job that will validate un-validated concordances found in `CONC_HOME/raw` then diff it with a previous validated concordance. The diffs get put into `CONC_HOME/diffs`.
