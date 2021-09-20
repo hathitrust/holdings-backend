@@ -14,7 +14,7 @@ def make_outf(output_dir)
   else
     FileUtils.mkdir_p(output_dir)
     ymd = Time.new.strftime("%F")
-    File.join(output_dir, "member_counts_#{ymd}.tsv")
+    fn = File.join(output_dir, "member_counts_#{ymd}.tsv")
     File.open(fn, "w")
   end
 end
