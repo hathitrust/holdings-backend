@@ -66,8 +66,9 @@ module Reports
     end
 
     # Dump freq table so these computes can be re-used in member_counts_report.
-    def dump_freq_table(path)
-      dump_file = File.open(path, "w")
+    def dump_freq_table(dump_fn = "freq.txt")
+      FileUtils.mkdir_p(Settings.cost_report_freq_path)
+      dump_file = File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w")
       freq_table.sort.each do |org, freq_data|
         dump_file.puts([org, JSON.generate(freq_data)].join("\t"))
       end

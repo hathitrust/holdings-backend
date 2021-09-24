@@ -49,5 +49,8 @@ if __FILE__ == $PROGRAM_NAME
   puts "Num members: #{Services.ht_members.members.count}"
 
   puts to_tsv(cost_report)
+  # Dump freq table to file
+  ymd = Time.new.strftime("%F")
+  cost_report.dump_freq_table("freq_#{ymd}.txt")
   logger.info waypoint.final_line
 end

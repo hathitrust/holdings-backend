@@ -115,8 +115,12 @@ RSpec.describe "CompileCostReports" do
     ].join("\n"))
   end
 
+  it "has a setting for where to dump freq files" do
+    expect(Settings.cost_report_freq_path.length).to be > 5
+  end
+
   it "dumps frequency table upon request" do
-    cr.dump_freq_table("/tmp/freq.txt")
-    expect(File).to exist("/tmp/freq.txt")
+    cr.dump_freq_table("freq.txt")
+    expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
   end
 end

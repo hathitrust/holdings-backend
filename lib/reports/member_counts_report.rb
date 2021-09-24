@@ -56,8 +56,7 @@ module Reports
             "fmt": "$holdings.mono_multi_serial"
           },
           "count": { "$sum": 1 }
-        } },
-        { "$sort": { "_id": 1 } }
+        } }
       ]
 
       BasicQueryReport.new.aggregate(q) do |res|
@@ -80,8 +79,7 @@ module Reports
             "fmt": "$holdings.mono_multi_serial"
           }
         } },
-        { "$group": { "_id": { "org": "$_id.org", "fmt": "$_id.fmt" }, "count": { "$sum": 1 } } },
-        { "$sort": { "_id": 1 } }
+        { "$group": { "_id": { "org": "$_id.org", "fmt": "$_id.fmt" }, "count": { "$sum": 1 } } }
       ]
 
       BasicQueryReport.new.aggregate(q) do |res|
