@@ -1,11 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
-
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
-require "bundler/setup"
 require "services"
 require "settings"
 require "utils/waypoint"

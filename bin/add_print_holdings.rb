@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
-require "bundler/setup"
 require "loader/file_loader"
 require "loader/holding_loader"
 require "services"

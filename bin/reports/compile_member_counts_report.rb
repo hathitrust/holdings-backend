@@ -3,8 +3,6 @@
 # Usage:
 # bundle exec ruby bin/reports/compile_member_counts_report.rb <COST_FREQ> <OUTPUT_DIR>
 
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "../..", "lib"))
-
 require "reports/member_counts_report"
 require "fileutils"
 

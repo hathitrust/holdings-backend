@@ -2,8 +2,6 @@
 
 # For manual/ocular inspection of a single OCN.
 # Takes an OCN and outputs a pretty-printed matching cluster.
-
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
 require "cluster"
 require "services"
 require "json"
