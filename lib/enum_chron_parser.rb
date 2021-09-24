@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
+require "services"
+
 # parser - a parser for enum/chron data
 # Takes an enumeration/chronology string and
 # classifies all terms as either enum and chron,
@@ -192,6 +195,7 @@ class EnumChronParser
     clear_fields
 
     # preprocess
+    orig_str = input_str
     input_str = preprocess(input_str)
 
     ### classify enum vs chron ###
@@ -222,10 +226,8 @@ class EnumChronParser
         end
       end
       return unless ALPHANUM.match?(input_str)
-    rescue StandardError => e
-      Services.logger.warn "[Parser] Problem parsing '#{input_str}'"
-      Services.logger.warn e.message
-      Services.logger.warn e.backtrace.inspect
+    rescue StandardError
+      Services.logger.warn "[Parser] Problem while parsing '#{orig_str}'"
       return
     end
 
@@ -256,13 +258,14 @@ class EnumChronParser
   # For debug purposes.
   # Invoke: ruby enum_chron_parser.rb <file>
   def self.parse_file(file)
+    puts ["orig", "n_enum", "n_chron"].join("\t")
     File.open(file).each_line do |line|
       line.strip!
       ecp = EnumChronParser.new
       ecp.parse(line)
       n_enum  = ecp.normalized_enum
       n_chron = ecp.normalized_chron
-      puts [n_enum, n_chron].join("\t")
+      puts [line, n_enum, n_chron].join("\t")
     end
   end
 
