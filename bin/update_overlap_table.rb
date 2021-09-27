@@ -2,9 +2,6 @@
 # frozen_string_literal: true
 
 require "pathname"
-$LOAD_PATH.unshift(Pathname.new(__dir__).parent + "lib")
-
-require "bundler/setup"
 require "cluster"
 require "cluster_overlap"
 require "logger"

@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift(File.join(File.dirname(__FILE__), "..", "lib"))
-require "bundler/setup"
 require "services"
 require "loader/hathifile_manager"
 require "utils/multi_logger"
