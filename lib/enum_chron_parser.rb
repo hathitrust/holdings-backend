@@ -206,7 +206,7 @@ class EnumChronParser
         matches.each do |m|
           # $stderr.puts "'#{m}'"
           add_to_chron(m[0])
-          input_str = input_str.gsub!(m[0], "")
+          input_str.gsub!(m[0], "")
         end
       end
       if input_str&.match?(MONTH_SPAN_RE)
@@ -214,7 +214,7 @@ class EnumChronParser
         matches.each do |m|
           # $stderr.puts "'#{pullout}'"
           add_to_chron(m[0])
-          input_str = input_str.gsub!(m[0], "")
+          input_str.gsub!(m[0], "")
         end
       end
       if input_str&.match?(MONTH_DAY_RE)
@@ -222,7 +222,7 @@ class EnumChronParser
         matches.each do |m|
           # $stderr.puts "'#{pullout}'"
           add_to_chron(m[0])
-          input_str = input_str.gsub!(m[0], "")
+          input_str.gsub!(m[0], "")
         end
       end
       return unless ALPHANUM.match?(input_str)
