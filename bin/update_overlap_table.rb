@@ -21,5 +21,8 @@ if __FILE__ == $PROGRAM_NAME
     cutoff_date = Date.parse(ARGV.shift)
   end
 
-  OverlapTableUpdate.new(cutoff_date).run
+  update = OverlapTableUpdate.new(cutoff_date)
+  update.run
+  Services.logger.info "Num deletes: #{update.num_deletes}"
+  Services.logger.info "Num adds: #{update.num_adds}"
 end

@@ -49,7 +49,7 @@ class OverlapTableUpdate
   def upsert_and_track(cluster)
     Services.logger.debug("Processing overlap for cluster: #{cluster._id}")
     cu = ETAS::ClusterUpdate.new(overlap_table, cluster)
-    cu.upsert
+    #cu.upsert
     waypoint.incr(cu.deletes.count + cu.adds.count)
     waypoint.on_batch {|wp| Services.logger.info wp.batch_line }
     @num_deletes += cu.deletes.count
