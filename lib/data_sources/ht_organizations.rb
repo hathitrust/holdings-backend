@@ -5,10 +5,10 @@ require "services"
 
 module DataSources
   # Information about an individual HathiTrust institution
-  class HTMember
-    attr_reader :inst_id, :country_code, :weight, :oclc_sym
+  class HTOrganization
+    attr_reader :inst_id, :country_code, :weight, :oclc_sym, :status
 
-    def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil)
+    def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil, status: 1)
       @inst_id = inst_id
       raise ArgumentError, "Must have institution id" unless @inst_id
 
@@ -19,15 +19,17 @@ module DataSources
       end
 
       @oclc_sym = oclc_sym
+
+      @status = status
     end
   end
 
   #
-  # Cache of information about HathiTrust members.
+  # Cache of information about HathiTrust organizations.
   #
   # Usage:
   #
-  #   htm = DataSources::HTMembers.new()
+  #   htm = DataSources::HTOrganizations.new()
   #   cc = htm["yale"].country_code
   #   wt = htm["harvard"].weight
   #
@@ -36,43 +38,48 @@ module DataSources
   #
   # You can also pass in mock data for development/testing purposes:
   #
-  #   htm = DataSources::HTMembers.new({
-  #     "haverford" => DataSources::HTMember.new(inst_id: "haverford",
+  #   htm = DataSources::HTOrganizations.new({
+  #     "haverford" => DataSources::HTOrganization.new(inst_id: "haverford",
   #                                    country_code: "us", weight: 0.67)
   #   })
   #   htm["haverford"].country_code
   #   htm["haverford"].weight
   #
-  class HTMembers
+  class HTOrganizations
 
-    attr_reader :members
+    attr_reader :organizations
 
-    def initialize(members = load_from_db)
-      @members = members
+    def initialize(organizations = load_from_db)
+      @organizations = organizations
     end
 
     def load_from_db
       Services.holdings_db[:ht_billing_members]
         .select(:inst_id, :country_code, :weight, :oclc_sym)
         .as_hash(:inst_id)
-        .transform_values {|h| HTMember.new(h) }
+        .transform_values {|h| HTOrganization.new(h) }
     end
 
     # Given a inst_id, returns a hash of data for that member.
     def [](inst_id)
-      if @members.key?(inst_id)
-        @members[inst_id]
+      if @organizations.key?(inst_id)
+        @organizations[inst_id]
       else
-        raise KeyError, "No member_info data for inst_id:#{inst_id}"
+        raise KeyError, "No organization_info data for inst_id:#{inst_id}"
       end
     end
 
-    # Adds a temporary member to the member data cache for the lifetime of the
+    # A list of organizations that are actually members, i.e. status = 1
+    def members
+      @organizations.select {|_k, org| org.status == 1 }
+    end
+
+    # Adds a temporary organization to the organization data cache for the lifetime of the
     # object; does not persist it to the database
     #
-    # @param member The HTMember to add
-    def add_temp(member)
-      @members[member.inst_id] = member
+    # @param organization The HTOrganization to add
+    def add_temp(organization)
+      @organizations[organization.inst_id] = organization
     end
 
   end

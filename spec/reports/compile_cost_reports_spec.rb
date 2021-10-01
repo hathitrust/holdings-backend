@@ -57,7 +57,7 @@ RSpec.describe "CompileCostReports" do
 
   before(:each) do
     Cluster.each(&:delete)
-    Services.register(:ht_members) { mock_members }
+    Services.register(:ht_organzations) { mock_organizations }
     Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)

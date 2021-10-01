@@ -7,7 +7,7 @@ ENV["MONGOID_ENV"] = "test"
 require "factory_bot"
 require "simplecov"
 require "webmock/rspec"
-require "fixtures/members"
+require "fixtures/organizations"
 require "fixtures/collections"
 require "fixtures/large_clusters"
 require "pry"
@@ -51,7 +51,7 @@ RSpec.configure do |config|
     # Ensure we don't try to use DB for tests by default and that we have
     # mock HT member data to use in tests
     Services.register(:holdings_db) { nil }
-    Services.register(:ht_members) { mock_members }
+    Services.register(:ht_organizations) { mock_organizations }
     Services.register(:ht_collections) { mock_collections }
     Services.register(:large_clusters) { mock_large_clusters }
 

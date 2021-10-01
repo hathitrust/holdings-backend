@@ -49,7 +49,7 @@ module Reports
     end
 
     def total_weight
-      Services.ht_members.members.map {|_id, member| member.weight }.sum
+      Services.ht_organizations.members.map {|_id, member| member.weight }.sum
     end
 
     def pd_cost
@@ -57,7 +57,7 @@ module Reports
     end
 
     def pd_cost_for_member(member)
-      (pd_cost / total_weight) * Services.ht_members[member.to_s].weight
+      (pd_cost / total_weight) * Services.ht_organizations[member.to_s].weight
     end
 
     def freq_table
@@ -134,7 +134,7 @@ module Reports
     end
 
     def extra_per_member
-      total_ic_costs(:hathitrust) / (Services.ht_members.members.keys - ["hathitrust"]).count
+      total_ic_costs(:hathitrust) / (Services.ht_organizations.members.keys - ["hathitrust"]).count
     end
 
     def total_cost_for_member(member)

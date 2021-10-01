@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../basic_query_report"
-require "data_sources/ht_members"
+require "data_sources/ht_organizations"
 require "json"
 
 module Reports
@@ -23,7 +23,7 @@ module Reports
   class MemberCountsReport
     attr_accessor :rows
 
-    def initialize(cost_report_freq = nil, members = DataSources::HTMembers.new.members.keys)
+    def initialize(cost_report_freq = nil, members = DataSources::HTOrganizations.new.members.keys)
       @cost_report_freq = cost_report_freq
 
       @rows = {}

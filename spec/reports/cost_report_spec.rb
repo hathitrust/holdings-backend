@@ -4,7 +4,7 @@ require "spec_helper"
 require "reports/cost_report"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
-require "data_sources/ht_members"
+require "data_sources/ht_organizations"
 
 RSpec.describe Reports::CostReport do
   let(:cr) { described_class.new(cost: 10) }
@@ -279,8 +279,9 @@ RSpec.describe Reports::CostReport do
               access: "deny")
       end
       let(:holding_serial) do
-        Services.ht_members.add_temp(
-          DataSources::HTMember.new(inst_id: "not_a_collection", country_code: "xx", weight: 1.0)
+        Services.ht_organizations.add_temp(
+          DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
+                                            weight: 1.0)
         )
 
         build(:holding,
