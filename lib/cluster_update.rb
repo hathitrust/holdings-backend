@@ -3,7 +3,7 @@
 require "services"
 require "cluster_overlap"
 
-# Update DB's overlap records for every ht_item in a given cluster
+# Update DB's overlap records for every ht_item and organization in a given cluster
 class ClusterUpdate
   attr_accessor :cluster
 

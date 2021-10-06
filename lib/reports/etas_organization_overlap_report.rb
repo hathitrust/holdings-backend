@@ -7,8 +7,8 @@ require "etas_overlap"
 
 module Reports
 
-  # Generates overlap reports for 1 or all members
-  class EtasMemberOverlapReport
+  # Generates overlap reports for 1 or all organizations
+  class EtasOrganizationOverlapReport
     attr_accessor :reports, :date_of_report, :report_path, :organization
 
     def initialize(organization = nil)

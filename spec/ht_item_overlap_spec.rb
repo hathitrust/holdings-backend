@@ -10,7 +10,7 @@ RSpec.describe HtItemOverlap do
           ocns: c.ocns,
           enum_chron: "1",
           n_enum: "1",
-          billing_entity: "ucr")
+          billing_entity: "ualberta")
   end
   let(:holding) do
     build(:holding,
@@ -47,7 +47,7 @@ RSpec.describe HtItemOverlap do
     it "returns all organizations that overlap with an item" do
       c.reload
       overlap = described_class.new(c.ht_items.first)
-      # billing_entity: ucr, holdings: smu, umich, non_matching: stanford
+      # billing_entity: ualberta, holdings: smu, umich, non_matching: stanford
       expect(overlap.organizations_with_holdings.count).to eq(4)
     end
 
@@ -62,7 +62,7 @@ RSpec.describe HtItemOverlap do
                    ocns: c.ocns,
                    enum_chron: "2",
                    n_enum: "2",
-                   billing_entity: "ucr")
+                   billing_entity: "ualberta")
       Clustering::ClusterHtItem.new(mpm2).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.where(n_enum: "2").first)
@@ -106,7 +106,7 @@ RSpec.describe HtItemOverlap do
     it "does not match if ht item enum is ''" do
       empty_mpm = build(:ht_item, :mpm,
                         ocns: c.ocns,
-                         billing_entity: "ucr",
+                         billing_entity: "ualberta",
                          enum_chron: "",
                          n_enum: "")
       Clustering::ClusterHtItem.new(empty_mpm).cluster.tap(&:save)
@@ -114,6 +114,27 @@ RSpec.describe HtItemOverlap do
       overlap = described_class.new(c.ht_items.where(enum_chron: "").first)
       expect(overlap.organizations_with_holdings).to eq([non_match_holding.organization,
                                                          empty_mpm.billing_entity])
+    end
+  end
+
+  describe "members_with_holdings" do
+    let(:non_member_holding) do
+      Services.ht_organizations.add_temp(
+        DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
+                                          weight: 1.0, status: 0)
+      )
+      build(:holding,
+            ocn: c.ocns.first,
+            organization: "non_member")
+    end
+
+    it "excludes organizations that are not members" do
+      Clustering::ClusterHolding.new(non_member_holding).cluster.tap(&:save)
+      c.reload
+      overlap = described_class.new(c.ht_items.first)
+      # billing_entity: ualberta, holdings: smu, umich, excluded: non_member, non_matching: stanford
+      expect(overlap.organizations_with_holdings.count).to eq(5)
+      expect(overlap.members_with_holdings.count).to eq(4)
     end
   end
 
@@ -126,6 +147,10 @@ RSpec.describe HtItemOverlap do
     end
 
     let(:ucm_item) do
+      Services.ht_organizations.add_temp(
+        DataSources::HTOrganization.new(inst_id: "ucm", country_code: "es",
+                                          weight: 1.0, status: 1)
+      )
       build(:ht_item, :mpm,
             ocns: c.ocns,
             collection_code: "UCM",

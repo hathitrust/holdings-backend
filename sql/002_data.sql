@@ -122,7 +122,7 @@ INSERT INTO `ht_billing_members` VALUES
 ('uc',NULL,1.00,'CIN',NULL,'us',1),
 ('ucalgary',NULL,1.00,'UAU','CaACU','ca',1),
 ('uchicago',NULL,1.33,'CGU','ICU','us',1),
-('ucm',NULL,1.00,'S9M','','es',0),
+('ucm',NULL,1.00,'S9M','','es',1),
 ('uconn',NULL,1.00,'UCW','CtU','us',1),
 ('udel',NULL,1.00,'DLM','DeU','us',1),
 ('uh',NULL,1.00,'TXH','TxHU','us',1),

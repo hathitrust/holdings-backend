@@ -10,6 +10,8 @@ def mock_organizations
     "ualberta" => DataSources::HTOrganization.new(inst_id: "ualberta", country_code: "ca",
                                                    weight: 1.0),
     "utexas" => DataSources::HTOrganization.new(inst_id: "utexas", country_code: "us", weight: 3.0),
+    "hathitrust" => DataSources::HTOrganization.new(inst_id: "hathitrust", country_code: "us",
+                                                   weight: 0.0),
     "uct" => DataSources::HTOrganization.new(inst_id: "uct", country_code: "za", weight: 0.0,
                                                status: 0)
   )

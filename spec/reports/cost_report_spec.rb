@@ -107,6 +107,27 @@ RSpec.describe Reports::CostReport do
     end
   end
 
+  describe "Non-member holdings" do
+    let(:non_member_holding) do
+      Services.ht_organizations.add_temp(
+        DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
+                                          weight: 1.0, status: 0)
+      )
+      build(:holding,
+            ocn: Cluster.first.ocns.first,
+            organization: "non_member")
+    end
+
+    it "does not include non-member holdings" do
+      Clustering::ClusterHolding.new(non_member_holding).cluster.tap(&:save)
+      cr.matching_clusters.each do |c|
+        c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+      end
+      expect(cr.freq_table[:umich][:spm]).to eq({ 2 => 1 })
+      expect(cr.freq_table[:non_member]).to eq({})
+    end
+  end
+
   describe "HScores and Costs" do
     before(:each) do
       Cluster.each(&:delete)
@@ -173,6 +194,9 @@ RSpec.describe Reports::CostReport do
 
     before(:each) do
       Cluster.each(&:delete)
+      Services.ht_organizations.add_temp(
+        DataSources::HTOrganization.new(inst_id: "different_cpc", country_code: "xx", weight: 1.0)
+      )
     end
 
     describe "multiple HTItem/Holding spms" do
@@ -279,16 +303,22 @@ RSpec.describe Reports::CostReport do
               access: "deny")
       end
       let(:holding_serial) do
-        Services.ht_organizations.add_temp(
-          DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
-                                            weight: 1.0)
-        )
-
         build(:holding,
               ocn: ht_serial.ocns.first,
               enum_chron: "3",
               n_enum: "3",
               organization: "not_a_collection")
+      end
+
+      before(:each) do
+        Services.ht_organizations.add_temp(
+          DataSources::HTOrganization.new(inst_id: "not_ht_serial.billing_entity",
+                                            country_code: "xx", weight: 1.0, status: 1)
+        )
+        Services.ht_organizations.add_temp(
+          DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
+                                            weight: 1.0, status: 1)
+        )
       end
 
       it "assigns all serials to the member and ht_item billing entities affect hshare" do

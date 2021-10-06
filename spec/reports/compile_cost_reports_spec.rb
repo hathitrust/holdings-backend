@@ -106,6 +106,7 @@ RSpec.describe "CompileCostReports" do
   it "produces .tsv output" do
     expect(to_tsv(cr)).to eq([
       "member_id	spm	mpm	ser	pd	weight	extra	total",
+      "hathitrust	0.0	0.0	0.0	0.0	0.0	0.0	0.0",
       "smu	0.0	0.6666666666666666	0.0	0.125	1.0	0.0	0.7916666666666666",
       "stanford	0.0	0.0	0.0	0.125	1.0	0.0	0.125",
       "ualberta	0.0	0.0	0.0	0.125	1.0	0.0	0.125",

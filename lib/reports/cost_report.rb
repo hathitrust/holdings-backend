@@ -92,8 +92,8 @@ module Reports
     def add_ht_item_to_freq_table(ht_item)
       item_format = CalculateFormat.new(ht_item._parent).item_format(ht_item).to_sym
       item_overlap = HtItemOverlap.new(ht_item)
-      item_overlap.matching_orgs.each do |org|
-        @freq_table[org.to_sym][item_format][item_overlap.matching_orgs.count] += 1
+      item_overlap.matching_members.each do |org|
+        @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
       end
     end
 
