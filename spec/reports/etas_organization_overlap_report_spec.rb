@@ -57,7 +57,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       f = rpt.report_for_org(h.organization)
       f.close
       lines = File.open(f.path).to_a
-      expect(lines.size).to eq(2)
+      expect(lines.size).to eq(3)
     end
 
     it "has 1 line with empty rights/access for the non-matching organization" do
@@ -66,8 +66,8 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       f = rpt.report_for_org(h2.organization)
       f.close
       lines = File.open(rpt.report_for_org(h2.organization).path).to_a
-      expect(lines.size).to eq(1)
-      rec = lines.first.split("\t")
+      expect(lines.size).to eq(2)
+      rec = lines.last.split("\t")
       expect(rec[3]).to eq("")
       expect(rec[4]).to eq("\n")
     end
@@ -76,8 +76,19 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       rpt.run
       orgs.each do |org|
+        rpt.report_for_org(org).close
         lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
         expect(lines.map(&:size)).to all(be == 5)
+      end
+    end
+
+    it "has a header line" do
+      rpt = described_class.new
+      rpt.run
+      orgs.each do |org|
+        rpt.report_for_org(org).close
+        header = File.open(rpt.report_for_org(org).path, &:readline).chomp
+        expect(header).to eq("oclc\tlocal_id\titem_type\trights\taccess")
       end
     end
 

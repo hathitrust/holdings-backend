@@ -26,6 +26,7 @@ module Reports
     def report_for_org(org)
       unless reports.key?(org)
         reports[org] = open_report(org, date_of_report)
+        reports[org].puts header
       end
       reports[org]
     end
@@ -56,8 +57,8 @@ module Reports
       etas_record = ETASOverlap.new(ocn: holding[:ocn],
                       local_id: holding[:local_id],
                       item_type: format,
-                      access: access,
-                      rights: rights)
+                      rights: rights,
+                      access: access)
       report_for_org(holding[:organization]).puts etas_record
     end
 
@@ -84,6 +85,10 @@ module Reports
           write_record(holding, c.format, "", "")
         end
       end
+    end
+
+    def header
+      ["oclc", "local_id", "item_type", "rights", "access"].join("\t")
     end
   end
 end
