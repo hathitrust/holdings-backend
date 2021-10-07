@@ -11,7 +11,7 @@ class ETASOverlap
   def initialize(ocn:, local_id:, item_type:, rights:, access:)
     @ocn = ocn
     @local_id = local_id
-    @item_type = item_type
+    @item_type = convert_format(item_type)
     @rights = rights
     @access = access
   end
@@ -22,5 +22,16 @@ class ETASOverlap
      item_type,
      rights,
      access].join("\t")
+  end
+
+  def convert_format(item_type=nil)
+    case item_type || @item_type
+    when "spm"
+      "mono"
+    when "mpm"
+      "multi"
+    when "ser", "ser/spm"
+      "serial"
+    end
   end
 end

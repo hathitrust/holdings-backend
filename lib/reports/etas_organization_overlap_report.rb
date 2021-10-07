@@ -50,7 +50,7 @@ module Reports
     # Creates an overlap record and writes to the appropriate org file
     #
     # @param holding [Holding] the holdings provides the ocn, local_id, and organization
-    # @param format  [String] the cluster format, 'mpm', 'spm', 'ser', or 'ser/spm'
+    # @param format  [String] the cluster format, 'mono', 'multi', 'serial', or 'ser/spm'
     # @param access  [String] 'allow' or 'deny' for the associated item
     # @param rights  [String] the rights for the associated item
     def write_record(holding, format, access, rights)
