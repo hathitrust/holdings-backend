@@ -2,9 +2,9 @@
 
 require "spec_helper"
 require "pp"
-require "reports/etas_member_overlap_report"
+require "reports/etas_organization_overlap_report"
 
-RSpec.describe Reports::EtasMemberOverlapReport do
+RSpec.describe Reports::EtasOrganizationOverlapReport do
   let(:h) { build(:holding) }
   let(:h2) { build(:holding, organization: "ualberta") }
   let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
@@ -51,7 +51,7 @@ RSpec.describe Reports::EtasMemberOverlapReport do
       end
     end
 
-    it "has a line for each ht_item in the holding member rpt" do
+    it "has a line for each ht_item in the holding organization rpt" do
       rpt = described_class.new
       rpt.run
       f = rpt.report_for_org(h.organization)
@@ -60,7 +60,7 @@ RSpec.describe Reports::EtasMemberOverlapReport do
       expect(lines.size).to eq(2)
     end
 
-    it "has 1 line with empty rights/access for the non-matching member" do
+    it "has 1 line with empty rights/access for the non-matching organization" do
       rpt = described_class.new
       rpt.run
       f = rpt.report_for_org(h2.organization)

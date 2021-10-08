@@ -12,7 +12,7 @@ Services.mongo!
 def to_tsv(report)
   tsv = []
   tsv << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
-  Services.ht_members.members.keys.sort.each do |member|
+  Services.ht_organizations.members.keys.sort.each do |member|
     next unless report.organization.nil? || (member == report.organization.to_s)
 
     tsv << [
@@ -21,7 +21,7 @@ def to_tsv(report)
       report.mpm_costs(member),
       report.ser_costs(member),
       report.pd_cost_for_member(member),
-      Services.ht_members[member].weight,
+      Services.ht_organizations[member].weight,
       report.extra_per_member,
       report.total_cost_for_member(member)
     ].join("\t")
@@ -44,7 +44,7 @@ if __FILE__ == $PROGRAM_NAME
   puts "Cost per volume: #{cost_report.cost_per_volume}"
   puts "Total weight: #{cost_report.total_weight}"
   puts "PD Cost: #{cost_report.pd_cost}"
-  puts "Num members: #{Services.ht_members.members.count}"
+  puts "Num members: #{Services.ht_organizations.members.count}"
 
   puts to_tsv(cost_report)
   # Dump freq table to file

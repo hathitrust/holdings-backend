@@ -9,7 +9,7 @@ require "mongoid"
 require "utils/slack_writer"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
-require "data_sources/ht_members"
+require "data_sources/ht_organizations"
 require "data_sources/large_clusters"
 
 Services = Canister.new
@@ -20,7 +20,7 @@ end
 Services.register(:slack_writer) { Utils::SlackWriter.new(Settings.slack_endpoint) }
 Services.register(:holdings_db) { DataSources::HoldingsDB.new }
 Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
-Services.register(:ht_members) { DataSources::HTMembers.new }
+Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
 Services.register(:ht_collections) { DataSources::HTCollections.new }
 Services.register(:logger) do
   Logger.new($stderr, level: Logger::INFO)

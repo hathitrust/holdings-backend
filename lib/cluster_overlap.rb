@@ -6,7 +6,7 @@ require "single_part_overlap"
 require "multi_part_overlap"
 require "serial_overlap"
 
-# Collects overlap records for every ht_item in a cluster
+# Collects overlap records for every ht_item and organization in a cluster
 class ClusterOverlap
   include Enumerable
 

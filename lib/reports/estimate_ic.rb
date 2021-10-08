@@ -76,7 +76,7 @@ module Reports
 
         overlap = HtItemOverlap.new(ht_item)
         # Insert a placeholder for the prospective member
-        overlap.matching_orgs << "prospective_member"
+        overlap.matching_members << "prospective_member"
         @h_share_total += overlap.h_share("prospective_member")
       end
     end

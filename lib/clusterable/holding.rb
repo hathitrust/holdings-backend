@@ -7,7 +7,7 @@ require "json"
 
 module Clusterable
 
-  # A member holding
+  # A holding
   class Holding
     include Mongoid::Document
     include EnumChron
@@ -38,12 +38,12 @@ module Clusterable
 
     def initialize(params = nil)
       super
-      set_member_data if organization
+      set_organization_data if organization
     end
 
     def organization=(organization)
       super
-      set_member_data
+      set_organization_data
     end
 
     def brt_lm_access?
@@ -112,9 +112,9 @@ module Clusterable
 
     private
 
-    def set_member_data
-      self.country_code = Services.ht_members[organization].country_code
-      self.weight       = Services.ht_members[organization].weight
+    def set_organization_data
+      self.country_code = Services.ht_organizations[organization].country_code
+      self.weight       = Services.ht_organizations[organization].weight
     end
 
   end

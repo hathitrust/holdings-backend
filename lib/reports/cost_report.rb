@@ -49,7 +49,7 @@ module Reports
     end
 
     def total_weight
-      Services.ht_members.members.map {|_id, member| member.weight }.sum
+      Services.ht_organizations.members.map {|_id, member| member.weight }.sum
     end
 
     def pd_cost
@@ -57,7 +57,7 @@ module Reports
     end
 
     def pd_cost_for_member(member)
-      (pd_cost / total_weight) * Services.ht_members[member.to_s].weight
+      (pd_cost / total_weight) * Services.ht_organizations[member.to_s].weight
     end
 
     def freq_table
@@ -92,8 +92,8 @@ module Reports
     def add_ht_item_to_freq_table(ht_item)
       item_format = CalculateFormat.new(ht_item._parent).item_format(ht_item).to_sym
       item_overlap = HtItemOverlap.new(ht_item)
-      item_overlap.matching_orgs.each do |org|
-        @freq_table[org.to_sym][item_format][item_overlap.matching_orgs.count] += 1
+      item_overlap.matching_members.each do |org|
+        @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
       end
     end
 
@@ -134,7 +134,7 @@ module Reports
     end
 
     def extra_per_member
-      total_ic_costs(:hathitrust) / (Services.ht_members.members.keys - ["hathitrust"]).count
+      total_ic_costs(:hathitrust) / (Services.ht_organizations.members.keys - ["hathitrust"]).count
     end
 
     def total_cost_for_member(member)

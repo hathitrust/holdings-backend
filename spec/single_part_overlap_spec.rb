@@ -11,7 +11,7 @@ RSpec.describe SinglePartOverlap do
   let(:ht2) do
     build(:ht_item, :spm,
           ocns: c.ocns,
-          collection_code: "HVD")
+          collection_code: "MIU")
   end
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "LM") }
   let(:h2) do

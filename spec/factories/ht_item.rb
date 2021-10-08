@@ -12,7 +12,7 @@ FactoryBot.define do
     access { ["allow", "deny"].sample }
     bib_fmt { ["BK", "CF", "MP", "MU", "MX", "SE", "VM"].sample }
     enum_chron { ["", "V.1"].sample }
-    collection_code { ["MIU", "HVD", "PU"].sample }
+    collection_code { ["MIU", "PU"].sample }
 
     trait :spm do
       bib_fmt { "BK" }
