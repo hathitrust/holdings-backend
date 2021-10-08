@@ -65,6 +65,9 @@ The Cluster Format is used in the overlap calculations. It is derived from the I
 **Public Domain vs In-Copyright**
 : For cost allocation purposes, HT Items with access "allow" in the Hathifiles are considered "public domain" and access "deny" are considered "in copyright". Rationale for the "allow" and "deny" found in the Hathifiles is underdefined. 
 
+**Member vs Organization**
+: Members are those organizations found in the ht_billing_members with "status" equal to 1. Only organizations that are members are used in the cost calculations.
+
 **Target Cost**
 : Set by the Board and Executive Director. Portion of the budget to be paid for by HT Item allocations.
 
@@ -103,15 +106,15 @@ The Cluster Format is used in the overlap calculations. It is derived from the I
 ## HT Item Overlap ##
 This is a description of the process by which the system determines who holds a particular in-copyright HT Item. 
 
-For HT Items in **clusters** that are not MPM, an institution is considered to hold the HT Item and is allocated a share for it if either of the following are true:
+For HT Items in **clusters** that are not MPM, an organization is considered to hold the HT Item and a member is allocated a share for it if either of the following are true:
 - It is the billing entity for the HT Item (i.e. the depositor of an HT Item is always assumed to hold it)
 - It submitted a holding that is in the cluster
 
-For HT Items in **clusters** that are MPM, the process is more complicated. An institution is considered to hold the item and is allocated a share if any of the following are true:
+For HT Items in **clusters** that are MPM, the process is more complicated. An organization is considered to hold the item and a member is allocated a share if any of the following are true:
 - It is the billing entity for the HT Item.
 - It has a holding in the cluster with an **n_enum** matching the **n_enum** of the HT Item.
 - It has a holding in the cluster with an empty **n_enum**. The reverse is **not** true: holdings with empty n_enums match all HT Items in an MPM cluster; but HT Items with empty n_enums match only holdings with empty n_enums.
-- It has holdings in the cluster, but none of the reported **n_enum** match any of the **n_enum** found in any of the HT Items in the cluster. That is, if no holdings n_enums match, then this is assumed to be a data problem, and the institution is considered to hold all of the items in the cluster. [^2]
+- It has holdings in the cluster, but none of the reported **n_enum** match any of the **n_enum** found in any of the HT Items in the cluster. That is, if no holdings n_enums match, then this is assumed to be a data problem, and the organization is considered to hold all of the items in the cluster. [^2]
 
 **NB**: Billing entities apply only to the HT Item they are on. For example, a billing entity on an HT Item with an empty n_enum will **not** match other HT Items in the cluster.
 
@@ -120,7 +123,7 @@ HT Item HScores are held in a frequency table separated by member and **HT Item*
 
 [^1]: System only uses n_enum which is likely wrong, but n_chron and n_enum_chron exist so changes should be easy.
 
-[^2]: This can lead to cases where a member providing more data or HT ingesting more HT Items can reduce access/cost. That is, if the institution or HT adds a record that does match, they will no longer be allocated a share of those that don't.
+[^2]: This can lead to cases where an organization providing more data or HT ingesting more HT Items can reduce access/cost. That is, if the organization or HT adds a record that does match, they will no longer be allocated a share of those that don't.
 
 [^3]: Implementation detail: `<member> => <format> : <num of orgs that hold a thing> : <frequency>`
 Total hscore for a particular member and format is thus  ∑(1 / number of orgs * frequency). This doubles as a data structure for overlap histograms which is why it is more complicated than it needs to be for only cost allocation.
