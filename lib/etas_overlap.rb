@@ -24,7 +24,7 @@ class ETASOverlap
      access].join("\t")
   end
 
-  def convert_format(item_type=nil)
+  def convert_format(item_type = nil)
     case item_type || @item_type
     when "spm"
       "mono"

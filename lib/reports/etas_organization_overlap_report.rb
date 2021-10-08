@@ -20,7 +20,8 @@ module Reports
     end
 
     def open_report(org, date)
-      File.open("#{report_path}/#{org}_#{date}.tsv", "w")
+      nonus = Services.ht_organizations[org]&.country_code == "us" ? "" : "_nonus"
+      File.open("#{report_path}/#{org}_#{date}#{nonus}.tsv", "w")
     end
 
     def report_for_org(org)
@@ -58,7 +59,7 @@ module Reports
                       local_id: holding[:local_id],
                       item_type: format,
                       rights: rights,
-                      access: access)
+                      access: convert_access(rights, access, holding[:organization]))
       report_for_org(holding[:organization]).puts etas_record
     end
 
@@ -89,6 +90,19 @@ module Reports
 
     def header
       ["oclc", "local_id", "item_type", "rights", "access"].join("\t")
+    end
+
+    # Handles access allow/deny for non-us organizations
+    def convert_access(rights, access, org)
+      return access if Services.ht_organizations[org].country_code == "us"
+
+      case rights
+      when "pdus"
+        access = "deny"
+      when "icus"
+        access = "allow"
+      end
+      access
     end
   end
 end
