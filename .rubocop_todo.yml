@@ -103,6 +103,7 @@ RSpec/ExampleLength:
 RSpec/MultipleExpectations:
   Exclude:
     - 'spec/autoscrub_spec.rb'
+    - 'spec/etas_overlap_spec.rb'
 
 Metrics/CyclomaticComplexity:
   Exclude:

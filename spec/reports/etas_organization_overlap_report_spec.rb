@@ -37,8 +37,13 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
   describe "#report_for_org" do
     it "gives us a filehandle for the org" do
       rpt = described_class.new
-      expect(rpt.report_for_org("test")).to be_a(File)
-      expect(rpt.report_for_org("test").path).to eq("#{tmp_dir}/test_#{rpt.date_of_report}.tsv")
+      expect(rpt.report_for_org("smu")).to be_a(File)
+      expect(rpt.report_for_org("smu").path).to eq("#{tmp_dir}/smu_#{rpt.date_of_report}.tsv")
+    end
+
+    it "gives us a 'nonus' filehandle for non-us orgs" do
+      rpt = described_class.new
+      expect(rpt.report_for_org("uct").path).to eq("#{tmp_dir}/uct_#{rpt.date_of_report}_nonus.tsv")
     end
   end
 
@@ -57,7 +62,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       f = rpt.report_for_org(h.organization)
       f.close
       lines = File.open(f.path).to_a
-      expect(lines.size).to eq(2)
+      expect(lines.size).to eq(3)
     end
 
     it "has 1 line with empty rights/access for the non-matching organization" do
@@ -66,8 +71,8 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       f = rpt.report_for_org(h2.organization)
       f.close
       lines = File.open(rpt.report_for_org(h2.organization).path).to_a
-      expect(lines.size).to eq(1)
-      rec = lines.first.split("\t")
+      expect(lines.size).to eq(2)
+      rec = lines.last.split("\t")
       expect(rec[3]).to eq("")
       expect(rec[4]).to eq("\n")
     end
@@ -76,8 +81,19 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       rpt.run
       orgs.each do |org|
+        rpt.report_for_org(org).close
         lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
         expect(lines.map(&:size)).to all(be == 5)
+      end
+    end
+
+    it "has a header line" do
+      rpt = described_class.new
+      rpt.run
+      orgs.each do |org|
+        rpt.report_for_org(org).close
+        header = File.open(rpt.report_for_org(org).path, &:readline).chomp
+        expect(header).to eq("oclc\tlocal_id\titem_type\trights\taccess")
       end
     end
 
@@ -88,6 +104,28 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       end
       rpt = described_class.new("umich")
       rpt.run
+    end
+  end
+
+  describe "#convert_access" do
+    it "returns whatever it was given for US orgs" do
+      rpt = described_class.new
+      expect(rpt.convert_access(nil, "given", "smu")).to eq("given")
+    end
+
+    it "returns 'deny' if rights is 'pdus' for non-US orgs" do
+      rpt = described_class.new
+      expect(rpt.convert_access("pdus", "allow", "uct")).to eq("deny")
+    end
+
+    it "returns 'allow' if rights is 'icus' for non-US orgs" do
+      rpt = described_class.new
+      expect(rpt.convert_access("icus", "deny", "uct")).to eq("allow")
+    end
+
+    it "returns whatever it was given if rights is not 'icus' or 'pdus' for non-US orgs" do
+      rpt = described_class.new
+      expect(rpt.convert_access(nil, "given", "uct")).to eq("given")
     end
   end
 end

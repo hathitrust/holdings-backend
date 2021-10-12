@@ -20,12 +20,14 @@ module Reports
     end
 
     def open_report(org, date)
-      File.open("#{report_path}/#{org}_#{date}.tsv", "w")
+      nonus = Services.ht_organizations[org]&.country_code == "us" ? "" : "_nonus"
+      File.open("#{report_path}/#{org}_#{date}#{nonus}.tsv", "w")
     end
 
     def report_for_org(org)
       unless reports.key?(org)
         reports[org] = open_report(org, date_of_report)
+        reports[org].puts header
       end
       reports[org]
     end
@@ -49,15 +51,15 @@ module Reports
     # Creates an overlap record and writes to the appropriate org file
     #
     # @param holding [Holding] the holdings provides the ocn, local_id, and organization
-    # @param format  [String] the cluster format, 'mpm', 'spm', 'ser', or 'ser/spm'
+    # @param format  [String] the cluster format, 'mono', 'multi', 'serial', or 'ser/spm'
     # @param access  [String] 'allow' or 'deny' for the associated item
     # @param rights  [String] the rights for the associated item
     def write_record(holding, format, access, rights)
       etas_record = ETASOverlap.new(ocn: holding[:ocn],
                       local_id: holding[:local_id],
                       item_type: format,
-                      access: access,
-                      rights: rights)
+                      rights: rights,
+                      access: convert_access(rights, access, holding[:organization]))
       report_for_org(holding[:organization]).puts etas_record
     end
 
@@ -84,6 +86,23 @@ module Reports
           write_record(holding, c.format, "", "")
         end
       end
+    end
+
+    def header
+      ["oclc", "local_id", "item_type", "rights", "access"].join("\t")
+    end
+
+    # Handles access allow/deny for non-us organizations
+    def convert_access(rights, access, org)
+      return access if Services.ht_organizations[org].country_code == "us"
+
+      case rights
+      when "pdus"
+        access = "deny"
+      when "icus"
+        access = "allow"
+      end
+      access
     end
   end
 end
