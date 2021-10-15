@@ -7,7 +7,6 @@ require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
 require "overlap/cluster_overlap"
-require "overlap/etas_overlap" # not used?
 
 Services.mongo!
 

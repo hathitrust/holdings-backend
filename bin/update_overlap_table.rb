@@ -3,7 +3,6 @@
 
 require "pathname"
 require "cluster"
-require "overlap/cluster_overlap" # not used?
 require "logger"
 require "services"
 require "utils/waypoint"

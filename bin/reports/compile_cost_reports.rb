@@ -5,7 +5,6 @@ require "services"
 require "utils/waypoint"
 require "utils/ppnum"
 require "reports/cost_report"
-require "overlap/ht_item_overlap" # not used?
 
 Services.mongo!
 
