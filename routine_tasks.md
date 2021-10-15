@@ -119,3 +119,20 @@ hilites_YYYYMMDD.tsv
 ```
 
 Paste each output file into the corresponding tab. In `HiLites` check for anomalous values, and add a `Notes` column noting which members were updated/added etc. since the last report.
+
+## Overlap reports
+
+Updates to the holdings_htitem_htmember table which drives ETAS are performed nightly by "cronjob.batch/etas-overlap-loader". This runs ```bundle exec bin/update_overlap_table.rb```. No manual intervention should be required.
+
+
+ETAS overlap reports for members can be generated with:
+```
+bin/run_generic_job.sh bundle exec ruby bin/reports/export_etas_overlap_report.rb <optional_organization>
+```
+If an organization is provided, only that organization's report will be generated. 
+
+
+Member counts reports can be generated with:
+```
+bin/run_generic_job.sh bundle exec ruby bin/reports/compile_member_counts_report.rb <path_to_cost_report_frequency_file> <output_dir>
+```
