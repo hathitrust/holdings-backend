@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "services"
-require "cluster_overlap"
+require "overlap/cluster_overlap"
 
 # Update DB's overlap records for every ht_item and organization in a given cluster
 class ClusterUpdate
@@ -24,7 +24,7 @@ class ClusterUpdate
     if @new_overlaps
       return @new_overlaps
     else
-      @new_overlaps = ClusterOverlap.new(cluster, nil).each.to_a.map(&:to_hash)
+      @new_overlaps = Overlap::ClusterOverlap.new(cluster, nil).each.to_a.map(&:to_hash)
     end
 
     @new_overlaps ||= []

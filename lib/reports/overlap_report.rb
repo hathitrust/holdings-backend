@@ -2,7 +2,7 @@
 
 require "services"
 require "cluster"
-require "cluster_overlap"
+require "overlap/cluster_overlap"
 require "utils/waypoint"
 
 module Reports
@@ -33,8 +33,8 @@ module Reports
       logger = Services.logger
       logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum @batch_size}"
 
-      ClusterOverlap.matching_clusters(@org).each do |c|
-        ClusterOverlap.new(c, @org).each do |overlap|
+      Overlap::ClusterOverlap.matching_clusters(@org).each do |c|
+        Overlap::ClusterOverlap.new(c, @org).each do |overlap|
           @waypoint.incr
           puts overlap_line(overlap.to_hash)
           @waypoint.on_batch {|wp| logger.info wp.batch_line }
