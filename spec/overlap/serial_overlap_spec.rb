@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "serial_overlap"
+require "overlap/serial_overlap"
 
-RSpec.describe SerialOverlap do
+RSpec.describe Overlap::SerialOverlap do
   let(:c) { build(:cluster) }
   let(:ht) { build(:ht_item, :ser, ocns: c.ocns) }
   let(:ht2) { build(:ht_item, :ser, ocns: c.ocns, ht_bib_key: ht.ht_bib_key) }

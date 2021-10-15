@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "etas_overlap"
+require "overlap/etas_overlap"
 
-RSpec.describe ETASOverlap do
+RSpec.describe Overlap::ETASOverlap do
   let(:eo) do
     described_class.new(ocn: rand(1_000_000),
               local_id: rand(1_000_000).to_s,

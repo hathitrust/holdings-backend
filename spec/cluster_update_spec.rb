@@ -4,10 +4,10 @@ require "spec_helper"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "cluster_update"
-require "overlap_table_update"
+require "overlap/overlap_table_update"
 
 RSpec.describe ClusterUpdate do
-  let(:update) { OverlapTableUpdate.new }
+  let(:update) { Overlap::OverlapTableUpdate.new }
   let(:h) { build(:holding, organization: "upenn") }
   let(:ht) { build(:ht_item, :spm, ocns: [h.ocn], billing_entity: "not_same_as_holding") }
   let(:ht2) { build(:ht_item, :spm, billing_entity: "not_same_as_holding") }

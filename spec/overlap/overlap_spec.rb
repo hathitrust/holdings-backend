@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "overlap"
+require "overlap/overlap"
 
-RSpec.describe Overlap do
+RSpec.describe Overlap::Overlap do
   context "with a cluster with an htitem and holdings" do
     let(:c) { build(:cluster) }
     let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }

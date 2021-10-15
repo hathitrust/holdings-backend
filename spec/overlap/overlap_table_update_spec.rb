@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_overlap"
+require "overlap/cluster_overlap" # not used?
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
-require "overlap_table_update"
+require "overlap/overlap_table_update"
 
-RSpec.describe OverlapTableUpdate do
+RSpec.describe Overlap::OverlapTableUpdate do
   let(:update) { described_class.new(nil, 10) }
 
   before(:each) do |_spec|

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "cluster_overlap"
+require "overlap/cluster_overlap"
 
-RSpec.describe ClusterOverlap do
+RSpec.describe Overlap::ClusterOverlap do
   let(:c) { build(:cluster) }
   let(:spm) { build(:ht_item, ocns: c.ocns, enum_chron: "", billing_entity: "ucr") }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
@@ -43,7 +43,7 @@ RSpec.describe ClusterOverlap do
     end
   end
 
-  describe "ClusterOverlap.matching_clusters" do
+  describe "Overlap::ClusterOverlap.matching_clusters" do
     let(:h) { build(:holding) }
     let(:ht) { build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding") }
     let(:ht2) { build(:ht_item, billing_entity: "not_same_as_holding") }
