@@ -34,13 +34,13 @@ module Overlap
     def overlap_record(ht_item, org)
       case @cluster.format
       when "ser"
-        Overlap::SerialOverlap.new(@cluster, org, ht_item)
+        SerialOverlap.new(@cluster, org, ht_item)
       when "spm"
-        Overlap::SinglePartOverlap.new(@cluster, org, ht_item)
+        SinglePartOverlap.new(@cluster, org, ht_item)
       when "mpm"
-        Overlap::MultiPartOverlap.new(@cluster, org, ht_item)
+        MultiPartOverlap.new(@cluster, org, ht_item)
       when "ser/spm"
-        Overlap::SinglePartOverlap.new(@cluster, org, ht_item)
+        SinglePartOverlap.new(@cluster, org, ht_item)
       end
     end
 

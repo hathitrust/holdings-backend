@@ -4,7 +4,7 @@ require "overlap/overlap"
 
 module Overlap
   # Overlap record for items in SPM clusters
-  class SinglePartOverlap < Overlap::Overlap
+  class SinglePartOverlap < Overlap
 
     def copy_count
       cc = @cluster.copy_counts[@org]

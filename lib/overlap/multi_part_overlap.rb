@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require "overlap"
+require "overlap/overlap"
 
 module Overlap
   # Overlap record for items in MPM clusters
-  class MultiPartOverlap < Overlap::Overlap
+  class MultiPartOverlap < Overlap
 
     def copy_count
       cc = matching_holdings.count
