@@ -8,7 +8,10 @@ module Reports
   MON = "mono"
   MUL = "multi"
   SER = "serial"
-  MCR_LABELS  = ["total_loaded", "distinct_ocns", "matching_volumes"].freeze
+  MCR_LABELS = [
+    "total_loaded",
+    "matching_volumes"
+  ].freeze
   MCR_FORMATS = [MON, MUL, SER].freeze
 
   # Alternate format names used in cost-report freq table.
@@ -37,7 +40,6 @@ module Reports
     # Execute queries and populate @rows.
     def run
       total_loaded
-      distinct_ocns
       matching_volumes
       self
     end
@@ -66,30 +68,7 @@ module Reports
       end
     end
 
-    # Count number of distinct ocns (that are in HT) in holdings per member & format
-    def distinct_ocns
-      q = [
-        { "$match": { "holdings.0": { "$exists": 1 }, "ht_items.0": { "$exists": 1 } } },
-        { "$project": { "holdings": 1 } },
-        { "$unwind": "$holdings" },
-        { "$group": {
-          "_id": {
-            "ocn": "$holdings.ocn",
-            "org": "$holdings.organization",
-            "fmt": "$holdings.mono_multi_serial"
-          }
-        } },
-        { "$group": { "_id": { "org": "$_id.org", "fmt": "$_id.fmt" }, "count": { "$sum": 1 } } }
-      ]
-
-      BasicQueryReport.new.aggregate(q) do |res|
-        org = res["_id"]["org"]
-        fmt = res["_id"]["fmt"]
-        @rows[org].distinct_ocns[fmt] = res["count"]
-      end
-    end
-
-    # Part 3 relies on the freq table having been dumped to a file
+    # This part relies on the freq table having been dumped to a file
     # when last the cost report was run.
     def matching_volumes
       unless @cost_report_freq.nil?
@@ -117,12 +96,11 @@ module Reports
 
   # Represents one row in the MemberCountsReport, with an org as key and a hash of data.
   class MemberCountsRow
-    attr_accessor :total_loaded, :distinct_ocns, :matching_volumes
+    attr_accessor :total_loaded, :matching_volumes
 
     def initialize(org)
       @org              = org
       @total_loaded     = { MON => 0, MUL => 0, SER => 0 }
-      @distinct_ocns    = { MON => 0, MUL => 0, SER => 0 }
       @matching_volumes = { MON => 0, MUL => 0, SER => 0 }
     end
 
@@ -140,7 +118,10 @@ module Reports
     end
 
     def to_a
-      [@total_loaded.values, @distinct_ocns.values, @matching_volumes.values].flatten
+      [
+        @total_loaded.values,
+        @matching_volumes.values
+      ].flatten
     end
 
     def to_s
