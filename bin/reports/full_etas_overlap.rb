@@ -6,8 +6,7 @@ require "settings"
 require "utils/waypoint"
 require "utils/ppnum"
 require "zinzout"
-require "cluster_overlap"
-require "etas_overlap"
+require "overlap/cluster_overlap"
 
 Services.mongo!
 
@@ -17,7 +16,7 @@ if __FILE__ == $PROGRAM_NAME
   logger = Services.logger
 
   Cluster.where("ht_items.0": { "$exists": 1 }).no_timeout.each do |cluster|
-    ClusterOverlap.new(cluster, nil).each do |overlap|
+    Overlap::ClusterOverlap.new(cluster, nil).each do |overlap|
       waypoint.incr
       oh = overlap.to_hash
       puts [oh[:lock_id],

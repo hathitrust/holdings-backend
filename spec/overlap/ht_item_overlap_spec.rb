@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "ht_item_overlap"
+require "overlap/ht_item_overlap"
 
-RSpec.describe HtItemOverlap do
+RSpec.describe Overlap::HtItemOverlap do
   let(:c) { build(:cluster) }
   let(:mpm) do
     build(:ht_item, :mpm,

@@ -3,12 +3,11 @@
 
 require "pathname"
 require "cluster"
-require "cluster_overlap"
 require "logger"
 require "services"
 require "utils/waypoint"
 require "date"
-require "overlap_table_update"
+require "overlap/overlap_table_update"
 
 Services.mongo!
 
@@ -21,5 +20,5 @@ if __FILE__ == $PROGRAM_NAME
     cutoff_date = Date.parse(ARGV.shift)
   end
 
-  OverlapTableUpdate.new(cutoff_date).run
+  Overlap::OverlapTableUpdate.new(cutoff_date).run
 end

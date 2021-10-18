@@ -2,8 +2,8 @@
 
 require "services"
 require "cluster"
-require "cluster_overlap"
-require "etas_overlap"
+require "overlap/cluster_overlap"
+require "overlap/etas_overlap"
 
 module Reports
 
@@ -55,7 +55,7 @@ module Reports
     # @param access  [String] 'allow' or 'deny' for the associated item
     # @param rights  [String] the rights for the associated item
     def write_record(holding, format, access, rights)
-      etas_record = ETASOverlap.new(ocn: holding[:ocn],
+      etas_record = Overlap::ETASOverlap.new(ocn: holding[:ocn],
                       local_id: holding[:local_id],
                       item_type: format,
                       rights: rights,
@@ -65,7 +65,7 @@ module Reports
 
     def write_overlaps(cluster, organization)
       holdings_matched = Set.new
-      ClusterOverlap.new(cluster, organization).each do |overlap|
+      Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
         overlap.matching_holdings.each do |holding|
           holdings_matched << holding
           write_record(holding, cluster.format, overlap.ht_item.access, overlap.ht_item.rights)

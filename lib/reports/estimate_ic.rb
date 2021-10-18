@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ht_item_overlap"
+require "overlap/ht_item_overlap"
 require "utils/waypoint"
 require "services"
 require "reports/cost_report"
@@ -74,7 +74,7 @@ module Reports
         end
         @num_items_ic += 1
 
-        overlap = HtItemOverlap.new(ht_item)
+        overlap = Overlap::HtItemOverlap.new(ht_item)
         # Insert a placeholder for the prospective member
         overlap.matching_members << "prospective_member"
         @h_share_total += overlap.h_share("prospective_member")

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ht_item_overlap"
+require "overlap/ht_item_overlap"
 require "utils/waypoint"
 require "services"
 
@@ -91,7 +91,7 @@ module Reports
 
     def add_ht_item_to_freq_table(ht_item)
       item_format = CalculateFormat.new(ht_item._parent).item_format(ht_item).to_sym
-      item_overlap = HtItemOverlap.new(ht_item)
+      item_overlap = Overlap::HtItemOverlap.new(ht_item)
       item_overlap.matching_members.each do |org|
         @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
       end

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "multi_part_overlap"
+require "overlap/multi_part_overlap"
 
-RSpec.describe MultiPartOverlap do
+RSpec.describe Overlap::MultiPartOverlap do
   let(:c) { build(:cluster) }
   let(:ht_w_ec) { build(:ht_item, :mpm, enum_chron: "1", n_enum: "1", ocns: c.ocns) }
   let(:ht_wo_ec) { build(:ht_item, :mpm, enum_chron: "", n_enum: "", ocns: c.ocns) }
