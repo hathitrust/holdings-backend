@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "overlap/cluster_overlap" # not used?
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "overlap/overlap_table_update"
