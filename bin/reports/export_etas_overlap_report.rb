@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+# Generates ETAS overlap reports for a given organization or all
+
 require "services"
 require "settings"
 require "reports/etas_organization_overlap_report"
