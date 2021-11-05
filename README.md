@@ -55,7 +55,6 @@ Files:
 * Can be gzipped or not -- the scripts will figure it out
 
 Script command cheat sheet:
-* `docker-compose run --rm dev bundle exec bin/add_ocn_resolutions.rb <filepath>`
 * `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
 * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb
  <filepath>` (full file)
@@ -70,27 +69,8 @@ representing a pair of OCLC numbers that should be treated as equivalent.
 
 There are ≈ 60M rows in this file. 
 
-The OCLC concordance source file is not for redistribution.
-
-The delta produces a list of adds and a list of deletes.
-
-Get the tsv file from our [private Dropbox account](https://www.dropbox.com/home/ULIB-HATHITRUST%20OPERATIONS/hathitrust-operations/Strategic%20Partners/OCLC/Concordance) into `/htprep/holdings/concordance/raw`.
-
-Before loading into production, the concordance needs to be validated and compared to the previous concordance.
-
-Run `bin/generic_job.sh conc-process bundle exec ruby bin/concordance_validation/validate_and_delta.rb`
-
-The validation takes a tsv file (gzipped or not) and:
-  * checks for correct format
-  * checks for raw OCNs resolving to multiple "terminal" OCNs
-  * checks for cycles
-  * puts a validated concordance into `htprep/holdings/concordance/validated`
-
-The delta compares the most recent validated concordance with the prior and puts 
-`comm_diff_<date_of_run>.txt.adds` and `comm_diff_<date_of_run>.txt.deletes` into `/htprep/holdings/concordance/diffs`.
-
-The adds and deletes can then be loaded into production with:
-`bin/generic_job.sh conc-load bin/load_concordance_diffs.rb <date_of_run>`
+*TODO* document current process for loading a scrubbed concordance file or a
+portion thereof in development?
 
 ### Loading the HathiFiles
 
@@ -101,7 +81,7 @@ for each item line. See the
 [Hathifiles file format specification](https://www.hathitrust.org/hathifiles_description)
 for more info if you're interested.
 
-To load a Hathifile (either a full file or an update):
+To load a Hathifile (either a full file or an update) in development:
   * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
   or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
   * `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
@@ -117,12 +97,10 @@ copies of the same item).
 
 These raw files are "scrubbed" and verified, resulting in scrubbed files.
 
-To load a scrubbed file:
+To load a scrubbed file in development:
   * Get the file(s) you want from `/htapps/mwarin.babel/phdb_scripts/data/loadfiles/`
   * Add UUIDs for tracking whether the individual line has been processed: `bin ruby/add_uuid.rb infile > outfile`
   * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
-
-
 
 ## K8s Cronjob
 `kubectl create -f cron_job.yaml`
@@ -131,8 +109,3 @@ Runs `validate_and_delta.rb` daily at 2300UTC, which is presumed EOD for the par
 `validate_and_delta.rb` checks the concordance directory for new un-validated concordance files, validates them and diffs with a previous concordance.
 Posts a message to the slack channel so we know there is an update to be loaded. 
 It does NOT attempt to update the concordance as it may conflict with reporting operations. This would require more complicated orchestration of jobs.
-
-## One command validation and delta
-`bin/validate_and_delta.sh`
-
-It runs a job that will validate un-validated concordances found in `CONC_HOME/raw` then diff it with a previous validated concordance. The diffs get put into `CONC_HOME/diffs`.
