@@ -12,7 +12,7 @@ module Overlap
 
     def initialize(cutoff_date = nil, batch_size = 100_000)
       @cutoff_date = cutoff_date || Date.today - 1.5
-      @waypoint = Utils::Waypoint.new(batch_size)
+      @waypoint = Services.progress_tracker.new(batch_size)
       @num_deletes = 0
       @num_adds = 0
     end
@@ -42,7 +42,7 @@ module Overlap
                       end
         session_refresh.exit
       end
-      Services.logger.info waypoint.final_line
+      Services.logger.info waypoint.finalize
     end
 
     private
@@ -52,7 +52,9 @@ module Overlap
       cu = ClusterUpdate.new(overlap_table, cluster)
       cu.upsert
       waypoint.incr(cu.deletes.count + cu.adds.count)
-      waypoint.on_batch {|wp| Services.logger.info wp.batch_line }
+      waypoint.on_batch do |wp|
+        Services.logger.info wp.batch_line
+      end
       @num_deletes += cu.deletes.count
       @num_adds += cu.adds.count
     end

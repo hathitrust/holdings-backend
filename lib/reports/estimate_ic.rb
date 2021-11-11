@@ -20,7 +20,7 @@ module Reports
       @num_items_pd = 0
       @num_items_ic = 0
       @clusters_seen = Set.new
-      @waypoint = Utils::Waypoint.new(batch_size)
+      @waypoint = Services.progress_tracker.new(batch_size)
     end
 
     def cost_report
@@ -42,7 +42,7 @@ module Reports
 
         waypoint.on_batch {|wp| Services.logger.info wp.batch_line }
       end
-      Services.logger.info waypoint.final_line
+      Services.logger.info waypoint.finalize
     end
 
     def pct_ocns_matched

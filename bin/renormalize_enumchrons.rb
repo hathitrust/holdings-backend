@@ -25,7 +25,7 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 1_000
-  waypoint = Utils::Waypoint.new(BATCH_SIZE)
+  waypoint = Services.progress_tracker.new(BATCH_SIZE)
   logger = Services.logger
   logger.info "Starting renormalization of enum chrons. Batches of #{ppnum BATCH_SIZE}"
 
@@ -34,5 +34,5 @@ if __FILE__ == $PROGRAM_NAME
     renormalize(rec)
     waypoint.on_batch {|wp| logger.info wp.batch_line }
   end
-  logger.info waypoint.final_line
+  logger.info waypoint.finalize
 end

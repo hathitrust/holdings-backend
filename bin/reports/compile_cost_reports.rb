@@ -30,7 +30,7 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 1_000
-  waypoint = Utils::Waypoint.new(BATCH_SIZE)
+  waypoint = Services.progress_tracker.new(BATCH_SIZE)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
 
@@ -49,5 +49,5 @@ if __FILE__ == $PROGRAM_NAME
   # Dump freq table to file
   ymd = Time.new.strftime("%F")
   cost_report.dump_freq_table("freq_#{ymd}.txt")
-  logger.info waypoint.final_line
+  logger.info waypoint.finalize
 end

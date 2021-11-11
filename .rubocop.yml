@@ -166,6 +166,9 @@ Layout/EndAlignment:
 Layout/DefEndAlignment:
   EnforcedStyleAlignWith: def
 
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
 Performance/RedundantMerge:
   Enabled: false
 

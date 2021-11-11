@@ -7,10 +7,12 @@ require "file_mutex"
 require "logger"
 require "mongoid"
 require "utils/slack_writer"
+require "utils/push_metrics_waypoint"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
 require "data_sources/ht_organizations"
 require "data_sources/large_clusters"
+require "prometheus/client/push"
 
 Services = Canister.new
 Services.register(:"mongo!") do
@@ -35,3 +37,22 @@ Services.register(:scrub_stats) { {} }
 
 Services.register(:large_clusters) { DataSources::LargeClusters.new }
 Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }
+
+Services.register(:pushgateway) { Prometheus::Client::Push.new(File.basename($PROGRAM_NAME), nil, Settings.pushgateway) }
+Services.register(:prometheus_registry) { Prometheus::Client.registry }
+Services.register(:prometheus_metrics) do
+  {
+    duration:          Prometheus::Client::Gauge.new(:job_duration_seconds,
+                                                     docstring: "Time spend running job in seconds"),
+
+    last_success:      Prometheus::Client::Gauge.new(:job_last_success,
+                                                     docstring: "Last Unix time when job successfully completed"),
+
+    records_processed: Prometheus::Client::Gauge.new(:job_records_processed,
+                                                     docstring: "Records processed by job"),
+    success_interval:  Prometheus::Client::Gauge.new(:job_expected_success_interval,
+                                                     docstring: "Maximum expected time in seconds between job completions")
+  }.tap {|m| m.each_value {|metric| Services.prometheus_registry.register(metric) } }
+end
+
+Services.register(:progress_tracker) { Utils::PushMetricsWaypoint }

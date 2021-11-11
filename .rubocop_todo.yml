@@ -28,6 +28,7 @@ Metrics/AbcSize:
 Layout/LineLength:
   Exclude:
     - 'spec/autoscrub_spec.rb'
+    - 'lib/services.rb'
 
 Style/FrozenStringLiteralComment:
   Exclude:

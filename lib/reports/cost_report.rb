@@ -76,7 +76,7 @@ module Reports
     end
 
     def compile_frequency_table
-      waypoint = Utils::Waypoint.new(maxlines)
+      waypoint = Services.progress_tracker.new(maxlines)
       logger.info("Begin compiling hscore frequency table.")
       matching_clusters.each do |c|
         c.ht_items.each do |ht_item|

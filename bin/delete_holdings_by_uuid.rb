@@ -19,7 +19,7 @@ Services.mongo!
 org_counts = {}
 
 ARGV.each do |path|
-  waypoint = Utils::Waypoint.new(1000)
+  waypoint = Services.progress_tracker.new(1000)
   inf = File.open(path, "r")
   inf.each_line do |line|
     waypoint.incr
@@ -42,7 +42,7 @@ ARGV.each do |path|
     end
   end
   inf.close
-  puts waypoint.final_line
+  puts waypoint.finalize
 end
 
 puts "summary:"

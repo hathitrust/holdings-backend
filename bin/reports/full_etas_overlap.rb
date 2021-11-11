@@ -12,7 +12,7 @@ Services.mongo!
 
 if __FILE__ == $PROGRAM_NAME
   BATCH_SIZE = 100_000
-  waypoint = Utils::Waypoint.new(BATCH_SIZE)
+  waypoint = Services.progress_tracker.new(BATCH_SIZE)
   logger = Services.logger
 
   Cluster.where("ht_items.0": { "$exists": 1 }).no_timeout.each do |cluster|
