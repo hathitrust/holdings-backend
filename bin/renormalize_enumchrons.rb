@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "services"
-require "utils/waypoint"
 require "utils/ppnum"
 require "cluster"
 
@@ -23,11 +22,11 @@ def records_with_enum_chrons
                         end
 end
 
-if __FILE__ == $PROGRAM_NAME
-  BATCH_SIZE = 1_000
-  waypoint = Services.progress_tracker.new(BATCH_SIZE)
+def main
+  batch_size = 1_000
+  waypoint = Services.progress_tracker.new(batch_size)
   logger = Services.logger
-  logger.info "Starting renormalization of enum chrons. Batches of #{ppnum BATCH_SIZE}"
+  logger.info "Starting renormalization of enum chrons. Batches of #{ppnum batch_size}"
 
   records_with_enum_chrons.each do |rec|
     waypoint.incr
@@ -36,3 +35,5 @@ if __FILE__ == $PROGRAM_NAME
   end
   logger.info waypoint.finalize
 end
+
+main if __FILE__ == $PROGRAM_NAME

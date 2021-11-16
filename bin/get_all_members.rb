@@ -3,4 +3,9 @@
 
 # Prints all current members to stdout
 require "data_sources/ht_organizations"
-puts DataSources::HTOrganizations.new.members.keys
+
+def main
+  puts DataSources::HTOrganizations.new.members.keys
+end
+
+main if $PROGRAM_NAME == __FILE__

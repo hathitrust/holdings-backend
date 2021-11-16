@@ -4,6 +4,11 @@ require "spec_helper"
 require "scrub/autoscrub"
 
 RSpec.describe Scrub::AutoScrub do
+  before(:each) do
+    stub_request(:get, OCLC_URL)
+      .to_return(body: '{ "oclcNumber": "1000000000" }')
+  end
+
   # Set up a minimal OK input file, which should result in success.
   test_file_path = "/tmp/testmember_mono_full_20201230_rspec.tsv"
   test_file = File.open(test_file_path, "w")
@@ -11,9 +16,9 @@ RSpec.describe Scrub::AutoScrub do
   test_file.puts("555\ti12345678")
   test_file.close
 
-  today_ymd  = Time.new.strftime("%F")
-  scrubber   = described_class.new(test_file_path)
-  out_struct = scrubber.output_struct
+  let(:today_ymd) { Time.new.strftime("%F") }
+  let(:scrubber)  { described_class.new(test_file_path) }
+  let(:out_struct) { scrubber.output_struct }
 
   it "does a scrub without raising anything" do
     expect { scrubber.run }.not_to raise_error

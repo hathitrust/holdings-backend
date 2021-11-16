@@ -6,19 +6,25 @@ require "ocn_concordance_diffs"
 require "utils/multi_logger"
 require "date"
 
-Services.mongo!
+def setup_logger
+  # log to Slack in addition to default logger
+  default_logger = Services.logger
 
-# log to Slack in addition to default logger
-default_logger = Services.logger
-
-date_to_load = ARGV[0]
-
-raise "Usage: #{$PROGRAM_NAME} YYYY-mm-dd" unless date_to_load
-
-BATCH_SIZE = 250_000
-
-Services.register(:logger) do
-  Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
+  Services.register(:logger) do
+    Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
+  end
 end
 
-OCNConcordanceDiffs.new(Date.parse(date_to_load)).load
+def main
+  Services.mongo!
+
+  setup_logger
+
+  date_to_load = ARGV[0]
+
+  raise "Usage: #{$PROGRAM_NAME} YYYY-mm-dd" unless date_to_load
+
+  OCNConcordanceDiffs.new(Date.parse(date_to_load)).load
+end
+
+main if $PROGRAM_NAME == __FILE__

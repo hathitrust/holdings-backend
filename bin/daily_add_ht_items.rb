@@ -5,15 +5,19 @@ require "services"
 require "loader/hathifile_manager"
 require "utils/multi_logger"
 
-Services.mongo!
+def setup_logger
+  # log to Slack in addition to default logger
+  default_logger = Services.logger
 
-# log to Slack in addition to default logger
-default_logger = Services.logger
-
-Services.register(:logger) do
-  Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
+  Services.register(:logger) do
+    Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
+  end
 end
 
-if __FILE__ == $PROGRAM_NAME
+def main
+  setup_logger
+  Services.mongo!
   Loader::HathifileManager.new.try_load
 end
+
+main if __FILE__ == $PROGRAM_NAME

@@ -19,6 +19,7 @@ Lint/UselessAssignment:
 # Offense count: 5
 Metrics/AbcSize:
   Exclude:
+    - 'bin/**/*.rb'
     - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub/scrub_fields.rb'
@@ -62,6 +63,7 @@ Metrics/ClassLength:
 # Configuration parameters: CountComments, ExcludedMethods.
 Metrics/MethodLength:
   Exclude:
+    - 'bin/**/*.rb'
     - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub/scrub_fields.rb'

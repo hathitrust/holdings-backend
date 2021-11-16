@@ -3,8 +3,12 @@
 
 require "compare_cluster"
 
-Services.mongo!
+def main
+  Services.mongo!
 
-ARGF.each_line do |line|
-  CompareCluster.new(line.strip).compare
+  ARGF.each_line do |line|
+    CompareCluster.new(line.strip).compare
+  end
 end
+
+main if __FILE__ == $PROGRAM_NAME

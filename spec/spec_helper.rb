@@ -58,6 +58,7 @@ RSpec.configure do |config|
       Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }
     end
+    Services.register(:scrub_logger) { Services.logger }
   end
 
   config.before(:each) do

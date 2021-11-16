@@ -6,7 +6,11 @@ require "cluster"
 require "services"
 require "json"
 
-Services.mongo!
+def main
+  Services.mongo!
+  ocn = ARGV.shift
+  puts look_up(ocn)
+end
 
 def look_up(ocn)
   cluster = Cluster.find_by(ocns: ocn.to_i)
@@ -17,7 +21,4 @@ def look_up(ocn)
   end
 end
 
-if $PROGRAM_NAME == __FILE__
-  ocn = ARGV.shift
-  puts look_up(ocn)
-end
+main if $PROGRAM_NAME == __FILE__

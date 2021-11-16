@@ -8,11 +8,11 @@ require "utils/ppnum"
 require "zinzout"
 require "overlap/cluster_overlap"
 
-Services.mongo!
+def main
+  Services.mongo!
 
-if __FILE__ == $PROGRAM_NAME
-  BATCH_SIZE = 100_000
-  waypoint = Services.progress_tracker.new(BATCH_SIZE)
+  batch_size = 100_000
+  waypoint = Services.progress_tracker.new(batch_size)
   logger = Services.logger
 
   Cluster.where("ht_items.0": { "$exists": 1 }).no_timeout.each do |cluster|
@@ -33,3 +33,5 @@ if __FILE__ == $PROGRAM_NAME
     end
   end
 end
+
+main if $PROGRAM_NAME == __FILE__

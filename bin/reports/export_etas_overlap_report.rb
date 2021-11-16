@@ -7,11 +7,13 @@ require "services"
 require "settings"
 require "reports/etas_organization_overlap_report"
 
-Services.mongo!
+def main
+  Services.mongo!
 
-if __FILE__ == $PROGRAM_NAME
   # optional
   org = ARGV.shift
   rpt = Reports::EtasOrganizationOverlapReport.new(org)
   rpt.run
 end
+
+main if $PROGRAM_NAME == __FILE__

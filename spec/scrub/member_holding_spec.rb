@@ -72,21 +72,30 @@ RSpec.describe Scrub::MemberHolding do
     expect(ok_min_hold.parse(bad_min_str)).to be(false)
   end
 
-  it "warns but does not raise when setting a nil" do
-    # Log to file so we can look for a specific warning.
-    tmp_log = "/tmp/member_holding_spec.log"
-    Services.register(:scrub_logger) do
-      Logger.new(tmp_log)
+  context "with known scrub logger" do
+    let(:tmp_log) { "/tmp/member_holding_spec.log" }
+
+    around(:each) do |example|
+      # FIXME should log to string in RAM; duplicative of the around(:each, type: "loaded_file")
+      # Log to file so we can look for a specific warning.
+      old_logger = Services.scrub_logger
+      begin
+        Services.register(:scrub_logger) do
+          Logger.new(tmp_log)
+        end
+
+        example.run
+      ensure
+        # Reset logger.
+        Services.register(:scrub_logger) { old_logger }
+        FileUtils.rm(tmp_log)
+      end
     end
 
-    expect { ok_min_hold.set("oclc", nil) }.not_to raise_error
-    expect(File.read(tmp_log)).to match(/col_val for col_type oclc is nil/)
-
-    # Reset logger.
-    Services.register(:scrub_logger) do
-      Logger.new($stderr)
+    it "warns but does not raise when setting a nil" do
+      expect { ok_min_hold.set("oclc", nil) }.not_to raise_error
+      expect(File.read(tmp_log)).to match(/col_val for col_type oclc is nil/)
     end
-    FileUtils.rm(tmp_log)
   end
 
   it "returns true if given a record with a bad status/condition etc" do
