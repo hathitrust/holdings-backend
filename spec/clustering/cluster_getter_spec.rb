@@ -63,13 +63,6 @@ RSpec.describe Clustering::ClusterGetter do
       c2.ht_items.create(htitem2)
       expect(merged_cluster.ht_items.count).to eq(2)
     end
-
-    xit "combines and dedupes commitments" do
-      c1.commitments.create(organization: "nypl")
-      c2.commitments.create(organization: "nypl")
-      c2.commitments.create(organization: "miu")
-      expect(merged_cluster.commitments.count).to eq(2)
-    end
   end
 
   context "when merging >2 clusters" do

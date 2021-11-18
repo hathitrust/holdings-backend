@@ -67,6 +67,10 @@ class Cluster
     push_to_field(:ocn_resolutions, items.flatten)
   end
 
+  def add_commitments(*items)
+    push_to_field(:commitments, items.flatten)
+  end
+
   def format
     @format ||= CalculateFormat.new(self).cluster_format
   end
