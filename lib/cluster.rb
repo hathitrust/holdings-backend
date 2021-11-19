@@ -147,12 +147,11 @@ class Cluster
   def push_to_field(field, items)
     return if items.empty?
 
+    ops = { "$push" => { field => { "$each" => items.map(&:as_document) } } }
+    ops["$currentDate"] = { 'last_modified': true } unless field == :commitments
     result = collection.update_one(
       { _id: _id },
-      {
-        "$push"        => { field => { "$each" => items.map(&:as_document) } },
-        "$currentDate" => { 'last_modified': true }
-      },
+      ops,
       session: Mongoid::Threaded.get_session
     )
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0

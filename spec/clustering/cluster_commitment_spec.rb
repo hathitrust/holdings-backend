@@ -22,8 +22,10 @@ RSpec.describe Clustering::ClusterCommitment do
         expect(Cluster.count).to eq(1)
       end
 
-      xit "does NOT update cluster last modified date" do
+      it "does NOT update cluster last modified date" do
+        c.reload
         orig_last_modified = c.last_modified
+        sleep(1)
         cluster = described_class.new(comm).cluster
         expect(cluster.last_modified).to eq(orig_last_modified)
       end
