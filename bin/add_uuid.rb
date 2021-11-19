@@ -5,10 +5,14 @@
 
 require "securerandom"
 
-ARGF.each do |line|
-  if /^OCN\tBIB/.match?(line)
-    puts [line.chomp, "UUID"].join("\t")
-  else
-    puts [line.chomp, SecureRandom.uuid].join("\t")
+def main
+  ARGF.each do |line|
+    if /^OCN\tBIB/.match?(line)
+      puts [line.chomp, "UUID"].join("\t")
+    else
+      puts [line.chomp, SecureRandom.uuid].join("\t")
+    end
   end
 end
+
+main if __FILE__ == $PROGRAM_NAME

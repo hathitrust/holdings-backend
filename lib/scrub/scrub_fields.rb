@@ -36,12 +36,6 @@ module Scrub
     # for capturing the numeric part
     NUMERIC_PART = /(\d+)/.freeze
 
-    # Get current max oclc
-    CURRENT_MAX_OCN = Scrub::MaxOcn.new.ocn
-    if CURRENT_MAX_OCN.nil?
-      raise "failed to set CURRENT_MAX_OCN"
-    end
-
     LOCAL_ID_MAX_LEN = 50
     MAX_NUM_ITEMS    = 25 # rather arbitrary
 
@@ -50,9 +44,16 @@ module Scrub
     GOVDOC    = /^[01]$/.freeze
     ISSN      = /^\d{4}-?\d{3}[0-9Xx]$/.freeze
 
-    EC_PARSER = EnumChronParser.new
-
     attr_accessor :logger
+
+    def initialize
+      # Get current max oclc
+      @current_max_ocn = Scrub::MaxOcn.new.ocn
+      @ec_parser = EnumChronParser.new
+      if @current_max_ocn.nil?
+        raise "failed to set current_max_ocn"
+      end
+    end
 
     # Given a string, determines which valid ocns are in it,
     # and returns them as a uniq'd array of Integers.
@@ -120,7 +121,7 @@ module Scrub
       numeric_part = capture_numeric(candidate)
       # As far as the numeric part goes, the only thing we can say
       # about it is that it should be smaller than the current max ocn.
-      numeric_part > CURRENT_MAX_OCN &&
+      numeric_part > current_max_ocn &&
         reject_value("too large for an ocn", numeric_part)
 
       numeric_part.zero? &&
@@ -187,8 +188,8 @@ module Scrub
     # Given an enumchron str, returns an array with a norm'd enum and norm'd chron
     # The enumchron parser is ancient, murky & probably not the best.
     def enumchron(str)
-      EC_PARSER.parse(str)
-      [EC_PARSER.normalized_enum, EC_PARSER.normalized_chron]
+      ec_parser.parse(str)
+      [ec_parser.normalized_enum, ec_parser.normalized_chron]
     end
 
     # checks that the given string contains an ok status
@@ -244,6 +245,8 @@ module Scrub
       md.nil? && reject_value("could not extract numeric part from ocn", str)
       md[0].to_i
     end
+
+    attr_reader :current_max_ocn, :ec_parser
 
   end
 end

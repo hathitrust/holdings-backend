@@ -31,6 +31,11 @@ services:
     volumes:
       - ./sql:/docker-entrypoint-initdb.d/
 
+  pushgateway:
+    image: prom/pushgateway
+    ports:
+      - "9091:9091"
+
 volumes:
   gem_cache:
   data_db:

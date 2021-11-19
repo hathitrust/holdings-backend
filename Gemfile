@@ -11,6 +11,7 @@ gem "faraday"
 gem "mongo"
 gem "mongoid"
 gem "mysql2"
+gem "prometheus-client"
 gem "sequel"
 gem "zinzout"
 

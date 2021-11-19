@@ -9,10 +9,8 @@ require "utils/waypoint"
 require "date"
 require "overlap/overlap_table_update"
 
-Services.mongo!
-
-if __FILE__ == $PROGRAM_NAME
-
+def main
+  Services.mongo!
   # Default: Now - 36 hours
   cutoff_date = Date.today - 1.5
 
@@ -22,3 +20,5 @@ if __FILE__ == $PROGRAM_NAME
 
   Overlap::OverlapTableUpdate.new(cutoff_date).run
 end
+
+main if __FILE__ == $PROGRAM_NAME

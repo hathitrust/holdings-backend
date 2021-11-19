@@ -16,7 +16,7 @@ def make_outf(output_dir)
   end
 end
 
-if __FILE__ == $PROGRAM_NAME
+def main
   # Check input.
   cost_report_freq = ARGV.shift
   if cost_report_freq.nil?
@@ -38,3 +38,5 @@ if __FILE__ == $PROGRAM_NAME
 
   outf.close
 end
+
+main if $PROGRAM_NAME == __FILE__

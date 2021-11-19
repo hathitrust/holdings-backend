@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "ppnum"
+require "services"
 
 module Utils
   # Naive waypoint class, to keep track of progress over time for long-running
@@ -87,15 +88,15 @@ module Utils
     end
 
     def batch_line
-      # rubocop:disable Layout/LineLength
-      "#{ppnum(count, 10)}. This batch #{ppnum(last_batch_size, 5)} in #{ppnum(last_batch_seconds, 4, 1)}s (#{batch_rate_str} r/s). Overall #{total_rate_str} r/s."
-      # rubocop:enable Layout/LineLength
+      "#{ppnum(count, 10)}. This batch #{ppnum(last_batch_size, 5)} " \
+        "in #{ppnum(last_batch_seconds, 4, 1)}s (#{batch_rate_str} r/s). " \
+        "Overall #{total_rate_str} r/s."
     end
 
-    def final_line
-      # rubocop:disable Layout/LineLength
-      "Finished. #{ppnum(count, 10)} total records in #{seconds_to_time_string(total_seconds_so_far)}. Overall #{total_rate_str} r/s."
-      # rubocop:enable Layout/LineLength
+    def finalize
+      "Finished. #{ppnum(count, 10)} total records " \
+        " in #{seconds_to_time_string(total_seconds_so_far)}. " \
+        "Overall #{total_rate_str} r/s."
     end
 
     def seconds_to_time_string(sec)

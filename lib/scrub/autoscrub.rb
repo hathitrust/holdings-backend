@@ -53,7 +53,7 @@ module Scrub
       tot_lines  = count_file_lines
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
-      waypoint   = Utils::Waypoint.new(batch_size)
+      waypoint   = Services.progress_tracker.new(batch_size)
 
       # Set up output file
       datetime   = Time.new.strftime("%F-%T").delete(":")

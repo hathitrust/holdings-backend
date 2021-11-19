@@ -28,15 +28,15 @@ def to_tsv(report)
   tsv.join("\n")
 end
 
-if __FILE__ == $PROGRAM_NAME
-  BATCH_SIZE = 1_000
-  waypoint = Utils::Waypoint.new(BATCH_SIZE)
+def main
+  batch_size = 1_000
+  waypoint = Services.progress_tracker.new(batch_size)
   logger = Services.logger
-  logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum BATCH_SIZE}"
+  logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum batch_size}"
 
   org = ARGV.shift
 
-  cost_report = Reports::CostReport.new(org, lines: BATCH_SIZE, logger: logger)
+  cost_report = Reports::CostReport.new(org, lines: batch_size, logger: logger)
   puts "Target cost: #{cost_report.target_cost}"
   puts "Num volumes: #{cost_report.num_volumes}"
   puts "Num pd volumes: #{cost_report.num_pd_volumes}"
@@ -49,5 +49,7 @@ if __FILE__ == $PROGRAM_NAME
   # Dump freq table to file
   ymd = Time.new.strftime("%F")
   cost_report.dump_freq_table("freq_#{ymd}.txt")
-  logger.info waypoint.final_line
+  logger.info waypoint.finalize
 end
+
+main if __FILE__ == $PROGRAM_NAME

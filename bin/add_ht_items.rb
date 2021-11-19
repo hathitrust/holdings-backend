@@ -5,10 +5,11 @@ require "loader/file_loader"
 require "loader/ht_item_loader"
 require "services"
 
-Services.mongo!
-Services.logger.info "Updating HT Items."
-
-if __FILE__ == $PROGRAM_NAME
+def main
+  Services.mongo!
+  Services.logger.info "Updating HT Items."
   filename = ARGV[0]
-  FileLoader.new(batch_loader: HtItemLoader.new).load(filename)
+  Loader::FileLoader.new(batch_loader: Loader::HtItemLoader.new).load(filename)
 end
+
+main if __FILE__ == $PROGRAM_NAME

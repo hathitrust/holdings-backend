@@ -4,7 +4,7 @@
 require "settings"
 require "concordance_validation/concordance"
 
-if $PROGRAM_NAME == __FILE__
+def main
   fin = ARGV.shift
   fout = ARGV.shift
   log = File.open("#{fout}.log", "w")
@@ -33,3 +33,5 @@ if $PROGRAM_NAME == __FILE__
     fout.puts [raw, c.terminal_ocn(raw)].join("\t")
   end
 end
+
+main if $PROGRAM_NAME == __FILE__
