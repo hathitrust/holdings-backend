@@ -55,16 +55,17 @@ class Cluster
     ht_items.to_a.find {|h| h.item_id == item_id }
   end
 
+  UPDATE_LAST_MODIFIED = { "$currentDate" => { 'last_modified': true } }.freeze
   def add_holdings(*items)
-    push_to_field(:holdings, items.flatten)
+    push_to_field(:holdings, items.flatten, UPDATE_LAST_MODIFIED)
   end
 
   def add_ht_items(*items)
-    push_to_field(:ht_items, items.flatten)
+    push_to_field(:ht_items, items.flatten, UPDATE_LAST_MODIFIED)
   end
 
   def add_ocn_resolutions(*items)
-    push_to_field(:ocn_resolutions, items.flatten)
+    push_to_field(:ocn_resolutions, items.flatten, UPDATE_LAST_MODIFIED)
   end
 
   def add_commitments(*items)
@@ -144,14 +145,12 @@ class Cluster
     @holdings_by_org ||= holdings.group_by(&:organization)
   end
 
-  def push_to_field(field, items)
+  def push_to_field(field, items, extra_ops = {})
     return if items.empty?
 
-    ops = { "$push" => { field => { "$each" => items.map(&:as_document) } } }
-    ops["$currentDate"] = { 'last_modified': true } unless field == :commitments
     result = collection.update_one(
       { _id: _id },
-      ops,
+      { "$push" => { field => { "$each" => items.map(&:as_document) } } }.merge(extra_ops),
       session: Mongoid::Threaded.get_session
     )
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
