@@ -30,6 +30,9 @@ module Clusterable
 
     validates_presence_of :uuid, :organization, :ocn, :local_id, :oclc_sym, :committed_date,
                           :facsimile
+    validates_inclusion_of :local_shelving_type, in: ["cloa", "clca", "sfca", "sfcahm", "sfcaasrs"],
+                           allow_nil: true
+    validate :deprecation_validation
 
     def matching_holdings
       cluster = _parent
@@ -48,6 +51,17 @@ module Clusterable
       @deprecation_status = status
       @deprecation_date = date
       @deprecate_replaced_by = replacement._id
+    end
+
+    private
+
+    # If one of the deprecation fields is set they both must be set
+    def deprecation_validation
+      if deprecation_status && deprecation_date.nil?
+        errors.add(:deprecation_status, "can't be set without a deprecation date.")
+      elsif deprecation_status.nil? && deprecation_date
+        errors.add(:deprecation_date, "can't be set without a deprecation status.")
+      end
     end
 
   end

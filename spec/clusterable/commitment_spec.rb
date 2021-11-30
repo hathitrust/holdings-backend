@@ -18,10 +18,24 @@ RSpec.describe Clusterable::Commitment do
     expect(c.commitments.first._parent).to be(c)
   end
 
+  it "validates local_shelving_type" do
+    expect(comm.valid?).to be true
+    comm.local_shelving_type = "invalid"
+    expect(comm.valid?).to be false
+    comm.local_shelving_type = "cloa"
+    expect(comm.valid?).to be true
+  end
+
   describe "deprecated?" do
     it "is deprecated if it has a deprecation status" do
       expect(comm.deprecated?).to be false
       expect(build(:commitment, :deprecated).deprecated?).to be true
+    end
+
+    it "validates deprecation" do
+      expect(comm.valid?).to be true
+      comm.deprecation_status = "C"
+      expect(comm.valid?).to be false
     end
   end
 
