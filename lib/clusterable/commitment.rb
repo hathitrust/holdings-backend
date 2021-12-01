@@ -4,18 +4,63 @@ require "mongoid"
 
 module Clusterable
 
-  # A commitment
+  # A shared print commitment
   class Commitment
     include Mongoid::Document
-    field :ocn, type: Integer # , type: OCLCNumber
+    field :uuid, type: String
     field :organization, type: String
+    field :ocn, type: Integer
+    field :local_id, type: String
+    field :oclc_sym, type: String
+    field :committed_date, type: DateTime
+    field :retention_date, type: DateTime
+    field :local_bib_id, type: String
+    field :local_item_id, type: String
+    field :local_item_location, type: String
+    field :local_shelving_type, type: String
+    field :policies, type: Array, default: []
+    field :facsimile, type: Boolean, default: false
+    field :other_program, type: String
+    field :other_retention_date, type: DateTime
+    field :deprecation_status, type: String
+    field :deprecation_date, type: DateTime
+    field :deprecation_replaced_by, type: String
 
     embedded_in :cluster
 
-    def move(new_parent)
-      unless new_parent.id == _parent.id
-        new_parent.commitments << dup
-        delete
+    validates_presence_of :uuid, :organization, :ocn, :local_id, :oclc_sym, :committed_date,
+                          :facsimile
+    validates_inclusion_of :local_shelving_type, in: ["cloa", "clca", "sfca", "sfcahm", "sfcaasrs"],
+                           allow_nil: true
+    validate :deprecation_validation
+
+    def matching_holdings
+      cluster = _parent
+      cluster.holdings.select {|h| h.organization == organization && h.local_id == local_id }
+    end
+
+    def batch_with?(other)
+      ocn == other.ocn
+    end
+
+    def deprecated?
+      ["C", "D", "E", "L", "M"].include? deprecation_status
+    end
+
+    def deprecate(status, replacement, date = Date.today)
+      @deprecation_status = status
+      @deprecation_date = date
+      @deprecate_replaced_by = replacement._id
+    end
+
+    private
+
+    # If one of the deprecation fields is set they both must be set
+    def deprecation_validation
+      if deprecation_status && deprecation_date.nil?
+        errors.add(:deprecation_status, "can't be set without a deprecation date.")
+      elsif deprecation_status.nil? && deprecation_date
+        errors.add(:deprecation_date, "can't be set without a deprecation status.")
       end
     end
 
