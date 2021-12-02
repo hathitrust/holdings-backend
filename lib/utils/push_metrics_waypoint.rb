@@ -24,7 +24,7 @@ module Utils
       super(@waypoint)
 
       if success_interval
-        metrics[:success_interval].set(success_interval)
+        metrics[:success_interval].set(success_interval.to_i)
       end
 
       update_metrics
