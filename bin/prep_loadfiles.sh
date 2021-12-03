@@ -42,7 +42,7 @@ sort -s -n -k1,1 -T ./ $outfile_1 \
     | bundle exec ruby bin/add_uuid.rb > $outfile_2
 
 # Split into chunks.
-split --verbose --number=l/$chunk_count $outfile_2 "$output_dir/split_"
+split -d --verbose --number=l/$chunk_count $outfile_2 "$output_dir/split_"
 
 # Add .tsv extension to chunks.
 for file in `ls -w1 $output_dir/split_* | grep -v '.tsv'`
