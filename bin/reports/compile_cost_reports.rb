@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "services"
-require "utils/waypoint"
 require "utils/ppnum"
 require "reports/cost_report"
 
@@ -30,7 +29,7 @@ end
 
 def main
   batch_size = 1_000
-  waypoint = Services.progress_tracker.new(batch_size)
+  marker = Services.progress_tracker.new(batch_size)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum batch_size}"
 
@@ -49,7 +48,7 @@ def main
   # Dump freq table to file
   ymd = Time.new.strftime("%F")
   cost_report.dump_freq_table("freq_#{ymd}.txt")
-  logger.info waypoint.finalize
+  logger.info marker.final_line
 end
 
 main if __FILE__ == $PROGRAM_NAME

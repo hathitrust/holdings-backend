@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "overlap/ht_item_overlap"
-require "utils/waypoint"
 require "services"
 require "reports/cost_report"
 
@@ -10,7 +9,7 @@ module Reports
   # Generate IC estimate from a list of OCNS
   class EstimateIC
     attr_accessor :ocns, :h_share_total, :num_ocns_matched, :num_items_matched, :num_items_pd,
-                  :num_items_ic, :clusters_seen, :waypoint
+                  :num_items_ic, :clusters_seen, :marker
 
     def initialize(ocns, batch_size = 100_000)
       @ocns = ocns.uniq
@@ -20,7 +19,7 @@ module Reports
       @num_items_pd = 0
       @num_items_ic = 0
       @clusters_seen = Set.new
-      @waypoint = Services.progress_tracker.new(batch_size)
+      @marker = Services.progress_tracker.new(batch_size)
     end
 
     def cost_report
@@ -29,7 +28,7 @@ module Reports
 
     def run
       ocns.each do |ocn|
-        waypoint.incr
+        marker.incr
         cluster = Cluster.find_by(ocns: ocn.to_i,
                                   "ht_items.0": { "$exists": 1 })
         next if cluster.nil?
@@ -40,9 +39,9 @@ module Reports
 
         count_matching_items(cluster)
 
-        waypoint.on_batch {|wp| Services.logger.info wp.batch_line }
+        marker.on_batch {|wp| Services.logger.info wp.batch_line }
       end
-      Services.logger.info waypoint.finalize
+      Services.logger.info marker.final_line
     end
 
     def pct_ocns_matched

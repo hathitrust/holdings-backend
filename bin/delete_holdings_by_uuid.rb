@@ -3,7 +3,6 @@
 require "services"
 require "holding"
 require "cluster"
-require "utils/waypoint"
 
 DIGIT_RX = /\d/.freeze
 UUID_RX  = /^[0-9a-f\-]+$/.freeze
@@ -19,11 +18,11 @@ def main
   org_counts = {}
 
   ARGV.each do |path|
-    waypoint = Services.progress_tracker.new(1000)
+    marker = Services.progress_tracker.new(1000)
     inf = File.open(path, "r")
     inf.each_line do |line|
-      waypoint.incr
-      waypoint.on_batch do |wp|
+      marker.incr
+      marker.on_batch do |wp|
         puts wp.batch_line
       end
 
@@ -42,7 +41,7 @@ def main
       end
     end
     inf.close
-    puts waypoint.finalize
+    puts marker.final_line
   end
 
   puts "summary:"

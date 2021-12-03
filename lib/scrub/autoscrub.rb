@@ -4,7 +4,6 @@ require "services"
 require "custom_errors"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
-require "utils/waypoint"
 
 module Scrub
   # Usage:
@@ -53,10 +52,10 @@ module Scrub
       tot_lines  = count_file_lines
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
-      waypoint   = Services.progress_tracker.new(batch_size)
+      marker = Services.progress_tracker.new(batch_size)
 
       # Set up output file
-      datetime   = Time.new.strftime("%F-%T").delete(":")
+      datetime = Time.new.strftime("%F-%T").delete(":")
       out_file_path = File.join(
         @output_dir,
         "#{@member_id}_#{@item_type}_#{datetime}.ndj"
@@ -67,8 +66,8 @@ module Scrub
       begin
         @member_holding_file.parse do |holding|
           out_file.puts(holding.to_json)
-          waypoint.incr
-          waypoint.on_batch do |wp|
+          marker.incr
+          marker.on_batch do |wp|
             Services.scrub_logger.info(wp.batch_line)
           end
         end

@@ -24,16 +24,16 @@ end
 
 def main
   batch_size = 1_000
-  waypoint = Services.progress_tracker.new(batch_size)
+  marker = Services.progress_tracker.new(batch_size)
   logger = Services.logger
   logger.info "Starting renormalization of enum chrons. Batches of #{ppnum batch_size}"
 
   records_with_enum_chrons.each do |rec|
-    waypoint.incr
+    marker.incr
     renormalize(rec)
-    waypoint.on_batch {|wp| logger.info wp.batch_line }
+    marker.on_batch {|wp| logger.info wp.batch_line }
   end
-  logger.info waypoint.finalize
+  logger.info marker.final_line
 end
 
 main if __FILE__ == $PROGRAM_NAME

@@ -5,7 +5,6 @@ require "pathname"
 require "cluster"
 require "logger"
 require "services"
-require "utils/waypoint"
 require "date"
 require "overlap/overlap_table_update"
 
