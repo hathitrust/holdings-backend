@@ -4,6 +4,7 @@ require "cluster"
 require "clustering/cluster_ocn_resolution"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
+require "clustering/cluster_commitment"
 
 module Clustering
   # Deletes a cluster, then re-creates clusters from the data in that cluster.
@@ -37,6 +38,7 @@ module Clustering
         .each {|r| ClusterOCNResolution.new(r.dup).cluster.save }
       recluster_ht_items
       recluster_holdings
+      recluster_commitments
     end
 
     def recluster_ht_items
@@ -51,6 +53,13 @@ module Clustering
         .sort_by(&:ocn)
         .chunk_while {|item1, item2| item1.batch_with?(item2) }
         .each {|batch| ClusterHolding.new(*batch.map(&:dup)).cluster.save }
+    end
+
+    def recluster_commitments
+      @cluster.commitments
+        .sort_by(&:ocn)
+        .chunk_while {|item1, item2| item1.batch_with?(item2) }
+        .each {|batch| ClusterCommitment.new(*batch.map(&:dup)).cluster.save }
     end
 
   end
