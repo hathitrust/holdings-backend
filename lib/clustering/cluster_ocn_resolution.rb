@@ -32,17 +32,11 @@ module Clustering
 
       Retryable.with_transaction do
         Cluster.where(ocns: { "$all": resolution.ocns }).each do |c|
-          had_resolution = false
-
           c.ocn_resolutions.delete_if do |candidate|
             candidate.deprecated == resolution.deprecated &&
-              candidate.resolved == resolution.resolved &&
-              had_resolution = true
+              candidate.resolved == resolution.resolved
           end
-
-          if had_resolution
-            Reclusterer.new(c).recluster
-          end
+          Reclusterer.new(c, resolution.ocns).recluster
         end
       end
     end

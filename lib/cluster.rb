@@ -176,4 +176,15 @@ class Cluster
   def empty?
     ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
   end
+
+  def update_ocns
+    self.ocns = [component_ocns].flatten.uniq
+    save
+  end
+
+  def component_ocns
+    @component_ocns ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
+      holdings.pluck(:ocn) + commitments.pluck(:ocn)
+  end
+
 end
