@@ -41,25 +41,22 @@ module Clustering
       recluster_commitments
     end
 
-    def recluster_ht_items
-      @cluster.ht_items
-        .sort_by(&:ocns)
+    def recluster_batch(clusterables, sort_field, clusterer)
+      clusterables.sort_by(&sort_field)
         .chunk_while {|item1, item2| item1.batch_with?(item2) }
-        .each {|batch| ClusterHtItem.new(*batch.map(&:dup)).cluster.save }
+        .each {|batch| clusterer.new(*batch.map(&:dup)).cluster.save }
+    end
+
+    def recluster_ht_items
+      recluster_batch(@cluster.ht_items, :ocns, ClusterHtItem)
     end
 
     def recluster_holdings
-      @cluster.holdings
-        .sort_by(&:ocn)
-        .chunk_while {|item1, item2| item1.batch_with?(item2) }
-        .each {|batch| ClusterHolding.new(*batch.map(&:dup)).cluster.save }
+      recluster_batch(@cluster.holdings, :ocn, ClusterHolding)
     end
 
     def recluster_commitments
-      @cluster.commitments
-        .sort_by(&:ocn)
-        .chunk_while {|item1, item2| item1.batch_with?(item2) }
-        .each {|batch| ClusterCommitment.new(*batch.map(&:dup)).cluster.save }
+      recluster_batch(@cluster.commitments, :ocn, ClusterCommitment)
     end
 
   end
