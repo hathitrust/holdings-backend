@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "cluster"
+require "clustering/cluster_commitment"
 
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
@@ -194,6 +195,92 @@ RSpec.describe Cluster do
         expect(c.holdings.size).to eq(0)
         expect(c.copy_counts["umich"]).to eq(0)
       end
+    end
+  end
+
+  describe "Commitments tests" do
+    let(:h_ch) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "CH") }
+    let(:h_lm) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "LM") }
+    let(:h_wd) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "WD") }
+    let(:ht_spm) { build(:ht_item, :spm, ocns: [ocn1], billing_entity: h_ch.organization) }
+    let(:ht_mpm) { build(:ht_item, :mpm, ocns: [ocn1], billing_entity: h_ch.organization) }
+    let(:ht_ser) { build(:ht_item, :ser, ocns: [ocn1], billing_entity: h_ch.organization) }
+    let(:spc) { build(:commitment, ocn: ocn1, organization: h_ch.organization) }
+
+    it "sees commitments as an array (empty when there arent any)" do
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      z = Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      expect(x.commitments).to eq([])
+      expect(z.commitments).to be_a(Array)
+      expect(z.commitments.size).to eq(1)
+    end
+
+    it "knows when there are commitments attached to a cluster" do
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      y = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      z = Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      expect(x.commitments?).to be(false)
+      expect(y.commitments?).to be(false)
+      expect(z.commitments?).to be(true)
+    end
+
+    it "ignores deprecated commitments" do
+      spc.deprecate("C")
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      y = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      z = Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      expect(x.commitments?).to be(false)
+      expect(y.commitments?).to be(false)
+      expect(z.commitments?).to be(false)
+    end
+
+    it "knows which clusters are eligible for commitments" do
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      z = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(z.eligible_for_commitments?).to be(true)
+    end
+
+    it "knows cluster not eligible for commitments if cluster format is mpm" do
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      z = Clustering::ClusterHtItem.new(ht_mpm).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(z.format).to be("mpm")
+      expect(z.eligible_for_commitments?).to be(false)
+    end
+
+    it "knows cluster not eligible for commitments if cluster format is ser" do
+      x = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      z = Clustering::ClusterHtItem.new(ht_ser).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(z.format).to be("ser")
+      expect(z.eligible_for_commitments?).to be(false)
+    end
+
+    it "knows cluster not eligible for commitments if there are no holdings" do
+      x = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      y = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(y.eligible_for_commitments?).to be(true)
+    end
+
+    it "knows cluster not eligible for commitments if all holdings are status:LM" do
+      x = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      y = Clustering::ClusterHolding.new(h_lm).cluster.tap(&:save)
+      q = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(y.eligible_for_commitments?).to be(false)
+      expect(q.eligible_for_commitments?).to be(true)
+    end
+
+    it "knows cluster not eligible for commitments if all holdings are status:WD" do
+      x = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      z = Clustering::ClusterHolding.new(h_wd).cluster.tap(&:save)
+      q = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      expect(x.eligible_for_commitments?).to be(false)
+      expect(z.eligible_for_commitments?).to be(false)
+      expect(q.eligible_for_commitments?).to be(true)
     end
   end
 end

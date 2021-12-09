@@ -26,6 +26,15 @@ RSpec.describe Clusterable::Commitment do
     expect(comm.valid?).to be true
   end
 
+  describe "deprecate" do
+    it "is deprecated by method call" do
+      expect(comm.deprecated?).to be false
+      comm.deprecate("C")
+      expect(comm.deprecated?).to be true
+      expect(comm.deprecation_status).to eq "C"
+    end
+  end
+
   describe "deprecated?" do
     it "is deprecated if it has a deprecation status" do
       expect(comm.deprecated?).to be false

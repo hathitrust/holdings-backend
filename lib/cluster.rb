@@ -120,6 +120,14 @@ class Cluster
     @brt_counts
   end
 
+  def ch_counts
+    @ch_counts ||= holdings_by_org.transform_values do |hs|
+      hs.select {|holding| holding.status == "CH" || holding.status.empty? }.size
+    end
+    @ch_counts.default = 0
+    @ch_counts
+  end
+
   def wd_counts
     @wd_counts ||= holdings_by_org
       .transform_values {|hs| hs.select {|holding| holding.status == "WD" }.size }
@@ -167,6 +175,19 @@ class Cluster
     relations.values.map(&:name).each do |relation|
       push_to_field(relation, cluster.send(relation).map(&:dup))
     end
+  end
+
+  def commitments?(include_deprecated: false)
+    if include_deprecated
+      commitments.any?
+    else
+      commitments.reject(&:deprecated?).any?
+    end
+  end
+
+  def eligible_for_commitments?
+    # be an spm with items and 1+ CH holdings
+    format == "spm" && ht_items.any? && holdings.any? && ch_counts.values.sum > 0
   end
 
   def large?
