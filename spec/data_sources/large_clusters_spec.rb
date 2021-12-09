@@ -90,7 +90,7 @@ RSpec.describe DataSources::LargeClusters do
 
   context "with missing large clusters files" do
     before(:each) do
-      File.delete(Settings.large_cluster_ocns) if File.exist?(Settings.large_cluster_ocns)
+      Settings.large_cluster_ocns = "file_that_does_not_exist"
     end
 
     it "does not raise error" do
