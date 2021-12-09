@@ -87,4 +87,23 @@ RSpec.describe DataSources::LargeClusters do
       expect(Cluster.count).to eq(1)
     end
   end
+
+  context "with missing large clusters files" do
+    before(:each) do
+      File.delete(Settings.large_cluster_ocns) if File.exist?(Settings.large_cluster_ocns)
+    end
+
+    it "does not raise error" do
+      expect { described_class.new }.not_to raise_error
+    end
+
+    it "warns of missing file" do
+      expect(Services.logger).to receive(:warn).with("No large clusters file found.")
+      described_class.new
+    end
+
+    it "sets large_clusters to empty set" do
+      expect(described_class.new.ocns).to be_empty
+    end
+  end
 end
