@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "clusterable/holding"
+require "clustering/cluster_commitment"
 require "cluster"
 
 RSpec.describe Clusterable::Holding do
@@ -111,6 +112,33 @@ RSpec.describe Clusterable::Holding do
 
     it "shows the member" do
       expect(h.inspect).to match(h.organization)
+    end
+  end
+
+  describe "commitments" do
+    before(:each) do
+      Cluster.collection.find.delete_many
+    end
+
+    let(:org) { "umich" }
+    let(:h_ch) do
+      build(
+        :holding, ocn: 123, status: "CH", local_id: "abc", mono_multi_serial: "mono"
+      )
+    end
+    let(:spc) { build(:commitment, ocn: 123, organization: org, local_id: "abc") }
+    let(:ht_spm) { build(:ht_item, :spm, ocns: [123]) }
+
+    it "finds no matching commitments if there are none" do
+      Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      expect(h_ch.matches_commitment?).to be false
+    end
+
+    it "finds matching commitments if there are any" do
+      Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      expect(h_ch.matches_commitment?).to be true
     end
   end
 end

@@ -110,6 +110,19 @@ module Clusterable
       as_document.slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS)).hash
     end
 
+    def matches_commitment?
+      # check if there is a commitment on the same cluster
+      # with the same org & local_id
+      cluster.commitments.select do |spc|
+        spc.organization == organization && spc.local_id == local_id
+      end.any?
+    end
+
+    def eligible_for_commitment?
+      # TODO: check if it matches the criteria for shared print
+      true
+    end
+
     private
 
     def set_organization_data
