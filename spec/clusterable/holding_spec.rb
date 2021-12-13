@@ -134,7 +134,7 @@ RSpec.describe Clusterable::Holding do
       expect(h_ch.matches_commitment?).to be false
     end
 
-    it "finds matching commitments if there are any" do
+    it "finds matching commitment if there is one" do
       Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
       Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
       Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
