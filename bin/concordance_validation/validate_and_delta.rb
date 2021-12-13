@@ -6,11 +6,6 @@ require "utils/multi_logger"
 require "settings"
 require "concordance_validation/delta"
 
-default_logger = Services.logger
-Services.register(:logger) do
-  Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
-end
-
 def review_logs(log_file)
   multiple_ocns_count = 0
   errors = []

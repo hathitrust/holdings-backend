@@ -6,19 +6,8 @@ require "ocn_concordance_diffs"
 require "utils/multi_logger"
 require "date"
 
-def setup_logger
-  # log to Slack in addition to default logger
-  default_logger = Services.logger
-
-  Services.register(:logger) do
-    Utils::MultiLogger.new(default_logger, Logger.new(Services.slack_writer, level: Logger::INFO))
-  end
-end
-
 def main
   Services.mongo!
-
-  setup_logger
 
   date_to_load = ARGV[0]
 
