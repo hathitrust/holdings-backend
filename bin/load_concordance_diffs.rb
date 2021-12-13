@@ -3,7 +3,6 @@
 
 require "services"
 require "ocn_concordance_diffs"
-require "utils/multi_logger"
 require "date"
 
 def main

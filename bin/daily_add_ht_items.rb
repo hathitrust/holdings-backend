@@ -3,7 +3,6 @@
 
 require "services"
 require "loader/hathifile_manager"
-require "utils/multi_logger"
 
 def main
   Services.mongo!

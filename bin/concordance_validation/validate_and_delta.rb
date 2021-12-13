@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require "services"
-require "utils/multi_logger"
 require "settings"
 require "concordance_validation/delta"
 
