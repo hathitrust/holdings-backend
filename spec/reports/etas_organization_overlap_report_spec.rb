@@ -56,6 +56,14 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       end
     end
 
+    it "only has a file for the organization given" do
+      new_h = build(:holding, ocn: h2.ocn)
+      Clustering::ClusterHolding.new(new_h).cluster.tap(&:save)
+      rpt = described_class.new(orgs.last)
+      rpt.run
+      expect(rpt.reports.keys).to eq([orgs.last])
+    end
+
     it "has a line for each ht_item in the holding organization rpt" do
       rpt = described_class.new
       rpt.run

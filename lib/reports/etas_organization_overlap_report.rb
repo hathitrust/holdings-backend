@@ -55,6 +55,8 @@ module Reports
     # @param access  [String] 'allow' or 'deny' for the associated item
     # @param rights  [String] the rights for the associated item
     def write_record(holding, format, access, rights)
+      return unless organization.nil? || organization == holding[:organization]
+
       etas_record = Overlap::ETASOverlap.new(ocn: holding[:ocn],
                       local_id: holding[:local_id],
                       item_type: format,
