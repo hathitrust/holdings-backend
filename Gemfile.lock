@@ -42,6 +42,7 @@ GEM
     i18n (1.8.5)
       concurrent-ruby (~> 1.0)
     method_source (1.0.0)
+    milemarker (1.0.0)
     minitest (5.14.2)
     mongo (2.13.1)
       bson (>= 4.8.2, < 5.0.0)
@@ -123,6 +124,7 @@ DEPENDENCIES
   factory_bot
   faker
   faraday
+  milemarker
   mongo
   mongoid
   mysql2

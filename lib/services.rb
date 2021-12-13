@@ -7,7 +7,7 @@ require "file_mutex"
 require "logger"
 require "mongoid"
 require "utils/slack_writer"
-require "utils/push_metrics_waypoint"
+require "utils/push_metrics_marker"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
 require "data_sources/ht_organizations"
@@ -55,4 +55,4 @@ Services.register(:prometheus_metrics) do
   }.tap {|m| m.each_value {|metric| Services.prometheus_registry.register(metric) } }
 end
 
-Services.register(:progress_tracker) { Utils::PushMetricsWaypoint }
+Services.register(:progress_tracker) { Utils::PushMetricsMarker }

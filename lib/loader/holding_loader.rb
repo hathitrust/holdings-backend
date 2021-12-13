@@ -30,7 +30,7 @@ module Loader
       Clustering::ClusterHolding.new(batch).cluster
     end
 
-    def finalize
+    def final_line
       if @update
         Clustering::ClusterHolding.delete_old_holdings(@organization, @current_date)
       end

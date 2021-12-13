@@ -42,23 +42,23 @@ module DataSources
     def load_tab_delimited_file(tablename:, filepath:,
       maxlines: 1_000_000, pause_in_seconds: 10,
       logger: Services.logger)
-      waypoint = Services.progress_tracker.new(maxlines)
+      marker = Services.progress_tracker.new(maxlines)
       logger.info("Begin load data infile of #{filepath} into #{tablename}")
       Dir.mktmpdir("#{tablename}_tmp_load", ".") do |dir|
         split_files = split_out_large_file(dir, filepath, maxlines)
         split_files.each do |f|
           load_data_infile(tablename, f)
           if f == split_files.last
-            waypoint.incr File.open(f).count
-            logger.info(waypoint.finalize)
+            marker.incr File.open(f).count
+            logger.info(marker.final_line)
           else
-            waypoint.incr maxlines
-            logger.info(waypoint.batch_line + "; sleeping #{pause_in_seconds}")
+            marker.incr maxlines
+            logger.info(marker.batch_line + "; sleeping #{pause_in_seconds}")
             sleep pause_in_seconds
           end
         end
       end
-      waypoint.count
+      marker.count
     end
 
     def split_out_large_file(dir, filepath, maxlines)

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "overlap/ht_item_overlap"
-require "utils/waypoint"
 require "services"
 
 module Reports
@@ -76,15 +75,15 @@ module Reports
     end
 
     def compile_frequency_table
-      waypoint = Services.progress_tracker.new(maxlines)
+      marker = Services.progress_tracker.new(maxlines)
       logger.info("Begin compiling hscore frequency table.")
       matching_clusters.each do |c|
         c.ht_items.each do |ht_item|
           next unless ht_item.access == "deny"
 
-          waypoint.incr
+          marker.incr
           add_ht_item_to_freq_table(ht_item)
-          waypoint.on_batch {|wp| logger.info wp.batch_line }
+          marker.on_batch {|m| logger.info m.batch_line }
         end
       end
     end
