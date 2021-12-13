@@ -37,8 +37,8 @@ module Utils
     end
 
     def on_batch
-      marker.on_batch do |wp|
-        yield wp
+      marker.on_batch do |m|
+        yield m
         update_metrics
       end
     end

@@ -28,7 +28,7 @@ def main
             oh[:wd_count],
             oh[:lm_count],
             oh[:access_count]].join("\t")
-      marker.on_batch {|wp| logger.info wp.batch_line }
+      marker.on_batch {|m| logger.info m.batch_line }
     end
   end
 end

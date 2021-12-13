@@ -31,7 +31,7 @@ def main
   records_with_enum_chrons.each do |rec|
     marker.incr
     renormalize(rec)
-    marker.on_batch {|wp| logger.info wp.batch_line }
+    marker.on_batch {|m| logger.info m.batch_line }
   end
   logger.info marker.final_line
 end

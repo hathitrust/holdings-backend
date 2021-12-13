@@ -22,8 +22,8 @@ def main
     inf = File.open(path, "r")
     inf.each_line do |line|
       marker.incr
-      marker.on_batch do |wp|
-        puts wp.batch_line
+      marker.on_batch do |m|
+        puts m.batch_line
       end
 
       (c_ocns, org, h_uuid) = line.strip.split("\t")

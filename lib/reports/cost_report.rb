@@ -83,7 +83,7 @@ module Reports
 
           marker.incr
           add_ht_item_to_freq_table(ht_item)
-          marker.on_batch {|wp| logger.info wp.batch_line }
+          marker.on_batch {|m| logger.info m.batch_line }
         end
       end
     end

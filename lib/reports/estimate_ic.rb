@@ -39,7 +39,7 @@ module Reports
 
         count_matching_items(cluster)
 
-        marker.on_batch {|wp| Services.logger.info wp.batch_line }
+        marker.on_batch {|m| Services.logger.info m.batch_line }
       end
       Services.logger.info marker.final_line
     end

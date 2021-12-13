@@ -51,8 +51,8 @@ module Overlap
       cu = ClusterUpdate.new(overlap_table, cluster)
       cu.upsert
       marker.incr(cu.deletes.count + cu.adds.count)
-      marker.on_batch do |wp|
-        Services.logger.info wp.batch_line
+      marker.on_batch do |m|
+        Services.logger.info m.batch_line
       end
       @num_deletes += cu.deletes.count
       @num_adds += cu.adds.count

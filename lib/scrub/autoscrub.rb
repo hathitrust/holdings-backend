@@ -67,8 +67,8 @@ module Scrub
         @member_holding_file.parse do |holding|
           out_file.puts(holding.to_json)
           marker.incr
-          marker.on_batch do |wp|
-            Services.scrub_logger.info(wp.batch_line)
+          marker.on_batch do |m|
+            Services.scrub_logger.info(m.batch_line)
           end
         end
         out_file.close

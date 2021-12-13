@@ -58,7 +58,7 @@ module Loader
     private
 
     def log_and_parse(line)
-      marker.incr.on_batch {|wp| logger.info wp.batch_line }
+      marker.incr.on_batch {|m| logger.info m.batch_line }
       batch_loader.item_from_line(line)
     end
 
