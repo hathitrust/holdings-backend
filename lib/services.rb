@@ -6,7 +6,6 @@ require "canister"
 require "file_mutex"
 require "logger"
 require "mongoid"
-require "utils/slack_writer"
 require "utils/push_metrics_marker"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
@@ -19,7 +18,6 @@ Services.register(:"mongo!") do
   Mongoid.load!("mongoid.yml", Settings.environment)
 end
 
-Services.register(:slack_writer) { Utils::SlackWriter.new(Settings.slack_endpoint) }
 Services.register(:holdings_db) { DataSources::HoldingsDB.new }
 Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
 Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
