@@ -44,6 +44,7 @@ Metrics/BlockLength:
     - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub/scrub_fields.rb'
+    - 'bin/holdings_deleter.rb'
     # uncomment in .rubocop.yml when above are fixed
     - 'spec/support/**/*.rb'
     - 'spec/**/*_spec.rb'
