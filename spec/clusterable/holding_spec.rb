@@ -123,7 +123,8 @@ RSpec.describe Clusterable::Holding do
     let(:org) { "umich" }
     let(:h_ch) do
       build(
-        :holding, ocn: 123, status: "CH", local_id: "abc", mono_multi_serial: "mono"
+        :holding, ocn: 123, status: "CH", organization: org,
+        local_id: "abc", mono_multi_serial: "mono"
       )
     end
     let(:spc) { build(:commitment, ocn: 123, organization: org, local_id: "abc") }
