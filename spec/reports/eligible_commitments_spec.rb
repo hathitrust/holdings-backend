@@ -2,38 +2,94 @@
 
 require "spec_helper"
 require "reports/eligible_commitments"
+require_relative "../../bin/reports/compile_eligible_commitments_report"
 
-RSpec.describe "EligibleCommitments" do
-  let(:report) { Reports::EligibleCommitments.new }
+# is not required higher up like the others clustering classes?
+require "clustering/cluster_commitment"
+
+RSpec.describe Reports::EligibleCommitments do
+  def build_h(org, ocn, local_id, status)
+    build(
+      :holding,
+      mono_multi_serial: "mono",
+      organization: org,
+      ocn: ocn,
+      local_id: local_id,
+      status: status
+    )
+  end
+
+  let(:report) { described_class.new }
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
-  let(:h_ch) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "CH") }
-  let(:h_lm) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "LM") }
-  let(:h_wd) { build(:holding, ocn: ocn1, mono_multi_serial: "mono", status: "WD") }
-  let(:ht_spm) { build(:ht_item, :spm, ocns: [ocn1], billing_entity: h_ch.organization) }
-  let(:ht_mpm) { build(:ht_item, :mpm, ocns: [ocn1], billing_entity: h_ch.organization) }
-  let(:ht_ser) { build(:ht_item, :ser, ocns: [ocn1], billing_entity: h_ch.organization) }
-  let(:spc) { build(:commitment, ocn: ocn1, organization: h_ch.organization) }
+  # Holdings
+  let(:h_ch) { build_h("umich", ocn1, "a123x", "CH") }
+  let(:h_lm) { build_h("umich", ocn1, "a123y", "LM") }
+  let(:h_wd) { build_h("umich", ocn1, "a123z", "WD") }
+  # HT Items
+  let(:ht_spm) { build(:ht_item, :spm, ocns: [ocn1]) }
+  let(:ht_mpm) { build(:ht_item, :mpm, ocns: [ocn1]) }
+  let(:ht_ser) { build(:ht_item, :ser, ocns: [ocn1]) }
+  # Commitments
+  let(:spc) { build(:commitment, ocn: ocn1) }
+
+  def run(ocns)
+    rows = []
+    report.for_ocns(ocns) do |row|
+      rows << row
+    end
+    rows
+  end
 
   before(:each) do
     Cluster.collection.find.delete_many
   end
 
-  it "has a header and it looks like this" do
-    expect(report.header).to eq(["ocn", "commitments"])
+  it "Header looks like this" do
+    expect(report.header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
   end
 
-  it "runs" do
+  it "Returns the single matching record" do
     Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
-    expect(report.for_ocns([ocn1, ocn2])).to be true
+    rows = run([ocn1, ocn2])
+    expect(rows.count).to eq 1
+    expect(rows.first).to eq ["umich", nil, 5, "a123x"]
   end
 
-  it "wants to know if a clusterable::holding can get its own cluster" do
-    c1 = Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
-    c2 = Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
-    expect(c1).to be_a Cluster
-    expect(c1).to eq c2
-    expect(c2.holdings.first.cluster).to eq c2
+  it "Ignores holdings that arent eligible" do
+    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_lm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_wd).cluster.tap(&:save)
+    rows = run([ocn1, ocn2])
+    expect(rows.count).to eq 0
+  end
+
+  it "Ignores clusters where there are no ht_items" do
+    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+    rows = run([ocn1, ocn2])
+    expect(rows.count).to eq 0
+  end
+
+  it "Ignores clusters where there are commitments" do
+    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+    Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+    rows = run([ocn1, ocn2])
+    expect(rows.count).to eq 0
+  end
+
+  it "Ignores clusters where format is mpm" do
+    Clustering::ClusterHtItem.new(ht_mpm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+    rows_mpm = run([ocn1, ocn2])
+    expect(rows_mpm.count).to eq 0
+  end
+
+  it "Ignores clusters where format is ser" do
+    Clustering::ClusterHtItem.new(ht_ser).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+    rows_ser = run([ocn1, ocn2])
+    expect(rows_ser.count).to eq 0
   end
 end

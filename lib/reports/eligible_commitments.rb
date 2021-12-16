@@ -11,36 +11,58 @@ module Reports
   class EligibleCommitments
 
     def header
-      ["ocn", "commitments"]
+      [
+        "organization",
+        "oclc_sym",
+        "ocn",
+        "local_id"
+      ]
     end
-
-    # also need methods on holdings that
-    # 1) say if there is a matching commitment
-    # 2) say if the HOLDING is eligible for commitments
 
     def for_ocns(ocns = [])
-      if ocns.any?
-        seen = {}
-        ocns.sort.uniq.each do |ocn|
-          cluster = Cluster.find_by(ocns: [ocn.to_i])
-
-          if cluster.nil?
-            yield [ocn, "NIL"]
-            next
-          end
-
-          if seen.key?(cluster._id)
-            next
-          end
-
-          seen[cluster._id] = true
-          
-          next unless cluster.eligible_for_commitments?
-          yield [ocn, cluster.commitments?]
-        end
-      else
+      if ocns.empty?
         raise "No ocns given"
       end
+
+      ocns.sort.uniq.each do |ocn|
+        cluster = Cluster.find_by(ocns: [ocn.to_i])
+
+        next if cluster.nil?
+        next if we_have_seen? cluster._id
+        next unless cluster.eligible_for_commitments?
+        next unless cluster.commitments.count.zero?
+
+        cluster.holdings.select(&:eligible_for_commitments?).each do |holding|
+          yield [
+            holding.organization,
+            organization_oclc_symbol(holding.organization),
+            holding.ocn,
+            holding.local_id
+          ]
+        end
+      end
     end
+
+    private
+
+    def organization_oclc_symbol(org)
+      @ht_organizations = Services.ht_organizations
+      if @ht_organizations.members.key?(org)
+        @ht_organizations.members[org].oclc_sym
+      else
+        "N/A"
+      end
+    end
+
+    def we_have_seen?(id)
+      @seen ||= {}
+      if @seen.key?(id)
+        true
+      else
+        @seen[id] = true
+        false
+      end
+    end
+
   end
 end
