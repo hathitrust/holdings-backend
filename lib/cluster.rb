@@ -186,12 +186,12 @@ class Cluster
   end
 
   def any_current_holdings?
-    ch_counts.values.sum > 0
+    @any_current_holdings ||= ch_counts.values.sum > 0
   end
 
   def eligible_for_commitments?
     # be an spm with items and 1+ CH holdings
-    format == "spm" && ht_items.any? && any_current_holdings?
+    @eligible_for_commitments ||= format == "spm" && ht_items.any? && any_current_holdings?
   end
 
   def large?
@@ -199,6 +199,9 @@ class Cluster
   end
 
   def empty?
-    ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
+    @empty ||= ht_items.empty? &&
+      ocn_resolutions.empty? &&
+      holdings.empty?        &&
+      commitments.empty?
   end
 end
