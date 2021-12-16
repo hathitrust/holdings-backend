@@ -118,9 +118,8 @@ module Clusterable
       end.any?
     end
 
-    def eligible_for_commitment?
-      # TODO: check if it matches the criteria for shared print
-      true
+    def eligible_for_commitments?
+      cluster.eligible_for_commitments? && (status.empty? || status == "CH")
     end
 
     private
