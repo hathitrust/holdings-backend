@@ -54,7 +54,7 @@ RSpec.describe Reports::EligibleCommitments do
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
     rows = run([ocn1, ocn2])
     expect(rows.count).to eq 1
-    expect(rows.first).to eq ["umich", nil, 5, "a123x"]
+    expect(rows.first).to eq ["umich", "EYM", 5, "a123x"]
   end
 
   it "Ignores holdings that arent eligible" do
@@ -91,5 +91,17 @@ RSpec.describe Reports::EligibleCommitments do
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
     rows_ser = run([ocn1, ocn2])
     expect(rows_ser.count).to eq 0
+  end
+
+  it "Keeps track of seen ids" do
+    expect(report.we_have_seen?("a")).to be false
+    expect(report.we_have_seen?("a")).to be true
+    expect(report.we_have_seen?("b")).to be false
+  end
+
+  it "Translates organization to oclc_symbol" do
+    expect(report.organization_oclc_symbol("umich")).to eq "EYM"
+    expect(report.organization_oclc_symbol("upenn")).to eq "PAU"
+    expect(report.organization_oclc_symbol("hathitrust")).to eq ""
   end
 end

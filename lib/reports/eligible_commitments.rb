@@ -44,7 +44,7 @@ module Reports
     end
 
     def organization_oclc_symbol(org)
-      @ht_organizations = Services.ht_organizations
+      @ht_organizations ||= Services.ht_organizations
       if @ht_organizations.members.key?(org)
         @ht_organizations.members[org].oclc_sym
       else
