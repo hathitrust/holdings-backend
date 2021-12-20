@@ -14,7 +14,7 @@ module Clustering
       @nodes = Set.new
       # root_ocn : [all matching ocns]
       @edges = Hash.new {|g, root| g[root] = Set.new }
-      @edges = compile_graph_from_cluster unless @cluster.nil?
+      compile_graph_from_cluster unless @cluster.nil?
     end
 
     # Add the tuple of OCNs to the list of nodes and edges
@@ -63,13 +63,11 @@ module Clustering
     end
 
     # Compile the graph from the given cluster
-    # 
-    # @param cluster
-    def compile_graph_from_cluster(cluster)
-      cluster.ht_items.pluck(:ocns).map {|tuple| add_tuple(tuple) }
-      cluster.ocn_resolutions.pluck(:ocns).map {|tuple| add_tuple(tuple) }
-      cluster.holdings.pluck(:ocn).map {|o| add_tuple([o]) }
-      cluster.commitments.pluck(:ocn).map {|o| add_tuple([o]) }
+    def compile_graph_from_cluster
+      @cluster.ht_items.pluck(:ocns).map {|tuple| add_tuple(tuple) }
+      @cluster.ocn_resolutions.pluck(:ocns).map {|tuple| add_tuple(tuple) }
+      @cluster.holdings.pluck(:ocn).map {|o| add_tuple([o]) }
+      @cluster.commitments.pluck(:ocn).map {|o| add_tuple([o]) }
     end 
   end
 end
