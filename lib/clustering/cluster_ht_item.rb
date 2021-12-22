@@ -51,9 +51,7 @@ module Clustering
           old_item = cluster.ht_item(ht_item.item_id)
           old_item.delete
 
-          Reclusterer.new(cluster).recluster if needs_recluster?(cluster, old_item.ocns)
-
-          cluster.delete if cluster.empty?
+          Reclusterer.new(cluster, old_item.ocns).recluster
         end
       end
     end
@@ -78,11 +76,9 @@ module Clustering
       Services.logger.debug "Cluster #{cluster.inspect}: " \
         "adding ht_items #{ht_items.inspect} with ocns #{ocns}"
       to_append = []
-      needs_reclustering = false
       ht_items.each do |item|
         if (existing_item = cluster.ht_item(item.item_id))
           Services.logger.debug "updating existing item with id #{item.item_id}"
-          needs_reclustering = needs_recluster?(cluster, existing_item.ocns, item.ocns)
 
           if (item_attrs = item.to_hash) != existing_item.to_hash
             existing_item.update_attributes(item_attrs)
@@ -95,9 +91,11 @@ module Clustering
       end
 
       cluster.add_ht_items(to_append) unless to_append.empty?
-      cluster.save if @any_updated
-
-      Reclusterer.new(cluster).recluster if needs_reclustering
+      if @any_updated || to_append.any?
+        cluster.update_ocns
+        cluster.save
+        Reclusterer.new(cluster).recluster
+      end
     end
 
     def needs_recluster?(cluster, old_ocns, new_ocns = [])

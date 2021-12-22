@@ -32,33 +32,15 @@ module Clustering
 
       Retryable.with_transaction do
         Cluster.where(ocns: { "$all": resolution.ocns }).each do |c|
-          had_resolution = false
-
           c.ocn_resolutions.delete_if do |candidate|
             candidate.deprecated == resolution.deprecated &&
-              candidate.resolved == resolution.resolved &&
-              had_resolution = true
+              candidate.resolved == resolution.resolved
           end
-
-          if had_resolution
-            Reclusterer.new(c).recluster
-          end
+          Reclusterer.new(c, resolution.ocns).recluster
         end
       end
     end
 
-    def needs_recluster?(cluster, resolution)
-      # We only need to recluster if the resolution could have been the 'glue' holding multiple
-      # OCNs together. The following situations mean the Resolution cannot be glue, so we don't
-      # need to recluster:
-      # 
-      # - There is an HTItem with the same pair of OCNs.
-      # - The cluster's Items, Holdings, and Commitments have the same OCN and any other resolutions contain that OCN.
-      # - The pair can be derived by transitivity of other Resolutions/Items
-
-      return true
-    end
-      
     private
 
     def add_resolutions(cluster)

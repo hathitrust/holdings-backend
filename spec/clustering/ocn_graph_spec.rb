@@ -9,11 +9,10 @@ RSpec.describe Clustering::OCNGraph do
   let(:set_bc) { Set.new([:b, :c]) }
   let(:g) { described_class.new }
 
- 
   describe "#add_tuple"  do
     it "adds all ocns in a tuple to @nodes" do
-      g.add_tuple([:a,:b,:c])
-      expect(g.nodes).to eq(Set.new([:a,:b,:c]))
+      g.add_tuple([:a, :b, :c])
+      expect(g.nodes).to eq(Set.new([:a, :b, :c]))
     end
 
     it "adds edges for each pairwise combination in a tuple" do
@@ -34,7 +33,7 @@ RSpec.describe Clustering::OCNGraph do
       g.add_tuple(set_a)
       g.add_tuple(set_bc)
     end
-    
+
     it "partitions a disconnected graph into multliple subgraphs" do
       expect(g.subgraphs.count).to eq(2)
       expect(g.subgraphs).to eq([Set.new([:a]), Set.new([:b, :c])])
@@ -46,5 +45,4 @@ RSpec.describe Clustering::OCNGraph do
       expect(g.subgraphs.first).to eq(Set.new([:a, :b, :c]))
     end
   end
-
 end

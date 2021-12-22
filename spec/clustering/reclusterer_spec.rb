@@ -34,4 +34,64 @@ RSpec.describe Clustering::Reclusterer do
       expect(Cluster.find_by(ocns: glue.resolved).commitments.count).to eq(1)
     end
   end
+
+  context "when removing non-glue from cluster" do
+    let(:nonglue) { build(:ocn_resolution, ocns: [glue.resolved, 666]) }
+
+    before(:each) do
+      Cluster.each(&:delete)
+      Clustering::ClusterOCNResolution.new(glue).cluster
+      Clustering::ClusterHtItem.new(ht_item).cluster
+      Clustering::ClusterOCNResolution.new(nonglue).cluster
+    end
+
+    it "updates the cluster's OCNS" do
+      # calls described_class.new(cluster).recluster
+      Clustering::ClusterOCNResolution.new(nonglue).delete
+      c = Cluster.first
+      expect(c.ocns).to eq((glue.ocns + ht_item.ocns).flatten.uniq)
+      expect(c.ocns).not_to include(666)
+    end
+  end
+
+  describe "#needs_recluster?" do
+    # TODO: These are bad tests that won't get full test coverage on their own because they overlap.
+    # Test the private methods used by needs_recluster? ?
+    before(:each) do
+      Cluster.each(&:delete)
+    end
+
+    it "returns false if there is only one OCN" do
+      cluster = Clustering::ClusterHolding.new(build(:holding)).cluster.tap(&:save)
+      reclusterer = described_class.new(cluster)
+      expect(reclusterer.needs_recluster?).to be false
+    end
+
+    it "returns false if it has an OCLC resolution covers both OCNS" do
+      Clustering::ClusterOCNResolution.new(glue).cluster
+      Clustering::ClusterHtItem.new(ht_item).cluster
+      expect(Cluster.first.ocns).to eq(glue.ocns)
+      expect(described_class.new(Cluster.first).needs_recluster?).to be false
+    end
+
+    it "returns false if it has an HTItem with the same OCNs as the cluster" do
+      Clustering::ClusterHtItem.new(ht_item).cluster
+      Clustering::ClusterHtItem.new(build(:ht_item, ocns: glue.ocns)).cluster
+      expect(Cluster.first.ocns).to eq(glue.ocns)
+      expect(described_class.new(Cluster.first).needs_recluster?).to be false
+    end
+
+    it "returns false if there is only one component" do
+      cluster = Clustering::ClusterHtItem.new(build(:ht_item)).cluster.tap(&:save)
+      reclusterer = described_class.new(cluster)
+      expect(reclusterer.needs_recluster?).to be false
+    end
+
+    it "returns false if the OCNs are connected" do
+      Clustering::ClusterHtItem.new(ht_item).cluster.tap(&:save)
+      cluster = Clustering::ClusterHolding.new(build(:holding, ocn: ht_item.ocns.first)).cluster
+      reclusterer = described_class.new(cluster)
+      expect(reclusterer.needs_recluster?).to be false
+    end
+  end
 end

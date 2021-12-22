@@ -60,7 +60,7 @@ Metrics/ClassLength:
     - 'lib/reports/cost_report.rb'
     - 'lib/cluster.rb'
 
-# Offense count: 6
+# Offense count: 7
 # Configuration parameters: CountComments, ExcludedMethods.
 Metrics/MethodLength:
   Exclude:
@@ -68,7 +68,7 @@ Metrics/MethodLength:
     - 'lib/scrub/autoscrub.rb'
     - 'lib/enum_chron_parser.rb'
     - 'lib/scrub/scrub_fields.rb'
-
+    - 'lib/clustering/cluster_ht_item.rb'
 
 # Offense count: 1
 Naming/AccessorMethodName:

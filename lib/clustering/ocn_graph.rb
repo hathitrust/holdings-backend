@@ -7,10 +7,10 @@ module Clustering
   # Constructs a graph from OCN tuples
   class OCNGraph
 
-    attr_accessor :edges, :nodes, :subgraphs
+    attr_accessor :edges, :nodes
 
     def initialize(cluster = nil)
-      @cluster ||= cluster
+      @cluster = cluster
       @nodes = Set.new
       # root_ocn : [all matching ocns]
       @edges = Hash.new {|g, root| g[root] = Set.new }
@@ -46,9 +46,9 @@ module Clustering
       @subgraphs
     end
 
-    # Recursively traverse the graph starting at the root. 
+    # Recursively traverse the graph starting at the root.
     # Compile the list of OCNs visited from a particular root.
-    # 
+    #
     # @param root The node to start the traversal.
     # @param [Set] nodes_visited The set of OCNs we have already traversed.
     def dfs_traverse(root, nodes_visited)
@@ -68,6 +68,6 @@ module Clustering
       @cluster.ocn_resolutions.pluck(:ocns).map {|tuple| add_tuple(tuple) }
       @cluster.holdings.pluck(:ocn).map {|o| add_tuple([o]) }
       @cluster.commitments.pluck(:ocn).map {|o| add_tuple([o]) }
-    end 
+    end
   end
 end
