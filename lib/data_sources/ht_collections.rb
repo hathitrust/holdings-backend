@@ -48,7 +48,7 @@ module DataSources
                 :original_from_inst_id,
                 :billing_entity)
         .as_hash(:collection)
-        .transform_values {|h| DataSources::HTCollection.new(h) }
+        .transform_values {|h| DataSources::HTCollection.new(**h) }
     end
 
     def [](collection)
