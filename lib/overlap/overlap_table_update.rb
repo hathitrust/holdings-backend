@@ -3,6 +3,7 @@
 require "services"
 require "date"
 require "cluster_update"
+require "utils/session_keep_alive"
 
 module Overlap
   # An update of the table used for ETAS: holdings_htitem_htmember
@@ -16,15 +17,6 @@ module Overlap
       @num_adds = 0
     end
 
-    def keep_alive(session, seconds = 120)
-      Thread.new do
-        loop do
-          sleep(seconds)
-          session.client.command(refreshSessions: [session.session_id])
-        end
-      end
-    end
-
     def overlap_table
       Services.relational_overlap_table
     end
@@ -33,13 +25,11 @@ module Overlap
       cutoff_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
       Services.logger.info "Upserting clusters last_modified after\
       #{cutoff_str} to holdings_htitem_htmember"
-      Cluster.with_session do |session|
-        session_refresh = keep_alive(session)
+      Utils::SessionKeepAlive.new(120).run do
         Cluster.where("ht_items.0": { "$exists": 1 },
                       last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
                         upsert_and_track cluster
                       end
-        session_refresh.exit
       end
       Services.logger.info marker.final_line
     end

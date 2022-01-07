@@ -43,6 +43,9 @@ RSpec.configure do |config|
   # Factory Bot
   config.include FactoryBot::Syntax::Methods
 
+  # Ignore tests tagged :slow by default.
+  config.filter_run_excluding slow: true
+
   config.before(:suite) do
     FactoryBot.find_definitions
   end

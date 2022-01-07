@@ -5,8 +5,11 @@ require "date"
 require "optparse"
 require "optparse/date"
 require "services"
+require "utils/session_keep_alive"
 
 Services.mongo!
+
+DEFAULT_KEEPALIVE_TIME = 60
 
 # Deletes holdings and any empty clusters that result.
 # Takes criteria and constructs an update_many...pull query based on those criteria.
@@ -20,6 +23,7 @@ class HoldingsDeleter
   attr_reader :matching_criteria
 
   def initialize(args)
+    @logger = Services.logger
     @matching_criteria = {} # These all go into the query.
     @control_flags     = {} # These control program flow.
     parse_opts(args)        # Set @matching_criteria
@@ -30,50 +34,57 @@ class HoldingsDeleter
     end
 
     if @control_flags[:verbose]
-      puts "Criteria:"
+      @logger.info "Criteria:"
       @matching_criteria.each do |k, v|
-        puts "\t#{k}:\t#{v} (#{v.class})"
+        @logger.info "\t#{k}:\t#{v} (#{v.class})"
       end
-      puts "Control flags:"
+      @logger.info "Control flags:"
       @control_flags.each do |k, v|
-        puts "\t#{k}:\t#{v} (#{v.class})"
+        @logger.info "\t#{k}:\t#{v} (#{v.class})"
       end
     end
   end
 
   def run
     if @control_flags[:noop]
-      puts "noop!" if @control_flags[:verbose]
+      @logger.info "noop!" if @control_flags[:verbose]
       return nil
     end
 
-    # Construct query.
-    pull_query = { "$pull": { "holdings": { "$and": [@matching_criteria] } } }
-    puts "Pull-query: #{pull_query}" if @control_flags[:verbose]
+    result = nil
+    keepalive_time = @control_flags[:session_keepalive_time] || DEFAULT_KEEPALIVE_TIME
+    Utils::SessionKeepAlive.new(keepalive_time).run do
+      # Construct query.
+      pull_query = { "$pull": { "holdings": { "$and": [@matching_criteria] } } }
+      @logger.info "Pull-query: #{pull_query}" if @control_flags[:verbose]
 
-    # Execute query/ies.
-    result = Cluster.collection.update_many({}, pull_query)
-    unless @control_flags[:leave_empties]
-      puts "Deleting empty clusters" if @control_flags[:verbose]
-      delete_empty_clusters
+      # Execute query/ies.
+      result = Cluster.collection.update_many({}, pull_query)
+      unless @control_flags[:leave_empties]
+        @logger.info "Deleting empty clusters" if @control_flags[:verbose]
+        delete_empty_clusters
+      end
+
+      # result is a Mongo::Operation::Update::Result obj and can be inspected further.
+      @logger.info "Result: #{result.inspect}" if @control_flags[:verbose]
     end
 
-    # result is a Mongo::Operation::Update::Result obj and can be inspected further.
-    puts "Result: #{result.inspect}" if @control_flags[:verbose]
     result
   end
 
   # This should perhaps be a method on Cluster, in some form?
   # Or broken out into its own little bin script?
   def delete_empty_clusters
-    Cluster.where({
+    query = {
       "$and": [
         { "ht_items.0":        { "$exists": 0 } },
         { "holdings.0":        { "$exists": 0 } },
         { "commitments.0":     { "$exists": 0 } },
         { "ocn_resolutions.0": { "$exists": 0 } }
       ]
-    }).each(&:delete)
+    }
+
+    Cluster.where(query).no_timeout.each(&:delete)
   end
 
   private
@@ -101,8 +112,9 @@ class HoldingsDeleter
       opts.on("--n_chron STR", String)
       opts.on("--n_enum STR", String)
       opts.on("--noop")
-      opts.on("--ocn NUM", Integer)
+      opts.on("--ocn INT", Integer)
       opts.on("--organization STR", String)
+      opts.on("--session_keepalive_time INT (s)", Integer)
       opts.on("--status STR (CH/LM/WD)", String) do |status|
         opt_regex(:status, status, /^(CH|LM|WD)$/)
       end
@@ -116,6 +128,7 @@ class HoldingsDeleter
     end.parse!(args, into: @matching_criteria)
   end
 
+  # When an option must match a regex.
   def opt_regex(opt, val, regex)
     unless val.match?(regex)
       raise "--#{opt} value '#{val}' must match #{regex}"
@@ -126,7 +139,14 @@ class HoldingsDeleter
 
   def move_opts
     # Move any control values over from @matching_criteria to @control_flags
-    [:leave_empties, :noop, :verbose].each do |cmd|
+    control_commands = [
+      :leave_empties,
+      :noop,
+      :session_keepalive_time,
+      :verbose
+    ]
+
+    control_commands.each do |cmd|
       if @matching_criteria.key?(cmd)
         @control_flags[cmd] = @matching_criteria.delete(cmd)
       end

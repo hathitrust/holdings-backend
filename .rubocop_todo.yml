@@ -54,11 +54,12 @@ Metrics/BlockLength:
 # Configuration parameters: CountComments.
 Metrics/ClassLength:
   Exclude:
-    - 'lib/scrub/autoscrub.rb'
-    - 'lib/enum_chron_parser.rb'
-    - 'lib/scrub/scrub_fields.rb'
-    - 'lib/reports/cost_report.rb'
+    - 'bin/holdings_deleter.rb'
     - 'lib/cluster.rb'
+    - 'lib/enum_chron_parser.rb'
+    - 'lib/reports/cost_report.rb'
+    - 'lib/scrub/autoscrub.rb'
+    - 'lib/scrub/scrub_fields.rb'
 
 # Offense count: 6
 # Configuration parameters: CountComments, ExcludedMethods.

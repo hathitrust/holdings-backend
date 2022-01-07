@@ -9,8 +9,8 @@ RSpec.describe HoldingsDeleter do
     described_class.new(args)
   end
 
-  def fake_clusters(org)
-    1.upto(10) do |ocn|
+  def fake_clusters(org, count = 10)
+    1.upto(count) do |ocn|
       h1 = build(:holding, ocn: ocn, organization: org)
       Clustering::ClusterHolding.new(h1).cluster.tap(&:save)
     end
@@ -134,6 +134,13 @@ RSpec.describe HoldingsDeleter do
       deleter = neu("--organization", "umich", "--leave_empties")
       deleter.run
       expect(empty_clusters.count).to eq(10)
+      # Call to explicitly delete.
+      deleter.delete_empty_clusters
+      expect(empty_clusters.count).to eq(0)
+    end
+
+    xit "placeholder for actually testing session/cursor timeout" do
+      # todo
     end
   end
 end
