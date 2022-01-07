@@ -57,7 +57,7 @@ module DataSources
       Services.holdings_db[:ht_billing_members]
         .select(:inst_id, :country_code, :weight, :oclc_sym)
         .as_hash(:inst_id)
-        .transform_values {|h| HTOrganization.new(h) }
+        .transform_values {|h| HTOrganization.new(**h) }
     end
 
     # Given a inst_id, returns a hash of data for that member.

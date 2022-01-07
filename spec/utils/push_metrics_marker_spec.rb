@@ -39,7 +39,7 @@ RSpec.describe Utils::PushMetricsMarker do
   end
 
   let(:pm_marker) do
-    described_class.new(batch_size, params)
+    described_class.new(batch_size, **params)
   end
 
   describe "#initialize" do
@@ -69,7 +69,7 @@ RSpec.describe Utils::PushMetricsMarker do
     it "sets success interval metric with constructor param" do
       expect(metrics[:success_interval]).to receive(:set).with(success_interval)
 
-      described_class.new(batch_size, params.merge({ success_interval: success_interval }))
+      described_class.new(batch_size, **params.merge({ success_interval: success_interval }))
     end
 
     it "pushes initial metrics to pushgateway" do
