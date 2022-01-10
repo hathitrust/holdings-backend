@@ -25,14 +25,12 @@ end
 
 conc_dir = Settings.concordance_path
 
-raw_gzip_files = Dir.glob("#{conc_dir}/raw/*txt.gz").sort
+# YYYYMM_concordance.txt .gz optional
+raw_files = Dir.glob("#{conc_dir}/raw/*_concordance.txt*").sort
+raw_dates = raw_files.map {|fname| fname.split("/").last.match(/^\d+/).to_s }
 
-file_names_split = raw_gzip_files.map {|fname| fname.split("/").last.split("_").first }
-raw_dates = file_names_split.select {|d| d =~ /^\d+$/ }
-
-validated_files = Dir.glob("#{conc_dir}/validated/*validated.tsv.gz").sort
-file_names_split = validated_files.map {|fname| fname.split("/").last.split("_").first }
-validated_dates = file_names_split.select {|d| d =~ /^\d+$/ }
+validated_files = Dir.glob("#{conc_dir}/validated/*concordance_validated.tsv.gz").sort
+validated_dates = validated_files.map {|fname| fname.split("/").last.match(/^\d+/).to_s }
 
 # Validate anything that doesn't have a validated equivalent
 dates_to_validate = raw_dates - validated_dates
