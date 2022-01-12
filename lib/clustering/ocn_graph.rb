@@ -64,10 +64,7 @@ module Clustering
 
     # Compile the graph from the given cluster
     def compile_graph_from_cluster
-      @cluster.ht_items.pluck(:ocns).map {|tuple| add_tuple(tuple) }
-      @cluster.ocn_resolutions.pluck(:ocns).map {|tuple| add_tuple(tuple) }
-      @cluster.holdings.pluck(:ocn).map {|o| add_tuple([o]) }
-      @cluster.commitments.pluck(:ocn).map {|o| add_tuple([o]) }
+      @cluster.component_ocns.map {|tuple| add_tuple([tuple].flatten)}
     end
   end
 end

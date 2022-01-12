@@ -98,24 +98,5 @@ module Clustering
       end
     end
 
-    def needs_recluster?(cluster, old_ocns, new_ocns = [])
-      # We only need to recluster (i.e. potentially split) if the item could have
-      # been the 'glue' holding multiple OCNs together. The following situations
-      # mean an HTItem cannot be glue, so we don't need to recluster:
-      #
-      # - There was 0 or 1 old OCN (so it couldn't have been 'glue')
-      # - old_ocns are all in concordance rules (so this item is not the 'glue')
-      # - old_ocns are a subset of the new ocns (if there are any), so the item
-      #   stays in this cluster and remains glue
-
-      new_ocns = new_ocns.to_set
-      old_ocns = old_ocns.to_set
-      concordance_ocns = cluster.ocn_resolutions.collect(&:ocns).flatten.to_set
-
-      !(old_ocns.count <= 1 ||
-        old_ocns.subset?(new_ocns) ||
-        old_ocns.subset?(concordance_ocns))
-    end
-
   end
 end

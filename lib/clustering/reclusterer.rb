@@ -12,9 +12,9 @@ module Clustering
   # Deletes a cluster, then re-creates clusters from the data in that cluster.
   class Reclusterer
 
-    def initialize(cluster, removed_ocns = nil)
+    def initialize(cluster, removed_ocn_tuple = nil)
       @cluster = cluster
-      @removed_ocns = removed_ocns || []
+      @removed_ocn_tuple = removed_ocn_tuple || []
     end
 
     def recluster
@@ -37,11 +37,11 @@ module Clustering
       end
     end
 
-    # The removed_ocns include an OCN no longer found in the remaining components
+    # The removed_ocn_tuple include an OCN no longer found in the remaining components
     def ocns_changed?
-      return false if @removed_ocns.none?
+      return false if @removed_ocn_tuple.none?
 
-      (@removed_ocns - @cluster.component_ocns).any?
+      (@removed_ocn_tuple - @cluster.component_ocns.flatten.uniq).any?
     end
 
     # Determines if all component OCNs are connected.
@@ -49,8 +49,8 @@ module Clustering
     def needs_recluster?
       return false if @cluster.ocns.one? ||
         resolution_includes_cluster_ocns? ||
-        htitem_includes_all_cluster_ocns? ||
-        cluster_components.one?
+        removed_ocn_tuple_equals_current_resolution? ||
+        removed_ocn_tuple_is_subset_of_ht_item?
 
       graph = OCNGraph.new(@cluster)
       graph.subgraphs.count > 1
@@ -64,8 +64,13 @@ module Clustering
       @cluster.ocns.count == 2 && @cluster.ocn_resolutions.one?
     end
 
-    def htitem_includes_all_cluster_ocns?
-      @cluster.ht_items.pluck(:ocns).any? {|tuple| tuple.sort == @cluster.ocns.sort }
+    def removed_ocn_tuple_equals_current_resolution?
+      @cluster.ocn_resolutions.pluck(:ocns).any? {|ocns| @removed_ocn_tuple.sort == ocns.sort }
+    end
+
+    def removed_ocn_tuple_is_subset_of_ht_item?
+      return false if @removed_ocn_tuple.none?
+      @cluster.ht_items.pluck(:ocns).any? {|ocns| @removed_ocn_tuple.to_set.subset? ocns.to_set }
     end
 
     def cluster_components
