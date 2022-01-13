@@ -92,6 +92,7 @@ module Clustering
 
       cluster.add_ht_items(to_append) unless to_append.empty?
       if @any_updated || to_append.any?
+        # Reclusterer would handle this if we could tell it which tuples were removed.
         cluster.update_ocns
         cluster.save
         Reclusterer.new(cluster).recluster
