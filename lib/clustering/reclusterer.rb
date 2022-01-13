@@ -53,7 +53,7 @@ module Clustering
         removed_ocn_tuple_is_subset_of_ht_item?
 
       graph = OCNGraph.new(@cluster)
-      graph.subgraphs.count > 1
+      graph.components.count > 1
     end
 
     private
@@ -70,6 +70,7 @@ module Clustering
 
     def removed_ocn_tuple_is_subset_of_ht_item?
       return false if @removed_ocn_tuple.none?
+
       @cluster.ht_items.pluck(:ocns).any? {|ocns| @removed_ocn_tuple.to_set.subset? ocns.to_set }
     end
 

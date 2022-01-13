@@ -38,9 +38,11 @@ GEM
     faraday-excon (1.1.0)
     faraday-net_http (1.0.1)
     faraday-net_http_persistent (1.1.0)
+    generator (0.0.1)
     hashdiff (1.0.1)
     i18n (1.8.11)
       concurrent-ruby (~> 1.0)
+    lazy_priority_queue (0.1.1)
     method_source (1.0.0)
     milemarker (1.0.0)
     minitest (5.15.0)
@@ -65,6 +67,9 @@ GEM
     rainbow (3.0.0)
     regexp_parser (1.8.2)
     rexml (3.2.5)
+    rgl (0.5.7)
+      lazy_priority_queue (~> 0.1.0)
+      stream (~> 0.5.3)
     rspec (3.9.0)
       rspec-core (~> 3.9.0)
       rspec-expectations (~> 3.9.0)
@@ -102,6 +107,8 @@ GEM
       docile (~> 1.1)
       simplecov-html (~> 0.11)
     simplecov-html (0.12.3)
+    stream (0.5.3)
+      generator
     tzinfo (2.0.4)
       concurrent-ruby (~> 1.0)
     unicode-display_width (1.7.0)
@@ -130,6 +137,7 @@ DEPENDENCIES
   prometheus-client
   pry
   pry-byebug
+  rgl
   rspec
   rubocop
   rubocop-performance

@@ -99,7 +99,7 @@ RSpec.describe Clustering::Reclusterer do
     before(:each) do
       Cluster.each(&:delete)
       Clustering::ClusterOCNResolution.new(glue).cluster
-      Clustering::ClusterHtItem.new(build(:ht_item, ocns:[glue.ocns, 999].flatten)).cluster
+      Clustering::ClusterHtItem.new(build(:ht_item, ocns: [glue.ocns, 999].flatten)).cluster
       Clustering::ClusterHolding.new(holding).cluster
     end
 
@@ -109,12 +109,10 @@ RSpec.describe Clustering::Reclusterer do
       expect(reclusterer.ocns_changed?).to be true
     end
 
-    it "returns false if removed_ocns are all in other component_ocns" do 
+    it "returns false if removed_ocns are all in other component_ocns" do
       cluster = Cluster.first
       reclusterer = described_class.new(cluster, [glue.resolved, 999])
       expect(reclusterer.ocns_changed?).to be false
     end
-      
   end
-      
 end
