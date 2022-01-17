@@ -29,15 +29,15 @@ RSpec.describe Clustering::OCNGraph do
       g.add_tuple(set_bc)
     end
 
-    it "partitions a disconnected graph into multliple components" do
-      expect(g.components.count).to eq(2)
-      expect(g.components).to eq([[:a], [:c, :b]])
+    it "partitions a disconnected graph into multliple subgraphs" do
+      expect(g.subgraphs.count).to eq(2)
+      expect(g.subgraphs).to eq([[:a], [:c, :b]])
     end
 
-    it "groups a connected graph into one component" do
+    it "groups a connected graph into one subgraph" do
       g.add_tuple(set_ab)
-      expect(g.components.count).to eq(1)
-      expect(g.components.first.sort).to eq([:a, :b, :c])
+      expect(g.subgraphs.count).to eq(1)
+      expect(g.subgraphs.first.sort).to eq([:a, :b, :c])
     end
   end
 end

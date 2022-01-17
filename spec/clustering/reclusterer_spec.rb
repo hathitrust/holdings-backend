@@ -103,13 +103,13 @@ RSpec.describe Clustering::Reclusterer do
       Clustering::ClusterHolding.new(holding).cluster
     end
 
-    it "returns true if removed_ocns contains an OCN no longer found in component_ocns" do
+    it "returns true if removed_ocns contains an OCN no longer found in clusterable_ocn_tuples" do
       cluster = Cluster.first
       reclusterer = described_class.new(cluster, [:not_in_cluster])
       expect(reclusterer.ocns_changed?).to be true
     end
 
-    it "returns false if removed_ocns are all in other component_ocns" do
+    it "returns false if removed_ocns are all in other clusterable_ocn_tuples" do
       cluster = Cluster.first
       reclusterer = described_class.new(cluster, [glue.resolved, 999])
       expect(reclusterer.ocns_changed?).to be false

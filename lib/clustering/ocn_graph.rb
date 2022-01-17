@@ -23,14 +23,14 @@ module Clustering
       tuple.sort.to_a.combination(2).each {|parent, child| add_edge(parent, child) }
     end
 
-    # Partition the vertices into one or more components
-    def components
-      @components ||= enum_for(:each_connected_component).to_a
+    # Partition the vertices into one or more subgraphs
+    def subgraphs
+      @subgraphs ||= enum_for(:each_connected_component).to_a
     end
 
     # Compile the graph from the given cluster
     def compile_graph_from_cluster
-      @cluster.component_ocns.map {|tuple| add_tuple([tuple].flatten) }
+      @cluster.clusterable_ocn_tuples.uniq.map {|tuple| add_tuple([tuple].flatten) }
     end
   end
 end

@@ -178,12 +178,12 @@ class Cluster
   end
 
   def update_ocns
-    self.ocns = [component_ocns].flatten.uniq
+    self.ocns = [clusterable_ocn_tuples].flatten.uniq
     save
   end
 
-  def component_ocns
-    @component_ocns ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
+  def clusterable_ocn_tuples
+    @clusterable_ocn_tuples ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
       holdings.pluck(:ocn) + commitments.pluck(:ocn)
   end
 

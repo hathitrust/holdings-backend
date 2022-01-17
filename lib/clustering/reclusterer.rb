@@ -44,7 +44,7 @@ module Clustering
     def ocns_changed?
       return false if @removed_ocn_tuple.none?
 
-      (@removed_ocn_tuple - @cluster.component_ocns.flatten.uniq).any?
+      (@removed_ocn_tuple - @cluster.clusterable_ocn_tuples.flatten.uniq).any?
     end
 
     # Determines if all component OCNs are connected.
@@ -56,8 +56,8 @@ module Clustering
         removed_ocn_tuple_is_subset_of_ht_item?
 
       graph = OCNGraph.new(@cluster)
-      # The OCN graph will have multiple components if the cluster's OCN tuples are not connected.
-      graph.components.count > 1
+      # The OCN graph will have multiple subgraphs if the cluster's OCN tuples are not connected.
+      graph.subgraphs.count > 1
     end
 
     private
