@@ -13,6 +13,7 @@ gem "mongo"
 gem "mongoid"
 gem "mysql2"
 gem "prometheus-client"
+gem "rgl"
 gem "sequel"
 gem "zinzout"
 

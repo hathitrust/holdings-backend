@@ -51,9 +51,7 @@ module Clustering
           old_item = cluster.ht_item(ht_item.item_id)
           old_item.delete
 
-          Reclusterer.new(cluster).recluster if needs_recluster?(cluster, old_item.ocns)
-
-          cluster.delete if cluster.empty?
+          Reclusterer.new(cluster, old_item.ocns).recluster
         end
       end
     end
@@ -78,11 +76,9 @@ module Clustering
       Services.logger.debug "Cluster #{cluster.inspect}: " \
         "adding ht_items #{ht_items.inspect} with ocns #{ocns}"
       to_append = []
-      needs_reclustering = false
       ht_items.each do |item|
         if (existing_item = cluster.ht_item(item.item_id))
           Services.logger.debug "updating existing item with id #{item.item_id}"
-          needs_reclustering = needs_recluster?(cluster, existing_item.ocns, item.ocns)
 
           if (item_attrs = item.to_hash) != existing_item.to_hash
             existing_item.update_attributes(item_attrs)
@@ -95,28 +91,12 @@ module Clustering
       end
 
       cluster.add_ht_items(to_append) unless to_append.empty?
-      cluster.save if @any_updated
-
-      Reclusterer.new(cluster).recluster if needs_reclustering
-    end
-
-    def needs_recluster?(cluster, old_ocns, new_ocns = [])
-      # We only need to recluster (i.e. potentially split) if the item could have
-      # been the 'glue' holding multiple OCNs together. The following situations
-      # mean an HTItem cannot be glue, so we don't need to recluster:
-      #
-      # - There was 0 or 1 old OCN (so it couldn't have been 'glue')
-      # - old_ocns are all in concordance rules (so this item is not the 'glue')
-      # - old_ocns are a subset of the new ocns (if there are any), so the item
-      #   stays in this cluster and remains glue
-
-      new_ocns = new_ocns.to_set
-      old_ocns = old_ocns.to_set
-      concordance_ocns = cluster.ocn_resolutions.collect(&:ocns).flatten.to_set
-
-      !(old_ocns.count <= 1 ||
-        old_ocns.subset?(new_ocns) ||
-        old_ocns.subset?(concordance_ocns))
+      if @any_updated || to_append.any?
+        # Reclusterer would handle this if we could tell it which tuples were removed.
+        cluster.update_ocns
+        cluster.save
+        Reclusterer.new(cluster).recluster
+      end
     end
 
   end

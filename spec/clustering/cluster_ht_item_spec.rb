@@ -167,11 +167,9 @@ RSpec.describe Clustering::ClusterHtItem do
       end
 
       it "does not change cluster update when no attributes change" do
-        first = described_class.new(item).cluster
-        first_last_modified = first.last_modified
-
+        described_class.new(item).cluster
+        first_last_modified = Cluster.first.last_modified
         updated = described_class.new(item).cluster
-
         expect(updated.last_modified).to eq(first_last_modified)
       end
     end
@@ -198,7 +196,8 @@ RSpec.describe Clustering::ClusterHtItem do
         expect(c.valid?).to be true
       end
 
-      it "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
+      # No longer necessary. Reclusterer will determine if it actually needs to be reclustered.
+      xit "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         old_cluster = create(:cluster, ocns: [1, 2, 3],
@@ -212,6 +211,22 @@ RSpec.describe Clustering::ClusterHtItem do
 
         expect(Cluster.count).to eq(1)
         expect(new_cluster._id).not_to eq(old_cluster._id)
+      end
+
+      it "updates cluster.ocns if an HTItem loses an OCN that is not in a concordance rule" do
+        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        htitem = build(:ht_item, ocns: [2, 3])
+        create(:cluster, ocns: [1, 2, 3],
+               ocn_resolutions: [resolution],
+               ht_items: [htitem])
+
+        htitem.ocns = [2]
+
+        described_class.new(htitem).cluster
+        updated_cluster = Cluster.with_ht_item(htitem).first
+
+        expect(Cluster.count).to eq(1)
+        expect(updated_cluster.ocns).to eq([1, 2])
       end
 
       it "does not recluster if an HTItem loses an OCN that is in the concordance" do
