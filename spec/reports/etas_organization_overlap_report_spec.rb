@@ -73,7 +73,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       expect(lines.size).to eq(3)
     end
 
-    it "has 1 line with empty rights/access for the non-matching organization" do
+    it "has 1 line with empty rights/access for holdings on clusters without HTItems" do
       rpt = described_class.new
       rpt.run
       f = rpt.report_for_org(h2.organization)
@@ -82,16 +82,16 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       expect(lines.size).to eq(2)
       rec = lines.last.split("\t")
       expect(rec[3]).to eq("")
-      expect(rec[4]).to eq("\n")
+      expect(rec[7]).to eq("\n")
     end
 
-    it "has 5 columns in the report" do
+    it "has 8 columns in the report" do
       rpt = described_class.new
       rpt.run
       orgs.each do |org|
         rpt.report_for_org(org).close
         lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
-        expect(lines.map(&:size)).to all(be == 5)
+        expect(lines.map(&:size)).to all(be == 8)
       end
     end
 
@@ -101,8 +101,22 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       orgs.each do |org|
         rpt.report_for_org(org).close
         header = File.open(rpt.report_for_org(org).path, &:readline).chomp
-        expect(header).to eq("oclc\tlocal_id\titem_type\trights\taccess")
+        expect(header)
+          .to eq("oclc\tlocal_id\titem_type\trights\taccess\tcatalog_id\tvolume_id\tenum_chron")
       end
+    end
+
+    it "has records for holdings that don't match HTItems" do
+      no_match = build(:holding, mono_multi_serial: "multi", enum_chron: "V.1")
+      Clustering::ClusterHolding.new(no_match).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, ocns: [no_match.ocn], enum_chron: "V.2"))
+        .cluster.tap(&:save)
+      rpt = described_class.new.tap(&:run)
+      rpt.report_for_org(no_match.organization).close
+      recs = File.readlines(rpt.report_for_org(no_match.organization).path)
+      expected_rec = [no_match.ocn, no_match.local_id, no_match.mono_multi_serial,
+                      "", "", "", "", ""].join("\t")
+      expect(recs.find {|r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
     end
 
     xit "runs large reports" do

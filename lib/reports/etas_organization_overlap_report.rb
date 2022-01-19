@@ -51,17 +51,19 @@ module Reports
     # Creates an overlap record and writes to the appropriate org file
     #
     # @param holding [Holding] the holdings provides the ocn, local_id, and organization
-    # @param format  [String] the cluster format, 'mono', 'multi', 'serial', or 'ser/spm'
-    # @param access  [String] 'allow' or 'deny' for the associated item
-    # @param rights  [String] the rights for the associated item
-    def write_record(holding, format, access, rights)
+    # @param fields  [Hash] rights, access, catalog_id, volume_id, enum_chron
+    def write_record(holding, fields)
       return unless organization.nil? || organization == holding[:organization]
 
       etas_record = Overlap::ETASOverlap.new(ocn: holding[:ocn],
                       local_id: holding[:local_id],
-                      item_type: format,
-                      rights: rights,
-                      access: convert_access(rights, access, holding[:organization]))
+                      item_type: holding.mono_multi_serial,
+                      rights: fields[:rights],
+                      access: convert_access(fields[:rights], fields[:access],
+                                             holding[:organization]),
+                      catalog_id: fields[:catalog_id],
+                      volume_id: fields[:volume_id],
+                      enum_chron: fields[:enum_chron])
       report_for_org(holding[:organization]).puts etas_record
     end
 
@@ -70,7 +72,12 @@ module Reports
       Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
         overlap.matching_holdings.each do |holding|
           holdings_matched << holding
-          write_record(holding, cluster.format, overlap.ht_item.access, overlap.ht_item.rights)
+          fields = { access:     overlap.ht_item.access,
+                     rights:     overlap.ht_item.rights,
+                     catalog_id: overlap.ht_item.ht_bib_key,
+                     volume_id:  overlap.ht_item.item_id,
+                     enum_chron: overlap.ht_item.enum_chron }
+          write_record(holding, fields)
         end
       end
       holdings_matched
@@ -80,18 +87,26 @@ module Reports
       clusters_with_holdings.each do |c|
         # No ht_items means an empty line for each holding
         unless c.ht_items.any?
-          c.holdings.each {|holding| write_record(holding, c.format, "", "") }
+          fields = Hash.new ""
+          c.holdings.each {|holding| write_record(holding, fields) }
           next
         end
         holdings_matched = write_overlaps(c, organization)
         missed_holdings(c, holdings_matched).each do |holding|
-          write_record(holding, c.format, "", "")
+          write_record(holding, Hash.new(""))
         end
       end
     end
 
     def header
-      ["oclc", "local_id", "item_type", "rights", "access"].join("\t")
+      ["oclc",
+       "local_id",
+       "item_type",
+       "rights",
+       "access",
+       "catalog_id",
+       "volume_id",
+       "enum_chron"].join("\t")
     end
 
     # Handles access allow/deny for non-us organizations
