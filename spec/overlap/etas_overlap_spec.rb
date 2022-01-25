@@ -5,7 +5,8 @@ require "overlap/etas_overlap"
 
 RSpec.describe Overlap::ETASOverlap do
   let(:eo) do
-    described_class.new(ocn: rand(1_000_000),
+    described_class.new(organization: "umich",
+              ocn: rand(1_000_000),
               local_id: rand(1_000_000).to_s,
               item_type: "mono",
               rights: "ic",
@@ -46,6 +47,24 @@ RSpec.describe Overlap::ETASOverlap do
 
     it "has an enum_chron" do
       expect(eo.enum_chron).to be_a(String)
+    end
+  end
+
+  describe "#convert_access" do
+    it "returns whatever it was given for US orgs" do
+      expect(eo.convert_access(nil, "given", "smu")).to eq("given")
+    end
+
+    it "returns 'deny' if rights is 'pdus' for non-US orgs" do
+      expect(eo.convert_access("pdus", "allow", "uct")).to eq("deny")
+    end
+
+    it "returns 'allow' if rights is 'icus' for non-US orgs" do
+      expect(eo.convert_access("icus", "deny", "uct")).to eq("allow")
+    end
+
+    it "returns whatever it was given if rights is not 'icus' or 'pdus' for non-US orgs" do
+      expect(eo.convert_access(nil, "given", "uct")).to eq("given")
     end
   end
 

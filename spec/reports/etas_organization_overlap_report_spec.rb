@@ -5,19 +5,9 @@ require "pp"
 require "reports/etas_organization_overlap_report"
 
 RSpec.describe Reports::EtasOrganizationOverlapReport do
-  let(:h) { build(:holding) }
-  let(:h2) { build(:holding, organization: "ualberta") }
-  let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
-  let(:ht2) { build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd") }
   let(:tmp_dir) { "tmp_reports_dir" }
-  let(:orgs) { [h.organization, h2.organization] }
 
   before(:each) do
-    Cluster.each(&:delete)
-    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
-    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
-    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
     Settings.etas_overlap_reports_path = tmp_dir
     FileUtils.rm_rf(tmp_dir)
   end
@@ -45,9 +35,29 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       expect(rpt.report_for_org("uct").path).to eq("#{tmp_dir}/uct_#{rpt.date_of_report}_nonus.tsv")
     end
+
+    it "has a header" do
+      rpt = described_class.new
+      rpt.report_for_org("smu").close
+      expect(File.readlines(rpt.report_for_org("smu").path)).to eq([rpt.header+"\n"])
+    end
   end
 
   describe "#run" do
+    let(:h) { build(:holding) }
+    let(:h2) { build(:holding, organization: "ualberta") }
+    let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
+    let(:ht2) { build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd") }
+    let(:orgs) { [h.organization, h2.organization] }
+
+    before(:each) do
+      Cluster.each(&:delete)
+      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
+    end
+
     it "has a file for each organization" do
       rpt = described_class.new
       rpt.run
@@ -73,6 +83,16 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       expect(lines.size).to eq(3)
     end
 
+    it "has 8 columns in the report" do
+      rpt = described_class.new
+      rpt.run
+      orgs.each do |org|
+        rpt.report_for_org(org).close
+        lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
+        expect(lines.map(&:size)).to all(be == 8)
+      end
+    end
+
     it "has 1 line with empty rights/access for holdings on clusters without HTItems" do
       rpt = described_class.new
       rpt.run
@@ -85,32 +105,11 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       expect(rec[7]).to eq("\n")
     end
 
-    it "has 8 columns in the report" do
-      rpt = described_class.new
-      rpt.run
-      orgs.each do |org|
-        rpt.report_for_org(org).close
-        lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
-        expect(lines.map(&:size)).to all(be == 8)
-      end
-    end
-
-    it "has a header line" do
-      rpt = described_class.new
-      rpt.run
-      orgs.each do |org|
-        rpt.report_for_org(org).close
-        header = File.open(rpt.report_for_org(org).path, &:readline).chomp
-        expect(header)
-          .to eq("oclc\tlocal_id\titem_type\trights\taccess\tcatalog_id\tvolume_id\tenum_chron")
-      end
-    end
-
     it "has records for holdings that don't match HTItems" do
       no_match = build(:holding, mono_multi_serial: "multi", enum_chron: "V.1")
       Clustering::ClusterHolding.new(no_match).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(build(:ht_item, ocns: [no_match.ocn], enum_chron: "V.2"))
-        .cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn],
+                                          enum_chron: "V.2")).cluster.tap(&:save)
       rpt = described_class.new.tap(&:run)
       rpt.report_for_org(no_match.organization).close
       recs = File.readlines(rpt.report_for_org(no_match.organization).path)
@@ -118,36 +117,40 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
                       "", "", "", "", ""].join("\t")
       expect(recs.find {|r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
     end
-
-    xit "runs large reports" do
-      100.times do
-        Clustering::ClusterHolding.new(build(:holding, ocn: h.ocn)).cluster.tap(&:save)
-        Clustering::ClusterHtItem.new(build(:ht_item, ocns: [h.ocn])).cluster.tap(&:save)
-      end
-      rpt = described_class.new("umich")
-      rpt.run
-    end
   end
 
-  describe "#convert_access" do
-    it "returns whatever it was given for US orgs" do
-      rpt = described_class.new
-      expect(rpt.convert_access(nil, "given", "smu")).to eq("given")
+  context "when holdings have the same id" do
+    let(:h1) { build(:holding, mono_multi_serial: "multi", enum_chron: "V.1") }
+    let(:h2) do
+      build(:holding, mono_multi_serial: "multi", ocn: h1.ocn,
+                 organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
     end
 
-    it "returns 'deny' if rights is 'pdus' for non-US orgs" do
-      rpt = described_class.new
-      expect(rpt.convert_access("pdus", "allow", "uct")).to eq("deny")
+    before(:each) do
+      Cluster.each(&:delete)
+      Clustering::ClusterHolding.new(h1).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
     end
 
-    it "returns 'allow' if rights is 'icus' for non-US orgs" do
-      rpt = described_class.new
-      expect(rpt.convert_access("icus", "deny", "uct")).to eq("allow")
+    it "writes only 1 no-match record" do
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      expect(File.readlines(rpt.report_for_org(h1.organization).path).count)
+        .to eq(2)
     end
 
-    it "returns whatever it was given if rights is not 'icus' or 'pdus' for non-US orgs" do
-      rpt = described_class.new
-      expect(rpt.convert_access(nil, "given", "uct")).to eq("given")
+    it "writes only 1 match record" do
+      ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "SE", enum_chron: "V.3")
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      recs = File.readlines(rpt.report_for_org(h1.organization).path)
+      expect(recs.count).to eq(2)
+      expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
+                                     ht.access, ht.ht_bib_key, ht.item_id,
+                                     ht.enum_chron].join("\t"))
     end
   end
 end
