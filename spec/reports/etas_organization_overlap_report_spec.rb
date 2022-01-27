@@ -152,5 +152,18 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
                                      ht.access, ht.ht_bib_key, ht.item_id,
                                      ht.enum_chron].join("\t"))
     end
+
+    it "writes only the 1 record that matches" do
+      ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "BK", enum_chron: "V.2")
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      recs = File.readlines(rpt.report_for_org(h1.organization).path)
+      expect(recs.count).to eq(2)
+      expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
+                                     ht.access, ht.ht_bib_key, ht.item_id,
+                                     ht.enum_chron].join("\t"))
+    end
   end
 end

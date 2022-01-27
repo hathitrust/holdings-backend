@@ -40,11 +40,18 @@ module Reports
       end
     end
 
+    # Holdings with org/local_id not found in holdings_matched
+    #
+    # @param cluster [Cluster]
+    # @param holdings_matched [Set] set of holdings that did match an item
     def missed_holdings(cluster, holdings_matched)
+      org_local_ids = Set.new(holdings_matched.pluck(:organization, :local_id))
       if organization.nil?
-        cluster.holdings - holdings_matched.to_a
+        cluster.holdings.reject {|h| org_local_ids.include? [h.organization, h.local_id] }
       else
-        cluster.holdings.group_by(&:organization)[organization] - holdings_matched.to_a
+        cluster.holdings.group_by(&:organization)[organization].reject do |h|
+          org_local_ids.include? [h.organization, h.local_id]
+        end
       end
     end
 
