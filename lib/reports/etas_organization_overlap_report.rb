@@ -40,37 +40,45 @@ module Reports
       end
     end
 
+    # Holdings with org/local_id not found in holdings_matched
+    #
+    # @param cluster [Cluster]
+    # @param holdings_matched [Set] set of holdings that did match an item
     def missed_holdings(cluster, holdings_matched)
+      org_local_ids = Set.new(holdings_matched.pluck(:organization, :local_id))
       if organization.nil?
-        cluster.holdings - holdings_matched.to_a
+        cluster.holdings.reject {|h| org_local_ids.include? [h.organization, h.local_id] }
       else
-        cluster.holdings.group_by(&:organization)[organization] - holdings_matched.to_a
+        cluster.holdings.group_by(&:organization)[organization].reject do |h|
+          org_local_ids.include? [h.organization, h.local_id]
+        end
       end
     end
 
     # Creates an overlap record and writes to the appropriate org file
     #
     # @param holding [Holding] the holdings provides the ocn, local_id, and organization
-    # @param format  [String] the cluster format, 'mono', 'multi', 'serial', or 'ser/spm'
-    # @param access  [String] 'allow' or 'deny' for the associated item
-    # @param rights  [String] the rights for the associated item
-    def write_record(holding, format, access, rights)
-      return unless organization.nil? || organization == holding[:organization]
+    # @param fields  [Hash] rights, access, catalog_id, volume_id, enum_chron
+    def write_record(record)
+      return unless organization.nil? || organization == record.organization
 
-      etas_record = Overlap::ETASOverlap.new(ocn: holding[:ocn],
-                      local_id: holding[:local_id],
-                      item_type: format,
-                      rights: rights,
-                      access: convert_access(rights, access, holding[:organization]))
-      report_for_org(holding[:organization]).puts etas_record
+      report_for_org(record.organization).puts record
     end
 
     def write_overlaps(cluster, organization)
       holdings_matched = Set.new
+      records_written = Set.new
       Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
         overlap.matching_holdings.each do |holding|
           holdings_matched << holding
-          write_record(holding, cluster.format, overlap.ht_item.access, overlap.ht_item.rights)
+          etas_record = Overlap::ETASOverlap.new(organization: holding.organization,
+            ocn: holding.ocn, local_id: holding.local_id, item_type: holding.mono_multi_serial,
+            rights:     overlap.ht_item.rights, access:     overlap.ht_item.access,
+            catalog_id: overlap.ht_item.ht_bib_key, volume_id:  overlap.ht_item.item_id,
+            enum_chron: overlap.ht_item.enum_chron)
+
+          write_record(etas_record) unless records_written.include? etas_record.to_s
+          records_written << etas_record.to_s
         end
       end
       holdings_matched
@@ -78,33 +86,35 @@ module Reports
 
     def run
       clusters_with_holdings.each do |c|
-        # No ht_items means an empty line for each holding
-        unless c.ht_items.any?
-          c.holdings.each {|holding| write_record(holding, c.format, "", "") }
-          next
-        end
         holdings_matched = write_overlaps(c, organization)
-        missed_holdings(c, holdings_matched).each do |holding|
-          write_record(holding, c.format, "", "")
-        end
+        write_records_for_unmatched_holdings(c, holdings_matched)
       end
     end
 
     def header
-      ["oclc", "local_id", "item_type", "rights", "access"].join("\t")
+      ["oclc",
+       "local_id",
+       "item_type",
+       "rights",
+       "access",
+       "catalog_id",
+       "volume_id",
+       "enum_chron"].join("\t")
     end
 
-    # Handles access allow/deny for non-us organizations
-    def convert_access(rights, access, org)
-      return access if Services.ht_organizations[org].country_code == "us"
+    def write_records_for_unmatched_holdings(cluster, holdings_matched)
+      records_written = Set.new
+      missed_holdings(cluster, holdings_matched).each do |holding|
+        etas_record = Overlap::ETASOverlap.new(organization: holding.organization,
+                        ocn: holding.ocn,
+                        local_id: holding.local_id,
+                        item_type: holding.mono_multi_serial)
+        next if records_written.include? etas_record.to_s
 
-      case rights
-      when "pdus"
-        access = "deny"
-      when "icus"
-        access = "allow"
+        records_written << etas_record.to_s
+        write_record(etas_record)
       end
-      access
     end
   end
+
 end

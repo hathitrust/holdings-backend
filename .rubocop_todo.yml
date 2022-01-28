@@ -16,7 +16,7 @@ Lint/UselessAssignment:
   Exclude:
     - 'lib/scrub/autoscrub.rb'
 
-# Offense count: 5
+# Offense count: 7
 Metrics/AbcSize:
   Exclude:
     - 'bin/**/*.rb'
@@ -25,6 +25,7 @@ Metrics/AbcSize:
     - 'lib/scrub/scrub_fields.rb'
     - 'lib/clustering/cluster_ht_item.rb'
     - 'lib/concordance_validation/concordance.rb'
+    - 'lib/reports/etas_organization_overlap_report.rb'
 
 Layout/LineLength:
   Exclude:
