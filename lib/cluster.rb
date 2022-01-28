@@ -190,7 +190,7 @@ class Cluster
   end
 
   def eligible_for_commitments?
-    # be an spm with items and 1+ CH holdings
+    # To be eligible for commitments, be an spm with items and 1+ CH holdings
     @eligible_for_commitments ||= format == "spm" && ht_items.any? && any_current_holdings?
   end
 
