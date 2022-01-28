@@ -19,7 +19,7 @@ RSpec.describe Overlap::HoldingCommitment do
   end
 
   def make_htitem(ocn)
-    spm = build(:ht_item, ocns: [ocn], enum_chron: "")
+    spm = build(:ht_item, :spm, ocns: [ocn])
     Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
   end
 
