@@ -18,8 +18,11 @@ module Overlap
       @commitments = []
 
       Cluster.where(ocns: ocn).each do |cluster|
-        @holdings    = filter_eligible(cluster.holdings)
-        @commitments = cluster.commitments.sort_by(&:organization)
+        # For holding-commitment overlaps we only care about spm clusters with ht_items
+        if cluster.format == "spm" && cluster.ht_items.any?
+          @holdings    = filter_eligible(cluster.holdings)
+          @commitments = cluster.commitments.sort_by(&:organization)
+        end
       end
     end
 

@@ -45,7 +45,7 @@ RSpec.describe Reports::EligibleCommitments do
     Cluster.collection.find.delete_many
   end
 
-  it "Header looks like this" do
+  it "Header looks like expected" do
     expect(report.header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
   end
 
@@ -67,14 +67,6 @@ RSpec.describe Reports::EligibleCommitments do
 
   it "Ignores clusters where there are no ht_items" do
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
-    rows = run([ocn1, ocn2])
-    expect(rows.count).to eq 0
-  end
-
-  it "Ignores clusters where there are commitments" do
-    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
-    Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
     rows = run([ocn1, ocn2])
     expect(rows.count).to eq 0
   end

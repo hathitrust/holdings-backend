@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
 require "services"
-require "cluster"
-
-Services.mongo!
+require "overlap/holding_commitment"
 
 module Reports
   # Given criteria, pull up all holdings that match those criteria
@@ -19,25 +17,30 @@ module Reports
       ]
     end
 
+    # In order to get the commitments that could have holdings but don't,
+    # get the holdings, the matched pairs, and remove from holdings the ones
+    # that are in a matched pair
     def for_ocns(ocns = [])
       if ocns.empty?
         raise "No ocns given"
       end
 
       ocns.sort.uniq.each do |ocn|
-        cluster = Cluster.find_by(ocns: [ocn.to_i])
-
-        next if cluster.nil?
-        next if we_have_seen? cluster._id
-        next unless cluster.eligible_for_commitments?
-        next unless cluster.commitments.count.zero?
-
-        cluster.holdings.select(&:eligible_for_commitments?).each do |holding|
+        overlap = Overlap::HoldingCommitment.new(ocn)
+        holdings = overlap.holdings
+        # Matched pairs in a HoldingCommitment is [[com1, hol1], [com2, hol2], ...].
+        overlap.matched_pairs.each do |pair|
+          # Remove the matched hol from holdings ...
+          holdings.delete(pair.last)
+          puts "deleting a holding"
+        end
+        # ... and what you are left with are holdings without commitments.
+        holdings.each do |h|
           yield [
-            holding.organization,
-            organization_oclc_symbol(holding.organization),
-            holding.ocn,
-            holding.local_id
+            h.organization,
+            organization_oclc_symbol(h.organization),
+            h.ocn,
+            h.local_id
           ]
         end
       end
