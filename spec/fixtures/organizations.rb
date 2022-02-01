@@ -1,18 +1,24 @@
 # frozen_string_literal: true
 
 def mock_organizations
+  mock = lambda do |inst, country, weight, sym, status = 1|
+    DataSources::HTOrganization.new(
+      inst_id:      inst,
+      country_code: country,
+      weight:       weight,
+      oclc_sym:     sym,
+      status:       status
+    )
+  end
+
   DataSources::HTOrganizations.new(
-    "upenn" => DataSources::HTOrganization.new(inst_id: "upenn", country_code: "us", weight: 1.0),
-    "umich" => DataSources::HTOrganization.new(inst_id: "umich", country_code: "us", weight: 1.0),
-    "smu" => DataSources::HTOrganization.new(inst_id: "smu", country_code: "us", weight: 1.0),
-    "stanford" => DataSources::HTOrganization.new(inst_id: "stanford", country_code: "us",
-                                                   weight: 1.0),
-    "ualberta" => DataSources::HTOrganization.new(inst_id: "ualberta", country_code: "ca",
-                                                   weight: 1.0),
-    "utexas" => DataSources::HTOrganization.new(inst_id: "utexas", country_code: "us", weight: 3.0),
-    "hathitrust" => DataSources::HTOrganization.new(inst_id: "hathitrust", country_code: "us",
-                                                   weight: 0.0),
-    "uct" => DataSources::HTOrganization.new(inst_id: "uct", country_code: "za", weight: 0.0,
-                                               status: 0)
+    "upenn"      => mock.call("upenn", "us", 1.0, "PAU"),
+    "umich"      => mock.call("umich", "us", 1.0, "EYM"),
+    "smu"        => mock.call("smu", "us", 1.0, "ISM"),
+    "stanford"   => mock.call("stanford", "us", 1.0, "STF"),
+    "ualberta"   => mock.call("ualberta", "ca", 1.0, "UAB"),
+    "utexas"     => mock.call("utexas", "us", 3.0, "IXA"),
+    "hathitrust" => mock.call("hathitrust", "us", 0.0, ""),
+    "uct"        => mock.call("uct", "za", 0.0, "OI@", 0)
   )
 end
