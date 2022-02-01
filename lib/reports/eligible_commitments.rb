@@ -19,7 +19,7 @@ module Reports
 
       ocns.sort.uniq.each do |ocn|
         overlap = Overlap::HoldingCommitment.new(ocn)
-        if overlap.commitments.any?
+        if overlap.commitments.empty?
           overlap.holdings.each do |h|
             yield [
               h.organization,
@@ -39,11 +39,6 @@ module Reports
       else
         "N/A"
       end
-    end
-
-    def we_have_seen?(id)
-      @seen ||= {}
-      @seen.key?(id) || !(@seen[id] = true)
     end
 
   end
