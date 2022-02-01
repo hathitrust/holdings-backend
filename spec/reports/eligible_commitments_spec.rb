@@ -53,8 +53,25 @@ RSpec.describe Reports::EligibleCommitments do
     Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
     rows = run([ocn1, ocn2])
-    expect(rows.count).to eq 1
-    expect(rows.first).to eq ["umich", "EYM", 5, "a123x"]
+    expect(rows).to eq [["umich", "EYM", 5, "a123x"]]
+  end
+
+  it "Does a more realistic example" do
+    magic_number = 50
+    1.upto(magic_number) do |i|
+      Clustering::ClusterHolding.new(build_h("umich", i, "i#{i}", "CH")).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, :spm, ocns: [i])).cluster.tap(&:save)
+    end
+    rows = run((1..magic_number).to_a)
+    expect(rows.size).to be magic_number
+  end
+
+  it "Ignores clusters that already have commitments" do
+    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+    Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+    rows = run([ocn1, ocn2])
+    expect(rows).to eq []
   end
 
   it "Ignores holdings that arent eligible" do
@@ -83,12 +100,6 @@ RSpec.describe Reports::EligibleCommitments do
     Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
     rows_ser = run([ocn1, ocn2])
     expect(rows_ser.count).to eq 0
-  end
-
-  it "Keeps track of seen ids" do
-    expect(report.we_have_seen?("a")).to be false
-    expect(report.we_have_seen?("a")).to be true
-    expect(report.we_have_seen?("b")).to be false
   end
 
   it "Translates organization to oclc_symbol" do
