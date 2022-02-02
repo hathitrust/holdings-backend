@@ -48,9 +48,9 @@ module Clusterable
     end
 
     def deprecate(status, replacement, date = Date.today)
-      @deprecation_status = status
-      @deprecation_date = date
-      @deprecate_replaced_by = replacement._id
+      self.deprecation_status = status
+      self.deprecation_date = date
+      self.deprecation_replaced_by = replacement._id
     end
 
     private

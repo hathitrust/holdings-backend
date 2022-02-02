@@ -39,6 +39,18 @@ RSpec.describe Clusterable::Commitment do
     end
   end
 
+  describe "deprecate" do
+    it "adds status, date and replacement id" do
+      c.commitments << comm
+      replacement = build(:commitment, ocn: comm.ocn)
+      depped = c.commitments.first
+      depped.deprecate("D", replacement)
+      expect(depped.deprecation_status).to eq("D")
+      expect(depped.deprecation_date).to eq(Date.today)
+      expect(depped.deprecation_replaced_by).to eq(replacement._id.to_s)
+    end
+  end
+
   describe "batch_with?" do
     let(:comm1) { build(:commitment, ocn: 123) }
     let(:comm2) { build(:commitment, ocn: 123) }
