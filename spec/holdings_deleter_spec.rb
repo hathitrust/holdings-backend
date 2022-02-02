@@ -5,7 +5,7 @@ require "spec_helper"
 require_relative "../bin/holdings_deleter"
 
 RSpec.describe HoldingsDeleter do
-  def neu(*args)
+  def new_test(*args)
     described_class.new(args)
   end
 
@@ -41,21 +41,21 @@ RSpec.describe HoldingsDeleter do
 
   describe "params" do
     it "requires params" do
-      expect { neu }.to raise_exception(RuntimeError)
-      expect { neu([]) }.to raise_exception(RuntimeError)
+      expect { new_test }.to raise_exception(RuntimeError)
+      expect { new_test([]) }.to raise_exception(RuntimeError)
     end
 
     it "requires valid params" do
-      expect { neu("foo", "bar") }.to raise_exception(RuntimeError)
-      expect { neu("--ocn", "1") }.not_to raise_exception
-      expect { neu("--organization", "yale") }.not_to raise_exception
+      expect { new_test("foo", "bar") }.to raise_exception(RuntimeError)
+      expect { new_test("--ocn", "1") }.not_to raise_exception
+      expect { new_test("--organization", "yale") }.not_to raise_exception
     end
 
     it "date_received must be parseable as a Date" do
       expect do
-        neu("--date_received", "potato").run
+        new_test("--date_received", "potato").run
       end.to raise_exception(OptionParser::InvalidArgument)
-      expect { neu("--date_received", "2020-01-01") }.not_to raise_exception
+      expect { new_test("--date_received", "2020-01-01") }.not_to raise_exception
     end
 
     it "can take many params" do
@@ -67,15 +67,15 @@ RSpec.describe HoldingsDeleter do
         "--date_received", "2020-01-01", "--weight", "1.33",
         "--gov_doc_flag", "true", "--noop", "1"
       ]
-      expect { neu(*many_params) }.not_to raise_exception
+      expect { new_test(*many_params) }.not_to raise_exception
     end
 
     it "does nothing if noop is set" do
-      expect(neu("--organization", "uh", "--noop").run).to eq nil
+      expect(new_test("--organization", "uh", "--noop").run).to eq nil
     end
 
     it "lets you inspect its criteria" do
-      crit = neu(
+      crit = new_test(
         "--organization", "uh",
         "--ocn", "5",
         "--date_received", "2020-01-01"
@@ -97,7 +97,7 @@ RSpec.describe HoldingsDeleter do
       expect(Cluster.collection.count).to eq(0)
       fake_clusters("umich")
       expect(count_holdings_by_org("umich")).to eq(10)
-      neu("--organization", "umich").run
+      new_test("--organization", "umich").run
       expect(count_holdings_by_org("umich")).to eq(0)
     end
 
@@ -105,7 +105,7 @@ RSpec.describe HoldingsDeleter do
       fake_clusters("umich")
       fake_clusters("smu")
       expect(count_holdings_by_org("umich")).to eq(10)
-      neu("--organization", "umich").run
+      new_test("--organization", "umich").run
       expect(count_holdings_by_org("umich")).to eq(0)
       expect(count_holdings_by_org("smu")).to eq(10)
     end
@@ -113,7 +113,7 @@ RSpec.describe HoldingsDeleter do
     it "we can get more specific" do
       fake_clusters("umich")
       fake_clusters("smu")
-      res = neu("--organization", "umich", "--ocn", "5").run
+      res = new_test("--organization", "umich", "--ocn", "5").run
       expect(res.documents.first["nModified"]).to eq 1
       expect(count_holdings_by_org("umich")).to eq 9
       expect(count_holdings_by_org("smu")).to eq 10
@@ -123,7 +123,7 @@ RSpec.describe HoldingsDeleter do
       expect(empty_clusters.count).to eq(0)
       fake_clusters("umich")
       expect(count_holdings_by_org("umich")).to eq(10)
-      deleter = neu("--organization", "umich")
+      deleter = new_test("--organization", "umich")
       deleter.run
       expect(empty_clusters.count + count_holdings_by_org("umich")).to eq(0)
     end
@@ -131,7 +131,7 @@ RSpec.describe HoldingsDeleter do
     it "leaves empty clusters only if told to" do
       expect(empty_clusters.count).to eq(0)
       fake_clusters("umich")
-      deleter = neu("--organization", "umich", "--leave_empties")
+      deleter = new_test("--organization", "umich", "--leave_empties")
       deleter.run
       expect(empty_clusters.count).to eq(10)
       # Call to explicitly delete.

@@ -43,7 +43,7 @@ RSpec.describe Scrub::AutoScrub do
     expect(Dir.empty?(out_struct.member_loaded)).to be(true)
   end
 
-  it "produced valid JSON" do
+  xit "produced valid JSON" do
     latest_rtl = out_struct.member_ready_to_load.children.select do |file|
       file.match?(/testmember_mono_[0-9-]+.ndj/)
     end.max
