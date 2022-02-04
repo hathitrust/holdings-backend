@@ -134,7 +134,7 @@ RSpec.describe Overlap::HoldingCommitment do
     overlap = described_class.new(ocn_1)
     expect(overlap.active_commitments.size).to eq 1
     # Deprecating the commitment should remove it from active_commitments.
-    cluster.commitments.first.deprecate("E", replacement)
+    cluster.commitments.first.deprecate(status: "E", replacement: replacement)
     cluster.save
     expect(cluster.commitments.first.deprecated?).to be true
     overlap = described_class.new(ocn_1)

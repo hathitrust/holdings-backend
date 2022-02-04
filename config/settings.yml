@@ -11,5 +11,6 @@ etas_overlap_reports_path: <%= ENV["ETAS_OVERLAP_REPORTS_PATH"] %>
 etas_overlap_reports_remote_path: <%= ENV["ETAS_OVERLAP_REPORTS_REMOTE_PATH"] %>
 loading_flag_path: <%= ENV["LOADING_FLAG_PATH"] %>
 cost_report_freq_path: <%= ENV["COST_REPORT_FREQ_PATH"] %>
+deprecation_report_path: <%= ENV["DEPRECATION_REPORT_PATH"] %>
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
 rclone_config_path: <%= ENV["RCLONE_CONFIG_PATH"] %>
