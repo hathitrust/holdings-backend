@@ -6,15 +6,19 @@ require "reports/etas_organization_overlap_report"
 
 RSpec.describe Reports::EtasOrganizationOverlapReport do
   let(:tmp_dir) { "tmp_reports_dir" }
+  let(:tmp_rmt) { "tmp_remote_path" }
 
   before(:each) do
     Settings.etas_overlap_reports_path = tmp_dir
+    Settings.etas_overlap_reports_remote_path = tmp_rmt
     Settings.rclone_config_path = "config/rclone.conf"
     FileUtils.rm_rf(tmp_dir)
+    FileUtils.rm_rf(tmp_rmt)
   end
 
   after(:each) do
     FileUtils.rm_rf(tmp_dir)
+    FileUtils.rm_rf(tmp_rmt)
   end
 
   describe "#initialize" do
@@ -189,12 +193,32 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     end
   end
 
+  describe "#move_reports_to_remote" do
+    let(:h) { build(:holding) }
+    let(:ht) { build(:ht_item, ocns: [h.ocn]) }
+
+    before(:each) do
+      Cluster.each(&:delete)
+      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    end
+
+    it "moves the gzipped report to the \"remote\" path" do
+      rpt = described_class.new(h.organization)
+      rpt.run
+      rpt.move_reports_to_remote
+      remote_file = "#{tmp_rmt}/#{h.organization}-hathitrust-member-data/analysis/" \
+        "#{File.basename(rpt.report_for_org(h.organization))}.gz"
+      expect(File.exist?(remote_file)).to be true
+    end
+  end
+
   describe "#rclone_move" do
     it "provides the proper system call for rclone" do
       rpt = described_class.new
       expect(rpt.rclone_move(File.open("test_file", "w"), "umich"))
         .to eq(["rclone", "--config", "config/rclone.conf", "move", "test_file",
-                "tmp_remote_path/umich-hathitrust-member-data/analysis"])
+                "#{tmp_rmt}/umich-hathitrust-member-data/analysis"])
     end
   end
 end
