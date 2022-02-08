@@ -55,12 +55,15 @@ module Clustering
         removed_ocn_tuple_equals_current_resolution? ||
         removed_ocn_tuple_is_subset_of_ht_item?
 
-      graph = OCNGraph.new(@cluster)
       # The OCN graph will have multiple subgraphs if the cluster's OCN tuples are not connected.
       graph.subgraphs.count > 1
     end
 
     private
+
+    def graph
+      @graph ||= OCNGraph.new(@cluster)
+    end
 
     # By definition, if a cluster has an OCLC resolution and only 2 OCNs then
     # the cluster is coherent.
@@ -89,29 +92,20 @@ module Clustering
     end
 
     def recluster_components
-      @cluster.ocn_resolutions
-        .each {|r| ClusterOCNResolution.new(r.dup).cluster.save }
-      recluster_ht_items
-      recluster_holdings
-      recluster_commitments
+      graph.subgraphs.each do |ocn_set|
+        new_cluster = Cluster.where(ocns: { "$in": ocn_set }).first || Cluster.new(ocns: ocn_set)
+        move_components(new_cluster.ht_items, @cluster.ht_items.where(ocns: { "$in": ocn_set }))
+        move_components(new_cluster.holdings, @cluster.holdings.where(ocn: { "$in": ocn_set }))
+        move_components(new_cluster.commitments,
+                        @cluster.commitments.where(ocn: { "$in": ocn_set }))
+        move_components(new_cluster.ocn_resolutions,
+                        @cluster.ocn_resolutions.where(ocns: { "$in": ocn_set }))
+        new_cluster.save
+      end
     end
 
-    def recluster_batch(clusterables, sort_field, clusterer)
-      clusterables.sort_by(&sort_field)
-        .chunk_while {|item1, item2| item1.batch_with?(item2) }
-        .each {|batch| clusterer.new(*batch.map(&:dup)).cluster.save }
-    end
-
-    def recluster_ht_items
-      recluster_batch(@cluster.ht_items, :ocns, ClusterHtItem)
-    end
-
-    def recluster_holdings
-      recluster_batch(@cluster.holdings, :ocn, ClusterHolding)
-    end
-
-    def recluster_commitments
-      recluster_batch(@cluster.commitments, :ocn, ClusterCommitment)
+    def move_components(new_cluster_field, components)
+      components&.each {|comp| new_cluster_field << comp }
     end
 
   end
