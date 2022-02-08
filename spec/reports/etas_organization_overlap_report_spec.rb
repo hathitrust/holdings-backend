@@ -9,6 +9,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
 
   before(:each) do
     Settings.etas_overlap_reports_path = tmp_dir
+    Settings.rclone_config_path = "config/rclone.conf"
     FileUtils.rm_rf(tmp_dir)
   end
 
@@ -28,18 +29,39 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     it "gives us a filehandle for the org" do
       rpt = described_class.new
       expect(rpt.report_for_org("smu")).to be_a(File)
-      expect(rpt.report_for_org("smu").path).to eq("#{tmp_dir}/smu_#{rpt.date_of_report}.tsv")
+      expect(rpt.report_for_org("smu").path)
+        .to eq("#{tmp_dir}/etas_overlap_smu_#{rpt.date_of_report}.tsv")
     end
 
     it "gives us a 'nonus' filehandle for non-us orgs" do
       rpt = described_class.new
-      expect(rpt.report_for_org("uct").path).to eq("#{tmp_dir}/uct_#{rpt.date_of_report}_nonus.tsv")
+      expect(rpt.report_for_org("uct").path)
+        .to eq("#{tmp_dir}/etas_overlap_uct_#{rpt.date_of_report}_nonus.tsv")
     end
 
     it "has a header" do
       rpt = described_class.new
       rpt.report_for_org("smu").close
       expect(File.readlines(rpt.report_for_org("smu").path)).to eq([rpt.header+"\n"])
+    end
+  end
+
+  describe "#gzip_report" do
+    let(:h) { build(:holding) }
+    let(:ht) { build(:ht_item, ocns: [h.ocn]) }
+
+    before(:each) do
+      Cluster.each(&:delete)
+      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+    end
+
+    it "gzips and prepends file name" do
+      rpt = described_class.new
+      rpt.run
+      gz = rpt.gzip_report(rpt.report_for_org(h.organization))
+      expect(File.path(gz))
+        .to eq("#{tmp_dir}/etas_overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
     end
   end
 
@@ -164,6 +186,15 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
                                      ht.access, ht.ht_bib_key, ht.item_id,
                                      ht.enum_chron].join("\t"))
+    end
+  end
+
+  describe "#rclone_move" do
+    it "provides the proper system call for rclone" do
+      rpt = described_class.new
+      expect(rpt.rclone_move(File.open("test_file", "w"), "umich"))
+        .to eq(["rclone", "--config", "config/rclone.conf", "move", "test_file",
+                "tmp_remote_path/umich-hathitrust-member-data/analysis"])
     end
   end
 end
