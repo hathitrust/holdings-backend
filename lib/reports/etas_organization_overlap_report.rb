@@ -9,7 +9,7 @@ module Reports
 
   # Generates overlap reports for 1 or all organizations
   class EtasOrganizationOverlapReport
-    attr_accessor :reports, :date_of_report, :report_path, :organization
+    attr_accessor :reports, :date_of_report, :report_path, :remote_report_path, :organization
 
     def initialize(organization = nil)
       @reports = {}
@@ -137,7 +137,7 @@ module Reports
         next unless org == organization || organization.nil?
 
         gz = gzip_report(file)
-        system(rclone_move(gz, org))
+        system(*rclone_move(gz, org))
       end
     end
 
