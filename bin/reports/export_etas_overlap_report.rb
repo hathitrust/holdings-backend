@@ -14,6 +14,7 @@ def main
   org = ARGV.shift
   rpt = Reports::EtasOrganizationOverlapReport.new(org)
   rpt.run
+  rpt.move_reports_to_remote
 end
 
 main if $PROGRAM_NAME == __FILE__

@@ -9,19 +9,20 @@ module Reports
 
   # Generates overlap reports for 1 or all organizations
   class EtasOrganizationOverlapReport
-    attr_accessor :reports, :date_of_report, :report_path, :organization
+    attr_accessor :reports, :date_of_report, :report_path, :remote_report_path, :organization
 
     def initialize(organization = nil)
       @reports = {}
       @date_of_report = Time.now.strftime("%Y-%m-%d")
       @report_path = Settings.etas_overlap_reports_path || "tmp_reports"
+      @remote_report_path = Settings.etas_overlap_reports_remote_path || "tmp_remote_path"
       Dir.mkdir(@report_path) unless File.exist?(@report_path)
       @organization = organization
     end
 
     def open_report(org, date)
       nonus = Services.ht_organizations[org]&.country_code == "us" ? "" : "_nonus"
-      File.open("#{report_path}/#{org}_#{date}#{nonus}.tsv", "w")
+      File.open("#{report_path}/etas_overlap_#{org}_#{date}#{nonus}.tsv", "w")
     end
 
     def report_for_org(org)
@@ -115,6 +116,37 @@ module Reports
         write_record(etas_record)
       end
     end
+
+    def gzip_report(rpt)
+      rpt.close
+      zipped = File.path(rpt) + ".gz"
+      Zlib::GzipWriter.open(zipped) do |gz|
+        File.open(rpt) do |file|
+          gz.mtime = File.mtime(file)
+          while (chunk = file.read(16*1024))
+            gz.write(chunk)
+          end
+        end
+      end
+      zipped
+    end
+
+    # Gzips and rclones the reports
+    def move_reports_to_remote
+      reports.each do |org, file|
+        next unless org == organization || organization.nil?
+
+        gz = gzip_report(file)
+        system(*rclone_move(gz, org))
+      end
+    end
+
+    def rclone_move(file, org)
+      ["rclone", "--config", Settings.rclone_config_path, "move",
+       File.path(file),
+       "#{@remote_report_path}/#{org}-hathitrust-member-data/analysis"]
+    end
+
   end
 
 end
