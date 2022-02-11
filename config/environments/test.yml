@@ -4,3 +4,4 @@ large_cluster_ocns: /tmp/large_cluster_ocns.txt
 loading_flag_path: /tmp/loading_flag
 slack_endpoint: http://slack.test/endpoint
 cost_report_freq_path: /tmp/cost_report_freq
+etas_overlap_batch_size: 50

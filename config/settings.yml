@@ -9,6 +9,7 @@ mongodb:
 target_cost: <%= ENV["TARGET_COST"] %>
 etas_overlap_reports_path: <%= ENV["ETAS_OVERLAP_REPORTS_PATH"] %>
 etas_overlap_reports_remote_path: <%= ENV["ETAS_OVERLAP_REPORTS_REMOTE_PATH"] %>
+etas_overlap_batch_size: <%= ENV["ETAS_OVERLAP_BATCH_SIZE"] %>
 loading_flag_path: <%= ENV["LOADING_FLAG_PATH"] %>
 cost_report_freq_path: <%= ENV["COST_REPORT_FREQ_PATH"] %>
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
