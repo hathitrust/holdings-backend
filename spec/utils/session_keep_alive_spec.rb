@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "spec_helper"
 require "utils/session_keep_alive"
 
 # These tests require some amount of sleep, but since sleeps are
@@ -38,7 +39,69 @@ RSpec.describe Utils::SessionKeepAlive do
     expect(keeper.refresher_thread.alive?).to be false
   end
 
-  xit "does not have a test that refreshSessions prevents session/cursor death" do
-    # todo
+  # KeepAlive doesn't fix CursorNotFound
+  context "with using KeepAlive to prevent Cursor loss on a long running process" do
+    before(:each) do
+      Cluster.each(&:delete)
+      create(:cluster)
+      create(:cluster)
+    end
+
+    # Fails as expected
+    it "raises CursorNotFound after 10 minutes", :slow do
+      expect(Cluster.count).to eq(2)
+      expect { Cluster.batch_size(1).no_timeout.each { |_c| sleep(660) } }
+        .to raise_error(Mongo::Error::OperationFailure, /CursorNotFound/)
+    end
+
+    # This fails
+    xit "Keep Alive prevents the CursorNotFound error" do
+      ska = described_class.new(60)
+      expect do
+        ska.run do
+          Cluster.batch_size(1).no_timeout.each { |_c| sleep(660) }
+        end
+      end.not_to raise_error
+    end
+  end
+
+  # Reducing batch_size DOES prevent CursorNotFound
+  context "with reducing batch size to prevent Cursor loss" do
+    before(:each) do
+      Cluster.each(&:delete)
+      # default batch size is 1000
+      2000.times { |x| create(:cluster, ocns: [x]) }
+    end
+
+    # true, CursorNotFound
+    it "fails when a batch takes longer than 10 minutes", :slow do
+      expect { Cluster.batch_size(250).no_timeout.each { |_c| sleep(3) } }
+        .to raise_error(Mongo::Error::OperationFailure, /CursorNotFound/)
+    end
+
+    # true
+    it "does not fail if we reduce batch size to keep time under 10 minutes", :slow do
+      expect { Cluster.batch_size(100).no_timeout.each { |_c| sleep(3) } }.not_to raise_error
+    end
+  end
+
+  # max_time_ms doesn't fix CursorNotFound
+  context "with changing maxTimeMS in order to prevent Cursor loss" do
+    before(:each) do
+      Cluster.each(&:delete)
+      create(:cluster)
+      create(:cluster)
+    end
+
+    # Does not fail as expected. maxTimeMS doesn't mean what I think it means?
+    xit "fails when a batch takes longer than the max time" do
+      expect { Cluster.max_time_ms(1000).each { |_c| sleep(3) } }
+        .to raise_error(Mongo::Error::OperationFailure, /CursorNotFound/)
+    end
+
+    # And this fails
+    xit "does not fail if we set max_time_ms to 0" do
+      expect { Cluster.max_time_ms(0).batch_size(1).each { |_c| sleep(660) } }.not_to raise_error
+    end
   end
 end
