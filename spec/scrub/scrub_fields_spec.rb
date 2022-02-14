@@ -8,7 +8,7 @@ RSpec.describe Scrub::ScrubFields do
 
   it "keeps tally of what was rejected & why" do
     # Make sure the tally for status("foo") is 0.
-    rej_foo = "status:foo".to_sym
+    rej_foo = :"status:foo"
     Services.scrub_stats[rej_foo] = 0
     # Call status("foo") and check that it incr'ed.
     sf.status("foo")

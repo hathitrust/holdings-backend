@@ -51,7 +51,7 @@ RSpec.describe Clustering::ClusterHolding do
     context "when updating an existing holding" do
       let(:h) { build(:holding, date_received: Date.yesterday) }
       let(:batch) { [h, build(:holding, ocn: h.ocn, date_received: Date.yesterday)] }
-      let(:batch2) { batch.map {|h| new_submission(h) } }
+      let(:batch2) { batch.map { |h| new_submission(h) } }
       let(:h2) { new_submission(h) }
 
       it "updates an existing holding" do
@@ -96,7 +96,7 @@ RSpec.describe Clustering::ClusterHolding do
         described_class.new(batch2).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(2)
-        expect(cluster.holdings.all? {|h| h.date_received == Date.today }).to be true
+        expect(cluster.holdings.all? { |h| h.date_received == Date.today }).to be true
       end
 
       it "does not add additional holdings when re-running a batch" do
@@ -128,7 +128,7 @@ RSpec.describe Clustering::ClusterHolding do
         c.ocns = [Services.large_clusters.ocns.first]
         c.save
         dupes = [build(:holding, organization: "umich", ocn: c.ocns.first),
-                 build(:holding, organization: "umich", ocn: c.ocns.first)]
+          build(:holding, organization: "umich", ocn: c.ocns.first)]
         described_class.new(dupes).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(1)
@@ -138,12 +138,12 @@ RSpec.describe Clustering::ClusterHolding do
         c.ocns = [Services.large_clusters.ocns.first]
         c.save
         old = build(:holding, organization: "umich", ocn: c.ocns.first,
-           date_received: Date.yesterday)
+          date_received: Date.yesterday)
         described_class.new(old).cluster
         dupes = [build(:holding, organization: "umich", ocn: c.ocns.first,
-                       date_received: Date.today),
-                 build(:holding, organization: "umich", ocn: c.ocns.first,
-                       date_received: Date.today)]
+          date_received: Date.today),
+          build(:holding, organization: "umich", ocn: c.ocns.first,
+            date_received: Date.today)]
         described_class.new(dupes).cluster
         cluster = Cluster.first
         expect(cluster.holdings.count).to eq(1)
@@ -207,8 +207,8 @@ RSpec.describe Clustering::ClusterHolding do
     let(:current_date) { DateTime.parse("2020-03-25") }
     let(:old1) do
       build(:holding,
-            status: "CH",
-            date_received: past_date)
+        status: "CH",
+        date_received: past_date)
     end
     let(:old2) { old1.clone }
     let(:new1) { old1.clone }
@@ -257,7 +257,7 @@ RSpec.describe Clustering::ClusterHolding do
       expect(clust.holdings.pluck(:date_received)).to \
         eq([new_date, old_date, old_date])
       described_class.delete_old_holdings(h.organization,
-                                          new_copy.date_received)
+        new_copy.date_received)
       clust = Cluster.first
       expect(clust.holdings.pluck(:date_received)).to \
         eq([new_date])

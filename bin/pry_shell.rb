@@ -11,7 +11,5 @@ require "pry"
 
 Services.mongo!
 
-# rubocop:disable Lint/Debugger
 binding.pry
 puts "Running pry shell."
-# rubocop:enable Lint/Debugger

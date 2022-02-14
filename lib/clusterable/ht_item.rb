@@ -68,6 +68,5 @@ module Clusterable
     def set_billing_entity
       self.billing_entity = Services.ht_collections[collection_code].billing_entity
     end
-
   end
 end

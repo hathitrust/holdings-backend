@@ -10,15 +10,15 @@ RSpec.describe Overlap::SinglePartOverlap do
   let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
   let(:ht2) do
     build(:ht_item, :spm,
-          ocns: c.ocns,
-          collection_code: "MIU")
+      ocns: c.ocns,
+      collection_code: "MIU")
   end
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "LM") }
   let(:h2) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: "umich",
-            condition: "BRT")
+      ocn: c.ocns.first,
+      organization: "umich",
+      condition: "BRT")
   end
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 

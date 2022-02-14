@@ -3,7 +3,6 @@
 require "cluster"
 
 module Clustering
-
   # This class provides a Cluster that contains the OCNs you want. There are
   # effectively three strategies:
   #
@@ -17,7 +16,7 @@ module Clustering
 
     def get
       Retryable.new.run do
-        try_strategies.tap {|c| yield c if block_given? }
+        try_strategies.tap { |c| yield c if block_given? }
       end
     end
 
@@ -38,7 +37,7 @@ module Clustering
       # operation, but don't start a transaction until we know we actually need
       # to merge clusters.
 
-      @clusters=Cluster.for_ocns(@ocns)
+      @clusters = Cluster.for_ocns(@ocns)
       @target = @clusters.shift
 
       return @target if @target.nil? || @clusters.empty?
@@ -66,6 +65,5 @@ module Clustering
         @target.add_to_set(ocns: @ocns)
       end
     end
-
   end
 end

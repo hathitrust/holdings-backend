@@ -5,7 +5,7 @@ require "faker"
 
 FactoryBot.define do
   factory :commitment, class: "Clusterable::Commitment" do
-    uuid  { SecureRandom.uuid }
+    uuid { SecureRandom.uuid }
     organization { ["umich", "upenn", "smu"].sample }
     ocn { rand(1_000_000) }
     local_id { "lid_" + rand(100).to_s }

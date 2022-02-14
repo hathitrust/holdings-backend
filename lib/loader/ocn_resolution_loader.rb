@@ -4,7 +4,6 @@ require "clusterable/ocn_resolution"
 require "clustering/cluster_ocn_resolution"
 
 module Loader
-
   # Constructs batches of HtItems from incoming file data
   class OCNResolutionLoader
     def item_from_line(line)

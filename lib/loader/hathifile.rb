@@ -21,16 +21,14 @@ module Loader
     end
 
     def load(loader: FileLoader.new(batch_loader: HtItemLoader.new))
-      begin
-        logger.info("Started loading #{filename}")
-        loader.load(filename)
-        @loaded = Time.now
-        mark_loaded
-        logger.info("Finished loading file #{filename}")
-      rescue StandardError => e
-        logger.error("Failed loading #{filename}: #{e}, not trying any more")
-        nil
-      end
+      logger.info("Started loading #{filename}")
+      loader.load(filename)
+      @loaded = Time.now
+      mark_loaded
+      logger.info("Finished loading file #{filename}")
+    rescue => e
+      logger.error("Failed loading #{filename}: #{e}, not trying any more")
+      nil
     end
 
     def source
@@ -53,6 +51,5 @@ module Loader
       # The update hathifile produced on a given date is named for the previous day
       Pathname.new(Settings.hathifile_path) + "hathi_upd_#{(date - 1).strftime("%Y%m%d")}.txt.gz"
     end
-
   end
 end

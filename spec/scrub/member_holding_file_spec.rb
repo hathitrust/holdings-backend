@@ -8,7 +8,7 @@ RSpec.describe Scrub::MemberHoldingFile do
 
   # Vars for tests expected to pass, prefix "ok_"
   let(:ok_mem) { "umich" }
-  let(:ok_fn)  { "umich_mono_full_20201230_corrected.tsv" }
+  let(:ok_fn) { "umich_mono_full_20201230_corrected.tsv" }
   let(:ok_mhf) { described_class.new(ok_fn) }
   let(:ok_header_mhf) do
     described_class.new(
@@ -17,11 +17,11 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   let(:ok_itype) { "mono" }
-  let(:ok_col_map) { { "oclc"=>0, "local_id"=>1 } }
+  let(:ok_col_map) { {"oclc" => 0, "local_id" => 1} }
 
   # Vars for tests expected to fail, prefix "bad_"
   let(:bad_mem) { "" }
-  let(:bad_fn)  { "FAIL ME PLEASE" }
+  let(:bad_fn) { "FAIL ME PLEASE" }
   let(:bad_mhf) { described_class.new(bad_fn) }
 
   # file headers
@@ -83,9 +83,9 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   it "can read a file and yield MemberHolding records" do
-    expect { ok_header_mhf.parse {|record| } }.not_to raise_error
+    expect { ok_header_mhf.parse { |record| } }.not_to raise_error
 
-    expect  do
+    expect do
       ok_header_mhf.parse do |record|
         unless record.is_a?(Scrub::MemberHolding)
           raise "yielded something else"

@@ -6,7 +6,6 @@ require "set"
 module DataSources
   # List of ocns for clusters too large to be stored with all holdings records
   class LargeClusters
-
     attr_accessor :ocns
 
     def initialize(ocns = load_large_clusters)

@@ -14,6 +14,6 @@ class BasicQueryReport
   def aggregate(query, &block)
     # We may have to change to allowDiskUse if/when we upgrade Mongo & mongo drivers,
     # because that seems like the more current lingo.
-    Cluster.collection.aggregate(query, { allow_disk_use: true }).each(&block)
+    Cluster.collection.aggregate(query, {allow_disk_use: true}).each(&block)
   end
 end

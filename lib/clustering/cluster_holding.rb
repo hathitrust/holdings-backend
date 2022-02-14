@@ -4,10 +4,8 @@ require "cluster"
 require "clustering/cluster_getter"
 
 module Clustering
-
   # Services for clustering Print Holdings records
   class ClusterHolding
-
     def initialize(*holdings)
       @holdings = holdings.flatten
       raise ArgumentError, "Must have holdings to cluster" unless @holdings.any?
@@ -15,7 +13,7 @@ module Clustering
       @ocn = @holdings.first.ocn
       @any_updated = false
 
-      if @holdings.count > 1 && @holdings.any? {|h| !h.batch_with?(@holdings.first) }
+      if @holdings.count > 1 && @holdings.any? { |h| !h.batch_with?(@holdings.first) }
         raise ArgumentError, "OCN for each holding in batch must match"
       end
 
@@ -33,7 +31,7 @@ module Clustering
 
           old_holdings = find_old_holdings(c, holding)
           if old_holdings.any?
-            old_holdings.each {|old| update_holding(old, holding) }
+            old_holdings.each { |old| update_holding(old, holding) }
           elsif duplicate_large_cluster_holding? c, holding, to_add
             next
           else
@@ -61,11 +59,11 @@ module Clustering
     def self.delete_old_holdings(org, date)
       Cluster.where(
         "holdings.organization": org,
-        "holdings.date_received": { "$lt": date }
+        "holdings.date_received": {"$lt": date}
       ).each do |c|
         c.holdings
-          .select {|h| h.organization == org && h.date_received < date }
-          .map {|h| ClusterHolding.new(h).delete }
+          .select { |h| h.organization == org && h.date_received < date }
+          .map { |h| ClusterHolding.new(h).delete }
       end
     end
 
@@ -73,7 +71,7 @@ module Clustering
 
     def update_holding(old, new)
       old.update_attributes(date_received: new.date_received,
-                            uuid: new.uuid)
+        uuid: new.uuid)
     end
 
     def find_old_holdings(cluster, holding)
@@ -95,8 +93,8 @@ module Clustering
 
     def duplicate_large_cluster_holding?(cluster, holding, to_add)
       cluster.large? &&
-        (cluster.holdings.to_a.find {|h| h.organization == holding.organization } ||
-         to_add.find {|h| h.organization == holding.organization })
+        (cluster.holdings.to_a.find { |h| h.organization == holding.organization } ||
+         to_add.find { |h| h.organization == holding.organization })
     end
 
     # Check and see if any items across existing/new holdings share a UUID but no other attributes.
@@ -104,8 +102,8 @@ module Clustering
     # Common case is that there is no overlap
     def check_for_duplicate_uuids!(existing_holdings, new_holdings)
       existing_by_uuid = existing_holdings.group_by(&:uuid)
-      new_by_uuid      = new_holdings.group_by(&:uuid)
-      common_uuids     = existing_by_uuid.keys & new_by_uuid.keys
+      new_by_uuid = new_holdings.group_by(&:uuid)
+      common_uuids = existing_by_uuid.keys & new_by_uuid.keys
 
       common_uuids.each do |uuid|
         existing = existing_by_uuid[uuid]
@@ -125,6 +123,5 @@ module Clustering
         end
       end
     end
-
   end
 end

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-# rubocop:disable Metrics/ClassLength
-
 require "zinzout"
 require "services"
 require "scrub/member_holding_header_factory"
@@ -22,7 +20,7 @@ module Scrub
 
     SPEC_RX = {
       # A single regex for file name pass/fail.
-      FILENAME:            /^
+      FILENAME: /^
       [a-z\-]+              # member_id
       _(mono|multi|serial)  # item_type
       _(full|partial)       # update_type
@@ -30,21 +28,21 @@ module Scrub
       (_.+)?                # optional "rest" part
       .tsv                  # must have a .tsv extension
       (.gz)?                # may have a .gz extension
-      $/x.freeze,
+      $/x,
 
       # Split filename on these to get the individual parts.
-      FILENAME_PART_DELIM: /[_.]/.freeze,
+      FILENAME_PART_DELIM: /[_.]/,
 
       # If filename fail, further regexes to discover why.
-      MEMBER_ID:           /^[a-z_\-]+$/.freeze,
-      ITEM_TYPE:           /^(mono|multi|serial)$/.freeze,
-      ITEM_TYPE_CONTEXT:   /_(mono|multi|serial)_/.freeze,
-      UPDATE_TYPE:         /^(full|partial)$/.freeze,
+      MEMBER_ID: /^[a-z_\-]+$/,
+      ITEM_TYPE: /^(mono|multi|serial)$/,
+      ITEM_TYPE_CONTEXT: /_(mono|multi|serial)_/,
+      UPDATE_TYPE: /^(full|partial)$/,
 
       # A YYYYMMDD date string is expected,
       # and of course this regex is overly permissive
       # but let's leave it like that.
-      DATE:                /^\d{8}$/.freeze
+      DATE: /^\d{8}$/
     }.freeze
 
     def initialize(path)
@@ -87,7 +85,7 @@ module Scrub
         raise FileNameError, "Empty filename"
       end
 
-      parts     = fn_str.split("_")
+      parts = fn_str.split("_")
       member_id = parts.first
 
       if SPEC_RX[:MEMBER_ID].match(member_id)
@@ -188,12 +186,10 @@ module Scrub
 
     def each_holding(&block)
       read_file do |line, line_no, col_map|
-        begin
-          # May be more than one, if multiple ocns
-          item_from_line(line, col_map).each(&block)
-        rescue BadRecordError => e
-          log("Rejected record #{filename}:#{line_no}, #{e.message}")
-        end
+        # May be more than one, if multiple ocns
+        item_from_line(line, col_map).each(&block)
+      rescue BadRecordError => e
+        log("Rejected record #{filename}:#{line_no}, #{e.message}")
       end
     end
 
@@ -204,13 +200,13 @@ module Scrub
 
       holding = MemberHolding.new(col_map)
 
-      all_ok  = holding.parse(line)
+      all_ok = holding.parse(line)
 
       unless all_ok
         raise BadRecordError, holding.violations.join(" // ")
       end
 
-      holding.organization      = @member_id
+      holding.organization = @member_id
       holding.mono_multi_serial = @item_type
 
       holding.explode_ocn
@@ -218,7 +214,7 @@ module Scrub
 
     def read_file
       Zinzout.zin(filepath) do |fh|
-        header  = MemberHoldingHeaderFactory.for(@item_type, fh.readline)
+        header = MemberHoldingHeaderFactory.for(@item_type, fh.readline)
         col_map = header.get_col_map
         line_no = 0
         fh.each_line do |line|
@@ -228,8 +224,5 @@ module Scrub
         end
       end
     end
-
   end
-
-  # rubocop:enable Metrics/ClassLength
 end

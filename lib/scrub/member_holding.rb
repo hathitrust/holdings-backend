@@ -7,21 +7,20 @@ require "scrub/scrub_fields"
 require "custom_errors"
 
 module Scrub
-
   # Represents the information in one line from a member holding file
   class MemberHolding
     attr_accessor :organization, :mono_multi_serial, :ocn, :uuid
 
     attr_reader :local_id, :status, :condition, :enum_chron, :issn,
-                :gov_doc_flag, :date_received, :n_enum, :n_chron,
-                :violations
+      :gov_doc_flag, :date_received, :n_enum, :n_chron,
+      :violations
 
     def initialize(col_map = {})
-      @col_map       = col_map
-      @scrubfields   = ScrubFields.new
-      @violations    = []
+      @col_map = col_map
+      @scrubfields = ScrubFields.new
+      @violations = []
       @date_received = Time.new.strftime("%Y-%m-%d")
-      @uuid          = SecureRandom.uuid
+      @uuid = SecureRandom.uuid
     end
 
     def log(msg)
@@ -51,7 +50,6 @@ module Scrub
 
     # Given a column name and a value, sets the proper attribute
     # via ScrubFields
-    # rubocop:disable Metrics/MethodLength
     def set(col_type, col_val)
       if col_val.nil?
         Services.scrub_logger.warn(
@@ -77,16 +75,15 @@ module Scrub
       when "enumchron"
         @enum_chron = col_val
         normalized = @scrubfields.enumchron(col_val)
-        @n_enum  = normalized[0]
+        @n_enum = normalized[0]
         @n_chron = normalized[1]
       when "issn"
         @issn = @scrubfields.issn(col_val)
       else
         raise ColValError,
-              "cannot handle column type #{col_type} (value: #{col_val})"
+          "cannot handle column type #{col_type} (value: #{col_val})"
       end
     end
-    # rubocop:enable Metrics/MethodLength
 
     # In case a MemberHolding.ocn has more than one value, we need to
     # explode into 1 MemberHolding per ocn.
@@ -100,8 +97,8 @@ module Scrub
 
       log("Exploding OCNs: #{ocn.join(",")}")
       @ocn.each do |ocn|
-        doppel      = clone
-        doppel.ocn  = ocn
+        doppel = clone
+        doppel.ocn = ocn
         doppel.uuid = SecureRandom.uuid
         siblings << doppel
       end
@@ -111,21 +108,20 @@ module Scrub
 
     def to_json(*_args)
       {
-        ocn:               ocn,
-        local_id:          local_id,
-        organization:      organization,
-        status:            status,
-        condition:         condition,
-        enum_chron:        enum_chron,
+        ocn: ocn,
+        local_id: local_id,
+        organization: organization,
+        status: status,
+        condition: condition,
+        enum_chron: enum_chron,
         mono_multi_serial: mono_multi_serial,
-        issn:              issn,
-        gov_doc_flag:      gov_doc_flag,
-        uuid:              uuid,
-        date_received:     date_received,
-        n_enum:            n_enum,
-        n_chron:           n_chron
+        issn: issn,
+        gov_doc_flag: gov_doc_flag,
+        uuid: uuid,
+        date_received: date_received,
+        n_enum: n_enum,
+        n_chron: n_chron
       }.to_json
     end
-
   end
 end

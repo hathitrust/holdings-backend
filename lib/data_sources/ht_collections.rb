@@ -7,7 +7,7 @@ module DataSources
   # An individual Collection record
   class HTCollection
     attr_reader :collection, :content_provider_cluster, :responsible_entity,
-                :original_from_inst_id, :billing_entity
+      :original_from_inst_id, :billing_entity
 
     def initialize(collection:, content_provider_cluster:, responsible_entity:,
       original_from_inst_id:, billing_entity:)
@@ -43,12 +43,12 @@ module DataSources
     def load_from_db
       Services.holdings_db[:ht_collections]
         .select(:collection,
-                :content_provider_cluster,
-                :responsible_entity,
-                :original_from_inst_id,
-                :billing_entity)
+          :content_provider_cluster,
+          :responsible_entity,
+          :original_from_inst_id,
+          :billing_entity)
         .as_hash(:collection)
-        .transform_values {|h| DataSources::HTCollection.new(**h) }
+        .transform_values { |h| DataSources::HTCollection.new(**h) }
     end
 
     def [](collection)

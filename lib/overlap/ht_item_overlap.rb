@@ -6,7 +6,6 @@ require "clusterable/ht_item"
 module Overlap
   # Collects organizations with an HTItem overlap
   class HtItemOverlap
-
     attr_accessor :matching_orgs, :matching_members, :ht_item
 
     def initialize(ht_item)

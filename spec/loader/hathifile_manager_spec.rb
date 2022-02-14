@@ -9,8 +9,8 @@ RSpec.describe Loader::HathifileManager do
     let(:hathifile_factory) { double(:hathifile_factory) }
     let(:loader) do
       described_class.new(hathifile_factory: hathifile_factory,
-                          last_loaded: last_loaded,
-                          loading_flag: loading_flag)
+        last_loaded: last_loaded,
+        loading_flag: loading_flag)
     end
 
     context "when there are no new files" do

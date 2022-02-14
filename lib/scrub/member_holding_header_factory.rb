@@ -4,7 +4,6 @@ require "custom_errors"
 require "scrub/member_holding_header"
 
 module Scrub
-
   # Usage:
   #
   # MemberHoldingHeaderFactory.for("mono", str)   -> MonoHoldingHeader

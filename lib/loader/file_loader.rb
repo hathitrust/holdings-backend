@@ -10,7 +10,7 @@ module Loader
     def initialize(batch_loader:, batch_size: 10_000)
       @logger = Services.logger
       @marker = Services.progress_tracker.new(batch_size)
-      @batch_size   = batch_size
+      @batch_size = batch_size
       @batch_loader = batch_loader
     end
 
@@ -21,7 +21,7 @@ module Loader
     def skip_matching_header(filehandle, skip_match)
       return filehandle unless skip_match
 
-      iter     = filehandle.enum_for(:each)
+      iter = filehandle.enum_for(:each)
       nextline = iter.next
       unless skip_match.match(nextline)
         iter.rewind
@@ -37,9 +37,9 @@ module Loader
     def load(filename, filehandle: Zinzout.zin(filename), skip_header_match: nil)
       logger.info "Loading #{filename}, batches of #{ppnum @batch_size}"
       skip_matching_header(filehandle, skip_header_match).each.lazy
-        .map {|line| log_and_parse(line) }
-        .chunk_while {|item1, item2| item1.batch_with?(item2) }
-        .each {|batch| batch_loader.load(batch) }
+        .map { |line| log_and_parse(line) }
+        .chunk_while { |item1, item2| item1.batch_with?(item2) }
+        .each { |batch| batch_loader.load(batch) }
 
       logger.info marker.final_line
       marker.count
@@ -49,8 +49,8 @@ module Loader
       logger.info "Deleting items from #{filename}, batches of #{ppnum @batch_size}"
 
       filehandle.lazy
-        .map {|line| log_and_parse(line) }
-        .each {|item| batch_loader.delete(item) }
+        .map { |line| log_and_parse(line) }
+        .each { |item| batch_loader.delete(item) }
 
       logger.info marker.final_line
     end
@@ -58,11 +58,10 @@ module Loader
     private
 
     def log_and_parse(line)
-      marker.incr.on_batch {|m| logger.info m.batch_line }
+      marker.incr.on_batch { |m| logger.info m.batch_line }
       batch_loader.item_from_line(line)
     end
 
     attr_reader :logger, :marker, :batch_size, :batch_loader
-
   end
 end

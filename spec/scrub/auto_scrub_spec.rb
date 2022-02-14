@@ -17,7 +17,7 @@ RSpec.describe Scrub::AutoScrub do
   test_file.close
 
   let(:today_ymd) { Time.new.strftime("%F") }
-  let(:scrubber)  { described_class.new(test_file_path) }
+  let(:scrubber) { described_class.new(test_file_path) }
   let(:out_struct) { scrubber.output_struct }
 
   it "does a scrub without raising anything" do

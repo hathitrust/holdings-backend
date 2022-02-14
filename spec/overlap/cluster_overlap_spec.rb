@@ -9,9 +9,9 @@ RSpec.describe Overlap::ClusterOverlap do
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
   let(:holding2) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: "smu",
-            condition: "brt")
+      ocn: c.ocns.first,
+      organization: "smu",
+      condition: "brt")
   end
 
   before(:each) do

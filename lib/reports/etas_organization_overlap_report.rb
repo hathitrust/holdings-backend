@@ -7,7 +7,6 @@ require "overlap/etas_overlap"
 require "utils/session_keep_alive"
 
 module Reports
-
   # Generates overlap reports for 1 or all organizations
   class EtasOrganizationOverlapReport
     attr_accessor :reports, :date_of_report, :report_path, :remote_report_path, :organization
@@ -38,7 +37,7 @@ module Reports
       Utils::SessionKeepAlive.new(120).run do
         if organization.nil?
           Cluster.batch_size(Settings.etas_overlap_batch_size)
-            .where("holdings.0": { "$exists": 1 }).no_timeout
+            .where("holdings.0": {"$exists": 1}).no_timeout
         else
           Cluster.batch_size(Settings.etas_overlap_batch_size)
             .where("holdings.organization": organization).no_timeout
@@ -53,7 +52,7 @@ module Reports
     def missed_holdings(cluster, holdings_matched)
       org_local_ids = Set.new(holdings_matched.pluck(:organization, :local_id))
       if organization.nil?
-        cluster.holdings.reject {|h| org_local_ids.include? [h.organization, h.local_id] }
+        cluster.holdings.reject { |h| org_local_ids.include? [h.organization, h.local_id] }
       else
         cluster.holdings.group_by(&:organization)[organization].reject do |h|
           org_local_ids.include? [h.organization, h.local_id]
@@ -99,22 +98,22 @@ module Reports
 
     def header
       ["oclc",
-       "local_id",
-       "item_type",
-       "rights",
-       "access",
-       "catalog_id",
-       "volume_id",
-       "enum_chron"].join("\t")
+        "local_id",
+        "item_type",
+        "rights",
+        "access",
+        "catalog_id",
+        "volume_id",
+        "enum_chron"].join("\t")
     end
 
     def write_records_for_unmatched_holdings(cluster, holdings_matched)
       records_written = Set.new
       missed_holdings(cluster, holdings_matched).each do |holding|
         etas_record = Overlap::ETASOverlap.new(organization: holding.organization,
-                        ocn: holding.ocn,
-                        local_id: holding.local_id,
-                        item_type: holding.mono_multi_serial)
+          ocn: holding.ocn,
+          local_id: holding.local_id,
+          item_type: holding.mono_multi_serial)
         next if records_written.include? etas_record.to_s
 
         records_written << etas_record.to_s
@@ -128,7 +127,7 @@ module Reports
       Zlib::GzipWriter.open(zipped) do |gz|
         File.open(rpt) do |file|
           gz.mtime = File.mtime(file)
-          while (chunk = file.read(16*1024))
+          while (chunk = file.read(16 * 1024))
             gz.write(chunk)
           end
         end
@@ -148,10 +147,8 @@ module Reports
 
     def rclone_move(file, org)
       ["rclone", "--config", Settings.rclone_config_path, "move",
-       File.path(file),
-       "#{@remote_report_path}/#{org}-hathitrust-member-data/analysis"]
+        File.path(file),
+        "#{@remote_report_path}/#{org}-hathitrust-member-data/analysis"]
     end
-
   end
-
 end

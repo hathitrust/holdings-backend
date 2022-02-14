@@ -7,33 +7,33 @@ RSpec.describe Utils::PushMetricsMarker do
   let(:batch_size) { rand(100) }
   let(:seconds_so_far) { rand(100) }
   let(:records_so_far) { rand(100) }
-  let(:success_interval) { 24*60*60 * rand(7) }
+  let(:success_interval) { 24 * 60 * 60 * rand(7) }
 
   let(:marker) do
     instance_double(Milemarker,
-                    final_line: true,
-                    total_seconds_so_far: seconds_so_far,
-                    count: records_so_far).tap do |d|
-                      allow(d).to receive(:on_batch).and_yield(d)
-                    end
+      final_line: true,
+      total_seconds_so_far: seconds_so_far,
+      count: records_so_far).tap do |d|
+      allow(d).to receive(:on_batch).and_yield(d)
+    end
   end
 
   let(:pushgateway) { instance_double(Prometheus::Client::Push, add: true) }
   let(:registry) { instance_double(Prometheus::Client::Registry) }
   let(:metrics) do
     {
-      duration:          instance_double(Prometheus::Client::Gauge, set: true),
-      last_success:      instance_double(Prometheus::Client::Gauge, set: true),
+      duration: instance_double(Prometheus::Client::Gauge, set: true),
+      last_success: instance_double(Prometheus::Client::Gauge, set: true),
       records_processed: instance_double(Prometheus::Client::Gauge, set: true),
-      success_interval:  instance_double(Prometheus::Client::Gauge, set: true)
+      success_interval: instance_double(Prometheus::Client::Gauge, set: true)
     }
   end
 
   let(:params) do
     {
-      marker:      marker,
-      registry:    registry,
-      metrics:     metrics,
+      marker: marker,
+      registry: registry,
+      metrics: metrics,
       pushgateway: pushgateway
     }
   end
@@ -69,7 +69,7 @@ RSpec.describe Utils::PushMetricsMarker do
     it "sets success interval metric with constructor param" do
       expect(metrics[:success_interval]).to receive(:set).with(success_interval)
 
-      described_class.new(batch_size, **params.merge({ success_interval: success_interval }))
+      described_class.new(batch_size, **params.merge({success_interval: success_interval}))
     end
 
     it "pushes initial metrics to pushgateway" do

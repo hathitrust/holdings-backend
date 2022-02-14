@@ -89,7 +89,7 @@ RSpec.describe SharedPrint::DeprecationRecord do
 
   describe "#commitments" do
     it "finds commitments if there are commitments on the cluster" do
-      dep =  described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
+      dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
       make_commitment(ocn, org, loc)
       expect(dep.commitments.size).to eq 1
       expect(dep.commitments.first).to be_a Clusterable::Commitment
@@ -97,7 +97,7 @@ RSpec.describe SharedPrint::DeprecationRecord do
     end
 
     it "does not find commitments if there are no commitments on the cluster" do
-      dep =  described_class.new(organization: org, ocn: empty_cluster.ocns.first, local_id: loc, status: sta)
+      dep = described_class.new(organization: org, ocn: empty_cluster.ocns.first, local_id: loc, status: sta)
       expect(dep.commitments.size).to eq 0
       expect(dep.err.size).to eq 1
     end

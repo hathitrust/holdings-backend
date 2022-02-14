@@ -4,16 +4,14 @@ require "cluster"
 require "clustering/cluster_getter"
 
 module Clustering
-
   # Services for batch loading Commitments
   class ClusterCommitment
-
     def initialize(*commitments)
       @commitments = commitments.flatten
       @ocn = @commitments.first.ocn
       @any_updated = false
 
-      if @commitments.count > 1 && @commitments.any? {|c| !c.batch_with?(@commitments.first) }
+      if @commitments.count > 1 && @commitments.any? { |c| !c.batch_with?(@commitments.first) }
         raise ArgumentError, "OCN for each Commitment in batch must match"
       end
 
@@ -43,6 +41,5 @@ module Clustering
     def uuids_in_cluster(cluster)
       cluster.commitments.pluck(:uuid)
     end
-
   end
 end

@@ -31,10 +31,10 @@ RSpec.describe HoldingsDeleter do
   def empty_clusters
     Cluster.collection.aggregate(
       [
-        { "$match": { "holdings.0":        { "$exists": 0 } } },
-        { "$match": { "commitments.0":     { "$exists": 0 } } },
-        { "$match": { "ht_items.0":        { "$exists": 0 } } },
-        { "$match": { "ocn_resolutions.0": { "$exists": 0 } } }
+        {"$match": {"holdings.0": {"$exists": 0}}},
+        {"$match": {"commitments.0": {"$exists": 0}}},
+        {"$match": {"ht_items.0": {"$exists": 0}}},
+        {"$match": {"ocn_resolutions.0": {"$exists": 0}}}
       ]
     )
   end
@@ -59,13 +59,23 @@ RSpec.describe HoldingsDeleter do
     end
 
     it "can take many params" do
-      many_params = [ # ugly bc rubocop thinks it's too long otherwise
-        "--ocn", "1", "--organization", "1", "--local_id", "1",
-        "--enum_chron", "1", "--n_enum", "1", "--n_chron", "1",
-        "--status", "CH", "--condition", "BRT", "--mono_multi_serial", "mono",
-        "--country_code", "se", "--uuid", "1", "--issn", "1",
-        "--date_received", "2020-01-01", "--weight", "1.33",
-        "--gov_doc_flag", "true", "--noop", "1"
+      many_params = [
+        "--ocn", "1",
+        "--organization", "1",
+        "--local_id", "1",
+        "--enum_chron", "1",
+        "--n_enum", "1",
+        "--n_chron", "1",
+        "--status", "CH",
+        "--condition", "BRT",
+        "--mono_multi_serial", "mono",
+        "--country_code", "se",
+        "--uuid", "1",
+        "--issn", "1",
+        "--date_received", "2020-01-01",
+        "--weight", "1.33",
+        "--gov_doc_flag", "true",
+        "--noop", "1"
       ]
       expect { new_test(*many_params) }.not_to raise_exception
     end

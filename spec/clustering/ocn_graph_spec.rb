@@ -9,7 +9,7 @@ RSpec.describe Clustering::OCNGraph do
   let(:set_bc) { Set.new([:b, :c]) }
   let(:g) { described_class.new }
 
-  describe "#add_tuple"  do
+  describe "#add_tuple" do
     it "adds all ocns in a tuple to @nodes" do
       g.add_tuple([:a, :b, :c])
       expect(g.vertices).to eq([:a, :b, :c])

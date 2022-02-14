@@ -26,10 +26,10 @@ module Overlap
       Services.logger.info "Upserting clusters last_modified after\
       #{cutoff_str} to holdings_htitem_htmember"
       Utils::SessionKeepAlive.new(120).run do
-        Cluster.where("ht_items.0": { "$exists": 1 },
-                      last_modified: { "$gt": cutoff_date }).no_timeout.each do |cluster|
-                        upsert_and_track cluster
-                      end
+        Cluster.where("ht_items.0": {"$exists": 1},
+          last_modified: {"$gt": cutoff_date}).no_timeout.each do |cluster|
+          upsert_and_track cluster
+        end
       end
       Services.logger.info marker.final_line
     end

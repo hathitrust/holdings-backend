@@ -14,33 +14,33 @@ RSpec.describe "CompileCostReports" do
 
   let(:ht_serial) do
     build(:ht_item, :ser,
-          collection_code: "MIU",
-          access: "deny")
+      collection_code: "MIU",
+      access: "deny")
   end
   let(:ht_spm) do
     build(:ht_item, :spm,
-          collection_code: "MIU",
-          access: "deny")
+      collection_code: "MIU",
+      access: "deny")
   end
   let(:ht_mpm1) do
     build(:ht_item, :mpm,
-          enum_chron: "1",
-          n_enum: "1",
-          collection_code: "MIU",
-          access: "deny")
+      enum_chron: "1",
+      n_enum: "1",
+      collection_code: "MIU",
+      access: "deny")
   end
   let(:ht_mpm2) do
     build(:ht_item, :mpm,
-          ocns: ht_mpm1.ocns,
-          ht_bib_key: ht_mpm1.ht_bib_key,
-          enum_chron: "",
-          collection_code: "PU",
-          access: "deny")
+      ocns: ht_mpm1.ocns,
+      ht_bib_key: ht_mpm1.ht_bib_key,
+      enum_chron: "",
+      collection_code: "PU",
+      access: "deny")
   end
   let(:ht_spm_pd) do
     build(:ht_item, :spm,
-          collection_code: "MIU",
-          access: "allow")
+      collection_code: "MIU",
+      access: "allow")
   end
   let(:holding_serial1) { build(:holding, ocn: ht_serial.ocns.first, organization: "umich") }
   let(:holding_serial2) { build(:holding, ocn: ht_serial.ocns.first, organization: "utexas") }
@@ -74,15 +74,15 @@ RSpec.describe "CompileCostReports" do
     # umich has 1 instance of a spm held by 1 org (umich)
     # umich has 1 instance of a ser held by 2 org (umich and utexas)
     # umich has 2 instance of a mpm held by 3 org ([smu, umich, utexas] and [smu, umich, upenn])
-    expect(cr.freq_table[:umich]).to eq(spm: { 1=>1 }, ser: { 2=>1 }, mpm: { 3=>2 })
+    expect(cr.freq_table[:umich]).to eq(spm: {1 => 1}, ser: {2 => 1}, mpm: {3 => 2})
     # 1/2 of the ht_serial
     # 1 of the ht_spm
     # 1/3 of ht_mpm1 (with SMU and upenn)
     # 1/3 of ht_mpm2 (with SMU and upenn)
-    expect(cr.total_hscore(:umich)).to be_within(0.0001).of(1/2.0 + 1.0 + 1/3.0 + 1/3.0)
+    expect(cr.total_hscore(:umich)).to be_within(0.0001).of(1 / 2.0 + 1.0 + 1 / 3.0 + 1 / 3.0)
     # 1 instance of a ser held by 2 orgs (umich and utexas)
     # 1 instance of a mpm held by 3 orgs (smu, umich, utexas)
-    expect(cr.freq_table[:utexas]).to eq(ser: { 2 => 1 }, mpm: { 3 => 1 })
+    expect(cr.freq_table[:utexas]).to eq(ser: {2 => 1}, mpm: {3 => 1})
   end
 
   it "computes total pd_cost" do
@@ -95,8 +95,8 @@ RSpec.describe "CompileCostReports" do
     # cost_per_volume = $1
     expect(cr.spm_costs(:umich)).to eq(1.0)
     # A third of two volumes for $1 each
-    expect(cr.mpm_costs(:umich)).to eq(1/3.0 * 2 * 1.00)
-    expect(cr.ser_costs(:umich)).to eq(1/2.0 * 1 * 1.00)
+    expect(cr.mpm_costs(:umich)).to eq(1 / 3.0 * 2 * 1.00)
+    expect(cr.ser_costs(:umich)).to eq(1 / 2.0 * 1 * 1.00)
   end
 
   it "computes total IC costs for a member" do

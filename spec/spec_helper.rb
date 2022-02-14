@@ -58,7 +58,7 @@ RSpec.configure do |config|
     Services.register(:ht_collections) { mock_collections }
     Services.register(:large_clusters) { mock_large_clusters }
     Services.register(:logger) do
-      Logger.new("test.log").tap {|l| l.level = Logger::DEBUG }
+      Logger.new("test.log").tap { |l| l.level = Logger::DEBUG }
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }
     end
     Services.register(:scrub_logger) { Services.logger }

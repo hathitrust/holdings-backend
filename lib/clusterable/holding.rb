@@ -6,7 +6,6 @@ require "enum_chron"
 require "json"
 
 module Clusterable
-
   # A holding
   class Holding
     include Mongoid::Document
@@ -56,20 +55,20 @@ module Clusterable
     def self.holding_to_record(holding_line)
       # OCN  BIB  MEMBER_ID  STATUS  CONDITION  DATE  ENUM_CHRON  TYPE  \
       # ISSN  N_ENUM  N_CHRON  GOV_DOC UUID
-      fields = holding_line.split(/\t/)
-      { ocn:               fields[0].to_i,
-        local_id:          fields[1],
-        organization:      fields[2],
-        status:            fields[3],
-        condition:         fields[4],
-        date_received:     DateTime.parse(fields[5]),
-        enum_chron:        fields[6],
-        mono_multi_serial: fields[7],
-        issn:              fields[8],
-        n_enum:            fields[9],
-        n_chron:           fields[10],
-        gov_doc_flag:      !fields[11].to_i.zero?,
-        uuid:              fields[12] }
+      fields = holding_line.split("\t")
+      {ocn: fields[0].to_i,
+       local_id: fields[1],
+       organization: fields[2],
+       status: fields[3],
+       condition: fields[4],
+       date_received: DateTime.parse(fields[5]),
+       enum_chron: fields[6],
+       mono_multi_serial: fields[7],
+       issn: fields[8],
+       n_enum: fields[9],
+       n_chron: fields[10],
+       gov_doc_flag: !fields[11].to_i.zero?,
+       uuid: fields[12]}
     end
 
     def self.new_from_holding_file_line(line)
@@ -88,7 +87,7 @@ module Clusterable
     # @param other, another holding
     def ==(other)
       (fields.keys - EQUALITY_EXCLUDED_FIELDS)
-        .all? {|attr| public_send(attr) == other.public_send(attr) }
+        .all? { |attr| public_send(attr) == other.public_send(attr) }
     end
 
     # Is true when all fields match except for _id
@@ -114,8 +113,7 @@ module Clusterable
 
     def set_organization_data
       self.country_code = Services.ht_organizations[organization].country_code
-      self.weight       = Services.ht_organizations[organization].weight
+      self.weight = Services.ht_organizations[organization].weight
     end
-
   end
 end

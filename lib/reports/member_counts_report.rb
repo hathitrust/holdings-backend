@@ -49,16 +49,16 @@ module Reports
     # Count number of loaded holdings records per member & format
     def total_loaded
       q = [
-        { "$match": { "holdings.0": { "$exists": 1 } } },
-        { "$project": { "holdings": 1 } },
-        { "$unwind": "$holdings" },
-        { "$group": {
-          "_id":   {
-            "org": "$holdings.organization",
-            "fmt": "$holdings.mono_multi_serial"
+        {"$match": {"holdings.0": {"$exists": 1}}},
+        {"$project": {holdings: 1}},
+        {"$unwind": "$holdings"},
+        {"$group": {
+          _id: {
+            org: "$holdings.organization",
+            fmt: "$holdings.mono_multi_serial"
           },
-          "count": { "$sum": 1 }
-        } }
+          count: {"$sum": 1}
+        }}
       ]
 
       BasicQueryReport.new.aggregate(q) do |res|
@@ -99,9 +99,9 @@ module Reports
     attr_accessor :total_loaded, :matching_volumes
 
     def initialize(org)
-      @org              = org
-      @total_loaded     = { MON => 0, MUL => 0, SER => 0 }
-      @matching_volumes = { MON => 0, MUL => 0, SER => 0 }
+      @org = org
+      @total_loaded = {MON => 0, MUL => 0, SER => 0}
+      @matching_volumes = {MON => 0, MUL => 0, SER => 0}
     end
 
     # 2-row header, like:

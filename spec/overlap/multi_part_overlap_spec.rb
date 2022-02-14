@@ -12,19 +12,19 @@ RSpec.describe Overlap::MultiPartOverlap do
   let(:h_wrong_ec) { build(:holding, ocn: c.ocns.first, enum_chron: "2", n_enum: "2") }
   let(:h_lm) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: h_w_ec.organization,
-            n_enum: "1",
-            status: "LM")
+      ocn: c.ocns.first,
+      organization: h_w_ec.organization,
+      n_enum: "1",
+      status: "LM")
   end
 
   let(:h_brt_wd) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: h_w_ec.organization,
-            n_enum: "1",
-            condition: "BRT",
-            status: "WD")
+      ocn: c.ocns.first,
+      organization: h_w_ec.organization,
+      n_enum: "1",
+      condition: "BRT",
+      status: "WD")
   end
 
   before(:each) do

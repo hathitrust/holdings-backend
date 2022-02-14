@@ -4,7 +4,6 @@ require "cluster"
 
 # Calculates the format for HT Items and OCN Clusters
 class CalculateFormat
-
   def initialize(cluster)
     @cluster = cluster
   end
@@ -38,7 +37,7 @@ class CalculateFormat
   private
 
   def any_of_format?(format)
-    @cluster.ht_items.any? {|ht| item_format(ht) == format }
+    @cluster.ht_items.any? { |ht| item_format(ht) == format }
   end
 
   def cluster_has_item_with_enum_and_same_ht_bib_key?(ht_item)
@@ -46,5 +45,4 @@ class CalculateFormat
       ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum.empty?
     end
   end
-
 end

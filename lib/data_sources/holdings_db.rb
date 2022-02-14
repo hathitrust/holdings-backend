@@ -13,7 +13,6 @@ module DataSources
   # Backend for connection to MySQL database for production information about
   # holdings and institutions
   class HoldingsDB < SimpleDelegator
-
     attr_reader :rawdb
     attr_accessor :connection_string
 
@@ -90,11 +89,10 @@ module DataSources
     end
 
     class << self
-
       private
 
       def conn_opts(config)
-        local_infile = { config_local_infile: 1 }
+        local_infile = {config_local_infile: 1}
         url = config[:url]
         opts = config[:opts]
         if url
@@ -109,12 +107,11 @@ module DataSources
       # Merge url, opts, or db settings from a hash into our config
       def merge_config(config)
         merged_config = Settings.database.to_hash
-        merged_config[:url]  = config[:url]  if config.key?(:url)
+        merged_config[:url] = config[:url] if config.key?(:url)
         merged_config[:opts] = config[:opts] if config.key?(:opts)
 
         merged_config
       end
     end
-
   end
 end

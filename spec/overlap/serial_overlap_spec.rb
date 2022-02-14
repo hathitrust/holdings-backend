@@ -10,10 +10,10 @@ RSpec.describe Overlap::SerialOverlap do
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
   let(:h2) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: "umich",
-            condition: "brt",
-            enum_chron: "")
+      ocn: c.ocns.first,
+      organization: "umich",
+      condition: "brt",
+      enum_chron: "")
   end
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 

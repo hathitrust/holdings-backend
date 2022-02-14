@@ -10,10 +10,10 @@ RSpec.describe Overlap::Overlap do
     let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
     let(:h2) do
       build(:holding,
-            ocn: c.ocns.first,
-              organization: "umich",
-              condition: "brt",
-              enum_chron: "V.1")
+        ocn: c.ocns.first,
+        organization: "umich",
+        condition: "brt",
+        enum_chron: "V.1")
     end
     let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
@@ -31,15 +31,15 @@ RSpec.describe Overlap::Overlap do
       it "returns a mostly empty hash" do
         overlap_hash = described_class.new(c, h.organization, ht).to_hash
         expect(overlap_hash).to eq(lock_id: c._id.to_s, cluster_id: c._id.to_s,
-            volume_id: ht.item_id,
-            member_id: h.organization,
-            n_enum: "",
-            # Counts are overridden by subclasses
-            copy_count: 0,
-            brt_count: 0,
-            wd_count: 0,
-            lm_count: 0,
-            access_count: 0)
+          volume_id: ht.item_id,
+          member_id: h.organization,
+          n_enum: "",
+          # Counts are overridden by subclasses
+          copy_count: 0,
+          brt_count: 0,
+          wd_count: 0,
+          lm_count: 0,
+          access_count: 0)
       end
     end
 
@@ -61,7 +61,7 @@ RSpec.describe Overlap::Overlap do
     end
 
     it "computes a lock id for an MPM" do
-      ht_item = build(:ht_item, :mpm,  n_enum: "V.1")
+      ht_item = build(:ht_item, :mpm, n_enum: "V.1")
       cluster = Clustering::ClusterHtItem.new(ht_item).cluster
       overlap = described_class.new(cluster, "an_org", ht_item)
       expect(cluster.format).to eq("mpm")

@@ -27,15 +27,15 @@ module Overlap
 
     def to_hash
       {
-        lock_id:      lock_id,
-        cluster_id:   @cluster._id.to_s,
-        volume_id:    @ht_item.item_id,
-        n_enum:       @ht_item.n_enum,
-        member_id:    @org,
-        copy_count:   copy_count,
-        brt_count:    brt_count,
-        wd_count:     wd_count,
-        lm_count:     lm_count,
+        lock_id: lock_id,
+        cluster_id: @cluster._id.to_s,
+        volume_id: @ht_item.item_id,
+        n_enum: @ht_item.n_enum,
+        member_id: @org,
+        copy_count: copy_count,
+        brt_count: brt_count,
+        wd_count: wd_count,
+        lm_count: lm_count,
         access_count: access_count
       }
     end

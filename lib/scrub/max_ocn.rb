@@ -44,8 +44,8 @@ module Scrub
     private
 
     def memo_expired?
-      mtime     = File.stat(MEMO_LOC).mtime.to_i
-      epoch     = Time.now.to_i
+      mtime = File.stat(MEMO_LOC).mtime.to_i
+      epoch = Time.now.to_i
       time_diff = epoch - mtime
       @log.info "time diff #{time_diff}"
       time_diff > @age_limit
@@ -66,14 +66,13 @@ module Scrub
         @log.info "mock call"
         IO.read("spec/fixtures/max_oclc_response.json")
       else
-        URI.open(OCLC_URL).read
+        URI.parse(OCLC_URL).open.read
       end
     end
 
     def read_file
       @ocn = IO.read(MaxOcn.memo_loc).strip.to_i
     end
-
   end
 end
 

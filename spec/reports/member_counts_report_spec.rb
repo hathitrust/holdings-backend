@@ -28,7 +28,7 @@ RSpec.describe "MemberCountsReport" do
     it "makes rows for all members given" do
       expect(rows.size).to eq(3)
       expect(
-        rows.key?("umich")  &&
+        rows.key?("umich") &&
         rows.key?("utexas") &&
         rows.key?("smu")
       ).to be(true)

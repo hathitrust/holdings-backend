@@ -97,7 +97,7 @@ RSpec.describe ClusterUpdate do
     let(:new_holding) { build(:holding) }
     let(:updated_item) do
       build(:ht_item, item_id: ht.item_id,
-                                ocns: [new_holding.ocn], billing_entity: "not_same_as_holding")
+        ocns: [new_holding.ocn], billing_entity: "not_same_as_holding")
     end
 
     before(:each) do

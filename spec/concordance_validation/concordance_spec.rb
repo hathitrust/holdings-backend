@@ -51,8 +51,8 @@ RSpec.describe ConcordanceValidation::Concordance do
   describe "compile_sub_graph" do
     it "compiles a list of all edges when given an ocn" do
       disconnected = described_class.new("spec/concordance_validation/data/disconnected.tsv")
-      expect(disconnected.compile_sub_graph(2)).to eq([{ 1 => [2, 3], 2 => [3] },
-                                                       { 2 => [1], 3 => [1, 2] }])
+      expect(disconnected.compile_sub_graph(2)).to eq([{1 => [2, 3], 2 => [3]},
+        {2 => [1], 3 => [1, 2]}])
     end
   end
 

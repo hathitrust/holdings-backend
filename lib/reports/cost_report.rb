@@ -4,7 +4,6 @@ require "overlap/ht_item_overlap"
 require "services"
 
 module Reports
-
   # Generates reports based on h_share
   class CostReport
     attr_accessor :organization, :logger, :maxlines, :target_cost
@@ -17,15 +16,15 @@ module Reports
       # Member Hash of a format hash of a member count hash
       # { org => { ser : { 1 org : count, 2 org : count }, mpm : {...
       @freq_table = Hash.new do |hash, member|
-        hash[member] = Hash.new {|fmt_hash, fmt| fmt_hash[fmt] = Hash.new(0) }
+        hash[member] = Hash.new { |fmt_hash, fmt| fmt_hash[fmt] = Hash.new(0) }
       end
     end
 
     def num_volumes
       @num_volumes ||= Cluster.collection.aggregate(
         [
-          { '$match': { "ht_items.0": { "$exists": 1 } } },
-          { '$group': { _id: nil, items_count: { "$sum": { '$size': "$ht_items" } } } }
+          {'$match': {"ht_items.0": {"$exists": 1}}},
+          {'$group': {_id: nil, items_count: {"$sum": {'$size': "$ht_items"}}}}
         ]
       ).first[:items_count]
     end
@@ -33,12 +32,12 @@ module Reports
     def num_pd_volumes
       @num_pd_volumes ||= Cluster.collection.aggregate(
         [
-          { '$match': { "ht_items.0": { "$exists": 1 } } },
-          { '$group': { _id:         nil,
-                        items_count: { "$sum": { "$size": {
-                          "$filter": { input: "$ht_items", as:    "item",
-                                       cond:  { "$eq": ["$$item.access", "allow"] } }
-                        } } } } }
+          {'$match': {"ht_items.0": {"$exists": 1}}},
+          {'$group': {_id: nil,
+                      items_count: {"$sum": {"$size": {
+                        "$filter": {input: "$ht_items", as:    "item",
+                                    cond: {"$eq": ["$$item.access", "allow"]}}
+                      }}}}}
         ]
       ).first[:items_count]
     end
@@ -48,7 +47,7 @@ module Reports
     end
 
     def total_weight
-      Services.ht_organizations.members.map {|_id, member| member.weight }.sum
+      Services.ht_organizations.members.map { |_id, member| member.weight }.sum
     end
 
     def pd_cost
@@ -83,7 +82,7 @@ module Reports
 
           marker.incr
           add_ht_item_to_freq_table(ht_item)
-          marker.on_batch {|m| logger.info m.batch_line }
+          marker.on_batch { |m| logger.info m.batch_line }
         end
       end
     end
@@ -98,13 +97,13 @@ module Reports
 
     def matching_clusters
       if @organization.nil?
-        Cluster.where("ht_items.0": { "$exists": 1 },
-                  "ht_items.access": "deny").no_timeout
+        Cluster.where("ht_items.0": {"$exists": 1},
+          "ht_items.access": "deny").no_timeout
       else
-        Cluster.where("ht_items.0": { "$exists": 1 },
-                    "ht_items.access": "deny",
-                    "$or": [{ "holdings.organization": @organization },
-                            { "ht_items.billing_entity": @organization }]).no_timeout
+        Cluster.where("ht_items.0": {"$exists": 1},
+          "ht_items.access": "deny",
+          "$or": [{"holdings.organization": @organization},
+            {"ht_items.billing_entity": @organization}]).no_timeout
       end
     end
 
@@ -139,6 +138,5 @@ module Reports
     def total_cost_for_member(member)
       total_ic_costs(member) + pd_cost_for_member(member) + extra_per_member
     end
-
   end
 end

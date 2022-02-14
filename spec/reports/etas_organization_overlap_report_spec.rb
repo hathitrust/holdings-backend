@@ -46,7 +46,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     it "has a header" do
       rpt = described_class.new
       rpt.report_for_org("smu").close
-      expect(File.readlines(rpt.report_for_org("smu").path)).to eq([rpt.header+"\n"])
+      expect(File.readlines(rpt.report_for_org("smu").path)).to eq([rpt.header + "\n"])
     end
   end
 
@@ -114,7 +114,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt.run
       orgs.each do |org|
         rpt.report_for_org(org).close
-        lines = File.open(rpt.report_for_org(org).path).to_a.map {|x| x.split("\t") }
+        lines = File.open(rpt.report_for_org(org).path).to_a.map { |x| x.split("\t") }
         expect(lines.map(&:size)).to all(be == 8)
       end
     end
@@ -135,13 +135,13 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       no_match = build(:holding, mono_multi_serial: "multi", enum_chron: "V.1")
       Clustering::ClusterHolding.new(no_match).cluster.tap(&:save)
       Clustering::ClusterHtItem.new(build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn],
-                                          enum_chron: "V.2")).cluster.tap(&:save)
+        enum_chron: "V.2")).cluster.tap(&:save)
       rpt = described_class.new.tap(&:run)
       rpt.report_for_org(no_match.organization).close
       recs = File.readlines(rpt.report_for_org(no_match.organization).path)
       expected_rec = [no_match.ocn, no_match.local_id, no_match.mono_multi_serial,
-                      "", "", "", "", ""].join("\t")
-      expect(recs.find {|r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
+        "", "", "", "", ""].join("\t")
+      expect(recs.find { |r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
     end
   end
 
@@ -149,7 +149,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     let(:h1) { build(:holding, mono_multi_serial: "multi", enum_chron: "V.1") }
     let(:h2) do
       build(:holding, mono_multi_serial: "multi", ocn: h1.ocn,
-                 organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
+        organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
     end
 
     before(:each) do
@@ -175,8 +175,8 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       recs = File.readlines(rpt.report_for_org(h1.organization).path)
       expect(recs.count).to eq(2)
       expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
-                                     ht.access, ht.ht_bib_key, ht.item_id,
-                                     ht.enum_chron].join("\t"))
+        ht.access, ht.ht_bib_key, ht.item_id,
+        ht.enum_chron].join("\t"))
     end
 
     it "writes only the 1 record that matches" do
@@ -188,8 +188,8 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       recs = File.readlines(rpt.report_for_org(h1.organization).path)
       expect(recs.count).to eq(2)
       expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
-                                     ht.access, ht.ht_bib_key, ht.item_id,
-                                     ht.enum_chron].join("\t"))
+        ht.access, ht.ht_bib_key, ht.item_id,
+        ht.enum_chron].join("\t"))
     end
   end
 
@@ -218,7 +218,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       expect(rpt.rclone_move(File.open("test_file", "w"), "umich"))
         .to eq(["rclone", "--config", "config/rclone.conf", "move", "test_file",
-                "#{tmp_rmt}/umich-hathitrust-member-data/analysis"])
+          "#{tmp_rmt}/umich-hathitrust-member-data/analysis"])
     end
   end
 end
