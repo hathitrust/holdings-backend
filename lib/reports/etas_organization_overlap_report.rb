@@ -37,9 +37,11 @@ module Reports
     def clusters_with_holdings
       Utils::SessionKeepAlive.new(120).run do
         if organization.nil?
-          Cluster.where("holdings.0": { "$exists": 1 }).no_timeout
+          Cluster.batch_size(Settings.etas_overlap_batch_size)
+            .where("holdings.0": { "$exists": 1 }).no_timeout
         else
-          Cluster.where("holdings.organization": organization).no_timeout
+          Cluster.batch_size(Settings.etas_overlap_batch_size)
+            .where("holdings.organization": organization).no_timeout
         end
       end
     end
