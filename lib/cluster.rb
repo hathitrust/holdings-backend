@@ -23,19 +23,19 @@ class Cluster
   embeds_many :ht_items, class_name: "Clusterable::HtItem"
   embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
   embeds_many :commitments, class_name: "Clusterable::Commitment"
-  index({ ocns: 1 },
-        unique: true,
-        partial_filter_expression: { ocns: { :$gt => 0 } })
-  index({ "ht_items.item_id": 1 }, unique: true, sparse: true)
-  index({ "ocn_resolutions.ocns": 1 }, unique: true, sparse: true)
-  index({ last_modified: 1 })
-  scope :for_resolution, lambda {|resolution|
+  index({ocns: 1},
+    unique: true,
+    partial_filter_expression: {ocns: {:$gt => 0}})
+  index({"ht_items.item_id": 1}, unique: true, sparse: true)
+  index({"ocn_resolutions.ocns": 1}, unique: true, sparse: true)
+  index({last_modified: 1})
+  scope :for_resolution, lambda { |resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
   scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
   scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 
-  before_save {|c| c.last_modified = Time.now.utc }
+  before_save { |c| c.last_modified = Time.now.utc }
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -52,10 +52,10 @@ class Cluster
   #
   # @param the item id to find
   def ht_item(item_id)
-    ht_items.to_a.find {|h| h.item_id == item_id }
+    ht_items.to_a.find { |h| h.item_id == item_id }
   end
 
-  UPDATE_LAST_MODIFIED = { "$currentDate" => { 'last_modified': true } }.freeze
+  UPDATE_LAST_MODIFIED = {"$currentDate" => {last_modified: true}}.freeze
   def add_holdings(*items)
     push_to_field(:holdings, items.flatten, UPDATE_LAST_MODIFIED)
   end
@@ -88,15 +88,15 @@ class Cluster
   # Maps enums to list of orgs that have a holding with that enum
   def holding_enum_orgs
     @holding_enum_orgs ||= holdings.group_by(&:n_enum)
-      .transform_values {|holdings| holdings.map(&:organization) }
-      .tap {|h| h.default = [] }
+      .transform_values { |holdings| holdings.map(&:organization) }
+      .tap { |h| h.default = [] }
     @holding_enum_orgs
   end
 
   def org_enums
     @org_enums ||= holdings.group_by(&:organization)
-      .transform_values {|holdings| holdings.map(&:n_enum) }
-      .tap {|h| h.default = [] }
+      .transform_values { |holdings| holdings.map(&:n_enum) }
+      .tap { |h| h.default = [] }
   end
 
   # Orgs that don't have "" enum chron or an enum chron found in the items
@@ -115,28 +115,28 @@ class Cluster
 
   def brt_counts
     @brt_counts ||= holdings_by_org
-      .transform_values {|hs| hs.select {|holding| holding.condition == "BRT" }.size }
+      .transform_values { |hs| hs.select { |holding| holding.condition == "BRT" }.size }
     @brt_counts.default = 0
     @brt_counts
   end
 
   def wd_counts
     @wd_counts ||= holdings_by_org
-      .transform_values {|hs| hs.select {|holding| holding.status == "WD" }.size }
+      .transform_values { |hs| hs.select { |holding| holding.status == "WD" }.size }
     @wd_counts.default = 0
     @wd_counts
   end
 
   def lm_counts
     @lm_counts ||= holdings_by_org
-      .transform_values {|hs| hs.select {|holding| holding.status == "LM" }.size }
+      .transform_values { |hs| hs.select { |holding| holding.status == "LM" }.size }
     @lm_counts.default = 0
     @lm_counts
   end
 
   def access_counts
     @access_counts ||= holdings_by_org
-      .transform_values {|hs| hs.select(&:brt_lm_access?).size }
+      .transform_values { |hs| hs.select(&:brt_lm_access?).size }
     @access_counts.default = 0
     @access_counts
   end
@@ -149,8 +149,8 @@ class Cluster
     return if items.empty?
 
     result = collection.update_one(
-      { _id: _id },
-      { "$push" => { field => { "$each" => items.map(&:as_document) } } }.merge(extra_ops),
+      {_id: _id},
+      {"$push" => {field => {"$each" => items.map(&:as_document)}}}.merge(extra_ops),
       session: Mongoid::Threaded.get_session
     )
     raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
@@ -158,7 +158,7 @@ class Cluster
     items.each do |item|
       item.parentize(self)
       item._association = send(field)._association
-      item.cluster=self
+      item.cluster = self
     end
     reload
   end
@@ -186,5 +186,4 @@ class Cluster
     @clusterable_ocn_tuples ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
       holdings.pluck(:ocn) + commitments.pluck(:ocn)
   end
-
 end

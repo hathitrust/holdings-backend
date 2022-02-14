@@ -3,7 +3,6 @@
 require "mongoid"
 
 module Clusterable
-
   # A shared print commitment
   class Commitment
     include Mongoid::Document
@@ -29,14 +28,14 @@ module Clusterable
     embedded_in :cluster
 
     validates_presence_of :uuid, :organization, :ocn, :local_id, :oclc_sym, :committed_date,
-                          :facsimile
+      :facsimile
     validates_inclusion_of :local_shelving_type, in: ["cloa", "clca", "sfca", "sfcahm", "sfcaasrs"],
-                           allow_nil: true
+      allow_nil: true
     validate :deprecation_validation
 
     def matching_holdings
       cluster = _parent
-      cluster.holdings.select {|h| h.organization == organization && h.local_id == local_id }
+      cluster.holdings.select { |h| h.organization == organization && h.local_id == local_id }
     end
 
     def batch_with?(other)
@@ -48,8 +47,8 @@ module Clusterable
     end
 
     def deprecate(status: "", replacement: nil, date: Date.today)
-      self.deprecation_status      = status
-      self.deprecation_date        = date
+      self.deprecation_status = status
+      self.deprecation_date = date
       self.deprecation_replaced_by = replacement._id unless replacement.nil?
     end
 
@@ -63,6 +62,5 @@ module Clusterable
         errors.add(:deprecation_date, "can't be set without a deprecation status.")
       end
     end
-
   end
 end

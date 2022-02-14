@@ -3,7 +3,6 @@
 require "cluster"
 
 module Clustering
-
   # Cluster getter for OCN-less HTItems
   #
   # Returns the cluster containing the HTItem or a new cluster if one does not
@@ -17,7 +16,7 @@ module Clustering
 
     def get
       Retryable.new.run do
-        try_strategies.tap {|c| yield c if block_given? }
+        try_strategies.tap { |c| yield c if block_given? }
       end
     end
 

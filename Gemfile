@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
+git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
 gem "canister"
 gem "dotenv"
@@ -31,9 +31,7 @@ group :test do
 end
 
 group :development do
-  gem "rubocop"
-  gem "rubocop-performance"
-  gem "rubocop-rspec"
+  gem "standard"
   gem "ruby-prof"
   gem "yard"
 end

@@ -100,7 +100,7 @@ RSpec.describe Clustering::ClusterHtItem do
       new_item = build(:ht_item)
       second_c = described_class.new(new_item).cluster
       # ht with ocns overlapping both
-      overlapping_item = build(:ht_item, ocns: c.ocns+second_c.ocns)
+      overlapping_item = build(:ht_item, ocns: c.ocns + second_c.ocns)
       cluster = described_class.new(overlapping_item).cluster
       expect(Cluster.count).to eq(1)
       expect(cluster.ht_items.to_a.size).to eq(3)
@@ -201,8 +201,8 @@ RSpec.describe Clustering::ClusterHtItem do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         old_cluster = create(:cluster, ocns: [1, 2, 3],
-               ocn_resolutions: [resolution],
-               ht_items: [htitem])
+          ocn_resolutions: [resolution],
+          ht_items: [htitem])
 
         htitem.ocns = [2]
 
@@ -217,8 +217,8 @@ RSpec.describe Clustering::ClusterHtItem do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         create(:cluster, ocns: [1, 2, 3],
-               ocn_resolutions: [resolution],
-               ht_items: [htitem])
+          ocn_resolutions: [resolution],
+          ht_items: [htitem])
 
         htitem.ocns = [2]
 
@@ -233,8 +233,8 @@ RSpec.describe Clustering::ClusterHtItem do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [1, 2])
         old_cluster = create(:cluster, ocns: [1, 2],
-               ocn_resolutions: [resolution],
-               ht_items: [htitem])
+          ocn_resolutions: [resolution],
+          ht_items: [htitem])
 
         htitem.ocns = [2]
 
@@ -249,8 +249,8 @@ RSpec.describe Clustering::ClusterHtItem do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [1])
         old_cluster = create(:cluster, ocns: [1, 2],
-               ocn_resolutions: [resolution],
-               ht_items: [htitem])
+          ocn_resolutions: [resolution],
+          ht_items: [htitem])
 
         htitem.ocns = [2]
 
@@ -265,9 +265,9 @@ RSpec.describe Clustering::ClusterHtItem do
         htitem = build(:ht_item, ocns: [3])
 
         old_cluster = create(:cluster, ocns: [1, 2, 3],
-               ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
-               ht_items: [htitem,
-                          build(:ht_item, ocns: [1, 3])])
+          ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+          ht_items: [htitem,
+            build(:ht_item, ocns: [1, 3])])
 
         htitem.ocns = [1]
 
@@ -293,7 +293,7 @@ RSpec.describe Clustering::ClusterHtItem do
       it "reclusters the old cluster if the old HTItem has multiple OCNs not in the concordance" do
         htitem = build(:ht_item, ocns: [1, 2])
         old_cluster = create(:cluster, ocns: [1, 2],
-               ht_items: [htitem, build(:ht_item, ocns: [1]), build(:ht_item, ocns: [2])])
+          ht_items: [htitem, build(:ht_item, ocns: [1]), build(:ht_item, ocns: [2])])
 
         htitem.ocns = [3]
         described_class.new(htitem).cluster
@@ -309,7 +309,7 @@ RSpec.describe Clustering::ClusterHtItem do
         another_htitem = build(:ht_item, ocns: [1])
 
         old_cluster = create(:cluster, ocns: [1],
-               ht_items: [htitem, another_htitem])
+          ht_items: [htitem, another_htitem])
 
         htitem.ocns = [2]
         described_class.new(htitem).cluster
@@ -336,8 +336,8 @@ RSpec.describe Clustering::ClusterHtItem do
       it "does not recluster if all the old HTItems's OCNs are covered by concordance rules" do
         htitem = build(:ht_item, ocns: [1, 2])
         old_cluster = create(:cluster, ocns: [1, 2],
-               ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
-               ht_items: [htitem, build(:ht_item, ocns: [1])])
+          ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+          ht_items: [htitem, build(:ht_item, ocns: [1])])
 
         htitem.ocns = [3]
 

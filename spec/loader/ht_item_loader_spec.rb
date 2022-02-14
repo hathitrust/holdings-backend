@@ -6,32 +6,32 @@ require "loader/ht_item_loader"
 RSpec.describe Loader::HtItemLoader do
   let(:line) do
     [
-      "test.123456",           # htid
-      "deny",                  # access
-      "ic",                    # rights
-      "000000123",             # ht_bib_key
-      "",                      # description
-      "TEST",                  # source
-      "000000123",             # source_bib_num
-      "99999",                 # oclc_num
-      "0123456789",            # isbn
-      "",                      # issn
-      "12345678",              # lccn
-      "Test Title",            # title
-      "Test Publisher, 1970",  # imprint
-      "bib",                   # rights_reason_code
-      "2020-10-01 00:00:00",   # rights_timestamp
-      "0",                     # us_gov_doc_flag
-      "1970",                  # rights_date_used
-      "xxu",                   # pub_place
-      "eng",                   # lang
-      "BK",                    # bib_fmt
-      "TEST",                  # collection_code
-      "test",                  # content_provider_code
-      "test",                  # responsible_entity_code
-      "test",                  # digitization_agent_code
-      "open",                  # access_profile_code
-      "Author, A. Test"        # author
+      "test.123456", # htid
+      "deny", # access
+      "ic", # rights
+      "000000123", # ht_bib_key
+      "", # description
+      "TEST", # source
+      "000000123", # source_bib_num
+      "99999", # oclc_num
+      "0123456789", # isbn
+      "", # issn
+      "12345678", # lccn
+      "Test Title", # title
+      "Test Publisher, 1970", # imprint
+      "bib", # rights_reason_code
+      "2020-10-01 00:00:00", # rights_timestamp
+      "0", # us_gov_doc_flag
+      "1970", # rights_date_used
+      "xxu", # pub_place
+      "eng", # lang
+      "BK", # bib_fmt
+      "TEST", # collection_code
+      "test", # content_provider_code
+      "test", # responsible_entity_code
+      "test", # digitization_agent_code
+      "open", # access_profile_code
+      "Author, A. Test" # author
     ].join("\t")
   end
 

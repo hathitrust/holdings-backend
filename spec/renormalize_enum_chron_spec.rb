@@ -31,7 +31,7 @@ RSpec.describe "Renormalize Enumchrons" do
       Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
       expect(records_with_enum_chrons.each.to_a.size).to eq(2)
       expect(records_with_enum_chrons.count(&:n_enum_chron)).to eq(0)
-      records_with_enum_chrons {|i| renormalize(i) }
+      records_with_enum_chrons { |i| renormalize(i) }
       expect(records_with_enum_chrons.count(&:n_enum_chron)).to eq(2)
     end
   end

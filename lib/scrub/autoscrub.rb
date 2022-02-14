@@ -22,11 +22,11 @@ module Scrub
       @path = path
 
       @member_holding_file = Scrub::MemberHoldingFile.new(@path)
-      @member_id           = @member_holding_file.member_id
-      @output_struct       = Scrub::ScrubOutputStructure.new(@member_id)
-      @item_type           = @member_holding_file.item_type_from_filename
-      @output_dir          = @output_struct.date_subdir!("output")
-      @log_dir             = @output_struct.date_subdir!("log")
+      @member_id = @member_holding_file.member_id
+      @output_struct = Scrub::ScrubOutputStructure.new(@member_id)
+      @item_type = @member_holding_file.item_type_from_filename
+      @output_dir = @output_struct.date_subdir!("output")
+      @log_dir = @output_struct.date_subdir!("log")
 
       # Once we have @member_id and @item_type,
       # build a log path and re-register the service logger to log to that path
@@ -35,7 +35,7 @@ module Scrub
         lgr = Logger.new(logger_path)
         # Show time, file:lineno, level for each log message
         lgr.formatter = proc do |severity, datetime, _progname, msg|
-          file_line   = caller(0)[4].split(":")[0, 2].join(":")
+          file_line = caller(4..4).first.split(":")[0, 2].join(":")
           "#{datetime.to_s[0, 19]} | #{file_line} | #{severity} | #{msg}\n"
         end
         lgr
@@ -49,7 +49,7 @@ module Scrub
       Services.scrub_logger.info("Started scrubbing #{@path}")
 
       # Figure out batch size for 100 batches.
-      tot_lines  = count_file_lines
+      tot_lines = count_file_lines
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
       marker = Services.progress_tracker.new(batch_size)
@@ -72,7 +72,7 @@ module Scrub
           end
         end
         out_file.close
-      rescue StandardError => e
+      rescue => e
         # Any uncaught error that isn't a CustomError should be fatal
         # and is a sign that error handling needs to be improved.
         Services.scrub_logger.fatal(e)
@@ -93,7 +93,6 @@ module Scrub
       # zcat -f works as plain cat if @path is not in gzip format.
       `zcat -f #{@path} | wc -l`.match(/^(\d+)/)[0].to_i
     end
-
   end
 end
 

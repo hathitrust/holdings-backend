@@ -4,7 +4,6 @@ require "clusterable/commitment"
 require "clustering/cluster_commitment"
 
 module Loader
-
   # Constructs batches of Commitments from incoming file data
   class SharedPrintLoader
     def item_from_line(json)

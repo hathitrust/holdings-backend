@@ -7,10 +7,10 @@ module SharedPrint
     attr_reader :organization, :ocn, :local_id, :status, :err
 
     def initialize(organization: nil, ocn: nil, local_id: nil, status: nil)
-      @ocn          = ocn.to_i
+      @ocn = ocn.to_i
       @organization = organization
-      @local_id     = local_id
-      @status       = status
+      @local_id = local_id
+      @status = status
       @allowed_status = ["C", "D", "E", "L", "M"]
       @err = []
       validate!
@@ -29,9 +29,9 @@ module SharedPrint
       cols = line.strip.split("\t")
       new(
         organization: cols[0],
-        ocn:          cols[1],
-        local_id:     cols[2],
-        status:       cols[3]
+        ocn: cols[1],
+        local_id: cols[2],
+        status: cols[3]
       )
     end
 
@@ -91,7 +91,7 @@ module SharedPrint
     # If no commitment matches local_id, add to @err.
     # Return the one(s) that do(es) match.
     def local_id_matches
-      @local_id_matches = org_commitments.select {|c| c.local_id == @local_id }
+      @local_id_matches = org_commitments.select { |c| c.local_id == @local_id }
       if @err.empty? && @local_id_matches.empty?
         @err << "No commitment with local_id:#{@local_id} found"
       end
@@ -130,6 +130,5 @@ module SharedPrint
         raise ArgumentError, "Bad status #{@status}"
       end
     end
-
   end
 end

@@ -16,16 +16,16 @@ module ConcordanceValidation
     def initialize(infile)
       @infile = infile
       Concordance.numbers_tab_numbers(infile)
-      @raw_to_resolved = Hash.new {|h, k| h[k] = [] }
-      @resolved_to_raw = Hash.new {|h, k| h[k] = [] }
+      @raw_to_resolved = Hash.new { |h, k| h[k] = [] }
+      @resolved_to_raw = Hash.new { |h, k| h[k] = [] }
       file_handler.open(infile).each do |line|
         # first pass
         raw, resolved = line.chomp.split("\t")
         raw_to_resolved[raw.to_i] << resolved.to_i if raw != resolved
         resolved_to_raw[resolved.to_i] << raw.to_i if raw != resolved
       end
-      @raw_to_resolved.default_proc = ->(_, _) { nil }
-      @resolved_to_raw.default_proc = ->(_, _) { nil }
+      @raw_to_resolved.default_proc = ->(_, _) {}
+      @resolved_to_raw.default_proc = ->(_, _) {}
     end
 
     def file_handler
@@ -103,7 +103,7 @@ module ConcordanceValidation
         return resolved.first if (resolved.count == 1) && terminal_ocn?(resolved.first)
 
         # multiple ocns, but they are all terminal
-        if resolved.all? {|o| terminal_ocn? o }
+        if resolved.all? { |o| terminal_ocn? o }
           raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(", ")}"
         end
 
@@ -111,7 +111,7 @@ module ConcordanceValidation
         resolved.each do |o|
           # it is not terminal so we replace with the ocns it resolves to
           if @raw_to_resolved.key? o
-            resolved.map! {|x| x == o ? @raw_to_resolved[o] : x }.flatten!
+            resolved.map! { |x| x == o ? @raw_to_resolved[o] : x }.flatten!
           end
         end
         resolved.uniq!

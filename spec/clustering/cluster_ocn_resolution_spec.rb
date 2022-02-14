@@ -19,8 +19,8 @@ RSpec.describe Clustering::ClusterOCNResolution do
 
       expect(cluster.ocn_resolutions.to_a.size).to eq(2)
       expect(cluster.ocns).to contain_exactly(resolution.deprecated,
-                                              resolution.resolved,
-                                              resolution2.deprecated)
+        resolution.resolved,
+        resolution2.deprecated)
       expect(Cluster.count).to eq(1)
     end
 
@@ -30,8 +30,8 @@ RSpec.describe Clustering::ClusterOCNResolution do
 
       expect(cluster.ocn_resolutions.to_a.size).to eq(2)
       expect(cluster.ocns).to contain_exactly(resolution.deprecated,
-                                              resolution.resolved,
-                                              resolution2.deprecated)
+        resolution.resolved,
+        resolution2.deprecated)
       expect(Cluster.count).to eq(1)
     end
 
@@ -63,8 +63,8 @@ RSpec.describe Clustering::ClusterOCNResolution do
       cluster.save
       expect(cluster.ocn_resolutions.to_a.size).to eq(2)
       expect(cluster.ocns).to contain_exactly(resolution.deprecated,
-                                              resolution2.deprecated,
-                                              resolution.resolved)
+        resolution2.deprecated,
+        resolution.resolved)
       expect(Cluster.each.to_a.size).to eq(1)
     end
 
@@ -116,10 +116,10 @@ RSpec.describe Clustering::ClusterOCNResolution do
     context "with HtItems matching OCNs from both rules" do
       before(:each) do
         [resolution.deprecated,
-         resolution.resolved,
-         resolution2.deprecated].each do |ocn|
-           Clustering::ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
-         end
+          resolution.resolved,
+          resolution2.deprecated].each do |ocn|
+          Clustering::ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
+        end
       end
 
       it "creates a new cluster with the deprecated OCN from the deleted rule" do
@@ -138,7 +138,7 @@ RSpec.describe Clustering::ClusterOCNResolution do
 
         expect(cluster_htitem_ocns).to contain_exactly(
           [resolution.deprecated], [resolution.resolved]
-)
+        )
       end
 
       it "cluster with deprecated OCN from deleted rule has correct HtItem" do

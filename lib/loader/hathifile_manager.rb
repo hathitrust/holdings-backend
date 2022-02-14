@@ -6,7 +6,6 @@ require "loader/hathifile"
 require "loader/loaded_file"
 
 module Loader
-
   # Usage: HathifileManger.new.try_load
   #
   # Loads incremental daily Hathifiles that have not yet been loaded into the
@@ -18,7 +17,6 @@ module Loader
   # ensure the most recent update to a given HtItem is the one represented in the
   # system.
   class HathifileManager
-
     def initialize(hathifile_factory: ->(date) { Hathifile.new(date) },
       last_loaded: LoadedFile.latest(type: "hathifile").produced,
       loading_flag: Services.loading_flag)

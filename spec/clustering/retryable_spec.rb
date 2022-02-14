@@ -18,13 +18,13 @@ RSpec.describe Clustering::Retryable do
     let(:htitem2) { build(:ht_item, ocns: htitem.ocns) }
     let!(:cluster) do
       create(:cluster,
-             ocns: htitem.ocns,
-             ht_items: [htitem, htitem2])
+        ocns: htitem.ocns,
+        ht_items: [htitem, htitem2])
     end
 
     def update_htitem
       # HTItem will move to new cluster
-      htitem.ocns = htitem.ocns.map {|o| o + 1 }
+      htitem.ocns = htitem.ocns.map { |o| o + 1 }
       Clustering::ClusterHtItem.new(htitem).cluster
     end
 

@@ -11,45 +11,45 @@ require "services"
 class EnumChronParser
   attr_accessor :enum, :chron
 
-  DOT_PATTERN = /\.\s+([^.]+)/.freeze
-  DATE_PATTERN = /\. [0-2]\d{3}/.freeze
+  DOT_PATTERN = /\.\s+([^.]+)/
+  DATE_PATTERN = /\. [0-2]\d{3}/
 
   # chron patterns
-  DATE_RE = /^([a-z]{0,7}\.)?[12]\d{3}/.freeze
+  DATE_RE = /^([a-z]{0,7}\.)?[12]\d{3}/
   MONTH_RE = /(jan|january|febr?|february|mar|march|
              apr|april|may|june?|
              july?|aug|august|sept?|september|
              oct|october|nov|november|dec|december)
-             [.?]?/ix.freeze
-  DAY_RE = /[0-3]?[0-9](th|st|rd|nd)$/i.freeze
-  DAY_RE1 = /([0-9]{1,4})(th|st|rd|nd)?/i.freeze
-  DAY_RE2 = /[0-3]?[0-9](th|st|rd|nd)?/.freeze
-  MONTH_DAY_RE = /(#{MONTH_RE} #{DAY_RE1})/.freeze
-  MONTH_SPAN_RE = /(#{MONTH_RE}-#{MONTH_RE})/.freeze
-  DAY_SPAN_RE = /(#{DAY_RE2}-#{DAY_RE2})/.freeze
-  DATE_MONTH_SPAN_RE = /(#{DATE_RE}-#{MONTH_RE})/.freeze
-  MONTH_DAY_SPAN_RE = /(#{MONTH_RE} #{DAY_SPAN_RE})/.freeze
-  SEASONS_RE = /(spring|summer|winter|fall)/i.freeze
+             [.?]?/ix
+  DAY_RE = /[0-3]?[0-9](th|st|rd|nd)$/i
+  DAY_RE1 = /([0-9]{1,4})(th|st|rd|nd)?/i
+  DAY_RE2 = /[0-3]?[0-9](th|st|rd|nd)?/
+  MONTH_DAY_RE = /(#{MONTH_RE} #{DAY_RE1})/
+  MONTH_SPAN_RE = /(#{MONTH_RE}-#{MONTH_RE})/
+  DAY_SPAN_RE = /(#{DAY_RE2}-#{DAY_RE2})/
+  DATE_MONTH_SPAN_RE = /(#{DATE_RE}-#{MONTH_RE})/
+  MONTH_DAY_SPAN_RE = /(#{MONTH_RE} #{DAY_SPAN_RE})/
+  SEASONS_RE = /(spring|summer|winter|fall)/i
 
   # enum patters
-  ENUM_RE = /(v\.|n\.s\.)/.freeze
-  LONG_NUM_RE = /^([0-9]{5,})/.freeze
+  ENUM_RE = /(v\.|n\.s\.)/
+  LONG_NUM_RE = /^([0-9]{5,})/
 
   # Misc patterns
-  REN_RE_1 = /([A-Za-z0-9.]+)\((\d{2,4})\)/.freeze
-  REN_RE_2 = /([A-Z])(\d+)/i.freeze
-  REN_RE_3 = /\w+\.(.*)/.freeze
-  REN_RE_4 = /[A-Za-z]+\s\](\d\])/.freeze
-  QUOTED_BSLASH = /"\\"/.freeze
-  DOT_SPACE = /\.\s+/.freeze
-  SPACE = /\s/.freeze
-  C_AZ = /C[a-z]*\./i.freeze
-  DOUBLE_COLON = /::/.freeze
-  ALPHANUM = /[a-z0-9]/i.freeze
-  TRAIL_HYPHEN = /-$/.freeze
+  REN_RE_1 = /([A-Za-z0-9.]+)\((\d{2,4})\)/
+  REN_RE_2 = /([A-Z])(\d+)/i
+  REN_RE_3 = /\w+\.(.*)/
+  REN_RE_4 = /[A-Za-z]+\s\](\d\])/
+  QUOTED_BSLASH = /"\\"/
+  DOT_SPACE = /\.\s+/
+  SPACE = /\s/
+  C_AZ = /C[a-z]*\./i
+  DOUBLE_COLON = /::/
+  ALPHANUM = /[a-z0-9]/i
+  TRAIL_HYPHEN = /-$/
 
   def initialize
-    @enum  = []
+    @enum = []
     @chron = []
   end
 
@@ -74,11 +74,11 @@ class EnumChronParser
     # remove spaces after dots except when followed by a date
 
     positions = mstr.enum_for(:scan,
-                              DOT_PATTERN).map { Regexp.last_match.begin(0) }
+      DOT_PATTERN).map { Regexp.last_match.begin(0) }
     iter = 0
     positions.each do |p|
       i = p - iter
-      unless mstr[i..i+5]&.match?(DATE_PATTERN)
+      unless mstr[i..i + 5]&.match?(DATE_PATTERN)
         mstr.sub!(". ", ".")
         iter += 1
       end
@@ -105,7 +105,7 @@ class EnumChronParser
   end
 
   def clear_fields
-    self.enum  = []
+    self.enum = []
     self.chron = []
   end
 
@@ -185,7 +185,7 @@ class EnumChronParser
       renum = renum[0..-2]
     end
     if renum[0] == ":"
-      renum = renum[1..-1]
+      renum = renum[1..]
     end
     renum
   end
@@ -226,7 +226,7 @@ class EnumChronParser
         end
       end
       return unless ALPHANUM.match?(input_str)
-    rescue StandardError
+    rescue
       Services.logger.warn "[Parser] Problem while parsing '#{orig_str}'"
       return
     end
@@ -239,7 +239,7 @@ class EnumChronParser
         sub_b = b.split("-")
         i = bits.index(b)
         bits.insert(i, sub_b[0])
-        bits.insert(i+1, sub_b[1])
+        bits.insert(i + 1, sub_b[1])
         bits.delete(b)
       end
 
@@ -263,14 +263,13 @@ class EnumChronParser
       line.strip!
       ecp = EnumChronParser.new
       ecp.parse(line)
-      n_enum  = ecp.normalized_enum
+      n_enum = ecp.normalized_enum
       n_chron = ecp.normalized_chron
       puts [line, n_enum, n_chron].join("\t")
     end
   end
 
   private :add_to_enum, :add_to_chron, :preprocess, :dot_sub, :clear_fields, :enum=
-
 end
 
 if $PROGRAM_NAME == __FILE__

@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
 module Clustering
-
   # Wrapper for a retryable MongoDB operation on clusters. Can either create a
   # simple retryable operation or a retryable operation wrapped in a transaction.
   class Retryable
-    MAX_RETRIES=5
+    MAX_RETRIES = 5
     # Not constantized by mongo gem
-    MONGO_DUPLICATE_KEY_ERROR=11_000
+    MONGO_DUPLICATE_KEY_ERROR = 11_000
 
     def self.ensure_transaction(&block)
       if (s = Mongoid::Threaded.get_session)
@@ -51,7 +50,7 @@ module Clustering
 
     def more_tries?
       if @tries < MAX_RETRIES
-        Services.logger.warn "Got #{@error}, retrying (try #{@tries+1})"
+        Services.logger.warn "Got #{@error}, retrying (try #{@tries + 1})"
         true
       else
         false
@@ -61,6 +60,5 @@ module Clustering
     private
 
     attr_accessor :error, :tries
-
   end
 end

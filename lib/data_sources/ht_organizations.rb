@@ -46,7 +46,6 @@ module DataSources
   #   htm["haverford"].weight
   #
   class HTOrganizations
-
     attr_reader :organizations
 
     def initialize(organizations = load_from_db)
@@ -57,7 +56,7 @@ module DataSources
       Services.holdings_db[:ht_billing_members]
         .select(:inst_id, :country_code, :weight, :oclc_sym)
         .as_hash(:inst_id)
-        .transform_values {|h| HTOrganization.new(**h) }
+        .transform_values { |h| HTOrganization.new(**h) }
     end
 
     # Given a inst_id, returns a hash of data for that member.
@@ -71,7 +70,7 @@ module DataSources
 
     # A list of organizations that are actually members, i.e. status = 1
     def members
-      @organizations.select {|_k, org| org.status == 1 }
+      @organizations.select { |_k, org| org.status == 1 }
     end
 
     # Adds a temporary organization to the organization data cache for the lifetime of the
@@ -81,6 +80,5 @@ module DataSources
     def add_temp(organization)
       @organizations[organization.inst_id] = organization
     end
-
   end
 end

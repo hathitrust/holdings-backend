@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
-# rubocop:disable Naming/AccessorMethodName
-
 require "services"
 
 module Scrub
-
   # Context: This class is responsible for knowing the internals
   # of the header line in a member_holding_file.
   #
@@ -77,7 +74,7 @@ module Scrub
 
       if col_map.empty?
         raise WellFormedHeaderError,
-              "Found no usable column headers among #{@cols}"
+          "Found no usable column headers among #{@cols}"
       end
 
       violations = check_violations
@@ -87,10 +84,7 @@ module Scrub
 
       col_map
     end
-
   end
-
-  # rubocop:enable Naming/AccessorMethodName
 
   # Subclass for monos
   class MonoHoldingHeader < MemberHoldingHeader

@@ -15,10 +15,8 @@ jobs:
       - name: Set up tests
         run: ./bin/setup_test.sh
 
-      - name: Run rubocop
-        run: docker-compose run --rm dev bundle exec rubocop
+      - name: Run standardrb
+        run: docker-compose run --rm dev bundle exec standardrb
 
       - name: Run tests
         run: docker-compose run --rm -e MONGOID_ENV=test dev bin/wait-for mariadb:3306 -- bundle exec rspec
-
-

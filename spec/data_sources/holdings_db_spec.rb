@@ -11,17 +11,17 @@ RSpec.describe DataSources::HoldingsDB do
   let(:host) { "mariadb" }
   let(:connection) do
     described_class.new(user: user,
-                               password: password,
-                               database: database,
-                               host: host)
+      password: password,
+      database: database,
+      host: host)
   end
 
   let(:opts) do
-    { user:     user,
-      password: password,
-      host:     host,
-      database: database,
-      adapter:  "mysql2" }
+    {user: user,
+     password: password,
+     host: host,
+     database: database,
+     adapter: "mysql2"}
   end
 
   describe "Connecting" do
@@ -48,24 +48,24 @@ RSpec.describe DataSources::HoldingsDB do
       end
 
       it "connects with url" do
-        Settings.database = { url: connection_string }
+        Settings.database = {url: connection_string}
         c = described_class.connection
         expect(c.tables).to include(:ht_billing_members)
       end
 
       it "connects with keyword options" do
-        Settings.database = { opts: opts }
+        Settings.database = {opts: opts}
         c = described_class.connection
         expect(c.tables).to include(:ht_billing_members)
       end
 
       it "fails as expected with bad user" do
-        Settings.database = { opts: opts.merge(user: "NO_SUCH_USER") }
+        Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
         expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
       end
 
       it "provided opts override settings" do
-        Settings.database = { opts: opts.merge(user: "NO_SUCH_USER") }
+        Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
         c = described_class.connection(opts: opts)
         expect(c.tables).to include(:ht_billing_members)
       end

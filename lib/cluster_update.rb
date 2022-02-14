@@ -49,5 +49,4 @@ class ClusterUpdate
       end
     end
   end
-
 end

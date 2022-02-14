@@ -17,7 +17,7 @@ def main
     begin
       sub = c.compile_sub_graph(raw)
       c.detect_cycles(*sub)
-    rescue StandardError => e
+    rescue => e
       log.puts e
       log.puts "Cycles:#{(sub[0].keys + sub[1].keys).flatten.uniq.join(", ")}"
       next
@@ -25,7 +25,7 @@ def main
     begin
       # checks for multiple terminal ocns
       _terminal = c.terminal_ocn(raw)
-    rescue StandardError => e
+    rescue => e
       log.puts e
       next
     end

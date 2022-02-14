@@ -11,9 +11,9 @@ c = "cmu"
 schools = [a, b, c]
 
 header = ["OCN", "BIB", "MEMBER_ID", "STATUS", "CONDITION", "DATE",
-          "ENUM_CHRON", "TYPE", "ISSN", "N_ENUM", "N_CHRON", "GOV_DOC", "UUID"]
+  "ENUM_CHRON", "TYPE", "ISSN", "N_ENUM", "N_CHRON", "GOV_DOC", "UUID"]
 
-holdings = schools.each_with_object({}) {|s, h| h[s] = [] }
+holdings = schools.each_with_object({}) { |s, h| h[s] = [] }
 
 def newline(member, ocn, status: "CH", gov: "")
   [
@@ -77,11 +77,11 @@ end
 
 # anu and bu share an OCN not in the hathifiles
 
-[a, b].each {|school| holdings[school] << newline(school, 100) }
+[a, b].each { |school| holdings[school] << newline(school, 100) }
 
 # And finally, anu has five other things that are not in the concordance,
 # hathifiles, or any other school
-(101..105).each {|oclc| holdings[a] << newline(a, oclc) }
+(101..105).each { |oclc| holdings[a] << newline(a, oclc) }
 
 # Now print it all out.
 schools.each do |s|

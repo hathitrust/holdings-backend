@@ -5,10 +5,8 @@ require "rgl/adjacency"
 require "rgl/connected_components"
 
 module Clustering
-
   # Constructs a graph from OCN tuples
   class OCNGraph < RGL::AdjacencyGraph
-
     def initialize(cluster = nil)
       super(Set)
       @cluster = cluster
@@ -20,7 +18,7 @@ module Clustering
     # @param [Enumerable] tuple A set of one or more OCNs from a clusterable
     def add_tuple(tuple)
       add_vertices(*tuple)
-      tuple.sort.to_a.combination(2).each {|parent, child| add_edge(parent, child) }
+      tuple.sort.to_a.combination(2).each { |parent, child| add_edge(parent, child) }
     end
 
     # Partition the vertices into one or more subgraphs
@@ -30,7 +28,7 @@ module Clustering
 
     # Compile the graph from the given cluster
     def compile_graph_from_cluster
-      @cluster.clusterable_ocn_tuples.uniq.map {|tuple| add_tuple([tuple].flatten) }
+      @cluster.clusterable_ocn_tuples.uniq.map { |tuple| add_tuple([tuple].flatten) }
     end
   end
 end

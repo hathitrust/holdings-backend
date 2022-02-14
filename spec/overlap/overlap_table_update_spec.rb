@@ -9,8 +9,8 @@ RSpec.describe Overlap::OverlapTableUpdate do
   let(:update) { described_class.new(nil, 10) }
 
   before(:each) do |_spec|
-    h   = build(:holding)
-    ht  = build(:ht_item, :spm, ocns: [h.ocn], billing_entity: "not_same_as_holding")
+    h = build(:holding)
+    ht = build(:ht_item, :spm, ocns: [h.ocn], billing_entity: "not_same_as_holding")
     ht2 = build(:ht_item, :spm, billing_entity: "not_same_as_holding")
     Cluster.each(&:delete)
     Clustering::ClusterHolding.new(h).cluster.tap(&:save)

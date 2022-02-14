@@ -90,7 +90,6 @@ class HoldingsDeleter
   private
 
   def parse_opts(args)
-    # This long block gets a mention in .rubocop_todo.yml
     @parser = OptionParser.new do |opts|
       opts.on("--condition STR (BRT)", String) do |cond|
         opt_regex(:condition, cond, /^(BRT)?$/)

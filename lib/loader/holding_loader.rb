@@ -3,10 +3,8 @@
 require "clustering/cluster_holding"
 
 module Loader
-
   # Constructs batches of Holdings from incoming file data
   class HoldingLoader
-
     def self.for(filename)
       if filename.end_with?(".tsv")
         HoldingLoaderTSV.new

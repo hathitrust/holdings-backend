@@ -72,10 +72,10 @@ RSpec.describe Reports::CostReport do
   describe "#compile_frequency_table" do
     it "ignores PD items" do
       pd_item = build(:ht_item,
-                      access: "allow",
-                      enum_chron: "1",
-                      n_enum: "1",
-                      billing_entity: "upenn")
+        access: "allow",
+        enum_chron: "1",
+        n_enum: "1",
+        billing_entity: "upenn")
       Clustering::ClusterHtItem.new(pd_item).cluster.tap(&:save)
       expect(cr.freq_table[:upenn][:mpm]).to eq({})
     end
@@ -84,7 +84,7 @@ RSpec.describe Reports::CostReport do
   describe "#add_ht_item_to_freq_table" do
     it "adds an ht_item to the freq_table for all matching orgs" do
       cr.add_ht_item_to_freq_table(mpm)
-      expect(cr.freq_table).to eq(stanford: { mpm: { 1 => 1 } })
+      expect(cr.freq_table).to eq(stanford: {mpm: {1 => 1}})
     end
   end
 
@@ -111,19 +111,19 @@ RSpec.describe Reports::CostReport do
     let(:non_member_holding) do
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
-                                          weight: 1.0, status: 0)
+          weight: 1.0, status: 0)
       )
       build(:holding,
-            ocn: Cluster.first.ocns.first,
-            organization: "non_member")
+        ocn: Cluster.first.ocns.first,
+        organization: "non_member")
     end
 
     it "does not include non-member holdings" do
       Clustering::ClusterHolding.new(non_member_holding).cluster.tap(&:save)
       cr.matching_clusters.each do |c|
-        c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+        c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
       end
-      expect(cr.freq_table[:umich][:spm]).to eq({ 2 => 1 })
+      expect(cr.freq_table[:umich][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:non_member]).to eq({})
     end
   end
@@ -165,7 +165,7 @@ RSpec.describe Reports::CostReport do
     describe "#spm/ser/mpm_costs" do
       it "computes the total cost for a given member for a spm format" do
         expect(cr.spm_costs(:umich)).to \
-          be_within(0.0001).of((5.0 / 1 + 3.0 /2.0) * cr.cost_per_volume)
+          be_within(0.0001).of((5.0 / 1 + 3.0 / 2.0) * cr.cost_per_volume)
       end
 
       it "computes the total cost for a given member for a mpm format" do
@@ -175,7 +175,7 @@ RSpec.describe Reports::CostReport do
 
       it "computes the total cost for a given member for a ser format" do
         expect(cr.ser_costs(:smu)).to \
-          be_within(0.0001).of((2.0 / 1 + 1.0 /2.0) * cr.cost_per_volume)
+          be_within(0.0001).of((2.0 / 1 + 1.0 / 2.0) * cr.cost_per_volume)
       end
     end
 
@@ -183,7 +183,7 @@ RSpec.describe Reports::CostReport do
       it "computes the extra costs allotted to members" do
         # we have no IC items that don't have a billing entity
         expect(cr.extra_per_member).to be_within(0.0001).of(0)
-        cr.freq_table[:hathitrust][:spm][1] =1
+        cr.freq_table[:hathitrust][:spm][1] = 1
         expect(cr.extra_per_member).to be_within(0.0001).of(cr.cost_per_volume / 6)
       end
     end
@@ -202,24 +202,24 @@ RSpec.describe Reports::CostReport do
     describe "multiple HTItem/Holding spms" do
       let(:ht_copy) do
         build(:ht_item, :spm,
-              ocns: spm.ocns,
-              billing_entity: spm.billing_entity,
-              access: "deny")
+          ocns: spm.ocns,
+          billing_entity: spm.billing_entity,
+          access: "deny")
       end
       let(:spm_holding) do
         build(:holding,
-              enum_chron: "",
-              organization: spm.billing_entity,
-              ocn: spm.ocns.first)
+          enum_chron: "",
+          organization: spm.billing_entity,
+          ocn: spm.ocns.first)
       end
 
       it "handles multiple HT copies of the same spm" do
         Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
         Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { spm: { 1 => 2 } })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "handles multiple copies of the same spm and holdings" do
@@ -227,9 +227,9 @@ RSpec.describe Reports::CostReport do
         Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { spm: { 1 => 2 } })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "multiple holdings lead to one hshare" do
@@ -240,9 +240,9 @@ RSpec.describe Reports::CostReport do
         cluster = Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
         cluster.add_holdings(mpm_holding).tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => { spm: { 1 => 1 } })
+        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
@@ -250,10 +250,10 @@ RSpec.describe Reports::CostReport do
         ht_copy.billing_entity = "different_cpc"
         Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expected_freq = { spm.billing_entity.to_sym => { spm: { 1 => 1 } },
-                         different_cpc: { spm: { 1 => 1 } } }
+        expected_freq = {spm.billing_entity.to_sym => {spm: {1 => 1}},
+                         :different_cpc => {spm: {1 => 1}}}
         expect(cr.freq_table).to eq(expected_freq)
       end
     end
@@ -265,59 +265,59 @@ RSpec.describe Reports::CostReport do
         Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
         Clustering::ClusterHolding.new(mpm_wo_ec).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table[mpm_wo_ec.organization.to_sym]).to eq(mpm: { 2 => 1 })
+        expect(cr.freq_table[mpm_wo_ec.organization.to_sym]).to eq(mpm: {2 => 1})
       end
     end
 
     describe "MPM holding with the wrong enum_chron" do
       let(:mpm_wrong_ec) do
         build(:holding,
-              ocn: mpm.ocns.first,
-              organization: "umich",
-              enum_chron: "2",
-              n_enum: "2")
+          ocn: mpm.ocns.first,
+          organization: "umich",
+          enum_chron: "2",
+          n_enum: "2")
       end
 
       it "gives mpm shares when enum_chron does not match anything" do
         Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
         Clustering::ClusterHolding.new(mpm_wrong_ec).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
-        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: { 2=>1 })
+        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: {2 => 1})
       end
     end
 
     describe "Serials" do
       let(:ht_serial) do
         build(:ht_item, :ser,
-              access: "deny")
+          access: "deny")
       end
       let(:ht_serial2) do
         build(:ht_item, :ser,
-              ht_bib_key: ht_serial.ht_bib_key,
-              ocns: ht_serial.ocns,
-              billing_entity: "not_ht_serial.billing_entity",
-              access: "deny")
+          ht_bib_key: ht_serial.ht_bib_key,
+          ocns: ht_serial.ocns,
+          billing_entity: "not_ht_serial.billing_entity",
+          access: "deny")
       end
       let(:holding_serial) do
         build(:holding,
-              ocn: ht_serial.ocns.first,
-              enum_chron: "3",
-              n_enum: "3",
-              organization: "not_a_collection")
+          ocn: ht_serial.ocns.first,
+          enum_chron: "3",
+          n_enum: "3",
+          organization: "not_a_collection")
       end
 
       before(:each) do
         Services.ht_organizations.add_temp(
           DataSources::HTOrganization.new(inst_id: "not_ht_serial.billing_entity",
-                                            country_code: "xx", weight: 1.0, status: 1)
+            country_code: "xx", weight: 1.0, status: 1)
         )
         Services.ht_organizations.add_temp(
           DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
-                                            weight: 1.0, status: 1)
+            weight: 1.0, status: 1)
         )
       end
 
@@ -326,11 +326,11 @@ RSpec.describe Reports::CostReport do
         Clustering::ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
         Clustering::ClusterHolding.new(holding_serial).cluster.tap(&:save)
         cr.matching_clusters.each do |c|
-          c.ht_items.each {|ht_item| cr.add_ht_item_to_freq_table(ht_item) }
+          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
         end
         # ht_serial.billing_entity + holding_serial.org and
         # ht_serial2.billing_entity + holding_serial.org
-        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: { 2 => 2 })
+        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: {2 => 2})
       end
     end
   end

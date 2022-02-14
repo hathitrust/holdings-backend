@@ -13,8 +13,8 @@ module Overlap
     def initialize(ocn)
       # For holding-commitment overlaps we only care about spm clusters with ht_items
       @cluster = Cluster
-        .where(ocns: ocn, "ht_items.0": { "$exists": 1 })
-        .find {|c| c.format == "spm" }
+        .where(ocns: ocn, "ht_items.0": {"$exists": 1})
+        .find { |c| c.format == "spm" }
     end
 
     # Restrict holdings to ones that are eligible for commitments.
@@ -40,6 +40,5 @@ module Overlap
         (hol.status.empty? || hol.status == "CH") &&
         hol.condition.empty?
     end
-
   end
 end

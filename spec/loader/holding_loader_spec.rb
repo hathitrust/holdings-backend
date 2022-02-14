@@ -7,18 +7,18 @@ RSpec.describe Loader::HoldingLoader do
   let(:uuid) { SecureRandom.uuid }
   let(:line) do
     [
-      "123",         # OCN
-      "456",         # BIB
-      "umich",       # MEMBER_ID
-      "",            # STATUS
-      "",            # CONDITION
-      "2020-01-01",  # DATE
-      "",            # ENUM_CHRON
-      "mono",        # TYPE
-      "",            # ISSN
-      "",            # N_ENUM
-      "",            # N_CHRON
-      "",            # GOV_DOC
+      "123", # OCN
+      "456", # BIB
+      "umich", # MEMBER_ID
+      "", # STATUS
+      "", # CONDITION
+      "2020-01-01", # DATE
+      "", # ENUM_CHRON
+      "mono", # TYPE
+      "", # ISSN
+      "", # N_ENUM
+      "", # N_CHRON
+      "", # GOV_DOC
       uuid
     ].join("\t")
   end

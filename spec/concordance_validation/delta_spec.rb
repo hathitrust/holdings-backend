@@ -10,9 +10,9 @@ require "fileutils"
 FileUtils.mkdir_p Settings.concordance_path + "/validated/"
 FileUtils.mkdir_p Settings.concordance_path + "/diffs/"
 File.write(Settings.concordance_path + "/validated/old_concordance.txt",
-           ["dupe\tdupe", "delete\tdelete"].join("\n"))
+  ["dupe\tdupe", "delete\tdelete"].join("\n"))
 File.write(Settings.concordance_path + "/validated/new_concordance.txt",
-           ["dupe\tdupe", "add\tadd"].join("\n"))
+  ["dupe\tdupe", "add\tadd"].join("\n"))
 
 RSpec.describe ConcordanceValidation::Delta do
   let(:delta) { described_class.new("old_concordance.txt", "new_concordance.txt") }

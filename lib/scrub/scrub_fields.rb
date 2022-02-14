@@ -9,40 +9,40 @@ module Scrub
   # from a member submission file.
   class ScrubFields
     # "444; 555; 666" -> %w[444,555,666]
-    OCN_SPLIT_DELIM      = /[,:;|\/ ]+/.freeze
-    LOCAL_ID_SPLIT_DELIM = /[,; ]+/.freeze
-    ISSN_DELIM           = LOCAL_ID_SPLIT_DELIM
+    OCN_SPLIT_DELIM = /[,:;|\/ ]+/
+    LOCAL_ID_SPLIT_DELIM = /[,; ]+/
+    ISSN_DELIM = LOCAL_ID_SPLIT_DELIM
 
     # (ocolc)555 / (abc)555
-    PAREN_PREFIX    = /^\(.+?\)/.freeze
-    OK_PAREN_PREFIX = /\((oclc|ocm|ocn|ocolc)\)/i.freeze
+    PAREN_PREFIX = /^\(.+?\)/
+    OK_PAREN_PREFIX = /\((oclc|ocm|ocn|ocolc)\)/i
 
     # ocn555 / abc555
-    PREFIX = /^\D+/.freeze
-    OK_PREFIX = /(oclc|ocm|ocn|ocolc)/i.freeze
+    PREFIX = /^\D+/
+    OK_PREFIX = /(oclc|ocm|ocn|ocolc)/i
 
     # No prefix, just "555", could be an ocn so we assume it is
-    JUST_DIGITS = /^\d+$/.freeze
+    JUST_DIGITS = /^\d+$/
 
     # any garbage that just doesn't have any numbers
-    NO_NUMBERS = /^\D+$/.freeze
+    NO_NUMBERS = /^\D+$/
 
     # someone exported a big num from excel, e.g. 1.1e+567
-    EXPONENTIAL = /\d[Ee]\+?\d/.freeze
+    EXPONENTIAL = /\d[Ee]\+?\d/
 
     # 55NEW55
-    DIGIT_MIX = /^\d+\D/.freeze
+    DIGIT_MIX = /^\d+\D/
 
     # for capturing the numeric part
-    NUMERIC_PART = /(\d+)/.freeze
+    NUMERIC_PART = /(\d+)/
 
     LOCAL_ID_MAX_LEN = 50
-    MAX_NUM_ITEMS    = 25 # rather arbitrary
+    MAX_NUM_ITEMS = 25 # rather arbitrary
 
-    STATUS    = /^(CH|LM|WD)$/.freeze
-    CONDITION = /^BRT$/.freeze
-    GOVDOC    = /^[01]$/.freeze
-    ISSN      = /^\d{4}-?\d{3}[0-9Xx]$/.freeze
+    STATUS = /^(CH|LM|WD)$/
+    CONDITION = /^BRT$/
+    GOVDOC = /^[01]$/
+    ISSN = /^\d{4}-?\d{3}[0-9Xx]$/
 
     attr_accessor :logger
 
@@ -170,7 +170,7 @@ module Scrub
     # ... a  single element array, where [0] is a ;-joined string.
     def issn(str)
       candidates = str.split(ISSN_DELIM)
-      ok_issns   = []
+      ok_issns = []
 
       candidates.each do |candidate|
         catch(:rejected_value) do
@@ -212,9 +212,9 @@ module Scrub
     # DRY code for the status, condition and govdoc functions
     def simple_matcher(rx, str)
       # Get the name of the calling method
-      cmeth  = caller_locations[0].label
+      cmeth = caller_locations(1..1).first.label
       output = []
-      str    = str.strip
+      str = str.strip
       unless str.empty?
         match = rx.match(str)
         if match.nil?
@@ -236,7 +236,7 @@ module Scrub
 
     def count_x(x)
       Services.scrub_stats[x.to_sym] ||= 0
-      Services.scrub_stats[x.to_sym]  += 1
+      Services.scrub_stats[x.to_sym] += 1
     end
 
     # May indirectly throw :rejected_value
@@ -247,6 +247,5 @@ module Scrub
     end
 
     attr_reader :current_max_ocn, :ec_parser
-
   end
 end

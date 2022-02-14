@@ -7,10 +7,10 @@ RSpec.describe DataSources::HTCollections do
   let(:mock_data) do
     {
       "EXA" => DataSources::HTCollection.new(collection: "EXA",
-                                content_provider_cluster: "excluster",
-                                responsible_entity: "example",
-                                original_from_inst_id: "example",
-                                billing_entity: "example")
+        content_provider_cluster: "excluster",
+        responsible_entity: "example",
+        original_from_inst_id: "example",
+        billing_entity: "example")
     }
   end
 

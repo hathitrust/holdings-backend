@@ -34,6 +34,5 @@ module Reports
         end
       end
     end
-
   end
 end

@@ -3,7 +3,6 @@
 require "mongoid"
 
 module Clusterable
-
   # A mapping from a deprecated OCN to a resolved OCN
   class OCNResolution
     include Mongoid::Document
@@ -18,7 +17,7 @@ module Clusterable
     validates_presence_of :deprecated, :resolved, :ocns
     index(ocns: 1)
 
-    scope :for_cluster, lambda {|_cluster|
+    scope :for_cluster, lambda { |_cluster|
       where(:$in => ocns)
     }
 
@@ -34,6 +33,5 @@ module Clusterable
     def batch_with?(other)
       resolved == other.resolved
     end
-
   end
 end

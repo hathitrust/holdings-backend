@@ -11,7 +11,7 @@ module Overlap
   # - enum_chron
   class ETASOverlap
     attr_accessor :organization, :ocn, :local_id, :item_type, :rights, :access,
-                  :catalog_id, :volume_id, :enum_chron
+      :catalog_id, :volume_id, :enum_chron
 
     def initialize(organization:, ocn:, local_id:, item_type: "", rights: "", access: "",
       catalog_id: "", volume_id: "", enum_chron: "")
@@ -28,13 +28,13 @@ module Overlap
 
     def to_s
       [ocn,
-       local_id,
-       item_type,
-       rights,
-       access,
-       catalog_id,
-       volume_id,
-       enum_chron].join("\t")
+        local_id,
+        item_type,
+        rights,
+        access,
+        catalog_id,
+        volume_id,
+        enum_chron].join("\t")
     end
 
     # Handles access allow/deny for non-us organizations

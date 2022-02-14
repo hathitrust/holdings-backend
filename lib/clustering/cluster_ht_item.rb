@@ -10,13 +10,12 @@ require "set"
 module Clustering
   # Services for batch loading HT items
   class ClusterHtItem
-
     def initialize(*ht_items)
       @ht_items = ht_items.flatten
       @ocns = @ht_items.first.ocns
       @any_updated = false
 
-      if @ht_items.count > 1 && @ht_items.any? {|h| !h.batch_with?(@ht_items.first) }
+      if @ht_items.count > 1 && @ht_items.any? { |h| !h.batch_with?(@ht_items.first) }
         raise ArgumentError, "OCN for each HTItem in batch must match"
       end
 
@@ -98,6 +97,5 @@ module Clustering
         Reclusterer.new(cluster).recluster
       end
     end
-
   end
 end

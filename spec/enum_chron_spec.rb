@@ -10,7 +10,6 @@ class DummyRecord
   field :n_enum
   field :n_chron
   field :n_enum_chron
-
 end
 
 RSpec.describe EnumChron do

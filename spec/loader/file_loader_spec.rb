@@ -19,7 +19,7 @@ end
 
 class FakeBatchLoader
   def initialize
-    @loaded  = []
+    @loaded = []
     @deleted = []
   end
 
@@ -59,7 +59,7 @@ RSpec.describe Loader::FileLoader do
     end
 
     it "groups items in batches" do
-      expect(batch_loader.loaded.map {|a| a.map(&:line) })
+      expect(batch_loader.loaded.map { |a| a.map(&:line) })
         .to include(["thing1", "thing1"])
     end
 

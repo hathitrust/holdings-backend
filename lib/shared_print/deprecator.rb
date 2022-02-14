@@ -31,8 +31,8 @@ module SharedPrint
       if @report.nil?
         # To reduce the risk of accidental overwrites by a different instance,
         # make the filename rather unique-ish.
-        iso_stamp  = Time.now.strftime("%Y%m%d-%H%M%S")
-        rand_str   = SecureRandom.hex(8)
+        iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+        rand_str = SecureRandom.hex(8)
         report_dir = Settings.deprecation_report_path
         FileUtils.mkdir_p(report_dir)
         @report_path = "#{report_dir}/commitments_deprecator_#{iso_stamp}_#{rand_str}.txt"

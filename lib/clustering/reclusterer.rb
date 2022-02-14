@@ -11,7 +11,6 @@ module Clustering
   # Determines if a cluster needs reclustering.
   # Deletes a cluster, then re-creates clusters from the data in that cluster.
   class Reclusterer
-
     # removed_ocn_tuple is the set of OCNs in a deleted HTItem or OCNResolution
     # N.B. updated HTItems may have their OCNs changed, but no removed_ocn_tuple is provided
     def initialize(cluster, removed_ocn_tuple = nil)
@@ -28,8 +27,8 @@ module Clustering
 
       if @cluster.large?
         raise LargeClusterError,
-              "Reclustering large cluster will lead to incomplete holdings. " \
-              "OCNs: #{@cluster.ocns.join(", ")}"
+          "Reclustering large cluster will lead to incomplete holdings. " \
+          "OCNs: #{@cluster.ocns.join(", ")}"
       end
 
       Retryable.with_transaction do
@@ -75,7 +74,7 @@ module Clustering
     def removed_ocn_tuple_equals_current_resolution?
       return false if @removed_ocn_tuple.none?
 
-      @cluster.ocn_resolutions.pluck(:ocns).any? {|ocns| @removed_ocn_tuple.sort == ocns.sort }
+      @cluster.ocn_resolutions.pluck(:ocns).any? { |ocns| @removed_ocn_tuple.sort == ocns.sort }
     end
 
     # The cluster has an HTItem with OCNs with sufficient glue to "cover" for the
@@ -83,7 +82,7 @@ module Clustering
     def removed_ocn_tuple_is_subset_of_ht_item?
       return false if @removed_ocn_tuple.none?
 
-      @cluster.ht_items.pluck(:ocns).any? {|ocns| @removed_ocn_tuple.to_set.subset? ocns.to_set }
+      @cluster.ht_items.pluck(:ocns).any? { |ocns| @removed_ocn_tuple.to_set.subset? ocns.to_set }
     end
 
     # A cluster's clusterable components.
@@ -93,20 +92,19 @@ module Clustering
 
     def recluster_components
       graph.subgraphs.each do |ocn_set|
-        new_cluster = Cluster.where(ocns: { "$in": ocn_set }).first || Cluster.new(ocns: ocn_set)
-        move_components(new_cluster.ht_items, @cluster.ht_items.where(ocns: { "$in": ocn_set }))
-        move_components(new_cluster.holdings, @cluster.holdings.where(ocn: { "$in": ocn_set }))
+        new_cluster = Cluster.where(ocns: {"$in": ocn_set}).first || Cluster.new(ocns: ocn_set)
+        move_components(new_cluster.ht_items, @cluster.ht_items.where(ocns: {"$in": ocn_set}))
+        move_components(new_cluster.holdings, @cluster.holdings.where(ocn: {"$in": ocn_set}))
         move_components(new_cluster.commitments,
-                        @cluster.commitments.where(ocn: { "$in": ocn_set }))
+          @cluster.commitments.where(ocn: {"$in": ocn_set}))
         move_components(new_cluster.ocn_resolutions,
-                        @cluster.ocn_resolutions.where(ocns: { "$in": ocn_set }))
+          @cluster.ocn_resolutions.where(ocns: {"$in": ocn_set}))
         new_cluster.save
       end
     end
 
     def move_components(new_cluster_field, components)
-      components&.each {|comp| new_cluster_field << comp }
+      components&.each { |comp| new_cluster_field << comp }
     end
-
   end
 end

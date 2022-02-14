@@ -14,7 +14,7 @@ class Synchronizer
 
   def write_status(action)
     Services.logger.debug "#{@pid} writing status #{@pid}_#{action}"
-    File.open("#{@tmpdir}/#{@pid}_#{action}", "w") {|_| }
+    File.open("#{@tmpdir}/#{@pid}_#{action}", "w") { |_| }
   end
 
   def wait_for(condition)
@@ -28,7 +28,6 @@ class Synchronizer
 end
 
 class InstrumentedClusterGetter < Clustering::ClusterGetter
-
   def initialize(ocns, synchronizer)
     super(ocns)
     @synchronizer = synchronizer
@@ -43,11 +42,9 @@ class InstrumentedClusterGetter < Clustering::ClusterGetter
       yield c
     end
   end
-
 end
 
 class InstrumentedClusterHtItem < Clustering::ClusterHtItem
-
   def with_synchronizer(synchronizer)
     tap { @synchronizer = synchronizer }
   end
@@ -102,8 +99,8 @@ RSpec.describe "concurrency" do
         ht_item = build(:ht_item, ocns: [2])
 
         syncher = Synchronizer.new(pid: "first",
-                                   wait_before: { save: "second_got_cluster" },
-                                   tmpdir: tmpdir)
+          wait_before: {save: "second_got_cluster"},
+          tmpdir: tmpdir)
 
         InstrumentedClusterHtItem.new(ht_item)
           .with_synchronizer(syncher)
@@ -116,9 +113,9 @@ RSpec.describe "concurrency" do
         ht_item = build(:ht_item, ocns: [1, 2])
 
         syncher = Synchronizer.new(pid: "second",
-                                   wait_before: { merge: "first_got_cluster",
-                                                  save:  "first_saved_cluster" },
-                                   tmpdir: tmpdir)
+          wait_before: {merge: "first_got_cluster",
+                        save: "first_saved_cluster"},
+          tmpdir: tmpdir)
 
         InstrumentedClusterHtItem.new(ht_item)
           .with_synchronizer(syncher)
@@ -141,7 +138,7 @@ RSpec.describe "concurrency" do
     #   - Process 1 deletes a different htitem and calls reclusterer
     #   - Ensure the htitem added by process 2 hasn't disappeared
 
-    let(:first_ht_item)  { FactoryBot.build(:ht_item, ocns: [1, 2]) }
+    let(:first_ht_item) { FactoryBot.build(:ht_item, ocns: [1, 2]) }
     let(:second_ht_item) { FactoryBot.build(:ht_item, ocns: [1]) }
 
     let(:first_process) do
@@ -149,8 +146,8 @@ RSpec.describe "concurrency" do
         Clustering::ClusterHtItem.new(first_ht_item).cluster.save
 
         syncher = Synchronizer.new(pid: "first",
-                                   wait_before: { delete: "second_saved_cluster" },
-                                   tmpdir: tmpdir)
+          wait_before: {delete: "second_saved_cluster"},
+          tmpdir: tmpdir)
 
         InstrumentedClusterHtItem.new(first_ht_item)
           .with_synchronizer(syncher)
@@ -161,8 +158,8 @@ RSpec.describe "concurrency" do
     let(:second_process) do
       proc do |tmpdir|
         syncher = Synchronizer.new(pid: "second",
-                                   wait_before: { save: "first_got_cluster" },
-                                   tmpdir: tmpdir)
+          wait_before: {save: "first_got_cluster"},
+          tmpdir: tmpdir)
 
         InstrumentedClusterHtItem.new(second_ht_item)
           .with_synchronizer(syncher)

@@ -6,21 +6,21 @@ require "json"
 
 RSpec.describe Scrub::MemberHolding do
   let(:test_data) { __dir__ + "/../testdata" }
-  let(:ok_min_hed) { { "oclc"=>0, "local_id"=>1 } }
+  let(:ok_min_hed) { {"oclc" => 0, "local_id" => 1} }
   let(:ok_min_str) { "123\t456" }
   let(:ok_min_hold) { described_class.new(ok_min_hed) }
 
   let(:ok_max_hed) do
     {
-      "oclc"      => 0,
-      "local_id"  => 1,
-      "status"    => 2,
+      "oclc" => 0,
+      "local_id" => 1,
+      "status" => 2,
       "condition" => 3,
       "enumchron" => 4,
-      "govdoc"    => 5
+      "govdoc" => 5
     }
   end
-  let(:ok_max_str)  { "123\tb456\tCH\tBRT\tv.1, 2020\t0" }
+  let(:ok_max_str) { "123\tb456\tCH\tBRT\tv.1, 2020\t0" }
   let(:bad_max_str) { "123\tb456\tXX\tXXX\tv.1, 2020\t0" }
   let(:ok_max_hold) { described_class.new(ok_max_hed) }
 

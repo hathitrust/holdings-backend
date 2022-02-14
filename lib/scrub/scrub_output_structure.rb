@@ -37,21 +37,21 @@ module Scrub
   # sos.latest("log")    # -> Dir
   # sos.latest("output") # -> Dir
   class ScrubOutputStructure
-    VALID_SUBDIR   = ["log", "output", "ready_to_load", "loaded"].freeze
-    VALID_DATE_STR = /^\d\d\d\d-\d\d-\d\d$/.freeze
-    DATE_STR       = /\d\d\d\d-\d\d-\d\d/.freeze
+    VALID_SUBDIR = ["log", "output", "ready_to_load", "loaded"].freeze
+    VALID_DATE_STR = /^\d\d\d\d-\d\d-\d\d$/
+    DATE_STR = /\d\d\d\d-\d\d-\d\d/
 
     attr_reader :member_id, :member_dir, :member_log, :member_output,
-                :member_ready_to_load, :member_loaded
+      :member_ready_to_load, :member_loaded
 
     def initialize(member_id)
       unless member_id.is_a?(String)
         raise ArgumentError, "member_id must be a string"
       end
 
-      @member_id     = member_id
-      @member_dir    = mkbase!
-      @member_log    = mklog!
+      @member_id = member_id
+      @member_dir = mkbase!
+      @member_log = mklog!
       @member_output = mkoutput!
       @member_ready_to_load = mkready_to_load!
       @member_loaded = mkloaded!
@@ -69,8 +69,8 @@ module Scrub
     end
 
     def latest(subdir)
-      base_dir      = mkdir!(validate_subdir(subdir))
-      latest_subdir = base_dir.children.select {|str| str.match?(DATE_STR) }.max
+      base_dir = mkdir!(validate_subdir(subdir))
+      latest_subdir = base_dir.children.select { |str| str.match?(DATE_STR) }.max
 
       if latest_subdir.nil?
         nil
@@ -81,12 +81,12 @@ module Scrub
 
     def to_json(*_args)
       dir_hash = {
-        "member_id"            => member_id,
-        "member_dir"           => member_dir.path,
-        "member_log"           => member_log.path,
-        "member_output"        => member_output.to_path,
+        "member_id" => member_id,
+        "member_dir" => member_dir.path,
+        "member_log" => member_log.path,
+        "member_output" => member_output.to_path,
         "member_ready_to_load" => member_ready_to_load.to_path,
-        "member_loaded"        => member_loaded.to_path
+        "member_loaded" => member_loaded.to_path
       }
 
       unless latest("output").nil?
@@ -138,7 +138,7 @@ module Scrub
 
     def mkdir!(*parts)
       path_parts = [__dir__, "..", "data", "member_data", @member_id] + parts
-      pathname   = Pathname.new(File.join(path_parts)).expand_path
+      pathname = Pathname.new(File.join(path_parts)).expand_path
       FileUtils.mkdir_p(pathname)
 
       Dir.new(pathname)

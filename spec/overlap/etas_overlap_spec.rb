@@ -6,14 +6,14 @@ require "overlap/etas_overlap"
 RSpec.describe Overlap::ETASOverlap do
   let(:eo) do
     described_class.new(organization: "umich",
-              ocn: rand(1_000_000),
-              local_id: rand(1_000_000).to_s,
-              item_type: "mono",
-              rights: "ic",
-              access: "deny",
-              catalog_id: rand(1_000_000),
-              volume_id: rand(1_000_000).to_s,
-              enum_chron: "V.1")
+      ocn: rand(1_000_000),
+      local_id: rand(1_000_000).to_s,
+      item_type: "mono",
+      rights: "ic",
+      access: "deny",
+      catalog_id: rand(1_000_000),
+      volume_id: rand(1_000_000).to_s,
+      enum_chron: "V.1")
   end
 
   describe "#initialize" do

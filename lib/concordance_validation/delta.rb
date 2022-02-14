@@ -4,7 +4,6 @@ require "zlib"
 require "settings"
 
 module ConcordanceValidation
-
   # Performs a diff of two validated concordances
   class Delta
     attr_accessor :old_conc, :new_conc, :adds, :deletes
@@ -12,8 +11,8 @@ module ConcordanceValidation
     def initialize(old_conc_filename, new_conc_filename)
       @old_conc = open_concordance(old_conc_filename)
       @new_conc = open_concordance(new_conc_filename)
-      @adds = Hash.new {|h, resolved| h[resolved] = Set.new }
-      @deletes = Hash.new {|h, resolved| h[resolved] = Set.new }
+      @adds = Hash.new { |h, resolved| h[resolved] = Set.new }
+      @deletes = Hash.new { |h, resolved| h[resolved] = Set.new }
     end
 
     def run
@@ -60,6 +59,5 @@ module ConcordanceValidation
         deletes[resolved_ocn] << dead_ocn
       end
     end
-
   end
 end

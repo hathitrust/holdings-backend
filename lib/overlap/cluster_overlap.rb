@@ -46,11 +46,11 @@ module Overlap
 
     def self.matching_clusters(org = nil)
       if org.nil?
-        Cluster.where("ht_items.0": { "$exists": 1 })
+        Cluster.where("ht_items.0": {"$exists": 1})
       else
-        Cluster.where("ht_items.0": { "$exists": 1 },
-                      "$or": [{ "holdings.organization": org },
-                              { "ht_items.billing_entity": org }])
+        Cluster.where("ht_items.0": {"$exists": 1},
+          "$or": [{"holdings.organization": org},
+            {"ht_items.billing_entity": org}])
       end
     end
   end

@@ -7,7 +7,7 @@ RSpec.describe DataSources::HTOrganizations do
   let(:mock_data) do
     {
       "example" => DataSources::HTOrganization.new(inst_id: "example", country_code: "xx",
-                                weight: 3.5, oclc_sym: "ZZZ")
+        weight: 3.5, oclc_sym: "ZZZ")
     }
   end
 
@@ -18,7 +18,7 @@ RSpec.describe DataSources::HTOrganizations do
   end
   let(:temp_non_member) do
     DataSources::HTOrganization.new(inst_id: "temp_non_member", country_code: "zz", weight: 1.0,
-                                     status: 0)
+      status: 0)
   end
 
   describe "#[]" do

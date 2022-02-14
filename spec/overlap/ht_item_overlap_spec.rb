@@ -7,31 +7,31 @@ RSpec.describe Overlap::HtItemOverlap do
   let(:c) { build(:cluster) }
   let(:mpm) do
     build(:ht_item, :mpm,
-          ocns: c.ocns,
-          enum_chron: "1",
-          n_enum: "1",
-          billing_entity: "ualberta")
+      ocns: c.ocns,
+      enum_chron: "1",
+      n_enum: "1",
+      billing_entity: "ualberta")
   end
   let(:holding) do
     build(:holding,
-          ocn: c.ocns.first,
-          organization: "umich",
-          enum_chron: "1",
-          n_enum: "1")
+      ocn: c.ocns.first,
+      organization: "umich",
+      enum_chron: "1",
+      n_enum: "1")
   end
   let(:holding2) do
     build(:holding,
-          ocn: c.ocns.first,
-            organization: "smu",
-            enum_chron: "1",
-            n_enum: "1")
+      ocn: c.ocns.first,
+      organization: "smu",
+      enum_chron: "1",
+      n_enum: "1")
   end
   let(:non_match_holding) do
     build(:holding,
-          ocn: c.ocns.first,
-        organization: "stanford",
-        enum_chron: "2",
-        n_enum: "2")
+      ocn: c.ocns.first,
+      organization: "stanford",
+      enum_chron: "2",
+      n_enum: "2")
   end
 
   before(:each) do
@@ -59,10 +59,10 @@ RSpec.describe Overlap::HtItemOverlap do
 
     it "does not include non-matching organizations that match something else" do
       mpm2 = build(:ht_item, :mpm,
-                   ocns: c.ocns,
-                   enum_chron: "2",
-                   n_enum: "2",
-                   billing_entity: "ualberta")
+        ocns: c.ocns,
+        enum_chron: "2",
+        n_enum: "2",
+        billing_entity: "ualberta")
       Clustering::ClusterHtItem.new(mpm2).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.where(n_enum: "2").first)
@@ -80,10 +80,10 @@ RSpec.describe Overlap::HtItemOverlap do
 
     it "matches if holding enum is ''" do
       empty_holding = build(:holding,
-                            ocn: c.ocns.first,
-                            organization: "upenn",
-                            enum_chron: "",
-                            n_enum: "")
+        ocn: c.ocns.first,
+        organization: "upenn",
+        enum_chron: "",
+        n_enum: "")
       Clustering::ClusterHolding.new(empty_holding).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.first)
@@ -92,11 +92,11 @@ RSpec.describe Overlap::HtItemOverlap do
 
     it "matches if holding enum is '', but chron exists" do
       almost_empty_holding = build(:holding,
-                                   ocn: c.ocns.first,
-                                   organization: "upenn",
-                                   enum_chron: "Aug",
-                                   n_enum: "",
-                                   n_chron: "Aug")
+        ocn: c.ocns.first,
+        organization: "upenn",
+        enum_chron: "Aug",
+        n_enum: "",
+        n_chron: "Aug")
       Clustering::ClusterHolding.new(almost_empty_holding).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.first)
@@ -105,15 +105,15 @@ RSpec.describe Overlap::HtItemOverlap do
 
     it "does not match if ht item enum is ''" do
       empty_mpm = build(:ht_item, :mpm,
-                        ocns: c.ocns,
-                         billing_entity: "ualberta",
-                         enum_chron: "",
-                         n_enum: "")
+        ocns: c.ocns,
+        billing_entity: "ualberta",
+        enum_chron: "",
+        n_enum: "")
       Clustering::ClusterHtItem.new(empty_mpm).cluster.tap(&:save)
       c.reload
       overlap = described_class.new(c.ht_items.where(enum_chron: "").first)
       expect(overlap.organizations_with_holdings).to eq([non_match_holding.organization,
-                                                         empty_mpm.billing_entity])
+        empty_mpm.billing_entity])
     end
   end
 
@@ -121,11 +121,11 @@ RSpec.describe Overlap::HtItemOverlap do
     let(:non_member_holding) do
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
-                                          weight: 1.0, status: 0)
+          weight: 1.0, status: 0)
       )
       build(:holding,
-            ocn: c.ocns.first,
-            organization: "non_member")
+        ocn: c.ocns.first,
+        organization: "non_member")
     end
 
     it "excludes organizations that are not members" do
@@ -141,20 +141,20 @@ RSpec.describe Overlap::HtItemOverlap do
   describe "#h_share" do
     let(:keio_item) do
       build(:ht_item, :mpm,
-            ocns: c.ocns,
-            collection_code: "KEIO",
-            enum_chron: "1")
+        ocns: c.ocns,
+        collection_code: "KEIO",
+        enum_chron: "1")
     end
 
     let(:ucm_item) do
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "ucm", country_code: "es",
-                                          weight: 1.0, status: 1)
+          weight: 1.0, status: 1)
       )
       build(:ht_item, :mpm,
-            ocns: c.ocns,
-            collection_code: "UCM",
-            enum_chron: "1")
+        ocns: c.ocns,
+        collection_code: "UCM",
+        enum_chron: "1")
     end
 
     it "returns ratio of organizations" do

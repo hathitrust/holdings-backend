@@ -22,19 +22,17 @@ module Utils
     attr_reader :seconds, :refresh_count, :refresher_thread
 
     def initialize(seconds = 120)
-      @seconds          = seconds # refresh freq, can be a float if you want to go below 1s.
-      @refresh_count    = 0       # For testing purposes, mostly.
-      @refresher_thread = nil     # The thread that refreshes the session.
+      @seconds = seconds # refresh freq, can be a float if you want to go below 1s.
+      @refresh_count = 0 # For testing purposes, mostly.
+      @refresher_thread = nil # The thread that refreshes the session.
     end
 
     def run(&_block)
       Cluster.with_session do |session|
-        begin
-          @refresher_thread = start_refresh_thread(session)
-          yield # i.e. execute _block
-        ensure
-          @refresher_thread.kill
-        end
+        @refresher_thread = start_refresh_thread(session)
+        yield # i.e. execute _block
+      ensure
+        @refresher_thread.kill
       end
     end
 

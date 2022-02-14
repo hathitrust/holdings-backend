@@ -20,7 +20,7 @@ RSpec.describe FileMutex do
 
     context "when the file does not exist" do
       it "runs the given block" do
-        expect {|b| mutex.with_lock(&b) }.to yield_control
+        expect { |b| mutex.with_lock(&b) }.to yield_control
       end
 
       it "creates the file before running the block" do
