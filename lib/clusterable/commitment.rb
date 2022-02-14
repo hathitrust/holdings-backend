@@ -47,10 +47,10 @@ module Clusterable
       ["C", "D", "E", "L", "M"].include? deprecation_status
     end
 
-    def deprecate(status, replacement, date = Date.today)
-      self.deprecation_status = status
-      self.deprecation_date = date
-      self.deprecation_replaced_by = replacement._id
+    def deprecate(status: "", replacement: nil, date: Date.today)
+      self.deprecation_status      = status
+      self.deprecation_date        = date
+      self.deprecation_replaced_by = replacement._id unless replacement.nil?
     end
 
     private

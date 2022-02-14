@@ -40,14 +40,44 @@ RSpec.describe Clusterable::Commitment do
   end
 
   describe "deprecate" do
+    it "deprecate sets deprecated? == true" do
+      c.commitments << comm
+      depped = c.commitments.first
+      expect(depped.deprecated?).to be false
+      depped.deprecate(status: "C")
+      expect(depped.deprecated?).to be true
+    end
+
     it "adds status, date and replacement id" do
       c.commitments << comm
       replacement = build(:commitment, ocn: comm.ocn)
       depped = c.commitments.first
-      depped.deprecate("D", replacement)
-      expect(depped.deprecation_status).to eq("D")
-      expect(depped.deprecation_date).to eq(Date.today)
+      d = DateTime.parse("2020-01-01")
+      expect(depped.deprecated?).to be false
+      depped.deprecate(status: "C", replacement: replacement, date: d)
+      expect(depped.deprecated?).to be true
+      expect(depped.deprecation_status).to eq("C")
+      expect(depped.deprecation_date).to eq(d)
       expect(depped.deprecation_replaced_by).to eq(replacement._id.to_s)
+    end
+
+    it "replacement is optional" do
+      c.commitments << comm
+      depped = c.commitments.first
+      d = DateTime.parse("2020-02-02")
+      depped.deprecate(status: "D", date: d)
+      expect(depped.deprecation_status).to eq("D")
+      expect(depped.deprecation_date).to eq(d)
+      expect(depped.deprecation_replaced_by).to eq nil
+    end
+
+    it "date is optional" do
+      c.commitments << comm
+      depped = c.commitments.first
+      depped.deprecate(status: "E")
+      expect(depped.deprecation_status).to eq("E")
+      expect(depped.deprecation_date).to eq(Date.today)
+      expect(depped.deprecation_replaced_by).to eq nil
     end
   end
 
