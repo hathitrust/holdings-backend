@@ -4,6 +4,7 @@ require "services"
 require "cluster"
 require "overlap/cluster_overlap"
 require "overlap/etas_overlap"
+require "utils/session_keep_alive"
 
 module Reports
 
@@ -34,10 +35,14 @@ module Reports
     end
 
     def clusters_with_holdings
-      if organization.nil?
-        Cluster.where("holdings.0": { "$exists": 1 }).no_timeout
-      else
-        Cluster.where("holdings.organization": organization).no_timeout
+      Utils::SessionKeepAlive.new(120).run do
+        if organization.nil?
+          Cluster.batch_size(Settings.etas_overlap_batch_size)
+            .where("holdings.0": { "$exists": 1 }).no_timeout
+        else
+          Cluster.batch_size(Settings.etas_overlap_batch_size)
+            .where("holdings.organization": organization).no_timeout
+        end
       end
     end
 
