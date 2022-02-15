@@ -127,7 +127,7 @@ module SharedPrint
 
     def validate!
       unless @allowed_status.include?(@status)
-        raise ArgumentError, "Bad status #{@status}"
+        raise ArgumentError, "Bad status \"#{@status}\""
       end
     end
   end
