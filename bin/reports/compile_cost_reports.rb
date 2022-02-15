@@ -28,7 +28,7 @@ def to_tsv(report)
 end
 
 def main
-  batch_size = 1_000
+  batch_size = 50_000
   marker = Services.progress_tracker.new(batch_size)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum batch_size}"
