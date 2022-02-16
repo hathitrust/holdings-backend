@@ -4,12 +4,13 @@ require "services"
 require "overlap/holding_commitment"
 
 module Reports
+  # User wants to find holdings for replacing shared print commitments.
   # Given criteria, pull up all clusters that  match those criteria
   # AND have holdings,
   # AND have ht_items,
   # AND for those clusters, report holdings that don't have a commitment.
-  # Invoke via bin/reports/compile_eligible_commitments_report.rb
-  class EligibleCommitments
+  # Invoke via bin/reports/compile_commitment_replacements_report.rb
+  class CommitmentReplacements
     def header
       ["organization", "oclc_sym", "ocn", "local_id"]
     end

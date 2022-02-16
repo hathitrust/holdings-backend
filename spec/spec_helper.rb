@@ -82,3 +82,19 @@ RSpec.configure do |config|
     end
   end
 end
+
+# Clusters and saves each element in an array of clusterables
+# DRY for the many times the tests need to do something like:
+# Clustering::ClusterXYZ.new(xyz).cluster.tap(&:save)
+def cluster_tap_save(clusterables)
+  clusterables.each do |clusterable|
+    case clusterable.class
+    when Clusterable::Holding
+      Clustering::ClusterHolding
+    when Clusterable::HtItem
+      Clustering::ClusterHtItem
+    when Clusterable::Commitment
+      Clustering::ClusterCommitment
+    end.new(clusterable).cluster.tap(&:save)
+  end
+end
