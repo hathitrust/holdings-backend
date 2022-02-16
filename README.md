@@ -13,7 +13,7 @@
 Run the following script to build and start the Docker containers:
 
 ```bash
-bash bin/setup_dev.sh
+bash bin/setup/setup_dev.sh
 ```
 
 ## Running the tests
@@ -30,7 +30,7 @@ docker volume rm holdings-backend_data_db # to clear out the development databas
 docker volume rm holdings-backend_gem_cache # to clear out gems
 
 # Rebuild it
-bash bin/setup_dev.sh
+bash bin/setup/setup_dev.sh
 ```
 
 ## Loading data

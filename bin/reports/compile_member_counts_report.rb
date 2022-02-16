@@ -16,15 +16,16 @@ def make_outf(output_dir)
   end
 end
 
-def main
+def run(*args)
   # Check input.
-  cost_report_freq = ARGV.shift
+  binding.pry
+  cost_report_freq = args.shift
   if cost_report_freq.nil?
     raise "req cost_report_freq file as 1st arg"
   end
 
   # Set up output
-  output_dir = ARGV.shift
+  output_dir = args.shift
   outf = make_outf(output_dir)
 
   # Run report
@@ -39,4 +40,4 @@ def main
   outf.close
 end
 
-main if $PROGRAM_NAME == __FILE__
+run(ARGV) if $PROGRAM_NAME == __FILE__

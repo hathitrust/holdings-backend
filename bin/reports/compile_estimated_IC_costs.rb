@@ -9,10 +9,9 @@ Services.mongo!
 
 # Given a file of unique OCNs, generate a cost estimate.
 
-def main
+def main(ocn_file)
   batch_size = 100_000
 
-  ocn_file = ARGV.shift
   ocns = File.open(ocn_file).map(&:to_i)
   est = Reports::EstimateIC.new(ocns, batch_size)
 
@@ -30,4 +29,4 @@ Of those, #{est.num_items_pd} ( #{est.pct_items_pd.round(1)}%) are in the public
 #{est.num_items_ic} ( #{est.pct_items_ic} ) are in copyright."
 end
 
-main if $PROGRAM_NAME == __FILE__
+main(ARGV.shift) if $PROGRAM_NAME == __FILE__

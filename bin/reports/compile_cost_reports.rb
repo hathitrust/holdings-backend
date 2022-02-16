@@ -26,13 +26,11 @@ def to_tsv(report)
   tsv.join("\n")
 end
 
-def main
+def main(org)
   batch_size = 50_000
   marker = Services.progress_tracker.new(batch_size)
   logger = Services.logger
   logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum batch_size}"
-
-  org = ARGV.shift
 
   cost_report = Reports::CostReport.new(org, lines: batch_size, logger: logger)
   puts "Target cost: #{cost_report.target_cost}"
@@ -50,4 +48,4 @@ def main
   logger.info marker.final_line
 end
 
-main if __FILE__ == $PROGRAM_NAME
+main(ARGV.shift) if __FILE__ == $PROGRAM_NAME

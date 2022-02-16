@@ -1,0 +1,64 @@
+i = implemented
+c = complete with docs
+d = can delete root bin file
+j = not needed for CLI, move to `jobs`?
+
+D   ./bin/pry_shell.rb
+
+D   ./bin/get_all_members.rb
+
+# moved to bin/setup/
+# They are a prereq for phctl so phctl can't get rid of them
+   ./bin/setup_dev.sh
+   ./bin/setup_test.sh
+   ./bin/rs_initiate.sh
+   ./bin/wait-for
+
+
+
+
+    ./bin/compare_clusters.rb
+    ./bin/inspect_ocn.rb
+    ./bin/holdings_deleter.rb
+
+
+D   ./bin/add_shared_print_commitments.rb
+    ./bin/get_holdings_uuid_by_org.rb
+D   ./bin/add_ht_items.rb
+
+
+
+*    ./bin/reports/compile_eligible_commitments_report.rb
+D   ./bin/reports/export_etas_overlap_report.rb
+i   ./bin/reports/compile_member_counts_report.rb
+i   ./bin/reports/compile_cost_reports.rb
+i   ./bin/reports/compile_estimated_IC_costs.rb
+
+    ./bin/concordance_validation
+i   ./bin/concordance_validation/validate_and_delta.rb
+D   ./bin/load_concordance_diffs.rb
+i   ./bin/concordance_validation/validate.rb
+
+
+# ask team about
+    ./bin/reports/full_etas_overlap.rb
+
+# holdings / autoscrub stuff
+# postpone ? 
+    ./bin/add_uuid.rb
+    ./bin/prep_loadfiles.sh #ignore for now
+    ./bin/add_print_holdings.rb
+    ./bin/delete_holdings_by_uuid.rb
+
+    ./bin/process_new_holdings.sh
+    ./bin/renormalize_enumchrons.rb
+
+    ./bin/append_sheets.pl
+    ./bin/cost_changes.sh
+
+# jobs # would need updates in ht_tanka 
+    "bin/phctl.rb report etas-overlap"
+    # These could also be moved into phctl, but don't really have a manual use case like "report etas-overlap"
+j   ./jobs/update_overlap_table.rb
+j   ./jobs/daily_add_ht_items.rb
+

@@ -15,6 +15,7 @@ gem "mysql2"
 gem "prometheus-client"
 gem "rgl"
 gem "sequel"
+gem "thor"
 gem "zinzout"
 
 group :development, :test do

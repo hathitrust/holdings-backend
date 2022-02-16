@@ -23,43 +23,47 @@ end
 # Validate any new files.
 # Compute deltas of new concordance with pre-existing validated concordance.
 
-conc_dir = Settings.concordance_path
+def main
+  conc_dir = Settings.concordance_path
 
-# YYYYMM_concordance.txt .gz optional
-raw_files = Dir.glob("#{conc_dir}/raw/*_concordance.txt*").sort
-raw_dates = raw_files.map { |fname| fname.split("/").last.match(/^\d+/).to_s }
+  # YYYYMM_concordance.txt .gz optional
+  raw_files = Dir.glob("#{conc_dir}/raw/*_concordance.txt*").sort
+  raw_dates = raw_files.map { |fname| fname.split("/").last.match(/^\d+/).to_s }
 
-validated_files = Dir.glob("#{conc_dir}/validated/*concordance_validated.tsv.gz").sort
-validated_dates = validated_files.map { |fname| fname.split("/").last.match(/^\d+/).to_s }
+  validated_files = Dir.glob("#{conc_dir}/validated/*concordance_validated.tsv.gz").sort
+  validated_dates = validated_files.map { |fname| fname.split("/").last.match(/^\d+/).to_s }
 
-# Validate anything that doesn't have a validated equivalent
-dates_to_validate = raw_dates - validated_dates
+  # Validate anything that doesn't have a validated equivalent
+  dates_to_validate = raw_dates - validated_dates
 
-dates_to_validate.each do |date|
-  fin = "#{conc_dir}/raw/#{date}_concordance.txt.gz"
-  fout = "#{conc_dir}/validated/#{date}_concordance_validated.tsv"
-  puts "Validating #{fin}"
-  validated = system("bundle exec ruby bin/concordance_validation/validate.rb #{fin} #{fout}" \
-                      "> #{conc_dir}/results.tmp")
-  Services.logger.info("Validated #{fin}.") if validated
-  _gzipped = system("gzip #{fout}")
-  error_msg = review_logs("#{conc_dir}/validated/#{date}_concordance_validated.tsv.log").join("\n")
-  Services.logger.info(error_msg)
+  dates_to_validate.each do |date|
+    fin = "#{conc_dir}/raw/#{date}_concordance.txt.gz"
+    fout = "#{conc_dir}/validated/#{date}_concordance_validated.tsv"
+    puts "Validating #{fin}"
+    validated = system("bundle exec ruby bin/concordance_validation/validate.rb #{fin} #{fout}" \
+                        "> #{conc_dir}/results.tmp")
+    Services.logger.info("Validated #{fin}.") if validated
+    _gzipped = system("gzip #{fout}")
+    error_msg = review_logs("#{conc_dir}/validated/#{date}_concordance_validated.tsv.log").join("\n")
+    Services.logger.info(error_msg)
+  end
+
+  # If we validated anything, find something to compute the deltas against
+  if dates_to_validate.any?
+    # most recent, previously validated concordance
+    prev_conc = validated_files.max
+    # most recent concordance we just validated
+    new_conc = "#{dates_to_validate.max}_concordance_validated.tsv.gz"
+    new_conc_w_path = "#{conc_dir}/validated/#{new_conc}"
+
+    Services.logger.info("Diffing #{prev_conc} and #{new_conc_w_path}")
+
+    # compute delta
+    delta = ConcordanceValidation::Delta.new(File.basename(prev_conc), new_conc)
+    delta.run
+
+    Services.logger.info("Concordance adds and deletes waiting in #{conc_dir}/diffs")
+  end
 end
 
-# If we validated anything, find something to compute the deltas against
-if dates_to_validate.any?
-  # most recent, previously validated concordance
-  prev_conc = validated_files.max
-  # most recent concordance we just validated
-  new_conc = "#{dates_to_validate.max}_concordance_validated.tsv.gz"
-  new_conc_w_path = "#{conc_dir}/validated/#{new_conc}"
-
-  Services.logger.info("Diffing #{prev_conc} and #{new_conc_w_path}")
-
-  # compute delta
-  delta = ConcordanceValidation::Delta.new(File.basename(prev_conc), new_conc)
-  delta.run
-
-  Services.logger.info("Concordance adds and deletes waiting in #{conc_dir}/diffs")
-end
+main if $PROGRAM_NAME == __FILE__
