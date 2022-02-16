@@ -31,7 +31,7 @@ RSpec.describe Reports::EligibleCommitments do
   let(:ht_mpm) { build(:ht_item, :mpm, ocns: [ocn1]) }
   let(:ht_ser) { build(:ht_item, :ser, ocns: [ocn1]) }
   # Commitments
-  let(:spc) { build(:commitment, ocn: ocn1) }
+  let(:spc) { build(:commitment, ocn: ocn1, organization: h_ch.organization, local_id: h_ch.local_id) }
 
   def run(ocns)
     rows = []
@@ -45,24 +45,41 @@ RSpec.describe Reports::EligibleCommitments do
     Cluster.collection.find.delete_many
   end
 
-  it "Header looks like expected" do
-    expect(report.header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
-  end
-
-  it "Returns the single matching record" do
-    Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
-    rows = run([ocn1, ocn2])
-    expect(rows).to eq [["umich", "EYM", 5, "a123x"]]
-  end
-
-  it "Does a more realistic example" do # keep
-    magic_number = 50
-    1.upto(magic_number) do |i|
-      Clustering::ClusterHolding.new(build_h("umich", i, "i#{i}", "CH")).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(build(:ht_item, :spm, ocns: [i])).cluster.tap(&:save)
+  describe "#header" do
+    it "looks like expected" do
+      expect(report.header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
     end
-    rows = run((1..magic_number).to_a)
-    expect(rows.size).to be magic_number
+  end
+  describe "#for_ocns" do
+    it "returns the single matching record" do
+      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      rows = run([ocn1, ocn2])
+      expect(rows).to eq [["umich", "EYM", 5, "a123x"]]
+    end
+    it "rejects overlap if there is a commitment-holding match" do
+      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      rows = run([ocn1])
+      expect(rows).to eq []
+    end
+    it "but includes overlap if the commitment is deprecated" do
+      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
+      Clustering::ClusterHolding.new(h_ch).cluster.tap(&:save)
+      spc.deprecate(status: "E")
+      Clustering::ClusterCommitment.new(spc).cluster.tap(&:save)
+      rows = run([ocn1])
+      expect(rows).to eq [["umich", "EYM", 5, "a123x"]]
+    end
+    it "does a more realistic example" do
+      magic_number = 50
+      1.upto(magic_number) do |i|
+        Clustering::ClusterHolding.new(build_h("umich", i, "i#{i}", "CH")).cluster.tap(&:save)
+        Clustering::ClusterHtItem.new(build(:ht_item, :spm, ocns: [i])).cluster.tap(&:save)
+      end
+      rows = run((1..magic_number).to_a)
+      expect(rows.size).to be magic_number
+    end
   end
 end

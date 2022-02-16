@@ -17,6 +17,7 @@ module SharedPrint
     def initialize(verbose: false)
       @verbose = verbose
       @header_spec = ["organization", "ocn", "local_id", "deprecation_status"]
+      clear_err
     end
 
     # Process a list of files.
@@ -48,6 +49,7 @@ module SharedPrint
       inf = File.open(path, "r")
       append_report "Reading deprecation records from #{path}"
       unless check_header(inf.gets.strip)
+        append_report @err
         append_report "Stopped processing file #{inf} due to header error."
         return
       end
@@ -60,7 +62,7 @@ module SharedPrint
     # Deprecation files must have this header.
     def check_header(header_line)
       expected = @header_spec.join("\t")
-      append_report "Checking header line #{header_line}"
+      append_report "Checking header line: #{header_line}"
       if header_line != expected
         @err << [
           "Header not OK.",
