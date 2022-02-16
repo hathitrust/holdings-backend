@@ -37,10 +37,10 @@ module Reports
       Utils::SessionKeepAlive.new(120).run do
         if organization.nil?
           Cluster.batch_size(Settings.etas_overlap_batch_size)
-            .where("holdings.0": {"$exists": 1}).no_timeout
+            .where("holdings.0": {"$exists": 1}).no_timeout.pluck(:_id).to_a
         else
           Cluster.batch_size(Settings.etas_overlap_batch_size)
-            .where("holdings.organization": organization).no_timeout
+            .where("holdings.organization": organization).no_timeout.pluck(:_id).to_a
         end
       end
     end
@@ -91,8 +91,9 @@ module Reports
 
     def run
       clusters_with_holdings.each do |c|
-        holdings_matched = write_overlaps(c, organization)
-        write_records_for_unmatched_holdings(c, holdings_matched)
+        cluster = Cluster.find_by(_id: c)
+        holdings_matched = write_overlaps(cluster, organization)
+        write_records_for_unmatched_holdings(cluster, holdings_matched)
       end
     end
 
