@@ -92,6 +92,7 @@ module Reports
     def run
       clusters_with_holdings.each do |c|
         cluster = Cluster.find_by(_id: c)
+        next if cluster.nil?
         holdings_matched = write_overlaps(cluster, organization)
         write_records_for_unmatched_holdings(cluster, holdings_matched)
       end
