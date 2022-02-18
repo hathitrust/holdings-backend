@@ -19,7 +19,6 @@ module DataSources
       end
 
       @oclc_sym = oclc_sym
-
       @status = status
     end
   end
@@ -54,7 +53,7 @@ module DataSources
 
     def load_from_db
       Services.holdings_db[:ht_billing_members]
-        .select(:inst_id, :country_code, :weight, :oclc_sym)
+        .select(:inst_id, :country_code, :weight, :oclc_sym, :status)
         .as_hash(:inst_id)
         .transform_values { |h| HTOrganization.new(**h) }
     end
