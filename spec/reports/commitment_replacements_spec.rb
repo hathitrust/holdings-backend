@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "reports/eligible_commitments"
-require_relative "../../bin/reports/compile_eligible_commitments_report"
+require "reports/commitment_replacements"
+require_relative "../../bin/reports/compile_commitment_replacements_report"
 
 # is not required higher up like the others clustering classes?
 require "clustering/cluster_commitment"
 
-RSpec.describe Reports::EligibleCommitments do
+RSpec.describe Reports::CommitmentReplacements do
   def build_h(org, ocn, local_id, status)
     build(
       :holding,
