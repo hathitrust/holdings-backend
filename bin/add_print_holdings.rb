@@ -13,11 +13,6 @@ def main
   holding_loader = Loader::HoldingLoader.for(filename)
   Loader::FileLoader.new(batch_loader: holding_loader).load(filename, skip_header_match: /\A\s*OCN/)
   holding_loader.final_line
-
-  organization = holding_loader.instance_variable_get("@organization")
-  rpt = Reports::EtasOrganizationOverlapReport.new(organization)
-  rpt.run
-  rpt.move_reports_to_remote
 end
 
 main if __FILE__ == $PROGRAM_NAME
