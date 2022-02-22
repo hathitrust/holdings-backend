@@ -18,7 +18,7 @@ RSpec.describe DataSources::HTOrganizations do
   end
   let(:temp_non_member) do
     DataSources::HTOrganization.new(inst_id: "temp_non_member", country_code: "zz", weight: 1.0,
-      status: 0)
+      status: false)
   end
 
   describe "#[]" do
@@ -40,8 +40,9 @@ RSpec.describe DataSources::HTOrganizations do
   end
 
   describe "#members" do
-    it "returns all members with status of 1 as a hash" do
+    it "returns all members with status.true? as a hash" do
       ht_organizations.add_temp(temp_non_member)
+      expect(temp_non_member.status).to be false
       expect(ht_organizations.organizations.keys).to include("temp_non_member")
       expect(ht_organizations.members.keys).to contain_exactly("example")
     end

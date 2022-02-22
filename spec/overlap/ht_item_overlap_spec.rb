@@ -121,7 +121,7 @@ RSpec.describe Overlap::HtItemOverlap do
     let(:non_member_holding) do
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
-          weight: 1.0, status: 0)
+          weight: 1.0, status: false)
       )
       build(:holding,
         ocn: c.ocns.first,
@@ -149,7 +149,7 @@ RSpec.describe Overlap::HtItemOverlap do
     let(:ucm_item) do
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "ucm", country_code: "es",
-          weight: 1.0, status: 1)
+          weight: 1.0, status: true)
       )
       build(:ht_item, :mpm,
         ocns: c.ocns,
