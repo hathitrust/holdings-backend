@@ -22,7 +22,7 @@ module Reports
 
     def active_members
       @active_members ||=
-        Services.ht_organizations.organizations.select { |_id, member| member.status == 1 }
+        Services.ht_organizations.organizations.select { |_id, member| member.status }
     end
 
     def num_volumes

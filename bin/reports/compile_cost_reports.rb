@@ -12,7 +12,6 @@ def to_tsv(report)
   tsv << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
   Services.ht_organizations.members.keys.sort.each do |member|
     next unless report.organization.nil? || (member == report.organization.to_s)
-
     tsv << [
       member,
       report.spm_costs(member),

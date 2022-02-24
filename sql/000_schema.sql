@@ -33,7 +33,7 @@ CREATE TABLE `ht_billing_members` (
   `oclc_sym` varchar(10) DEFAULT NULL,
   `marc21_sym` varchar(10) DEFAULT NULL,
   `country_code` char(2) NOT NULL DEFAULT 'us',
-  `status` smallint(6) DEFAULT NULL
+  `status` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 --

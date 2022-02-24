@@ -8,7 +8,7 @@ module DataSources
   class HTOrganization
     attr_reader :inst_id, :country_code, :weight, :oclc_sym, :status
 
-    def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil, status: 1)
+    def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil, status: true)
       @inst_id = inst_id
       raise ArgumentError, "Must have institution id" unless @inst_id
 
@@ -67,9 +67,9 @@ module DataSources
       end
     end
 
-    # A list of organizations that are actually members, i.e. status = 1
+    # A list of organizations that are actually members, i.e. status.true?
     def members
-      @organizations.select { |_k, org| org.status == 1 }
+      @organizations.select { |_k, org| org.status }
     end
 
     # Adds a temporary organization to the organization data cache for the lifetime of the

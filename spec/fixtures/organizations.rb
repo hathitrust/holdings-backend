@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 def mock_organizations
-  mock = lambda do |inst, country, weight, sym, status = 1|
+  mock = lambda do |inst, country, weight, sym, status = true|
     DataSources::HTOrganization.new(
       inst_id: inst,
       country_code: country,
@@ -19,6 +19,6 @@ def mock_organizations
     "ualberta" => mock.call("ualberta", "ca", 1.0, "UAB"),
     "utexas" => mock.call("utexas", "us", 3.0, "IXA"),
     "hathitrust" => mock.call("hathitrust", "us", 0.0, ""),
-    "uct" => mock.call("uct", "za", 0.0, "OI@", 0)
+    "uct" => mock.call("uct", "za", 0.0, "OI@", false)
   )
 end
