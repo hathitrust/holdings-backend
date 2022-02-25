@@ -5,10 +5,22 @@ require "thor"
 require "pry"
 require "services"
 require "loader/file_loader"
+require "loader/ht_item_loader"
 require "loader/shared_print_loader"
+$LOAD_PATH.unshift(File.dirname(__FILE__))
+require "concordance_processing"
+require "ocn_concordance_diffs"
+require "reports/compile_cost_reports"
+require "reports/compile_estimated_IC_costs"
+require "reports/compile_member_counts_report"
+require "reports/etas_organization_overlap_report"
 
 Services.mongo!
 
+# This can be started locally with
+# `docker-compose run --rm dev bundle exec bin/phctl.rb <command>`
+# or on the cluster with 
+# `ht_tanka/environments/holdings/jobs/run_generic_job.sh bin/phctl.rb <command>`
 module PHCTL
   class Load < Thor
     desc "commitments FILENAME", "Add shared print commitments"
@@ -25,7 +37,6 @@ module PHCTL
 
     desc "concordance DATE", "Load concordance deltas for the given date"
     def concordance(date)
-      require "ocn_concordance_diffs"
       OCNConcordanceDiffs.new(Date.parse(date)).load
     end
   end
@@ -34,14 +45,12 @@ module PHCTL
   
     desc "validate INFILE OUTFILE",  "Validate a concordance file"
     def validate(infile, outfile)
-      require_relative "concordance_validation/validate.rb"
-      main(infile, outfile)
+      ConcordanceProcessing.new.validate(infile, outfile)
     end
 
-    desc "validate-and-delta", "Validates and computes deltas in default concordance directory"
-    def validate_and_delta
-      require_relative "concordance_validation/validate_and_delta.rb"
-      main
+    desc "delta", "Computes deltas in default concordance directory"
+    def delta(old, new)
+      ConcordanceProcessing.new.delta(old, new)
     end 
   end
 
@@ -49,19 +58,16 @@ module PHCTL
   class Report < Thor
     desc "costreport ORG", "Run a cost report"
     def costreport(org=nil)
-      require_relative "reports/compile_cost_reports.rb"
-      main(org)
+      CompileCostReport.new.run(org)
     end
 
     desc "estimate OCN_FILE", "Run an estimate"
     def estimate(ocn_file)
-      require_relative "reports/compile_estimated_IC_costs.rb"
-      main(ocn_file)
+      CompileEstimate.new.run(ocn_file)
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"
     def eligible_commitments(*ocns)
-      require "reports/eligible_commitments"
       report = Reports::EligibleCommitments.new
       puts report.header.join("\t")
       report.for_ocns(ocns.map(&:to_i)) do |row|
@@ -71,13 +77,11 @@ module PHCTL
 
     desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
     def member_counts(cost_rpt_freq_file, output_dir)
-      require_relative "reports/compile_member_counts_report.rb"
-      main(cost_rpt_freq_file, output_dir)
+      CompileMemberCounts.new.run(cost_rpt_freq_file, output_dir)
     end
   
     desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
     def etas_overlap(org=nil)
-      require "reports/etas_organization_overlap_report"
       rpt = Reports::EtasOrganizationOverlapReport.new(org)
       rpt.run
       rpt.move_reports_to_remote

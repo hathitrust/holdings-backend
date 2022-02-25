@@ -1,3 +1,6 @@
+# Notes for bin/ reorg and PHCTL
+# can remove once complete
+
 i = implemented
 c = complete with docs
 d = can delete root bin file
@@ -20,10 +23,10 @@ D   ./bin/get_all_members.rb
     ./bin/compare_clusters.rb
     ./bin/inspect_ocn.rb
     ./bin/holdings_deleter.rb
+    ./bin/get_holdings_uuid_by_org.rb
 
 
 D   ./bin/add_shared_print_commitments.rb
-    ./bin/get_holdings_uuid_by_org.rb
 D   ./bin/add_ht_items.rb
 
 
