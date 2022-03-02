@@ -7,13 +7,14 @@ require "services"
 require "loader/file_loader"
 require "loader/ht_item_loader"
 require "loader/shared_print_loader"
+require "reports/commitment_replacements"
+require "reports/etas_organization_overlap_report"
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require "concordance_processing"
 require "ocn_concordance_diffs"
-require "reports/compile_cost_reports"
-require "reports/compile_estimated_IC_costs"
-require "reports/compile_member_counts_report"
-require "reports/etas_organization_overlap_report"
+require "report/compile_cost_reports"
+require "report/compile_estimated_IC_costs"
+require "report/compile_member_counts_report"
 
 Services.mongo!
 
@@ -66,15 +67,6 @@ module PHCTL
       CompileEstimate.new.run(ocn_file)
     end
 
-    desc "eligible-commitments OCNS", "Find eligible commitments"
-    def eligible_commitments(*ocns)
-      report = Reports::EligibleCommitments.new
-      puts report.header.join("\t")
-      report.for_ocns(ocns.map(&:to_i)) do |row|
-        puts row
-      end
-    end
-
     desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
     def member_counts(cost_rpt_freq_file, output_dir)
       CompileMemberCounts.new.run(cost_rpt_freq_file, output_dir)
@@ -86,6 +78,29 @@ module PHCTL
       rpt.run
       rpt.move_reports_to_remote
     end
+
+    desc "eligible-commitments OCNS", "Find eligible commitments"
+    def eligible_commitments(*ocns)
+      report = Reports::CommitmentReplacements.new
+      puts report.header.join("\t")
+      report.for_ocns(ocns.map(&:to_i)) do |row|
+        puts row
+      end
+    end
+
+    desc "uncommitted-holdings", "Find holdings without commitments"
+    option :all, :type => :boolean, :default => false
+    option :verbose, :type => :boolean, :default => false
+    option :organization, :type => :array, :default => []
+    option :ocn, :type => :array, :default => []
+    option :noop, :type => :boolean, :default =>  false
+    def uncommitted_holdings
+      options[:ocn] = options[:ocn].map(&:to_i)
+      report = Reports::UncommittedHoldings.new(**options)
+      puts report.header.join("\t")
+      report.run  { |record| puts record.to_s }
+    end
+
   end
   
   class PHCTL < Thor

@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "reports/cost_report"
-require_relative "../../bin/reports/compile_cost_reports"
+require_relative "../../bin/report/compile_cost_reports"
 
 RSpec.describe "CompileCostReports" do
   # 4 HT Items
