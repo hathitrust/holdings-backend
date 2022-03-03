@@ -13,5 +13,6 @@ etas_overlap_batch_size: <%= ENV["ETAS_OVERLAP_BATCH_SIZE"] %>
 loading_flag_path: <%= ENV["LOADING_FLAG_PATH"] %>
 cost_report_freq_path: <%= ENV["COST_REPORT_FREQ_PATH"] %>
 deprecation_report_path: <%= ENV["DEPRECATION_REPORT_PATH"] %>
+replace_commitment_report_path: <%= ENV["REPLACE_COMMITMENT_REPORT_PATH"] %>
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
 rclone_config_path: <%= ENV["RCLONE_CONFIG_PATH"] %>
