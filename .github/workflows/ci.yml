@@ -13,10 +13,10 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Set up tests
-        run: ./bin/setup_test.sh
+        run: ./bin/setup/setup_test.sh
 
       - name: Run standardrb
         run: docker-compose run --rm dev bundle exec standardrb
 
       - name: Run tests
-        run: docker-compose run --rm -e MONGOID_ENV=test dev bin/wait-for mariadb:3306 -- bundle exec rspec
+        run: docker-compose run --rm -e MONGOID_ENV=test dev bin/setup/wait-for mariadb:3306 -- bundle exec rspec

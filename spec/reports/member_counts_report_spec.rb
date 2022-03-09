@@ -3,7 +3,6 @@
 require "spec_helper"
 require "reports/member_counts_report"
 require "reports/cost_report"
-require_relative "../../bin/reports/compile_member_counts_report"
 
 RSpec.describe "MemberCountsReport" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }

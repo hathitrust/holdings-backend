@@ -3,7 +3,6 @@
 require "clustering/cluster_commitment"
 require "reports/uncommitted_holdings"
 require "spec_helper"
-require_relative "../../bin/reports/compile_uncommitted_holdings"
 
 RSpec.describe Reports::UncommittedHoldings do
   let(:report_all) { described_class.new(all: true) }

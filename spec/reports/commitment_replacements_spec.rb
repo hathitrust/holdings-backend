@@ -2,7 +2,6 @@
 
 require "spec_helper"
 require "reports/commitment_replacements"
-require_relative "../../bin/reports/compile_commitment_replacements_report"
 
 # is not required higher up like the others clustering classes?
 require "clustering/cluster_commitment"

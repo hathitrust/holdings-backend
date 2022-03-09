@@ -13,7 +13,7 @@
 Run the following script to build and start the Docker containers:
 
 ```bash
-bash bin/setup_dev.sh
+bash bin/setup/setup_dev.sh
 ```
 
 ## Running the tests
@@ -30,7 +30,7 @@ docker volume rm holdings-backend_data_db # to clear out the development databas
 docker volume rm holdings-backend_gem_cache # to clear out gems
 
 # Rebuild it
-bash bin/setup_dev.sh
+bash bin/setup/setup_dev.sh
 ```
 
 ## Loading data
@@ -55,7 +55,7 @@ Files:
 * Can be gzipped or not -- the scripts will figure it out
 
 Script command cheat sheet:
-* `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
+* `docker-compose run --rm dev bundle exec bin/phctl load ht_items <filepath>`
 * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb
  <filepath>` (full file)
 * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb -u
@@ -84,7 +84,7 @@ for more info if you're interested.
 To load a Hathifile (either a full file or an update) in development:
   * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
   or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
-  * `docker-compose run --rm dev bundle exec bin/add_ht_items.rb <filepath>`
+  * `docker-compose run --rm dev bundle exec bin/phctl.rb load ht_items <filepath>`
   where the components are exactly as for the OCLC concordance file.
 
 ### Loading (scrubbed) print holdings
