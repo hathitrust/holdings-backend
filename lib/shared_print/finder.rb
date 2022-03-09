@@ -15,7 +15,7 @@ module SharedPrint
       @organization = organization
       @ocn = ocn
       @local_id = local_id
-      @deprecated = deprecated
+      @deprecated = deprecated # nil = don't care, could be deprecated or not.
 
       # Put together a query based on the criteria gathered.
       @query = build_query
@@ -64,7 +64,7 @@ module SharedPrint
     # so we can iterate over the commitments of those clusters
     # and return only the commitments that match.
     def match?(commitment)
-      @deprecated == commitment.deprecated? &&
+      (@deprecated.nil? || @deprecated == commitment.deprecated?) &&
         empty_or_include?(@organization, commitment.organization) &&
         empty_or_include?(@ocn, commitment.ocn) &&
         empty_or_include?(@local_id, commitment.local_id)

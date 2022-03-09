@@ -43,6 +43,11 @@ module Clusterable
     end
 
     def deprecated?
+      # C = duplicate Copy,
+      # D = Damaged,
+      # E = committed in Error,
+      # L = Lost,
+      # M = Missing from Print Holdings
       ["C", "D", "E", "L", "M"].include? deprecation_status
     end
 

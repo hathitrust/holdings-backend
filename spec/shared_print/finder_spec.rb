@@ -92,6 +92,9 @@ RSpec.describe SharedPrint::Finder do
       res = described_class.new(local_id: [loc1, loc2]).commitments.to_a
       expect(res.map(&:local_id)).to eq [loc1, loc2]
     end
+  end
+
+  describe "deprecated records" do
     it "ignores deprecated commitments by default" do
       spc2.deprecate(status: "E")
       cluster_tap_save [spc1, spc2]
@@ -103,6 +106,13 @@ RSpec.describe SharedPrint::Finder do
       cluster_tap_save [spc1, spc2]
       res = described_class.new(deprecated: true).commitments.to_a
       expect(res.map(&:ocn)).to eq [ocn2]
+    end
+    it "can combine deprecated and active commitments" do
+      spc2.deprecate(status: "E")
+      cluster_tap_save [spc1, spc2]
+      res = described_class.new(deprecated: nil).commitments.to_a
+      expect(res.map(&:ocn)).to eq [ocn1, ocn2]
+      expect(res.map(&:deprecated?)).to eq [false, true]
     end
   end
 end
