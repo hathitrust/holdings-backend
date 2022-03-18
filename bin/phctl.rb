@@ -84,7 +84,7 @@ module PHCTL
       report = Reports::CommitmentReplacements.new
       puts report.header.join("\t")
       report.for_ocns(ocns.map(&:to_i)) do |row|
-        puts row
+        puts row.join("\t")
       end
     end
 
