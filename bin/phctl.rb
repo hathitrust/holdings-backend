@@ -72,8 +72,8 @@ module PHCTL
 
     desc "deprecate INFILE", "Decprecate commitments based on provided records"
     option :verbose, :type => :boolean, :default => false
-    def deprecate(infile)
-      SharedPrint::Deprecator.new(verbose: options[:verbose]).run(infile)
+    def deprecate(*infile)
+      SharedPrint::Deprecator.new(verbose: options[:verbose]).run([*infile])
     end
   end
 
