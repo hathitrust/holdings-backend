@@ -9,12 +9,16 @@ require "loader/ht_item_loader"
 require "loader/shared_print_loader"
 require "reports/commitment_replacements"
 require "reports/etas_organization_overlap_report"
+require "reports/uncommitted_holdings"
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require "concordance_processing"
 require "ocn_concordance_diffs"
 require "report/compile_cost_reports"
 require "report/compile_estimated_IC_costs"
 require "report/compile_member_counts_report"
+require "shared_print/updater"
+require "shared_print/replacer"
+require "shared_print/deprecator"
 
 Services.mongo!
 
@@ -55,6 +59,23 @@ module PHCTL
     end 
   end
 
+  class SharedPrintOps < Thor
+    desc "update INFILE", "Update commitments based on provided records"
+    def update(infile)
+      SharedPrint::Updater.new(infile).run
+    end
+
+    desc "replace INFILE", "Replace commitments based on provided records"
+    def replace(infile)
+      SharedPrint::Replacer.new(infile).run
+    end
+
+    desc "deprecate INFILE", "Decprecate commitments based on provided records"
+    option :verbose, :type => :boolean, :default => false
+    def deprecate(*infile)
+      SharedPrint::Deprecator.new(verbose: options[:verbose]).run([*infile])
+    end
+  end
 
   class Report < Thor
     desc "costreport ORG", "Run a cost report"
@@ -96,7 +117,11 @@ module PHCTL
     option :noop, :type => :boolean, :default =>  false
     def uncommitted_holdings
       options[:ocn] = options[:ocn].map(&:to_i)
-      report = Reports::UncommittedHoldings.new(**options)
+      report = Reports::UncommittedHoldings.new(all: options[:all],
+                                                ocn: options[:ocn],
+                                                organization: options[:organization],
+                                                verbose: options[:verbose],
+                                                noop: options[:noop])
       puts report.header.join("\t")
       report.run  { |record| puts record.to_s }
     end
@@ -123,6 +148,9 @@ module PHCTL
 
     desc "concordance", "Validate or validate and compute deltas"
     subcommand "concordance", Concordance
+
+    desc "sp", "Shared print operations"
+    subcommand "sp", SharedPrintOps
   end
 
 end

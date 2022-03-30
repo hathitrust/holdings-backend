@@ -35,6 +35,7 @@ module SharedPrint
         rand_str = SecureRandom.hex(8)
         iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
         @report_path = "#{report_dir}/#{in_base}_#{iso_stamp}_#{rand_str}#{in_ext}"
+        warn "Reporting to #{@report_path}"
         @report = File.open(@report_path, "w")
       end
       @report.puts msg
