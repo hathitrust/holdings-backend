@@ -21,12 +21,14 @@ class CompileEstimate
 
     est.run
 
-    puts "Total Estimated IC Cost:#{est.total_estimated_ic_cost}
-  In all, we received #{est.ocns.count} distinct OCLC numbers.
-  Of those distinct OCLC numbers, #{est.num_ocns_matched} (#{est.pct_ocns_matched.round(1)}%) match in
-  HathiTrust, corresponding to #{est.num_items_matched} HathiTrust items.
-  Of those, #{est.num_items_pd} ( #{est.pct_items_pd.round(1)}%) are in the public domain,
-  #{est.num_items_ic} ( #{est.pct_items_ic} ) are in copyright."
+    puts [
+      "Total Estimated IC Cost: $#{est.total_estimated_ic_cost.round(2)}",
+      "In all, we received #{est.ocns.count} distinct OCLC numbers.",
+      "Of those distinct OCLC numbers, #{est.num_ocns_matched} (#{est.pct_ocns_matched.round(1)}%) match items in",
+      "HathiTrust, corresponding to #{est.num_items_matched} HathiTrust items.",
+      "Of those items, #{est.num_items_pd} (#{est.pct_items_pd.round(1)}%) are in the public domain,",
+      "#{est.num_items_ic} (#{est.pct_items_ic.round(1)}%) are in copyright."
+    ].join("\n")
   end
 end
 
