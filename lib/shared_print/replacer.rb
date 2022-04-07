@@ -9,6 +9,10 @@ module SharedPrint
   # Members can send files of replace_records, which each identify an existing
   # shared print commitment and something to replace it with.
   # This class takes such files and processes them.
+  # A file of replace_records should have a header that contains the columns:
+  # [replace_organization, replace_ocn, replace_local_id] to identify
+  # the original commitment, and then the same columns that a shared print commitment
+  # file has.
   class Replacer
     attr_reader :report_path
     def initialize(path)
@@ -23,7 +27,8 @@ module SharedPrint
         finder_args = {
           ocn: [record.delete(:replace_ocn).to_i],
           organization: [record.delete(:replace_organization)],
-          local_id: [record.delete(:replace_local_id)]
+          local_id: [record.delete(:replace_local_id)],
+          deprecated: nil
         }
         existing = SharedPrint::Finder.new(**finder_args).commitments.to_a.first
         rep_rec = SharedPrint::ReplaceRecord.new(existing: existing, replacement: record)
