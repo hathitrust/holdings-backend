@@ -46,6 +46,7 @@ RSpec.describe Clustering::ClusterCommitment do
     context "when re-adding an existing commitment" do
       it "doesn't add a commitment that already exists" do
         comm2 = comm.dup
+        comm2.uuid = comm.uuid # dup does not give us the same uuid in the copy
         described_class.new(comm).cluster
         described_class.new(comm2).cluster
         expect(Cluster.count).to eq(1)
@@ -54,6 +55,7 @@ RSpec.describe Clustering::ClusterCommitment do
 
       it "raises an error when two commitments with same uuid are in same batch" do
         comm2 = comm.dup
+        comm2.uuid = comm.uuid # dup does not give us the same uuid in the copy
         expect { described_class.new([comm, comm2]).cluster }.to raise_exception(/same UUID/)
       end
     end

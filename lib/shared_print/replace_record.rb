@@ -1,3 +1,5 @@
+require "securerandom"
+
 module SharedPrint
   class ReplaceRecord
     attr_reader :existing, :replacement
@@ -16,7 +18,6 @@ module SharedPrint
       # Thus we may need to turn a Hash read from a file into a Clusterable::Commitment.
       if @replacement.instance_of?(Hash)
         @replacement = Clusterable::Commitment.new(@replacement)
-        Clustering::ClusterCommitment.new(@replacement).cluster.tap(&:save)
       end
 
       unless @existing.instance_of?(Clusterable::Commitment)
@@ -30,6 +31,8 @@ module SharedPrint
       unless matches.size == 1
         raise IndexError, "Existing matches must be 1 (is #{matches.size})"
       end
+
+      Clustering::ClusterCommitment.new(@replacement).cluster.tap(&:save)
     end
 
     # Replace :existing with :replacement.

@@ -26,6 +26,11 @@ RSpec.describe Clusterable::Commitment do
     expect(comm.valid?).to be true
   end
 
+  it "has a uuid" do
+    expect(comm.uuid.nil?).to be false
+    expect(comm.uuid.empty?).to be false
+  end
+
   describe "deprecated?" do
     it "is deprecated if it has a deprecation status" do
       expect(comm.deprecated?).to be false
