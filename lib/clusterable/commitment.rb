@@ -33,6 +33,11 @@ module Clusterable
       allow_nil: true
     validate :deprecation_validation
 
+    def initialize(_params = nil)
+      super
+      self.uuid = SecureRandom.uuid
+    end
+
     def matching_holdings
       cluster = _parent
       cluster.holdings.select { |h| h.organization == organization && h.local_id == local_id }
