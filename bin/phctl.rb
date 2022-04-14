@@ -24,14 +24,14 @@ Services.mongo!
 
 # This can be started locally with
 # `docker-compose run --rm dev bundle exec bin/phctl.rb <command>`
-# or on the cluster with 
+# or on the cluster with
 # `ht_tanka/environments/holdings/jobs/run_generic_job.sh bin/phctl.rb <command>`
 module PHCTL
   class Load < Thor
     desc "commitments FILENAME", "Add shared print commitments"
     def commitments(filename)
       Services.logger.info "Loading Shared Print Commitments: #{filename}"
-      Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.new).load(filename) 
+      Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.new).load(filename)
     end
 
     desc "ht_items FILENAME", "Add HT Items"
@@ -47,7 +47,7 @@ module PHCTL
   end
 
   class Concordance < Thor
-  
+
     desc "validate INFILE OUTFILE",  "Validate a concordance file"
     def validate(infile, outfile)
       ConcordanceProcessing.new.validate(infile, outfile)
@@ -56,7 +56,7 @@ module PHCTL
     desc "delta", "Computes deltas in default concordance directory"
     def delta(old, new)
       ConcordanceProcessing.new.delta(old, new)
-    end 
+    end
   end
 
   class SharedPrintOps < Thor
@@ -78,9 +78,11 @@ module PHCTL
   end
 
   class Report < Thor
-    desc "costreport ORG", "Run a cost report"
-    def costreport(org=nil)
-      CompileCostReport.new.run(org)
+    desc "costreport (--organization ORG) (--target_cost COST)", "Run a cost report"
+    option :organization, :type => :string, :default => nil
+    option :target_cost, :type => :numeric, :default => nil
+    def costreport
+      CompileCostReport.new.run(options[:organization], options[:target_cost])
     end
 
     desc "estimate OCN_FILE", "Run an estimate"
@@ -92,7 +94,7 @@ module PHCTL
     def member_counts(cost_rpt_freq_file, output_dir)
       CompileMemberCounts.new.run(cost_rpt_freq_file, output_dir)
     end
-  
+
     desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
     def etas_overlap(org=nil)
       rpt = Reports::EtasOrganizationOverlapReport.new(org)
@@ -127,7 +129,7 @@ module PHCTL
     end
 
   end
-  
+
   class PHCTL < Thor
     desc "members", "Prints all current members"
     def members
@@ -138,7 +140,7 @@ module PHCTL
     def pry
       binding.pry
     end
-    
+
     # report
     desc "report", "Generate a report"
     subcommand "report", Report
