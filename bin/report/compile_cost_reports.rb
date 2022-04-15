@@ -27,13 +27,12 @@ class CompileCostReport
     tsv.join("\n")
   end
 
-  def run(org)
+  def run(org, cost = nil)
     batch_size = 50_000
     marker = Services.progress_tracker.new(batch_size)
     logger = Services.logger
     logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum batch_size}"
-
-    cost_report = Reports::CostReport.new(org, lines: batch_size, logger: logger)
+    cost_report = Reports::CostReport.new(org, cost: cost, lines: batch_size, logger: logger)
     puts "Target cost: #{cost_report.target_cost}"
     puts "Num volumes: #{cost_report.num_volumes}"
     puts "Num pd volumes: #{cost_report.num_pd_volumes}"

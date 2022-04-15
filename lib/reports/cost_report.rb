@@ -9,6 +9,8 @@ module Reports
     attr_accessor :organization, :logger, :maxlines, :target_cost
 
     def initialize(org = nil, cost: Settings.target_cost, lines: 1_000_000, logger: Services.logger)
+      raise "Target cost not set" if cost.nil?
+
       @organization = org
       @target_cost = Float(cost)
       @maxlines = lines
