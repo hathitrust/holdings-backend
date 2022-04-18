@@ -9,15 +9,20 @@ RSpec.describe SharedPrint::ReplaceRecord do
   let(:ocn9) { 9 }
   let(:org1) { "umich" }
   let(:loc1) { "i111" }
+  let(:dat1) { DateTime.new(2001, 12, 30) }
 
   let(:org2) { "yale" }
   let(:loc2) { "i222" }
   let(:obj) { Object.new }
+  let(:dat2) { DateTime.new(2002, 12, 30) }
 
   # Spc 1 & 2 have the same ocn, that's the only similarity
-  let(:spc1) { build(:commitment, ocn: ocn1, organization: org1, local_id: loc1) }
-  let(:spc2) { build(:commitment, ocn: ocn1, organization: org2, local_id: loc2) }
+  let(:spc1) { build(:commitment, ocn: ocn1, organization: org1, local_id: loc1, committed_date: dat1) }
+  let(:spc2) { build(:commitment, ocn: ocn1, organization: org2, local_id: loc2, committed_date: dat2) }
   let(:spc2_hash) { {ocn: ocn1.to_s, organization: org2, local_id: loc2} }
+
+  # Any new commitments should get this for committed_date.
+  let(:jan_first_this_year) { DateTime.new(Time.now.year, 1, 1) }
 
   def get_deprecated
     SharedPrint::Finder.new(deprecated: true).commitments.to_a
@@ -82,6 +87,8 @@ RSpec.describe SharedPrint::ReplaceRecord do
       expect(active.size).to eq 1
       expect(deprecated.first.local_id).to eq spc1.local_id
       expect(rep_rec.verify).to be true
+      expect(deprecated.first.committed_date).to eq dat1
+      expect(active.first.committed_date).to eq dat2
     end
     it "replace a deprecated commitment with an existing commitment" do
       # Setup
@@ -115,6 +122,8 @@ RSpec.describe SharedPrint::ReplaceRecord do
       expect(active.size).to eq 1
       expect(deprecated.first.local_id).to eq spc1.local_id
       expect(rep_rec.verify).to be true
+      expect(deprecated.first.committed_date).to eq dat1
+      expect(active.first.committed_date).to eq jan_first_this_year
     end
     it "replace a deprecated commitment with a new commitment" do
       # Setup
@@ -132,6 +141,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
       expect(active.size).to eq 1
       expect(deprecated.first.local_id).to eq spc1.local_id
       expect(rep_rec.verify).to be true
+      expect(active.first.committed_date).to eq jan_first_this_year
     end
   end
 

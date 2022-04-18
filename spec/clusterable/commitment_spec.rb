@@ -31,6 +31,11 @@ RSpec.describe Clusterable::Commitment do
     expect(comm.uuid.empty?).to be false
   end
 
+  it "gets a default committed_date if none given" do
+    new_empty = Clusterable::Commitment.new({})
+    expect(new_empty.committed_date).to eq DateTime.new(Time.now.year, 1, 1)
+  end
+
   describe "deprecated?" do
     it "is deprecated if it has a deprecation status" do
       expect(comm.deprecated?).to be false
