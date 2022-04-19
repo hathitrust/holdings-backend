@@ -36,6 +36,10 @@ module Clusterable
     def initialize(_params = nil)
       super
       self.uuid = SecureRandom.uuid
+      # Commitments should come with their own committed date, but in case they don't
+      # (such as when replacing commitments) we set it to the first of the year.
+      # See ticket DEV-206.
+      self.committed_date = DateTime.new(Time.now.year, 1, 1) if committed_date.nil?
     end
 
     def matching_holdings
