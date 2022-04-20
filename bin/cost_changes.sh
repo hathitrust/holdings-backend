@@ -25,7 +25,7 @@ diffp_file="$out_dir/diff_percent_totals_$ymd.tsv";
 hilites_file="$out_dir/hilites_$ymd.tsv";
 
 # Get all current members.
-member_list=`bundle exec ruby bin/get_all_members.rb | grep -v 'hathitrust' | tr '\n' '|'`;
+member_list=`bundle exec ruby bin/phctl.rb members | grep -v 'hathitrust' | tr '\n' '|'`;
 keep_lines="^($member_list";
 keep_lines+="_header|member_id)\t";
 
