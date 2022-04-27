@@ -1,0 +1,145 @@
+[{
+  "_id": {
+    "$oid": "5f506158ddb1220001c61ed9"
+  },
+  "ocns": [
+    2503661
+  ],
+  "ht_items": [
+    {
+      "_id": {
+        "$oid": "5f506158ddb1220001c61eda"
+      },
+      "ocns": [
+        2503661
+      ],
+      "item_id": "nyp.33433082421565",
+      "ht_bib_key": 8638629,
+      "rights": "pd",
+      "bib_fmt": "BK",
+      "enum_chron": "",
+      "content_provider_code": "nypl",
+      "n_enum": "",
+      "n_chron": "",
+      "access": "allow",
+      "billing_entity": "nypl",
+      "collection_code": "NYP",
+      "n_enum_chron": ""
+    }
+  ],
+  "holdings": [
+    {
+      "_id": {
+        "$oid": "5f8964c55ae5b10001a6da54"
+      },
+      "enum_chron": "",
+      "n_enum": "",
+      "n_chron": "",
+      "ocn": 2503661,
+      "local_id": "000238264",
+      "organization": "amherst",
+      "country_code": "us",
+      "weight": 0.67,
+      "status": "CH",
+      "condition": "",
+      "date_received": "2018-08-10 00:00:00 UTC",
+      "mono_multi_serial": "mono",
+      "issn": "",
+      "gov_doc_flag": false,
+      "uuid": "bab56a32-cf07-4059-92eb-a213012acf59",
+      "n_enum_chron": ""
+    },
+    {
+      "_id": {
+        "$oid": "5f8964c55ae5b10001a6da55"
+      },
+      "enum_chron": "",
+      "n_enum": "",
+      "n_chron": "",
+      "ocn": 2503661,
+      "local_id": "188946",
+      "organization": "uic",
+      "country_code": "us",
+      "weight": 1.0,
+      "status": "CH",
+      "condition": "",
+      "date_received": "2020-05-28 00:00:00 UTC",
+      "mono_multi_serial": "mono",
+      "issn": "",
+      "gov_doc_flag": false,
+      "uuid": "2ab58107-36a8-4ecc-945d-26e3327f9d18",
+      "n_enum_chron": ""
+    },
+    {
+      "_id": {
+        "$oid": "5f8964c55ae5b10001a6da56"
+      },
+      "enum_chron": "",
+      "n_enum": "",
+      "n_chron": "",
+      "ocn": 2503661,
+      "local_id": "2503661",
+      "organization": "claremont",
+      "country_code": "us",
+      "weight": 1.0,
+      "status": "CH",
+      "condition": "",
+      "date_received": "2019-07-19 00:00:00 UTC",
+      "mono_multi_serial": "mono",
+      "issn": "",
+      "gov_doc_flag": false,
+      "uuid": "1a2fc3cb-ffb3-4f7a-b8fc-05b6c3c3b179",
+      "n_enum_chron": ""
+    }
+  ],
+  "last_modified": "2022-02-15 18:29:27 UTC",
+  "commitments": [
+    {
+      "_id": {
+        "$oid": "61b3881be4698e000140d4e3"
+      },
+      "policies": [
+
+      ],
+      "uuid": "5e8104f9-ac90-4aa0-9f71-460dceed3e8e",
+      "organization": "usg",
+      "ocn": 2503661,
+      "local_id": "994673153902959",
+      "oclc_sym": "GSL",
+      "committed_date": "2019-02-28 05:00:00 UTC",
+      "facsimile": false
+    },
+    {
+      "_id": {
+        "$oid": "61b3881be4698e000140d4e4"
+      },
+      "policies": [
+
+      ],
+      "uuid": "003fa99b-1f3f-468e-9aed-9bb3477c14f7",
+      "organization": "dickinson",
+      "ocn": 2503661,
+      "local_id": "991000497499705226",
+      "oclc_sym": "DKC",
+      "committed_date": "2019-02-28 05:00:00 UTC",
+      "facsimile": false
+    },
+    {
+      "_id": {
+        "$oid": "61b3881be4698e000140d4e5"
+      },
+      "policies": [
+
+      ],
+      "uuid": "261846e5-702f-4335-8942-8d6024b22dc4",
+      "organization": "utexas",
+      "ocn": 2503661,
+      "local_id": "ut.991031652059706011",
+      "oclc_sym": "IXA",
+      "committed_date": "2019-02-28 05:00:00 UTC",
+      "facsimile": false,
+      "deprecation_date": "2022-02-15 05:00:00 UTC",
+      "deprecation_status": "L"
+    }
+  ]
+}]

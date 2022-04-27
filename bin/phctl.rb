@@ -5,6 +5,7 @@ require "thor"
 require "pry"
 require "services"
 require "loader/file_loader"
+require "loader/cluster_loader"
 require "loader/ht_item_loader"
 require "loader/shared_print_loader"
 require "reports/commitment_replacements"
@@ -43,6 +44,13 @@ module PHCTL
     desc "concordance DATE", "Load concordance deltas for the given date"
     def concordance(date)
       OCNConcordanceDiffs.new(Date.parse(date)).load
+    end
+
+    desc "cluster_file FILENAME", "Add a whole file of clusters in JSON format."
+    def cluster_file(filename)
+      loader = Loader::ClusterLoader.new
+      loader.load(filename)
+      Services.logger.info loader.stats
     end
   end
 
