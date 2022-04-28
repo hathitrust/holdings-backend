@@ -41,7 +41,7 @@ module Loader
       @attempted_docs += 1
       # Clean input of $oid's, because they don't insert well.
       hash.delete("_id")
-      sections = ["ht_items", "holdings", "commitments"]
+      sections = ["ht_items", "holdings", "commitments", "ocn_resolutions"]
       sections.each do |section|
         if hash.key?(section)
           hash[section].each do |subsection|
@@ -54,6 +54,9 @@ module Loader
       Cluster.collection.insert_one(hash)
       @success_docs += 1
     rescue Mongo::Error::OperationFailure => err
+      Services.logger.warn(err.message)
+      @fail_docs += 1
+    rescue BSON::String::IllegalKey => err
       Services.logger.warn(err.message)
       @fail_docs += 1
     end
