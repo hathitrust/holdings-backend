@@ -2,6 +2,7 @@
 
 require "settings"
 require "concordance_validation/concordance"
+require "concordance_validation/delta"
 
 class ConcordanceProcessing
 

@@ -69,9 +69,17 @@ representing a pair of OCLC numbers that should be treated as equivalent.
 
 There are ≈ 60M rows in this file. 
 
-*TODO* document current process for loading a scrubbed concordance file or a
-portion thereof in development?
+Concordance files can be downloaded to concordance_path/raw/<yyyymm>_concordance.txt.gz_
 
+1. Validate, e.g. 
+  `run_generic_job.sh conc-val bundle exec bin/phctl.rb concordance validate /htprep/holdings/concordance/raw/202205_concordance.txt.gz /htprep/holdings/concordance/validated/202205_concordance_validated.tsv`
+
+2. Compute deltas, e.g. 
+  `run_generic_job.sh conc-delta bundle exec bin/phctl.rb concordance delta /htprep/holdings/concordance/validated/202205_concordance_validated.tsv /htprep/holdings/concordance/validated/202112_concordance_validated.tsv.gz`
+
+3. Load deltas, e.g.
+  `run_generic_job.sh load-conc bundle exec bin/phctl.rb load concordance 2022-05`
+  
 ### Loading the HathiFiles
 
 The _hathifiles_ come in both monthly "full-file" and daily "changes"
