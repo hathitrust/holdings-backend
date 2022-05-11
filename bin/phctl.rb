@@ -11,6 +11,7 @@ require "loader/shared_print_loader"
 require "reports/commitment_replacements"
 require "reports/etas_organization_overlap_report"
 require "reports/uncommitted_holdings"
+require "reports/rare_uncommitted"
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 require "concordance_processing"
 require "ocn_concordance_diffs"
@@ -136,6 +137,13 @@ module PHCTL
       report.run  { |record| puts record.to_s }
     end
 
+    # E.g. phctl report rare-uncommitted-counts --max_sph 2 --max_h 1
+    desc "rare-uncommitted-counts", "Get counts of rare holdings"
+    option :max_h, :type => :numeric, :default => nil
+    option :max_sph, :type => :numeric, :default => nil
+    def rare_uncommitted_counts(h: options[:max_h], sph: options[:max_sph])
+      puts Reports::RareUncommitted.new.counts_format(h: h, sph: sph)
+    end
   end
 
   class PHCTL < Thor
