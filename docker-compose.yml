@@ -9,6 +9,7 @@ services:
       - gem_cache:/gems
     environment:
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
+      PUSHGATEWAY: http://pushgateway:9091
 
   mongo_dev:
     image: mongo
