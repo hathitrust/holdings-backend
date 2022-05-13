@@ -54,8 +54,11 @@ module Reports
           "Both args sph and h are nil. At least one of them must be not-nil."
       end
 
+      marker = Services.progress_tracker.new(1000)
       Services.logger.debug "run(sph: #{sph}, h: #{h})"
       Cluster.where(@query).no_timeout.each do |cluster|
+        marker.incr
+        marker.on_batch { |m| Services.logger.info m.batch_line }
         Services.logger.debug "check cluster #{cluster.ocns}"
         # Try to reject the cluster, based on various things:
         next if reject_based_on_format?(cluster)
@@ -67,6 +70,7 @@ module Reports
         Services.logger.debug "yield cluster #{cluster.ocns}"
         yield cluster
       end
+      Services.logger.info marker.final_line
     end
 
     # Runs the report and condenses it down to counts.
