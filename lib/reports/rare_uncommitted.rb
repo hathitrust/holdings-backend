@@ -16,20 +16,158 @@ module Reports
   # Usage:
   #
   # Find clusters held by up to 5 members:
-  # clusters = Reports::RareUncommitted.new.run(h: 5).to_a
+  # clusters = Reports::RareUncommitted.new(max_h: 5).run.to_a
   #
   # Find clusters held by up to 2 sp members:
-  # clusters = Reports::RareUncommitted.new.run(sph: 2).to_a
+  # clusters = Reports::RareUncommitted.new(max_sp_h: 2).run.to_a
   #
   # Find clusters held by up to 5 members and up to 2 sp members:
-  # clusters = Reports::RareUncommitted.new.run(h: 5, sph: 2).to_a
+  # clusters = Reports::RareUncommitted.new(max_h: 5, max_sp_h: 2).run.to_a
   class RareUncommitted
-    def initialize(memoize_orgs: true)
-      @memoize_orgs = memoize_orgs # memoize sp_organizations if true, turn off for testing
+    def initialize(
+      max_h: nil,
+      max_sp_h: nil,
+      non_sp_h_count: nil,
+      commitment_count: 0,
+      organization: nil,
+      memoize_orgs: true
+    )
+      if [max_h, max_sp_h, non_sp_h_count].compact.empty?
+        raise ArgumentError,
+          "max_h, max_sp_h & non_sp_h_count are nil. At least one of them must not be."
+      end
+
+      # A selected cluster should have h <= @max_h, if set
+      @max_h = max_h
+      # A selected cluster should have max_sp_h <= @max_sp_h, if set
+      @max_sp_h = max_sp_h
+      # A selected cluster should have non_sp_h_count <= @non_sp_h_count, if set
+      @non_sp_h_count = non_sp_h_count
+      # A selected cluster should have commitment_count == @commitment_count, default 0
+      @commitment_count = commitment_count
+      # If given an organization, do record output for that organization
+      @organization = organization
+
+      # A selected cluster should always have at least items and holdings.
       @query = {
         "ht_items.0" => {"$exists": 1},
         "holdings.0" => {"$exists": 1}
       }
+
+      unless @organization.nil?
+        @query["holdings.organization"] = @organization
+      end
+
+      # memoize organization lookups if true, turn off for testing
+      @memoize_orgs = memoize_orgs
+    end
+
+    # Calls counts and yields the formatted report one line at a time.
+    def output_counts
+      return enum_for(:output_counts) unless block_given?
+
+      counts_data = counts
+      log counts_data.inspect
+      header = [
+        "number of holding libraries",
+        "type of member holding",
+        "total_items",
+        "num_clusters"
+      ].join("\t")
+      yield header
+
+      counts_data.keys.each do |h_type|
+        counts_data[h_type].keys.each do |h_val|
+          data = counts_data[h_type][h_val]
+          output = [
+            h_val,
+            type_map[h_type],
+            data[:total_items],
+            data[:num_clusters]
+          ].join("\t")
+
+          yield output
+        end
+      end
+    end
+
+    # Runs the report and condenses it down to counts.
+    def counts
+      clusters = run.to_a
+
+      {
+        h: populate_counts(clusters, @max_h, :h),
+        sp_h: populate_counts(clusters, @max_sp_h, :sp_h),
+        non_sp_h: populate_counts(clusters, @non_sp_h_count, :non_sp_h)
+      }
+    end
+
+    # Runs the report and outputs all matching records
+    def output_organization
+      return enum_for(:output_organization) unless block_given?
+
+      header = [
+        "organization",
+        "local_id",
+        "gov_doc",
+        "condition",
+        "OCN"
+      ].join("\t")
+      yield header
+
+      run do |cluster|
+        cluster.holdings.each do |holding|
+          if !@organization.nil?
+            next unless holding.organization == @organization
+          end
+
+          # We store gov_doc_flag as a true/false and the report wants 1/0.
+          govdoc_bool_2_int = holding.gov_doc_flag == true ? 1 : 0
+
+          record = [
+            holding.organization,
+            holding.local_id,
+            govdoc_bool_2_int,
+            holding.condition,
+            holding.ocn
+          ].join("\t")
+          yield record
+        end
+      end
+    end
+
+    # Returns the clusters matching the query & holdings/commitments criteria.
+    def run
+      return enum_for(:run) unless block_given?
+
+      marker = Services.progress_tracker.new(1000)
+      Cluster.where(@query).no_timeout.each do |cluster|
+        marker.incr
+        marker.on_batch { |m| Services.logger.info m.batch_line }
+        log "--- check cluster #{cluster.ocns} ---"
+        # Try to reject the cluster, based on various things:
+        next if reject_based_on_format?(cluster)
+        next if reject_based_on_access?(cluster)
+        next if reject_based_on_commitments?(cluster)
+        next if reject_based_on_h?(cluster)
+        next if reject_based_on_sp_h?(cluster)
+        next if reject_based_on_non_sp_h?(cluster)
+
+        # If we didn't find reason to reject cluster, then the cluster goes in the report.
+        log "yield cluster #{cluster.ocns}"
+        yield cluster
+      end
+      Services.logger.info marker.final_line
+    end
+
+    # All orgs that have holdings.
+    def all_organizations
+      if @memoize_orgs
+        @all_organizations ||= Cluster.distinct("holdings.organization").compact
+      else
+        # For testing.
+        Cluster.distinct("holdings.organization").compact
+      end
     end
 
     # All organizations that participate in the HT SP program.
@@ -42,168 +180,121 @@ module Reports
       end
     end
 
-    # Returns the clusters matching the query & h/sph criteria.
-    # h   = no of distinct    orgs with holdings on a cluster
-    # sph = no of distinct sp orgs with holdings on a cluster
-    # Args use nil to mean undefined because 0 is a meaningful number in this context.
-    def run(sph: nil, h: nil)
-      return enum_for(:run, sph: sph, h: h) unless block_given?
-
-      if sph.nil? && h.nil?
-        raise ArgumentError,
-          "Both args sph and h are nil. At least one of them must be not-nil."
-      end
-
-      marker = Services.progress_tracker.new(1000)
-      Services.logger.debug "run(sph: #{sph}, h: #{h})"
-      Cluster.where(@query).no_timeout.each do |cluster|
-        marker.incr
-        marker.on_batch { |m| Services.logger.info m.batch_line }
-        Services.logger.debug "check cluster #{cluster.ocns}"
-        # Try to reject the cluster, based on various things:
-        next if reject_based_on_format?(cluster)
-        next if reject_based_on_access?(cluster)
-        next if reject_based_on_commitments?(cluster)
-        next if reject_based_on_sph?(cluster, sph)
-        next if reject_based_on_h?(cluster, h)
-        # If we didn't find reason to reject cluster, then the cluster goes in the report.
-        Services.logger.debug "yield cluster #{cluster.ocns}"
-        yield cluster
-      end
-      Services.logger.info marker.final_line
+    # All orgs that have holdings but not commitments.
+    def non_sp_organizations
+      # Don't care to check @memoize_orgs here, the other methods do it.
+      all_organizations - sp_organizations
     end
 
-    # Runs the report and condenses it down to counts.
-    def counts(sph: nil, h: nil)
-      clusters = run(sph: sph, h: h).to_a
-
-      counts_data = {
-        h: {},
-        sph: {}
-      }
-
-      # Populate counts for each sph [0 .. sph]
-      unless sph.nil?
-        0.upto(sph).each do |i|
-          counts_data[:sph][i] = {
+    # Populate one section (based on h_type) of the counts structure
+    def populate_counts(clusters, counter, h_type)
+      h_type_counts = {}
+      unless counter.nil?
+        start_count = 0
+        # For :non_sp_h we only care about exact matches, not the range up to.
+        if h_type == :non_sp_h
+          start_count = @non_sp_h_count
+        end
+        start_count.upto(counter).each do |h_val|
+          h_type_counts[h_val] = {
             total_items: 0,
             num_clusters: 0
           }
         end
         clusters.each do |cluster|
-          sph = cluster_sph(cluster)
+          h_val = counts_for_h_type(cluster, h_type) # e.g. is this a sp_h:5 cluster?
           total_items = cluster.ht_items.count
-          counts_data[:sph][sph][:total_items] += total_items
-          counts_data[:sph][sph][:num_clusters] += 1
+          h_type_counts[h_val][:total_items] += total_items
+          h_type_counts[h_val][:num_clusters] += 1
         end
       end
 
-      # Same for h
-      unless h.nil?
-        0.upto(h).each do |i|
-          counts_data[:h][i] = {
-            total_items: 0,
-            num_clusters: 0
-          }
-        end
-        clusters.each do |cluster|
-          h = cluster_h(cluster)
-          total_items = cluster.ht_items.count
-          counts_data[:h][h][:total_items] += total_items
-          counts_data[:h][h][:num_clusters] += 1
-        end
-      end
-
-      counts_data
+      h_type_counts
     end
 
-    # Calls counts and returns the formatted report as a string.
-    def counts_format(h: nil, sph: nil)
-      buf = []
-      counts = counts(h: h, sph: sph)
-      header = [
-        "number of holding libraries",
-        "type of member holding",
-        "total_items",
-        "num_clusters"
-      ]
-      buf << header.join("\t")
-
-      counts.keys.each do |h_type|
-        counts[h_type].keys.each do |h_val|
-          data = counts[h_type][h_val]
-          buf << [
-            h_val,
-            type_map[h_type],
-            data[:total_items],
-            data[:num_clusters]
-          ].join("\t")
-        end
+    # dry-method for output_counts
+    def counts_for_h_type(cluster, h_type)
+      case h_type
+      when :h
+        cluster_h(cluster)
+      when :sp_h
+        cluster_sp_h(cluster)
+      when :non_sp_h
+        cluster_non_sp_h(cluster)
       end
-
-      buf.join("\n")
     end
 
     private
 
+    def log(msg)
+      Services.logger.debug msg
+    end
+
+    # For output formatting
     def type_map
-      {sph: "retention library", h: "member library"}
+      {
+        h: "member library",
+        sp_h: "retention library",
+        non_sp_h: "non-retention member library"
+      }
     end
 
     # Given the format of the cluster, should it be rejected from the report?
     def reject_based_on_format?(cluster)
-      Services.logger.debug "check cluster format (#{cluster.format})"
-      if cluster.format == "spm"
-        Services.logger.debug "allow"
-        false
-      else
-        Services.logger.debug "reject"
-        true
-      end
+      log "check format (#{cluster.format})"
+      reject_if_true(cluster.format != "spm")
     end
 
     # Given the access value on the cluster, should it be rejected from the report?
     def reject_based_on_access?(cluster)
-      Services.logger.debug "check cluster access"
-      if cluster.ht_items.collect(&:access).include? "allow"
-        Services.logger.debug "allow"
-        false
-      else
-        Services.logger.debug "reject"
-        true
-      end
+      cluster_access = cluster.ht_items.collect(&:access).uniq
+      log "check access (#{cluster_access.join(",")})"
+      reject_if_true(!cluster_access.include?("allow"))
     end
 
-    # Given cluster_sph and sph, should this cluster be rejected from the report?
-    def reject_based_on_sph?(cluster, sph)
-      return false if sph.nil?
+    # Given cluster_h and @max_h, should the cluster be rejected from the report?
+    def reject_based_on_h?(cluster)
+      return false if @max_h.nil?
 
-      Services.logger.debug "check cluster_sph (#{cluster_sph(cluster)}) > sph (#{sph})"
-      if cluster_sph(cluster) > sph
-        Services.logger.debug "reject"
-        true
-      else
-        Services.logger.debug "allow"
-        false
-      end
+      cluster_count_val = cluster_h(cluster)
+      log "check_h (#{cluster_count_val} > #{@max_h}) ?"
+      reject_if_true(cluster_count_val > @max_h)
     end
 
-    # Which/how many sp members have holdings in this cluster?
-    def cluster_sph(cluster)
-      holding_sp_orgs = cluster.holdings.collect(&:organization).uniq & sp_organizations
-      holding_sp_orgs.size
+    # Given cluster_sp_h and @max_sp_h, should this cluster be rejected from the report?
+    def reject_based_on_sp_h?(cluster)
+      return false if @max_sp_h.nil?
+
+      cluster_count_val = cluster_sp_h(cluster)
+      log "check cluster_sp_h (#{cluster_count_val}) > sp_h (#{@max_sp_h}) ?"
+      reject_if_true(cluster_count_val > @max_sp_h)
     end
 
-    # Given cluster_h and h, should the cluster be rejected from the report?
-    def reject_based_on_h?(cluster, h)
-      return false if h.nil?
+    # Given cluster_sp_h and @max_sp_h, should this cluster be rejected from the report?
+    def reject_based_on_non_sp_h?(cluster)
+      return false if @non_sp_h_count.nil?
 
-      Services.logger.debug "check cluster_h (#{cluster_h(cluster)} > #{h})"
-      if cluster_h(cluster) > h
-        Services.logger.debug "reject"
+      cluster_count_val = cluster_non_sp_h(cluster)
+      log "check cluster_non_sp_h (#{cluster_count_val}) == non_sp_h_count (#{@non_sp_h_count}) ?"
+      reject_if_true(cluster_count_val != @non_sp_h_count)
+    end
+
+    # Given the commitments on the cluster and @commitment_count,
+    # should the cluster be rejected from the report?
+    def reject_based_on_commitments?(cluster)
+      # The number of non-deprecated commitments must match @commitment_count
+      active = cluster.commitments.reject(&:deprecated?)
+      log "check commitments #{active.size} == #{@commitment_count}?"
+      reject_if_true(active.size != @commitment_count)
+    end
+
+    # DRY for the return of the "reject_if_x" methods
+    def reject_if_true(expr)
+      if expr
+        log "reject"
         true
       else
-        Services.logger.debug "allow"
+        log "allow"
         false
       end
     end
@@ -214,16 +305,16 @@ module Reports
       holding_orgs.size
     end
 
-    # Given the commitments on the cluster, should the cluster be rejected from the report?
-    def reject_based_on_commitments?(cluster)
-      Services.logger.debug "check cluster #{cluster.ocns}: commitments?"
-      if cluster.commitments.reject(&:deprecated?).any?
-        Services.logger.debug "reject"
-        true
-      else
-        Services.logger.debug "allow"
-        false
-      end
+    # How many sp members have holdings in this cluster?
+    def cluster_sp_h(cluster)
+      holding_sp_orgs = cluster.holdings.collect(&:organization).uniq & sp_organizations
+      holding_sp_orgs.size
+    end
+
+    # How many non-sp members have holdings in this cluster?
+    def cluster_non_sp_h(cluster)
+      holding_non_sp_orgs = cluster.holdings.collect(&:organization).uniq & non_sp_organizations
+      holding_non_sp_orgs.size
     end
   end
 end

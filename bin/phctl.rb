@@ -134,15 +134,31 @@ module PHCTL
                                                 verbose: options[:verbose],
                                                 noop: options[:noop])
       puts report.header.join("\t")
-      report.run  { |record| puts record.to_s }
+      report.run { |record| puts record.to_s }
     end
 
-    # E.g. phctl report rare-uncommitted-counts --max_sph 2 --max_h 1
+    # E.g. phctl report rare-uncommitted-counts --max_sp_h 2 --max_h 1
     desc "rare-uncommitted-counts", "Get counts of rare holdings"
     option :max_h, :type => :numeric, :default => nil
-    option :max_sph, :type => :numeric, :default => nil
-    def rare_uncommitted_counts(h: options[:max_h], sph: options[:max_sph])
-      puts Reports::RareUncommitted.new.counts_format(h: h, sph: sph)
+    option :max_sp_h, :type => :numeric, :default => nil
+    option :non_sp_h_count, :type => :numeric, :default => nil
+    option :commitment_count, :type => :numeric, :default => 0
+    option :organization, :type => :string, :default => nil
+    def rare_uncommitted_counts
+      report = Reports::RareUncommitted.new(
+        max_h: options[:max_h],
+        max_sp_h: options[:max_sp_h],
+        non_sp_h_count: options[:non_sp_h_count],
+        commitment_count: options[:commitment_count],
+        organization: options[:organization]
+      )
+
+      report_data = options[:organization].nil? ?
+                      report.output_counts : report.output_organization
+
+      report_data.each do |report_line|
+        puts report_line
+      end
     end
   end
 
