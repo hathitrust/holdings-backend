@@ -5,27 +5,31 @@ require "pp"
 require "reports/etas_organization_overlap_report"
 
 RSpec.describe Reports::EtasOrganizationOverlapReport do
-  let(:tmp_dir) { "tmp_reports_dir" }
+  let(:tmp_local) { "tmp_local_reports" }
+  let(:tmp_pers) { "tmp_pers_path" }
   let(:tmp_rmt) { "tmp_remote_path" }
 
   before(:each) do
-    Settings.etas_overlap_reports_path = tmp_dir
+    Settings.local_report_path = tmp_local
+    Settings.etas_overlap_reports_path = tmp_pers
     Settings.etas_overlap_reports_remote_path = tmp_rmt
     Settings.rclone_config_path = "config/rclone.conf"
-    FileUtils.rm_rf(tmp_dir)
+    FileUtils.rm_rf(tmp_pers)
     FileUtils.rm_rf(tmp_rmt)
   end
 
   after(:each) do
-    FileUtils.rm_rf(tmp_dir)
+    FileUtils.rm_rf(tmp_local)
+    FileUtils.rm_rf(tmp_pers)
     FileUtils.rm_rf(tmp_rmt)
   end
 
   describe "#initialize" do
     it "makes the directory if it doesn't exist" do
       rpt = described_class.new
-      expect(rpt.report_path).to eq(tmp_dir)
-      expect(File).to exist(tmp_dir)
+      expect(rpt.persistent_report_path).to eq(tmp_pers)
+      expect(File).to exist(tmp_pers)
+      expect(File).to exist(rpt.local_report_path)
     end
   end
 
@@ -34,13 +38,13 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       expect(rpt.report_for_org("smu")).to be_a(File)
       expect(rpt.report_for_org("smu").path)
-        .to eq("#{tmp_dir}/etas_overlap_smu_#{rpt.date_of_report}.tsv")
+        .to eq("#{tmp_local}/etas_overlap_smu_#{rpt.date_of_report}.tsv")
     end
 
     it "gives us a 'nonus' filehandle for non-us orgs" do
       rpt = described_class.new
       expect(rpt.report_for_org("uct").path)
-        .to eq("#{tmp_dir}/etas_overlap_uct_#{rpt.date_of_report}_nonus.tsv")
+        .to eq("#{tmp_local}/etas_overlap_uct_#{rpt.date_of_report}_nonus.tsv")
     end
 
     it "has a header" do
@@ -65,7 +69,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt.run
       gz = rpt.gzip_report(rpt.report_for_org(h.organization))
       expect(File.path(gz))
-        .to eq("#{tmp_dir}/etas_overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
+        .to eq("#{tmp_local}/etas_overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
     end
   end
 
@@ -193,7 +197,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     end
   end
 
-  describe "#move_reports_to_remote" do
+  describe "#move_reports" do
     let(:h) { build(:holding) }
     let(:ht) { build(:ht_item, ocns: [h.ocn]) }
 
@@ -203,10 +207,19 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
     end
 
+    it "moves the gzipped report to the persistent storage path" do
+      rpt = described_class.new(h.organization)
+      rpt.run
+      rpt.move_reports
+      persistent_file = "#{tmp_pers}/" \
+        "#{File.basename(rpt.report_for_org(h.organization))}.gz"
+      expect(File.exist?(persistent_file)).to be true
+    end
+
     it "moves the gzipped report to the \"remote\" path" do
       rpt = described_class.new(h.organization)
       rpt.run
-      rpt.move_reports_to_remote
+      rpt.move_reports
       remote_file = "#{tmp_rmt}/#{h.organization}-hathitrust-member-data/analysis/" \
         "#{File.basename(rpt.report_for_org(h.organization))}.gz"
       expect(File.exist?(remote_file)).to be true

@@ -9,20 +9,25 @@ require "utils/session_keep_alive"
 module Reports
   # Generates overlap reports for 1 or all organizations
   class EtasOrganizationOverlapReport
-    attr_accessor :reports, :date_of_report, :report_path, :remote_report_path, :organization
+    attr_accessor :reports, :date_of_report, :local_report_path, :persistent_report_path, :remote_report_path, :organization
 
     def initialize(organization = nil)
       @reports = {}
       @date_of_report = Time.now.strftime("%Y-%m-%d")
-      @report_path = Settings.etas_overlap_reports_path || "tmp_reports"
+      # where we write them on the pod
+      @local_report_path = Settings.local_report_path || "local_reports"
+      Dir.mkdir(@local_report_path) unless File.exist?(@local_report_path)
+      # persistent storage
+      @persistent_report_path = Settings.etas_overlap_reports_path || "tmp_reports"
+      Dir.mkdir(@persistent_report_path) unless File.exist?(@persistent_report_path)
+      # public access location
       @remote_report_path = Settings.etas_overlap_reports_remote_path || "tmp_remote_path"
-      Dir.mkdir(@report_path) unless File.exist?(@report_path)
       @organization = organization
     end
 
     def open_report(org, date)
       nonus = Services.ht_organizations[org]&.country_code == "us" ? "" : "_nonus"
-      File.open("#{report_path}/etas_overlap_#{org}_#{date}#{nonus}.tsv", "w")
+      File.open("#{local_report_path}/etas_overlap_#{org}_#{date}#{nonus}.tsv", "w")
     end
 
     def report_for_org(org)
@@ -137,12 +142,13 @@ module Reports
       zipped
     end
 
-    # Gzips and rclones the reports
-    def move_reports_to_remote
+    # Gzips, copies to persistent storage and rclones the reports
+    def move_reports
       reports.each do |org, file|
         next unless org == organization || organization.nil?
 
         gz = gzip_report(file)
+        FileUtils.cp(gz, @persistent_report_path)
         system(*rclone_move(gz, org))
       end
     end

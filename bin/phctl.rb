@@ -108,7 +108,7 @@ module PHCTL
     def etas_overlap(org=nil)
       rpt = Reports::EtasOrganizationOverlapReport.new(org)
       rpt.run
-      rpt.move_reports_to_remote
+      rpt.move_reports
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"
