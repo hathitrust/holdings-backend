@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "services"
+require "scrub/malformed_header_error"
 
 module Scrub
   # Context: This class is responsible for knowing the internals
@@ -13,7 +14,7 @@ module Scrub
     def initialize(header_line)
       @header_line = header_line.chomp
 
-      log("Getting header information from: #{header_line}")
+      Services.scrub_logger.info("Getting header information from: #{header_line}")
 
       @cols = @header_line.downcase.split("\t")
       @cols.each do |col|
@@ -21,10 +22,6 @@ module Scrub
       end
       # Required header columns for all files
       @req_header_cols = ["oclc", "local_id"]
-    end
-
-    def log(msg)
-      Services.scrub_logger.info(msg)
     end
 
     def possible_cols
@@ -73,7 +70,7 @@ module Scrub
       end
 
       if col_map.empty?
-        raise WellFormedHeaderError,
+        raise Scrub::MalFormedHeaderError,
           "Found no usable column headers among #{@cols}"
       end
 

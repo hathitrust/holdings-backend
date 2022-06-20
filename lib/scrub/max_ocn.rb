@@ -25,6 +25,14 @@ module Scrub
       MEMO_LOC
     end
 
+    def current_max_ocn
+      return_val = ocn
+      if return_val.nil?
+        raise "failed to set current_max_ocn"
+      end
+      return_val
+    end
+
     def ocn
       if File.exist?(MaxOcn.memo_loc)
         @log.info "memo hit"

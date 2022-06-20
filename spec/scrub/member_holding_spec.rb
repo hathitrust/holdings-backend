@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 require "scrub/member_holding"
-require "custom_errors"
+require "scrub/malformed_header_error"
+require "scrub/col_val_error"
 require "json"
 
 RSpec.describe Scrub::MemberHolding do
@@ -25,6 +26,8 @@ RSpec.describe Scrub::MemberHolding do
   let(:ok_max_hold) { described_class.new(ok_max_hed) }
 
   let(:bad_min_str) { "FAIL_ME\t456" }
+  let(:bad_hed) { {"foo" => 0} }
+  let(:bad_min_hold) { described_class.new(bad_hed) }
 
   let(:explode_ocn_str) { "1,2,3\t456" }
 
@@ -65,7 +68,11 @@ RSpec.describe Scrub::MemberHolding do
   end
 
   it "raises an error if given a bad col type" do
-    expect { ok_min_hold.parse("") }.to raise_error(ColValError)
+    expect { ok_min_hold.parse("") }.to raise_error(Scrub::ColValError)
+  end
+
+  it "raises an error here too" do
+    expect { bad_min_hold.parse(ok_min_str) }.to raise_error(Scrub::ColValError)
   end
 
   it "returns false if given a record with a bad ocn" do

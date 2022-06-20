@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require "zinzout"
-require "services"
-require "scrub/member_holding_header_factory"
-require "custom_errors"
+require "scrub/file_name_error"
+require "scrub/malformed_record_error"
 require "scrub/member_holding"
+require "scrub/member_holding_header_factory"
 require "scrub/scrub_fields"
+require "services"
+require "zinzout"
 
 module Scrub
   # Context:
@@ -65,7 +66,7 @@ module Scrub
 
     def parse(&block)
       unless valid_filename?
-        raise FileNameError, "Invalid filename #{@filename}"
+        raise Scrub::FileNameError, "Invalid filename #{@filename}"
       end
 
       scrub_stats = Services.scrub_stats
@@ -82,7 +83,7 @@ module Scrub
 
     def member_id_from_filename(fn_str = @filename)
       if fn_str.nil? || fn_str.empty?
-        raise FileNameError, "Empty filename"
+        raise Scrub::FileNameError, "Empty filename"
       end
 
       parts = fn_str.split("_")
@@ -92,7 +93,7 @@ module Scrub
         log("OK member_id #{member_id} in filename #{@filename}")
         member_id
       else
-        raise FileNameError, "Did not find a member_id in filename (#{fn_str})"
+        raise Scrub::FileNameError, "Did not find a member_id in filename (#{fn_str})"
       end
     end
 
@@ -102,7 +103,7 @@ module Scrub
         log("OK item_type (#{item_type}) from filename (#{@filename})")
         item_type
       else
-        raise FileNameError, "Did not find item_type in filename (#{fn_str})"
+        raise Scrub::FileNameError, "Did not find item_type in filename (#{fn_str})"
       end
     end
 
@@ -188,7 +189,7 @@ module Scrub
       read_file do |line, line_no, col_map|
         # May be more than one, if multiple ocns
         item_from_line(line, col_map).each(&block)
-      rescue BadRecordError => e
+      rescue Scrub::MalformedRecordError => e
         log("Rejected record #{filename}:#{line_no}, #{e.message}")
       end
     end
@@ -203,7 +204,7 @@ module Scrub
       all_ok = holding.parse(line)
 
       unless all_ok
-        raise BadRecordError, holding.violations.join(" // ")
+        raise Scrub::MalformedRecordError, holding.violations.join(" // ")
       end
 
       holding.organization = @member_id
