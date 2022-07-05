@@ -14,4 +14,4 @@ CREATE TABLE IF NOT EXISTS `holdings_htitem_htmember` (
   PRIMARY KEY (`volume_id`, `member_id`),
   KEY (`member_id`),
   KEY (`cluster_id`)
-  ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
