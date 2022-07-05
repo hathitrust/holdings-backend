@@ -88,7 +88,7 @@ end
 # Clustering::ClusterXYZ.new(xyz).cluster.tap(&:save)
 def cluster_tap_save(clusterables)
   clusterables.each do |clusterable|
-    case clusterable.class
+    case clusterable
     when Clusterable::Holding
       Clustering::ClusterHolding
     when Clusterable::HtItem
