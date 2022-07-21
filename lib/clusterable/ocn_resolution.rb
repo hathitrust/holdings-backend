@@ -22,7 +22,7 @@ module Clusterable
     }
 
     def ==(other)
-      deprecated == other.deprecated && resolved == other.resolved
+      self.class == other.class && deprecated == other.deprecated && resolved == other.resolved
     end
 
     def initialize(params = nil)
