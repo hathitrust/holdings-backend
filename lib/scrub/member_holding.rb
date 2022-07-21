@@ -4,7 +4,7 @@ require "securerandom"
 require "json"
 require "services"
 require "scrub/scrub_fields"
-require "custom_errors"
+require "scrub/col_val_error"
 
 module Scrub
   # Represents the information in one line from a member holding file
@@ -31,7 +31,7 @@ module Scrub
     # and populates a MemberHolding-object
     def parse(str)
       if str.nil? || str.empty?
-        raise ColValError, "bad str (class #{str.class}): #{str}"
+        raise Scrub::ColValError, "bad str (class #{str.class}): #{str}"
       end
 
       cols = str.split("\t")
@@ -52,9 +52,7 @@ module Scrub
     # via ScrubFields
     def set(col_type, col_val)
       if col_val.nil?
-        Services.scrub_logger.warn(
-          "col_val for col_type #{col_type} is nil"
-        )
+        Services.scrub_logger.warn("col_val for col_type #{col_type} is nil")
         col_val = ""
       end
 
@@ -80,7 +78,7 @@ module Scrub
       when "issn"
         @issn = @scrubfields.issn(col_val)
       else
-        raise ColValError,
+        raise Scrub::ColValError,
           "cannot handle column type #{col_type} (value: #{col_val})"
       end
     end

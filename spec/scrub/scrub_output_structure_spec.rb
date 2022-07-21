@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "scrub/scrub_output_structure"
-require "custom_errors"
 
 RSpec.describe Scrub::ScrubOutputStructure do
   let(:test) { described_class.new("test") }

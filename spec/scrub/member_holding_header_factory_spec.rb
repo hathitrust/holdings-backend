@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "scrub/member_holding_header_factory"
-require "custom_errors"
+require "scrub/item_type_error"
 
 RSpec.describe Scrub::MemberHoldingHeaderFactory do
   let(:mon) { "mono" }
@@ -22,7 +22,7 @@ RSpec.describe Scrub::MemberHoldingHeaderFactory do
   end
 
   it "raises an error given an illegal item_type" do
-    expect { check_class(failme, min_ok_hed) }.to raise_error(ItemTypeError)
+    expect { check_class(failme, min_ok_hed) }.to raise_error(Scrub::ItemTypeError)
   end
 
   it "returns a col map (hash)" do

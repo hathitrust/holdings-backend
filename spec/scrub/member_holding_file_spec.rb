@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "scrub/member_holding_file"
-require "custom_errors"
+require "scrub/file_name_error"
 
 RSpec.describe Scrub::MemberHoldingFile do
   let(:test_data) { __dir__ + "/../../testdata" }
@@ -34,8 +34,8 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   it "raises error if no member_id in filename" do
-    expect { ok_mhf.member_id_from_filename("") }.to raise_error(FileNameError)
-    expect { ok_mhf.member_id_from_filename(nil) }.to raise_error(FileNameError)
+    expect { ok_mhf.member_id_from_filename("") }.to raise_error(Scrub::FileNameError)
+    expect { ok_mhf.member_id_from_filename(nil) }.to raise_error(Scrub::FileNameError)
   end
 
   it "finds item type in filename" do
@@ -43,7 +43,7 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   it "raises error if no item_type in filename" do
-    expect { bad_mhf.item_type_from_filename }.to raise_error(FileNameError)
+    expect { bad_mhf.item_type_from_filename }.to raise_error(Scrub::FileNameError)
   end
 
   it "checks a whole filename" do
@@ -58,8 +58,8 @@ RSpec.describe Scrub::MemberHoldingFile do
     let(:bad_fn_5) { "umich_mono_full_20201230.!!!" } # bad extension
 
     it "Raises an error if it can't figure out member_id or item_type" do
-      expect { described_class.new(bad_fn_1).valid_filename? }.to raise_error(FileNameError)
-      expect { described_class.new(bad_fn_2).valid_filename? }.to raise_error(FileNameError)
+      expect { described_class.new(bad_fn_1).valid_filename? }.to raise_error(Scrub::FileNameError)
+      expect { described_class.new(bad_fn_2).valid_filename? }.to raise_error(Scrub::FileNameError)
     end
 
     it "rejects a bad filename for the right reason" do

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "services"
-require "custom_errors"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
 
