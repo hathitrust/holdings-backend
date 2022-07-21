@@ -30,8 +30,8 @@ module Reports
     def num_volumes
       @num_volumes ||= Cluster.collection.aggregate(
         [
-          {'$match': {"ht_items.0": {"$exists": 1}}},
-          {'$group': {_id: nil, items_count: {"$sum": {'$size': "$ht_items"}}}}
+          {"$match": {"ht_items.0": {"$exists": 1}}},
+          {"$group": {_id: nil, items_count: {"$sum": {"$size": "$ht_items"}}}}
         ]
       ).first[:items_count]
     end
@@ -39,8 +39,8 @@ module Reports
     def num_pd_volumes
       @num_pd_volumes ||= Cluster.collection.aggregate(
         [
-          {'$match': {"ht_items.0": {"$exists": 1}}},
-          {'$group': {_id: nil,
+          {"$match": {"ht_items.0": {"$exists": 1}}},
+          {"$group": {_id: nil,
                       items_count: {"$sum": {"$size": {
                         "$filter": {input: "$ht_items", as:    "item",
                                     cond: {"$eq": ["$$item.access", "allow"]}}
