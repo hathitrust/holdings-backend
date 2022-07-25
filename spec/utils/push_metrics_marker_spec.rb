@@ -151,7 +151,7 @@ RSpec.describe Utils::PushMetricsMarker do
 
   describe "Services.pushgateway" do
     it "initiates OK" do
-      expect{ spg = Services.pushgateway }.not_to raise_error
+      expect { Services.pushgateway }.not_to raise_error
     end
   end
 end
