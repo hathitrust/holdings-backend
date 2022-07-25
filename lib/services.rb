@@ -36,7 +36,7 @@ Services.register(:scrub_stats) { {} }
 Services.register(:large_clusters) { DataSources::LargeClusters.new }
 Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }
 
-Services.register(:pushgateway) { Prometheus::Client::Push.new(File.basename($PROGRAM_NAME), nil, Settings.pushgateway) }
+Services.register(:pushgateway) { Prometheus::Client::Push.new(job: File.basename($PROGRAM_NAME), gateway: Settings.pushgateway) }
 Services.register(:prometheus_registry) { Prometheus::Client.registry }
 Services.register(:prometheus_metrics) do
   {

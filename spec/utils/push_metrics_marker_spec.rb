@@ -2,6 +2,7 @@
 
 require "utils/push_metrics_marker"
 require "prometheus/client/push"
+require "services"
 
 RSpec.describe Utils::PushMetricsMarker do
   let(:batch_size) { rand(100) }
@@ -145,6 +146,12 @@ RSpec.describe Utils::PushMetricsMarker do
     it "delegates to marker" do
       expect(marker).to receive(:count)
       pm_marker.count
+    end
+  end
+
+  describe "Services.pushgateway" do
+    it "initiates OK" do
+      expect{ spg = Services.pushgateway }.not_to raise_error
     end
   end
 end
