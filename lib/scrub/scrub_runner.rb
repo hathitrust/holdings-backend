@@ -24,7 +24,7 @@ module Scrub
   # Scrubs and loads any new member-uploaded files.
   class ScrubRunner
     def initialize
-      @members = DataSources::HTOrganizations.organizations
+      @members = DataSources::HTOrganizations.new.members.keys.sort
       if Settings.scrubbed_files_dir.nil?
         raise "Need Settings.scrubbed_files_dir to be set"
       end
@@ -38,7 +38,7 @@ module Scrub
     end
 
     def run_some_members(members)
-      puts "Run members: #{members.join(", ")}."
+      puts "Run members: #{members}."
       members.each do |member|
         run_one_member(member)
       end
@@ -84,7 +84,7 @@ module Scrub
       unless Dir.exist?(scrubbed_dir)
         Dir.mkdir(scrubbed_dir)
       end
-      Dir.new(scrubbed_dir).to_a
+      Dir.new(scrubbed_dir).to_a.select { |fn| fn =~ /\.tsv(\.gz)$/ }
     end
 
     def download_to_work_dir(member, file)
@@ -103,4 +103,9 @@ module Scrub
       FileUtils.mv(file, scrubbed_dir)
     end
   end
+end
+
+if $0 == __FILE__
+  Settings.scrubbed_files_dir = "/tmp"
+  Scrub::ScrubRunner.new.run_all_members
 end
