@@ -40,7 +40,7 @@ module Scrub
     def run_some_members(members)
       puts "Run members: #{members.join(", ")}."
       members.each do |member|
-        run_one(member)
+        run_one_member(member)
       end
     end
 
