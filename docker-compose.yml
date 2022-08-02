@@ -37,6 +37,24 @@ services:
     ports:
       - "9091:9091"
 
+  sidekiq_web:
+    build: .
+    restart: always
+    volumes:
+      - .:/usr/src/app
+      - gem_cache:/gems
+    command: bundle exec puma bin/sidekiq_web.ru
+    depends_on:
+      - redis
+    ports:
+      - 9292:9292
+    environment:
+      REDIS_URL: redis://redis/
+
+  redis:
+    image: redis
+    restart: always
+
 volumes:
   gem_cache:
   data_db:

@@ -17,6 +17,8 @@ gem "rgl"
 gem "sequel"
 gem "thor"
 gem "zinzout"
+gem "puma"
+gem "sidekiq"
 
 group :development, :test do
   gem "pry"

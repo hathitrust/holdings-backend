@@ -13,7 +13,11 @@ require "fixtures/large_clusters"
 require "pry"
 require "settings"
 require "services"
+require "sidekiq/testing"
+
 SimpleCov.start
+Sidekiq.strict_args!
+Sidekiq::Testing.fake!
 
 Mongoid.load!("mongoid.yml", Settings.environment)
 

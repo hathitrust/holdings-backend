@@ -5,8 +5,6 @@ require "zinzout"
 require "services"
 require "reports/estimate_ic"
 
-Services.mongo!
-
 # Given a file of unique OCNs, generate a cost estimate.
 class CompileEstimate
   def run(ocn_file)
@@ -31,5 +29,3 @@ class CompileEstimate
     ].join("\n")
   end
 end
-
-CompileEstimate.new.run(ARGV.shift) if $PROGRAM_NAME == __FILE__

@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-# Usage:
-# bundle exec ruby bin/reports/compile_member_counts_report.rb <COST_FREQ> <OUTPUT_DIR>
-
 require "reports/member_counts_report"
 require "fileutils"
 
@@ -40,5 +37,3 @@ class CompileMemberCounts
     outf.close
   end
 end
-
-CompileMemberCounts.new.run(ARGV) if $PROGRAM_NAME == __FILE__

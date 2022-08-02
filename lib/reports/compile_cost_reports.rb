@@ -5,8 +5,6 @@ require "services"
 require "utils/ppnum"
 require "reports/cost_report"
 
-Services.mongo!
-
 class CompileCostReport
   def to_tsv(report)
     tsv = []
@@ -48,5 +46,3 @@ class CompileCostReport
     logger.info marker.final_line
   end
 end
-
-CompileCostReport.run(ARGV.shift) if __FILE__ == $PROGRAM_NAME
