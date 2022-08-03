@@ -3,13 +3,9 @@
 require "spec_helper"
 require "phctl"
 
-RSpec.describe "PHCTL::PHCTL" do
+RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   def phctl(*args)
     PHCTL::PHCTL.start(*args)
-  end
-
-  before(:each) do
-    Sidekiq::Worker.clear_all
   end
 
   commands = {

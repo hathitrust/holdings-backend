@@ -61,7 +61,7 @@ module Jobs
 
     class Delta
       include Sidekiq::Job
-      def perform(infile, outfile)
+      def perform(old, new)
         ConcordanceProcessing.new.delta(old, new)
       end
     end
@@ -145,7 +145,7 @@ module Jobs
       include Sidekiq::Job
       def perform(**kwargs)
         report = Reports::RareUncommitted.new(**kwargs)
-        report_data = options[:organization].nil? ?
+        report_data = kwargs[:organization].nil? ?
                         report.output_counts : report.output_organization
 
         report_data.each do |report_line|

@@ -11,10 +11,15 @@ RSpec.describe Reports::EstimateIC do
   let(:rpt) { described_class.new(ocns) }
 
   before(:each) do
+    @old_cost = Settings.target_cost
     Settings.target_cost = 20
     Cluster.each(&:delete)
     Clustering::ClusterHtItem.new(ht_allow).cluster.tap(&:save)
     Clustering::ClusterHtItem.new(ht_deny).cluster.tap(&:save)
+  end
+
+  after(:each) do
+    Settings.target_cost = @old_cost
   end
 
   describe "#cost_report" do

@@ -3,6 +3,7 @@
 require "spec_helper"
 require "shared_print/finder"
 require "shared_print/updater"
+require "phctl"
 
 RSpec.describe SharedPrint::Updater do
   let(:ocn1) { 1 }
@@ -68,7 +69,7 @@ RSpec.describe SharedPrint::Updater do
     zero_match = build(:commitment, ocn: 999, organization: "yale", local_id: "i999", local_bib_id: "d")
     cluster_tap_save [single_match, multi_match_1, multi_match_2, zero_match]
     # This fixture wants to make 4 updates but only matches the commitment in single_match.
-    described_class.new("spec/fixtures/test_sp_update_file.tsv").run
+    PHCTL::PHCTL.start(%w[sp update spec/fixtures/test_sp_update_file.tsv])
     # Only single_match should have an updated local_bib_id.
     arr = SharedPrint::Finder.new.commitments.to_a
     expect(arr.map(&:local_bib_id).sort).to eq ["b", "c", "d", "updated"]

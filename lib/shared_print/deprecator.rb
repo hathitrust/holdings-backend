@@ -26,23 +26,7 @@ module SharedPrint
       args.each do |arg|
         from_file(arg)
       end
-    end
-
-    # Append messages to a report file, and to STDERR if @verbose
-    def append_report(msg)
-      if @report.nil?
-        # To reduce the risk of accidental overwrites by a different instance,
-        # make the filename rather unique-ish.
-        iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
-        rand_str = SecureRandom.hex(8)
-        report_dir = Settings.deprecation_report_path
-        FileUtils.mkdir_p(report_dir)
-        @report_path = "#{report_dir}/commitments_deprecator_#{iso_stamp}_#{rand_str}.txt"
-        warn "Reporting to #{@report_path}" if @verbose
-        @report = File.open(@report_path, "w")
-      end
-      @report.puts msg
-      warn msg if @verbose
+      @report&.close
     end
 
     # Read deprecation records from file and try to deprecate the matching commitments.
@@ -108,9 +92,24 @@ module SharedPrint
     def clear_err
       @err = []
     end
-  end
 
-  if __FILE__ == $PROGRAM_NAME
-    SharedPrint::Deprecator.new.run(ARGV)
+    private
+
+    # Append messages to a report file, and to STDERR if @verbose
+    def append_report(msg)
+      if @report.nil?
+        # To reduce the risk of accidental overwrites by a different instance,
+        # make the filename rather unique-ish.
+        iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+        rand_str = SecureRandom.hex(8)
+        report_dir = Settings.deprecation_report_path
+        FileUtils.mkdir_p(report_dir)
+        @report_path = "#{report_dir}/commitments_deprecator_#{iso_stamp}_#{rand_str}.txt"
+        warn "Reporting to #{@report_path}" if @verbose
+        @report = File.open(@report_path, "w")
+      end
+      @report.puts msg
+      warn msg if @verbose
+    end
   end
 end

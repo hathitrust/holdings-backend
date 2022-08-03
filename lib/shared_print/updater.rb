@@ -23,22 +23,7 @@ module SharedPrint
         report "}"
       end
       report "Done with #{file}."
-    end
-
-    # Report to file, set up if not set up.
-    def report(msg)
-      if @report.nil?
-        report_dir = Settings.shared_print_update_report_path
-        FileUtils.mkdir_p(report_dir)
-        in_base = File.basename(@file, ".*")
-        in_ext = File.extname(@file)
-        rand_str = SecureRandom.hex(8)
-        iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
-        @report_path = "#{report_dir}/#{in_base}_#{iso_stamp}_#{rand_str}#{in_ext}"
-        warn "Reporting to #{@report_path}"
-        @report = File.open(@report_path, "w")
-      end
-      @report.puts msg
+      @report&.close
     end
 
     # Takes a single update record...
@@ -98,6 +83,24 @@ module SharedPrint
       @commitments.each do |cm|
         report cm.inspect
       end
+    end
+
+    private
+
+    # Report to file, set up if not set up.
+    def report(msg)
+      if @report.nil?
+        report_dir = Settings.shared_print_update_report_path
+        FileUtils.mkdir_p(report_dir)
+        in_base = File.basename(@file, ".*")
+        in_ext = File.extname(@file)
+        rand_str = SecureRandom.hex(8)
+        iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+        @report_path = "#{report_dir}/#{in_base}_#{iso_stamp}_#{rand_str}#{in_ext}"
+        warn "Reporting to #{@report_path}"
+        @report = File.open(@report_path, "w")
+      end
+      @report.puts msg
     end
   end
 end

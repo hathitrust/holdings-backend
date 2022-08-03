@@ -5,15 +5,11 @@ require "pp"
 require "reports/etas_organization_overlap_report"
 
 RSpec.describe Reports::EtasOrganizationOverlapReport do
-  let(:tmp_local) { "tmp_local_reports" }
-  let(:tmp_pers) { "tmp_pers_path" }
-  let(:tmp_rmt) { "tmp_remote_path" }
+  let(:tmp_local) { Settings.local_report_path }
+  let(:tmp_pers) { Settings.etas_overlap_reports_path }
+  let(:tmp_rmt) { Settings.etas_overlap_reports_remote_path }
 
   before(:each) do
-    Settings.local_report_path = tmp_local
-    Settings.etas_overlap_reports_path = tmp_pers
-    Settings.etas_overlap_reports_remote_path = tmp_rmt
-    Settings.rclone_config_path = "config/rclone.conf"
     FileUtils.rm_rf(tmp_pers)
     FileUtils.rm_rf(tmp_rmt)
   end
@@ -230,7 +226,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     it "provides the proper system call for rclone" do
       rpt = described_class.new
       expect(rpt.rclone_move(File.open("test_file", "w"), "umich"))
-        .to eq(["rclone", "--config", "config/rclone.conf", "move", "test_file",
+        .to eq(["rclone", "--config", Settings.rclone_config_path, "move", "test_file",
           "#{tmp_rmt}/umich-hathitrust-member-data/analysis"])
     end
   end

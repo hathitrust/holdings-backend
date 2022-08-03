@@ -17,7 +17,7 @@ require "sidekiq/testing"
 
 SimpleCov.start
 Sidekiq.strict_args!
-Sidekiq::Testing.fake!
+Sidekiq::Testing.inline!
 
 Mongoid.load!("mongoid.yml", Settings.environment)
 
@@ -85,6 +85,12 @@ RSpec.configure do |config|
       Services.register(:logger) { old_logger }
     end
   end
+
+  config.around(:each, type: "sidekiq_fake") do |example|
+    Sidekiq::Testing.fake! do
+      example.run
+    end
+  end
 end
 
 # Clusters and saves each element in an array of clusterables
@@ -101,4 +107,8 @@ def cluster_tap_save(clusterables)
       Clustering::ClusterCommitment
     end.new(clusterable).cluster.tap(&:save)
   end
+end
+
+def fixture(filename)
+  File.join(__dir__, "fixtures", filename)
 end

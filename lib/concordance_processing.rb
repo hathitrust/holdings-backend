@@ -31,6 +31,9 @@ class ConcordanceProcessing
 
       fout.puts [raw, c.terminal_ocn(raw)].join("\t")
     end
+
+    log.close
+    fout.close
   end
 
   # Compute deltas of new concordance with pre-existing validated concordance.

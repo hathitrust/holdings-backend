@@ -18,10 +18,10 @@ module Reports
       @local_report_path = Settings.local_report_path || "local_reports"
       Dir.mkdir(@local_report_path) unless File.exist?(@local_report_path)
       # persistent storage
-      @persistent_report_path = Settings.etas_overlap_reports_path || "tmp_reports"
+      @persistent_report_path = Settings.etas_overlap_reports_path
       Dir.mkdir(@persistent_report_path) unless File.exist?(@persistent_report_path)
       # public access location
-      @remote_report_path = Settings.etas_overlap_reports_remote_path || "tmp_remote_path"
+      @remote_report_path = Settings.etas_overlap_reports_remote_path
       @organization = organization
     end
 

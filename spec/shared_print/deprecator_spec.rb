@@ -2,6 +2,8 @@
 
 require "spec_helper"
 require "shared_print/deprecator"
+require "fileutils"
+require "phctl"
 
 RSpec.describe SharedPrint::Deprecator do
   let(:org_1) { "umich" }
@@ -25,13 +27,8 @@ RSpec.describe SharedPrint::Deprecator do
 
   before(:each) do
     Cluster.collection.find.delete_many
+    FileUtils.rm(Dir.glob("/tmp/deprecation_report/*"))
     dep.clear_err
-  end
-
-  it "appends messages to a report." do
-    expect(dep.report_path).to eq nil
-    dep.append_report("foo")
-    expect(File.file?(dep.report_path)).to be true
   end
 
   describe "#check_header" do
@@ -90,7 +87,7 @@ RSpec.describe SharedPrint::Deprecator do
     end
     expect(File.file?(deprecation_file_path)).to be true
     # Run command on file (#8)
-    dep.run([deprecation_file_path])
+    PHCTL::PHCTL.start(["sp", "deprecate", deprecation_file_path])
     # C & D are deprecated (#9)
     expect(lookup_commitment(3).deprecated?).to be true
     expect(lookup_commitment(4).deprecated?).to be true
@@ -101,8 +98,7 @@ RSpec.describe SharedPrint::Deprecator do
     expect(lookup_commitment(1).deprecated?).to be false
     expect(lookup_commitment(2).deprecated?).to be false
 
-    dep.report.close
-    report_slurp = File.read(dep.report_path).split("\n")
+    report_slurp = File.read(Dir.glob("/tmp/deprecation_report/commitments_deprecator_*").first).split("\n")
     # We logged what we did and what we could not do (#11 & 12).
     today = Date.today.strftime("%Y-%m-%d")
     expect(report_slurp.count { |x| x =~ /Commitment deprecated.+deprecation_date: #{today}/ }).to eq 2

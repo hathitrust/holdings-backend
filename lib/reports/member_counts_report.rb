@@ -26,7 +26,7 @@ module Reports
   class MemberCountsReport
     attr_accessor :rows
 
-    def initialize(cost_report_freq = nil, members = DataSources::HTOrganizations.new.members.keys)
+    def initialize(cost_report_freq = nil, members = Services.ht_organizations.members.keys)
       @cost_report_freq = cost_report_freq
 
       @rows = {}

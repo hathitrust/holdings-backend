@@ -17,7 +17,7 @@ RSpec.describe Reports::CostReport do
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    Settings.target_cost = 10
+    @old_cost = Settings.target_cost
     Cluster.each(&:delete)
     c.save
     c2.save
@@ -25,6 +25,10 @@ RSpec.describe Reports::CostReport do
     Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
     Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
     Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
+  end
+
+  after(:each) do
+    Settings.target_cost = @old_cost
   end
 
   describe "#num_volumes" do
