@@ -14,6 +14,8 @@ require "services"
 
 RSpec.describe Utils::FileTransfer do
   let(:ft) { described_class.new }
+  # Do not change local_dir or remote_dir to something important,
+  # as they WILL be deleted during these tests.
   let(:local_dir) { "/tmp/file_transfer_test/local" }
   let(:remote_dir) { "/tmp/file_transfer_test/remote" }
   let(:local_file_name) { "test_file_a.txt" }
@@ -39,36 +41,42 @@ RSpec.describe Utils::FileTransfer do
     FileUtils.rm_rf remote_dir
   end
 
-  it "requires conf file to be set in Settings" do
-    expect { described_class.new }.not_to raise_error
-    Settings.rclone_config_path = nil
-    expect { described_class.new }.to raise_error
+  context "initialize" do
+    it "requires conf file to be set in Settings" do
+      expect { described_class.new }.not_to raise_error
+      Settings.rclone_config_path = nil
+      expect { described_class.new }.to raise_error
+    end
+
+    it "requires conf file to exist" do
+      expect { described_class.new }.not_to raise_error
+      FileUtils.rm conf
+      expect { described_class.new }.to raise_error
+    end
   end
 
-  it "requires conf file to exist" do
-    expect { described_class.new }.not_to raise_error
-    FileUtils.rm conf
-    expect { described_class.new }.to raise_error
+  context "listing remote files" do
+    it "ls_remote_dir" do
+      parsed_json = ft.ls_remote_dir(remote_dir)
+      expect(parsed_json).to be_a Array
+      expect(parsed_json.size).to eq 1
+      expect(parsed_json.first).to be_a Hash
+      expect(parsed_json.first.keys.sort).to eq %w[IsDir MimeType ModTime Name Path Size]
+      expect(parsed_json.first["Name"]).to eq remote_file_name
+    end
   end
 
-  it "ls_remote_dir" do
-    parsed_json = ft.ls_remote_dir(remote_dir)
-    expect(parsed_json).to be_a Array
-    expect(parsed_json.size).to eq 1
-    expect(parsed_json.first).to be_a Hash
-    expect(parsed_json.first.keys.sort).to eq %w[IsDir MimeType ModTime Name Path Size]
-    expect(parsed_json.first["Name"]).to eq remote_file_name
-  end
+  context "transferring files" do
+    it "upload" do
+      expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 0
+      ft.upload(local_file_path, remote_dir)
+      expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 1
+    end
 
-  it "upload" do
-    expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 0
-    ft.upload(local_file_path, remote_dir)
-    expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 1
-  end
-
-  it "download" do
-    expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be false
-    ft.download(remote_file_path, local_dir)
-    expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be true
+    it "download" do
+      expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be false
+      ft.download(remote_file_path, local_dir)
+      expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be true
+    end
   end
 end

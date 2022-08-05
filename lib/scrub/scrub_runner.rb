@@ -9,9 +9,11 @@
 # ideally using a queue or pool of workers.
 
 require "data_sources/ht_organizations"
+require "data_sources/directory_locator"
 require "loader/file_loader"
 require "loader/holding_loader"
 require "scrub/autoscrub"
+require "utils/file_transfer"
 require "fileutils"
 
 # Example:
@@ -28,9 +30,9 @@ module Scrub
       if Settings.scrubbed_files_dir.nil?
         raise "Need Settings.scrubbed_files_dir to be set"
       end
+
+      @ft = Utils::FileTransfer.new
     end
-    # see lib/reports/etas_organization_overlap_report.rb for rclone stuff,
-    # should be broken out into its own class?
 
     def run_all_members
       puts "Run all members."
@@ -69,7 +71,8 @@ module Scrub
     # Check member-uploaded files for any not previously seen files
     def check_new_files(member)
       puts "check new files for member #{member}"
-      remote_files = [] # todo: something something rclone
+      remote_dir = DataSources::DirectoryLocator.new(member).remote.holdings_current
+      remote_files = @ft.ls_remote_dir(remote_dir).map { |f| f["Name"] }
       old_files = check_old_files(member)
       # Return new (as in previously not processed) files
       new_files = remote_files - old_files
