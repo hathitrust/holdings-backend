@@ -1,52 +1,48 @@
 require "services"
 
 module DataSources
-  # Given an organization name, provide locations to all their
-  # remote and local directories to/from which files of importance
-  # may be transferred.
-  # locator = DataSources::DirectoryLocator.new("umich")
-  # remote_holdings = locator.remote.holdings_current
+  # Given a base and and org id, provide paths (strings) to the org's dirs.
+  # Assumes identical structure on the remote and local side,
+  # just with a different base path, and does not know/care if the paths
+  # that it provides actually point to anything real.
+  # E.g.:
+  # remote_d = DataSources::DirectoryLocator.new("dropbox:foo/bar/member_data", "foo")
+  # local_d = DataSources::DirectoryLocator.new("/tmp/member_data", "foo")
+  # remote_holdings = remote_d.holdings_current
+  # local_holdings = local_d.holdings_current
   class DirectoryLocator
-    attr_reader :organization, :remote, :local
-    def initialize(organization)
+    attr_reader :base, :organization
+    def initialize(base, organization)
+      @base = base
       @organization = organization
-      @remote = DataSources::RemoteDirectory.new(organization)
-      @local = DataSources::LocalDirectory.new(organization)
-    end
-  end
-
-  class RemoteDirectory
-    attr_reader :organization
-    def initialize(organization)
-      @organization = organization
+      # In the off chance the object is created 1s before jan 1st,
+      # at least we'll be consistent across the life of this object.
+      @year = Time.new.year.to_s
     end
 
     def base
-      glue(
-        Settings.remote_file_storage_base, # e.g. remote:#{dropbox_url} or /tmp/test
-        "#{organization}-hathitrust-member-data"
-      )
+      join(@base, "#{organization}-hathitrust-member-data")
     end
 
     def holdings
-      glue(base, "print\ holdings")
+      join(base, "print\ holdings")
     end
 
     def holdings_current
-      glue(holdings, Time.new.year.to_s)
+      join(holdings, @year)
     end
 
     def shared_print
-      glue(base, "shared\ print")
+      join(base, "shared\ print")
     end
 
     def analysis
-      glue(base, "analysis")
+      join(base, "analysis")
     end
 
     private
 
-    def glue(*arr)
+    def join(*arr)
       arr.join("/")
     end
   end
