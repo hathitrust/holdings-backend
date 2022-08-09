@@ -11,31 +11,36 @@ module DataSources
   # remote_holdings = remote_d.holdings_current
   # local_holdings = local_d.holdings_current
   class DirectoryLocator
-    attr_reader :base, :organization
-    def initialize(base, organization)
-      @base = base
+    attr_reader :root, :organization
+    def initialize(root, organization)
+      @root = root # the part of the file system where the member directories start
       @organization = organization
       # In the off chance the object is created 1s before jan 1st,
       # at least we'll be consistent across the life of this object.
       @year = Time.new.year.to_s
     end
 
+    # The base directory for the organization.
     def base
-      join(@base, "#{organization}-hathitrust-member-data")
+      join(@root, "#{organization}-hathitrust-member-data")
     end
 
+    # The holdings parent directory for the organization
     def holdings
       join(base, "print\ holdings")
     end
 
+    # The current-year holdings directory
     def holdings_current
       join(holdings, @year)
     end
 
+    # The shared print directory (not divided into years like holdings are)
     def shared_print
       join(base, "shared\ print")
     end
 
+    # This is where HT uploads reports and such for the member to access.
     def analysis
       join(base, "analysis")
     end
