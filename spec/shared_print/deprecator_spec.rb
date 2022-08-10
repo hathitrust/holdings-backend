@@ -106,6 +106,6 @@ RSpec.describe SharedPrint::Deprecator do
     # We logged what we did and what we could not do (#11 & 12).
     today = Date.today.strftime("%Y-%m-%d")
     expect(report_slurp.count { |x| x =~ /Commitment deprecated.+deprecation_date: #{today}/ }).to eq 2
-    expect(report_slurp.count { |x| x.start_with?("Could not deprecate record") }).to eq 2
+    expect(report_slurp.count { |x| x.start_with?("Something failed:") }).to eq 2
   end
 end
