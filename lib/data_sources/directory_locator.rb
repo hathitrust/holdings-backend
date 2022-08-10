@@ -1,4 +1,4 @@
-require "services"
+# frozen_string_literal: true
 
 module DataSources
   # Given a base and and org id, provide paths (strings) to the org's dirs.

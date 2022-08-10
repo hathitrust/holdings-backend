@@ -27,8 +27,11 @@ module Scrub
   class ScrubRunner
     def initialize
       @members = DataSources::HTOrganizations.new.members.keys.sort
-      if Settings.scrubbed_files_dir.nil?
-        raise "Need Settings.scrubbed_files_dir to be set"
+      if Settings.local_member_dir.nil?
+        raise "Need Settings.local_member_dir to be set"
+      end
+      if Settings.remote_member_dir.nil?
+        raise "Need Settings.remote_member_dir to be set"
       end
 
       @ft = Utils::FileTransfer.new
@@ -61,8 +64,8 @@ module Scrub
       download_to_work_dir(member, new_file)
       scrubber = Scrub::Autoscrub.new(new_file)
       scrubber.run
-      # figure out the output files that was just generated
-      # todo: implement scrubber.reports and/or do it with Scrub::ScrubOutputStructure
+      # todo: chunk and hand off job to sidekiq
+      # todo: figure out the output files that was just generated
       upload_to_member(member, scrubber.reports.latest)
       holding_loader = Loader::HoldingLoader.for(scrubber.output.latest)
       Loader::FileLoader.new(holding_loader).load(scrubber.output.latest)
@@ -71,7 +74,10 @@ module Scrub
     # Check member-uploaded files for any not previously seen files
     def check_new_files(member)
       puts "check new files for member #{member}"
-      remote_dir = DataSources::DirectoryLocator.new(member).remote.holdings_current
+      remote_dir = DataSources::DirectoryLocator.new(
+        Settings.remote_member_dir,
+        member
+      ).holdings_current
       remote_files = @ft.ls_remote_dir(remote_dir).map { |f| f["Name"] }
       old_files = check_old_files(member)
       # Return new (as in previously not processed) files
@@ -83,16 +89,32 @@ module Scrub
     # Check the member scrub_dir for previously scrubbed files.
     def check_old_files(member)
       puts "check old files for #{member}"
-      scrubbed_dir = "#{Settings.scrubbed_files_dir}/#{member}"
-      unless Dir.exist?(scrubbed_dir)
-        Dir.mkdir(scrubbed_dir)
+      local_dir = DataSources::DirectoryLocator.new(
+        Settings.local_member_dir,
+        member
+      ).holdings_current
+      unless Dir.exist?(local_dir)
+        Dir.mkdir(local_dir)
       end
-      Dir.new(scrubbed_dir).to_a.select { |fn| fn =~ /\.tsv(\.gz)$/ }
+      Dir.new(local_dir).to_a.select { |fn| fn =~ /\.tsv(\.gz)$/ }
     end
 
     def download_to_work_dir(member, file)
       puts "download remote file #{file} to work dir for #{member}"
       # todo: something something rclone, get the file down
+      remote_dir = DataSources::DirectoryLocator.new(
+        Settings.remote_member_dir,
+        member
+      )
+
+      work_dir = DataSources::DirectoryLocator.new(
+        Settings.local_member_dir,
+        member
+      ).base + "/work"
+      
+      @ft.download(file, work_dir)
+
+      return work_dir + "/#{file}"
     end
 
     def upload_to_member(member, file)
@@ -101,14 +123,9 @@ module Scrub
     end
 
     def move_to_scrubbed_dir(member, file)
-      scrubbed_dir = "#{Settings.scrubbed_files_dir}/#{member}"
+      scrubbed_dir = "#{Settings.local_member_dir}/#{member}"
       puts "move #{file} to #{scrubbed_dir}"
       FileUtils.mv(file, scrubbed_dir)
     end
   end
-end
-
-if $0 == __FILE__
-  Settings.scrubbed_files_dir = "/tmp"
-  Scrub::ScrubRunner.new.run_all_members
 end
