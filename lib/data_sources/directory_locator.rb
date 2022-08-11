@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "utils/file_transfer"
+
 module DataSources
   # Given a base and and org id, provide paths (strings) to the org's dirs.
   # Assumes identical structure on the remote and local side,
@@ -43,6 +45,14 @@ module DataSources
     # This is where HT uploads reports and such for the member to access.
     def analysis
       join(base, "analysis")
+    end
+
+    # Ensure that each expected path points to an existing dir (mkdir if not)
+    def ensure!
+      @ft ||= Utils::FileTransfer.new
+      @ft.mkdir(holdings_current)
+      @ft.mkdir(shared_print)
+      @ft.mkdir(analysis)
     end
 
     private

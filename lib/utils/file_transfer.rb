@@ -28,10 +28,27 @@ module Utils
       transfer(remote_file, local_dir)
     end
 
+    def exists?(dir)
+      call = "#{call_prefix} ls \"#{dir}\""
+      puts call
+      system call
+    end
+
+    def mkdir(dir)
+      call = "#{call_prefix} mkdir \"#{dir}\""
+      puts call
+      system call
+    end
+
     # Return parsed JSON ls output
     def ls_remote_dir(remote_dir)
       # Never parse ls output, let rclone do it for us.
-      call = "#{call_prefix} lsjson #{remote_dir}"
+
+      unless exists?(remote_dir)
+        raise "dir #{remote_dir} does not exist"
+      end
+
+      call = "#{call_prefix} lsjson \"#{remote_dir}\""
       puts "call #{call}"
       response = `#{call}`
       puts "response #{response}"

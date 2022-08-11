@@ -26,7 +26,6 @@ module Scrub
   # Scrubs and loads any new member-uploaded files.
   class ScrubRunner
     def initialize
-      @members = DataSources::HTOrganizations.new.members.keys.sort
       if Settings.local_member_dir.nil?
         raise "Need Settings.local_member_dir to be set"
       end
@@ -39,6 +38,7 @@ module Scrub
 
     def run_all_members
       puts "Run all members."
+      @members = DataSources::HTOrganizations.new.members.keys.sort
       run_some_members(@members)
     end
 
@@ -101,20 +101,15 @@ module Scrub
 
     def download_to_work_dir(member, file)
       puts "download remote file #{file} to work dir for #{member}"
-      # todo: something something rclone, get the file down
-      remote_dir = DataSources::DirectoryLocator.new(
-        Settings.remote_member_dir,
-        member
-      )
 
       work_dir = DataSources::DirectoryLocator.new(
         Settings.local_member_dir,
         member
       ).base + "/work"
-      
+
       @ft.download(file, work_dir)
 
-      return work_dir + "/#{file}"
+      work_dir + "/#{file}"
     end
 
     def upload_to_member(member, file)

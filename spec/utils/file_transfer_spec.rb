@@ -23,6 +23,7 @@ RSpec.describe Utils::FileTransfer do
   let(:local_file_path) { "#{local_dir}/#{local_file_name}" }
   let(:remote_file_path) { "#{remote_dir}/#{remote_file_name}" }
   let(:conf) { "config/rclone.conf" }
+  let(:missing_dir) { "/dev/null/foo" }
 
   # Clean up temporary files and directories
   before(:each) do
@@ -63,6 +64,29 @@ RSpec.describe Utils::FileTransfer do
       expect(parsed_json.first).to be_a Hash
       expect(parsed_json.first.keys.sort).to eq %w[IsDir MimeType ModTime Name Path Size]
       expect(parsed_json.first["Name"]).to eq remote_file_name
+    end
+
+    it "throws an error if dir does not exist" do
+      expect(ft.exists?(remote_dir)).to be true
+      expect { ft.ls_remote_dir(remote_dir) }.not_to raise_error
+      expect(ft.exists?(missing_dir)).to be false
+      expect { ft.ls_remote_dir(missing_dir) }.to raise_error
+    end
+  end
+
+  context "#mkdir" do
+    it "can make a dir that does not exist" do
+      new_dir = "#{local_dir}/nope"
+      expect(ft.exists?(new_dir)).to be false
+      ft.mkdir(new_dir)
+      expect(ft.exists?(new_dir)).to be true
+    end
+
+    it "makes the whole path even if missing, like mkdir -p" do
+      new_dir = "#{local_dir}/nope1/nope2/nope3"
+      expect(ft.exists?(new_dir)).to be false
+      ft.mkdir(new_dir)
+      expect(ft.exists?(new_dir)).to be true
     end
   end
 
