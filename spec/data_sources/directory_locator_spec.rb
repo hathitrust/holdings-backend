@@ -42,9 +42,8 @@ RSpec.describe DataSources::DirectoryLocator do
   it "ensure!" do
     Settings.rclone_config_path = "/tmp/foo.txt"
     FileUtils.touch(Settings.rclone_config_path)
-    expect(Dir.exists?(dl.base)).to be false
-    expect{ dl.ensure! }.to_not raise_error
-    expect(Dir.exists?(dl.base)).to be true
+    expect(Dir.exist?(dl.base)).to be false
+    expect { dl.ensure! }.to_not raise_error
+    expect(Dir.exist?(dl.base)).to be true
   end
-  
 end

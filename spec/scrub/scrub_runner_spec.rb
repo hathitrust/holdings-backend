@@ -23,7 +23,7 @@ RSpec.describe Scrub::ScrubRunner do
 
   # test everything
   it "#run_some_members" do
-    orgs  = ["smu", "umich"]
+    orgs = ["smu", "umich"]
     roots = [Settings.local_member_dir, Settings.remote_member_dir]
     # Make sure the dirs exist first
     roots.each do |root|
