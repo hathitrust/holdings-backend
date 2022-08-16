@@ -15,12 +15,12 @@ RSpec.describe Scrub::Chunker do
     # Get the expected number of files.
     expect(chunker.chunks.size).to eq chunk_count
     # Each file exists.
-    0.upto(chunk_count-1).each do |i|
+    0.upto(chunk_count - 1).each do |i|
       expect(File.exist?(chunker.chunks[i])).to be true
     end
     chunker.cleanup!
     # Cleanup removed the chunks.
-    0.upto(chunk_count-1).each do |i|
+    0.upto(chunk_count - 1).each do |i|
       expect(File.exist?(chunker.chunks[i])).to be false
     end
   end
