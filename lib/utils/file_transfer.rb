@@ -43,8 +43,8 @@ module Utils
       response = `#{call}`
       puts "response #{response}"
       JSON.parse(response)
-    rescue JSON::ParserError => _err
-      raise Utils::FileTransferError, "could not ls #{remote_dir}"
+    rescue JSON::ParserError => err
+      raise Utils::FileTransferError, "Could not ls #{remote_dir}... #{err}"
     end
 
     private
