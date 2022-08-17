@@ -8,3 +8,4 @@ deprecation_report_path: /tmp/deprecation_report
 replace_commitment_report_path: /tmp/replace_commitment_report
 shared_print_update_report_path: /tmp/shared_print_update_report
 etas_overlap_batch_size: 50
+rclone_config_path: /tmp/rclone.conf
