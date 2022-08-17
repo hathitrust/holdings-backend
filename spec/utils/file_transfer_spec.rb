@@ -58,7 +58,7 @@ RSpec.describe Utils::FileTransfer do
   end
 
   describe "listing remote files" do
-    it "lsjson" do
+    it "provides json file listing" do
       parsed_json = ft.lsjson(remote_dir)
       expect(parsed_json).to be_a Array
       expect(parsed_json.size).to eq 1
