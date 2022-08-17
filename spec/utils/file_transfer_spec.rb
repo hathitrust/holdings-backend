@@ -44,7 +44,7 @@ RSpec.describe Utils::FileTransfer do
     FileUtils.rm_rf remote_dir
   end
 
-  context "initialize" do
+  describe "initialize" do
     it "requires conf file to be set in Settings" do
       expect { described_class.new }.not_to raise_error
       Settings.rclone_config_path = nil
@@ -57,7 +57,7 @@ RSpec.describe Utils::FileTransfer do
     end
   end
 
-  context "listing remote files" do
+  describe "listing remote files" do
     it "ls_remote_dir" do
       parsed_json = ft.ls_remote_dir(remote_dir)
       expect(parsed_json).to be_a Array
@@ -74,7 +74,7 @@ RSpec.describe Utils::FileTransfer do
     end
   end
 
-  context "#mkdir_p" do
+  describe "#mkdir_p" do
     it "can make a dir that does not exist" do
       new_dir = "#{local_dir}/nope"
       expect(ft.exists?(new_dir)).to be false
@@ -89,7 +89,7 @@ RSpec.describe Utils::FileTransfer do
     end
   end
 
-  context "transferring files" do
+  describe "transferring files" do
     it "upload" do
       expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 0
       ft.upload(local_file_path, remote_dir)
