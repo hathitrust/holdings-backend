@@ -31,7 +31,7 @@ module Utils
       make_call("#{call_prefix} ls \"#{dir}\"")
     end
 
-    def mkdir(dir)
+    def mkdir_p(dir)
       make_call("#{call_prefix} mkdir \"#{dir}\"")
     end
 

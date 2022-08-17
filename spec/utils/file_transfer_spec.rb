@@ -74,17 +74,17 @@ RSpec.describe Utils::FileTransfer do
     end
   end
 
-  context "#mkdir" do
+  context "#mkdir_p" do
     it "can make a dir that does not exist" do
       new_dir = "#{local_dir}/nope"
       expect(ft.exists?(new_dir)).to be false
-      ft.mkdir(new_dir)
+      ft.mkdir_p(new_dir)
       expect(ft.exists?(new_dir)).to be true
     end
     it "makes the whole path even if missing, like mkdir -p" do
       new_dir = "#{local_dir}/nope1/nope2/nope3"
       expect(ft.exists?(new_dir)).to be false
-      ft.mkdir(new_dir)
+      ft.mkdir_p(new_dir)
       expect(ft.exists?(new_dir)).to be true
     end
   end
