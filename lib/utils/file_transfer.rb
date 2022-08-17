@@ -36,7 +36,7 @@ module Utils
     end
 
     # Return parsed JSON ls output
-    def ls_remote_dir(remote_dir)
+    def lsjson(remote_dir)
       # Never parse ls output, let rclone do it for us.
       call = "#{call_prefix} lsjson \"#{remote_dir}\""
       puts "call #{call}"

@@ -58,8 +58,8 @@ RSpec.describe Utils::FileTransfer do
   end
 
   describe "listing remote files" do
-    it "ls_remote_dir" do
-      parsed_json = ft.ls_remote_dir(remote_dir)
+    it "lsjson" do
+      parsed_json = ft.lsjson(remote_dir)
       expect(parsed_json).to be_a Array
       expect(parsed_json.size).to eq 1
       expect(parsed_json.first).to be_a Hash
@@ -68,9 +68,9 @@ RSpec.describe Utils::FileTransfer do
     end
     it "throws an error if dir does not exist" do
       expect(ft.exists?(remote_dir)).to be true
-      expect { ft.ls_remote_dir(remote_dir) }.not_to raise_error
+      expect { ft.lsjson(remote_dir) }.not_to raise_error
       expect(ft.exists?(missing_dir)).to be false
-      expect { ft.ls_remote_dir(missing_dir) }.to raise_error Utils::FileTransferError
+      expect { ft.lsjson(missing_dir) }.to raise_error Utils::FileTransferError
     end
   end
 
@@ -91,9 +91,9 @@ RSpec.describe Utils::FileTransfer do
 
   describe "transferring files" do
     it "upload" do
-      expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 0
+      expect(ft.lsjson(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 0
       ft.upload(local_file_path, remote_dir)
-      expect(ft.ls_remote_dir(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 1
+      expect(ft.lsjson(remote_dir).count { |h| h["Name"] == local_file_name }).to eq 1
     end
     it "download" do
       expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be false
