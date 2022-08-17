@@ -23,20 +23,19 @@ RSpec.describe Utils::FileTransfer do
   let(:remote_file_name) { "test_file_b.txt" }
   let(:local_file_path) { "#{local_dir}/#{local_file_name}" }
   let(:remote_file_path) { "#{remote_dir}/#{remote_file_name}" }
-  let(:conf) { "config/rclone.conf" }
+  let(:conf) { Settings.rclone_config_path }
   let(:missing_dir) { "/dev/null/foo" }
   let(:missing_file) { "/dev/null/foo.txt" }
 
   # Clean up temporary files and directories
   before(:each) do
-    Settings.rclone_config_path = conf
+    FileUtils.touch conf # if it does not exist FileTransfer complains
     FileUtils.mkdir_p local_dir
     FileUtils.mkdir_p remote_dir
     FileUtils.rm("#{local_dir}/*", force: true)
     FileUtils.rm("#{remote_dir}/*", force: true)
     FileUtils.touch local_file_path
     FileUtils.touch remote_file_path
-    FileUtils.touch conf # if it does not exist FileTransfer complains
   end
 
   after(:each) do
@@ -47,8 +46,10 @@ RSpec.describe Utils::FileTransfer do
   describe "initialize" do
     it "requires conf file to be set in Settings" do
       expect { described_class.new }.not_to raise_error
+      original_path = Settings.rclone_config_path
       Settings.rclone_config_path = nil
       expect { described_class.new }.to raise_error RuntimeError
+      Settings.rclone_config_path = original_path
     end
     it "requires conf file to exist" do
       expect { described_class.new }.not_to raise_error
