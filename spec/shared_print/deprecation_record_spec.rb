@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "shared_print/deprecation_record"
+require "shared_print/deprecation_error"
 
 RSpec.describe SharedPrint::DeprecationRecord do
   let(:org) { "umich" }
@@ -77,13 +78,11 @@ RSpec.describe SharedPrint::DeprecationRecord do
   describe "#cluster" do
     it "finds a cluster if there is a cluster to find" do
       expect(dep.cluster).to be_a Cluster
-      expect(dep.err.size).to eq 0
     end
 
-    it "does not find a cluster if there is no matching cluster, and notes this in @err" do
+    it "returns nil if there is no matching cluster" do
       dep = described_class.new(ocn: ocn_that_should_fail, status: sta)
-      expect(dep.cluster).to eq nil
-      expect(dep.err).to eq ["No cluster found for OCN:#{ocn_that_should_fail}"]
+      expect(dep.cluster.nil?).to be true
     end
   end
 
@@ -93,13 +92,11 @@ RSpec.describe SharedPrint::DeprecationRecord do
       make_commitment(ocn, org, loc)
       expect(dep.commitments.size).to eq 1
       expect(dep.commitments.first).to be_a Clusterable::Commitment
-      expect(dep.err.size).to eq 0
     end
 
     it "does not find commitments if there are no commitments on the cluster" do
       dep = described_class.new(organization: org, ocn: empty_cluster.ocns.first, local_id: loc, status: sta)
-      expect(dep.commitments.size).to eq 0
-      expect(dep.err.size).to eq 1
+      expect(dep.commitments.empty?).to be true
     end
   end
 
@@ -108,18 +105,16 @@ RSpec.describe SharedPrint::DeprecationRecord do
       comm = make_commitment(ocn, org, loc)
       dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
       expect(dep.org_commitments).to eq [comm]
-      expect(dep.err.size).to eq 0
     end
 
     it "does not find commitments that belong to its organization if there aren't any" do
       make_commitment(ocn, org, loc)
       dep = described_class.new(organization: org_2, ocn: ocn, local_id: loc, status: sta)
-      expect(dep.org_commitments.size).to eq 0
-      expect(dep.err).to eq ["No commitments by organization:#{org_2} in cluster."]
+      expect(dep.org_commitments).to eq []
     end
   end
 
-  describe "#reject_deprecated" do
+  describe "#undeprecated_commitments" do
     it "rejects deprecated commitments from its org_commitments" do
       com1 = make_commitment(ocn, org, loc)
       com2 = make_commitment(ocn, org, loc_2)
@@ -128,14 +123,14 @@ RSpec.describe SharedPrint::DeprecationRecord do
       expect(com2.deprecated?).to be true
       com2._parent.save
       dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
-      expect(dep.reject_deprecated).to eq [com1]
+      expect(dep.undeprecated_commitments).to eq [com1]
     end
 
     it "_only_ rejects deprecated commitments" do
       com1 = make_commitment(ocn, org, loc)
       com2 = make_commitment(ocn, org, loc_2)
       dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
-      expect(dep.reject_deprecated).to eq [com1, com2]
+      expect(dep.undeprecated_commitments).to eq [com1, com2]
     end
   end
 
@@ -149,13 +144,29 @@ RSpec.describe SharedPrint::DeprecationRecord do
     end
   end
 
-  describe "#multiple_matches?" do
-    it "reports the occurrence of multiple local_id matches" do
+  describe "#validate_single_match" do
+    it "false if multiple local_id matches" do
       make_commitment(ocn, org, loc)
       make_commitment(ocn, org, loc)
       dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
-      dep.multiple_matches?
-      expect(dep.err.size).to eq 3
+      expect(dep.validate_single_match).to be false
     end
+    it "false if zero local_id matches" do
+      dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
+      expect(dep.validate_single_match).to be false
+    end
+    it "true if exactly one local_id match" do
+      make_commitment(ocn, org, loc)
+      dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
+      expect(dep.validate_single_match).to be true
+    end
+  end
+
+  it "be OK when asked to find commitments when there is no cluster" do
+    expect {
+      described_class.parse_line(
+        "ou\t780750\t99334010002042\tL"
+      ).find_commitment
+    }.to raise_error SharedPrint::DeprecationError
   end
 end

@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
+require "cluster"
+require "shared_print/deprecation_error"
+
 module SharedPrint
   # Represents a line in a file of (shared print) deprecation requests,
   # and can try to find a Commitment that matches it.
   class DeprecationRecord
-    attr_reader :organization, :ocn, :local_id, :status, :err
+    attr_reader :organization, :ocn, :local_id, :status
 
     def initialize(organization: nil, ocn: nil, local_id: nil, status: nil)
       @ocn = ocn.to_i
@@ -12,7 +15,6 @@ module SharedPrint
       @local_id = local_id
       @status = status
       @allowed_status = ["C", "D", "E", "L", "M"]
-      @err = []
       validate!
     end
 
@@ -35,95 +37,55 @@ module SharedPrint
       )
     end
 
-    # If ocn does not return a cluster, add to @err
+    # OCN should lead to a cluster.
     def cluster
       @cluster ||= Cluster.where(ocns: @ocn).first
-      if @err.empty? && @cluster.nil?
-        @err << "No cluster found for OCN:#{ocn}"
-      end
-
-      @cluster
     end
 
-    # If cluster does not have commitments, add to @err
+    # The cluster should have commitments.
     def commitments
-      return @commitments unless @commitments.nil?
-
-      if cluster.nil? || cluster.commitments.empty?
-        @err << "No commitments found in cluster"
-        @commitments = []
-      else
-        @commitments = cluster.commitments
-      end
-      @commitments
+      @commitments ||= (cluster&.commitments || [])
     end
 
-    # If cluster does not have commitments by dep.organization, add to @err
-    # Return the commitments that _do_ match dep.organization.
+    # Cluster should have commitments by dep.organization.
     def org_commitments
-      return @org_commitments unless @org_commitments.nil?
-
-      if @err.empty?
-        @org_commitments = commitments.select do |c|
-          c.organization == @organization
-        end
-        if @org_commitments.empty?
-          @err << "No commitments by organization:#{organization} in cluster."
-        end
+      @org_commitments = commitments.select do |c|
+        c.organization == @organization
       end
-      @org_commitments
     end
 
-    # If commitments contain deprecated ones, add to @err and remove them.
-    # Return only non-deprecated
-    def reject_deprecated
-      already_deprecated = org_commitments.select(&:deprecated?)
-      @org_commitments.reject!(&:deprecated?)
-      if @err.empty? && org_commitments.empty?
-        @err << "Only deprecated commitments found:"
-        already_deprecated.each do |already_dep|
-          @err << already_dep.inspect
-        end
+    # There should be undeprecated commitments on the cluster.
+    def undeprecated_commitments
+      @undeprecated_commitments ||= org_commitments.select do |c|
+        c.deprecated? == false
       end
-      @org_commitments
     end
 
-    # If no commitment matches local_id, add to @err.
-    # Return the one(s) that do(es) match.
+    # One of the undeprecated commitments should match the input local_id.
     def local_id_matches
-      @local_id_matches = org_commitments.select { |c| c.local_id == @local_id }
-      if @err.empty? && @local_id_matches.empty?
-        @err << "No commitment with local_id:#{@local_id} found"
-      end
-      @local_id_matches
-    end
-
-    # Multiple local_id matches is an error maybe?
-    def multiple_matches?
-      if @err.empty? && local_id_matches.size > 1
-        @err << "Multiple matches found:"
-        local_id_matches.each do |match|
-          @err << match.inspect
-        end
+      @local_id_matches = undeprecated_commitments.select do |c|
+        c.local_id == @local_id
       end
     end
 
+    # There should only be one match in the end.
+    def validate_single_match
+      local_id_matches.size == 1
+    end
+
+    # Start at cluster level, given ocn, and whittle down.
+    # Raise error if at any point we have an unexpected number of things.
     def find_commitment
-      # dep must match a cluster (on ocn)
-      cluster
-      # cluster must have commitments
-      commitments
-      # 1+ of those commitments must match organization
-      org_commitments
-      # 1+ of those commitments must be non-deprecated
-      reject_deprecated
-      # 1+ of those must match local_id
-      local_id_matches
-      # This should be the last-ish check, after all whittle-downs.
-      multiple_matches?
+      raise SharedPrint::DeprecationError, "No cluster found for OCN:#{ocn}" if cluster.nil?
+      raise SharedPrint::DeprecationError, "No commitments found in cluster" if commitments.empty?
+      raise SharedPrint::DeprecationError, "No commitments by organization:#{organization} in cluster." if org_commitments.empty?
+      raise SharedPrint::DeprecationError, "Only deprecated commitments found." if undeprecated_commitments.empty?
+      raise SharedPrint::DeprecationError, "No commitment with local_id:#{@local_id} found" if local_id_matches.empty?
+      raise SharedPrint::DeprecationError, "Multiple local_ids found: #{local_id_matches.join(", ")}" unless validate_single_match
+      local_id_matches.first
     end
 
-    private # private # private # private # private # private # private
+    private
 
     def validate!
       unless @allowed_status.include?(@status)

@@ -3,6 +3,7 @@
 require "cluster"
 require "services"
 require "shared_print/deprecation_record"
+require "shared_print/deprecation_error"
 
 Services.mongo!
 
@@ -54,8 +55,9 @@ module SharedPrint
         return
       end
       inf.each_line do |line|
-        success = try_deprecate(line.strip)
-        append_report "Could not deprecate record" unless success
+        try_deprecate(line.strip)
+      rescue SharedPrint::DeprecationError => e
+        append_report "Could not deprecate record. #{e}"
       end
     end
 
@@ -82,8 +84,11 @@ module SharedPrint
       clear_err
       dep = DeprecationRecord.parse_line(line)
       append_report "Find and deprecate a commitment based on the deprecation record: <#{dep}>."
-      dep.find_commitment
-      @err += dep.err
+      begin
+        dep.find_commitment
+      rescue SharedPrint::DeprecationError => e
+        @err << e.message
+      end
 
       # At this point we should have run out of reasons to reject the deprecation record,
       # and should have ended up with exactly one matching commitment, or errors.
