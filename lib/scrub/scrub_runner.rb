@@ -32,7 +32,6 @@ module Scrub
       if Settings.remote_member_dir.nil?
         raise "Need Settings.remote_member_dir to be set"
       end
-
       @ft = Utils::FileTransfer.new
     end
 
@@ -61,8 +60,8 @@ module Scrub
     # This should ideally spin off another (set of?) worker thread(s).
     def run_file(member, file)
       puts "running file #{file} for member #{member}"
-      download_to_work_dir(member, new_file)
-      scrubber = Scrub::Autoscrub.new(new_file)
+      download_to_work_dir(member, file)
+      scrubber = Scrub::AutoScrub.new(file)
       scrubber.run
       # todo: chunk and hand off job to sidekiq
       # todo: figure out the output files that was just generated
@@ -100,14 +99,11 @@ module Scrub
 
     def download_to_work_dir(member, file)
       puts "download remote file #{file} to work dir for #{member}"
-
       work_dir = DataSources::DirectoryLocator.new(
         Settings.local_member_dir,
         member
-      ).base + "/work"
-
+      ).holdings_current
       @ft.download(file, work_dir)
-
       work_dir + "/#{file}"
     end
 
