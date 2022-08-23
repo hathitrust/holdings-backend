@@ -10,8 +10,11 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
 
   commands = {
     %w[load commitments somefile] => Jobs::Load::Commitments,
+    %w[load concordance date] => Jobs::Load::Concordance,
     %w[load ht_items somefile] => Jobs::Load::HtItems,
     %w[load cluster_file somefile] => Jobs::Load::ClusterFile,
+    %w[load holdings somefile] => Jobs::Load::Holdings,
+    %w[cleanup holdings instid date] => Jobs::Cleanup::Holdings,
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
     %w[concordance delta oldfile newfile] => Jobs::Concordance::Delta,
     %w[sp update infile] => Jobs::SharedPrintOps::Update,

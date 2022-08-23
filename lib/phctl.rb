@@ -28,6 +28,18 @@ module PHCTL
     def cluster_file(filename)
       Jobs::Load::ClusterFile.perform_async(filename)
     end
+
+    desc "holdings FILENAME", "Loads scrubbed holdings."
+    def holdings(filename)
+      Jobs::Load::Holdings.perform_async(filename)
+    end
+  end
+
+  class Cleanup < Thor
+    desc "holdings INST DATE", "Deletes holdings for INST that were last updated prior to DATE."
+    def holdings(inst, date)
+      Jobs::Cleanup::Holdings.perform_async(inst, date)
+    end
   end
 
   class Concordance < Thor
@@ -137,5 +149,8 @@ module PHCTL
 
     desc "sp", "Shared print operations"
     subcommand "sp", SharedPrintOps
+
+    desc "cleanup", "Cleanup operations"
+    subcommand "cleanup", Cleanup
   end
 end

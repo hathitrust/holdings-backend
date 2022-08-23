@@ -39,7 +39,10 @@ module Loader
       skip_matching_header(filehandle, skip_header_match).each.lazy
         .map { |line| log_and_parse(line) }
         .chunk_while { |item1, item2| item1.batch_with?(item2) }
-        .each { |batch| batch_loader.load(batch) }
+        .each do |batch|
+          batch_loader.load(batch)
+          Thread.pass
+        end
 
       logger.info marker.final_line
       marker.count

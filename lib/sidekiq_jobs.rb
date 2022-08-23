@@ -1,7 +1,9 @@
 require "services"
+require "sidekiq"
 require "loader/file_loader"
 require "loader/cluster_loader"
 require "loader/ht_item_loader"
+require "loader/holding_loader"
 require "loader/shared_print_loader"
 require "reports/commitment_replacements"
 require "reports/etas_organization_overlap_report"
@@ -15,6 +17,9 @@ require "reports/compile_member_counts_report"
 require "shared_print/updater"
 require "shared_print/replacer"
 require "shared_print/deprecator"
+
+# Don't want to do this by default when we aren't running under sidekiq
+Services.register(:logger) { Sidekiq.logger }
 
 module Jobs
   module Load
@@ -47,6 +52,24 @@ module Jobs
         loader = Loader::ClusterLoader.new
         loader.load(filename)
         Services.logger.info loader.stats
+      end
+    end
+
+    class Holdings
+      include Sidekiq::Job
+      def perform(filename)
+        Services.logger.info "Adding Print Holdings from #{filename}."
+        Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(filename))
+          .load(filename, skip_header_match: /\A\s*OCN/)
+      end
+    end
+  end
+
+  module Cleanup
+    class Holdings
+      include Sidekiq::Job
+      def perform(instid, date)
+        Clustering::ClusterHolding.delete_old_holdings(instid, Date.parse(date))
       end
     end
   end

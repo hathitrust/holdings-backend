@@ -35,9 +35,22 @@ RSpec.describe "Jobs" do
       end
     end
 
+    it "Holdings loads holdings" do
+      expect { Jobs::Load::Holdings.new.perform(fixture("umich_fake_testdata.ndj")) }
+        .to change { cluster_count(:holdings) }.by(10)
+    end
+
     it "ClusterFile loads json clusters" do
       expect { Jobs::Load::ClusterFile.new.perform(fixture("cluster_2503661.json")) }
         .to change { Cluster.count }.by(1)
+    end
+  end
+
+  describe "Cleanup" do
+    it "Holdings removes old holdings" do
+      Jobs::Load::Holdings.new.perform(fixture("umich_fake_testdata.ndj"))
+      expect { Jobs::Cleanup::Holdings.new.perform("umich", "2022-01-01") }
+        .to change { cluster_count(:holdings) }.by(-10)
     end
   end
 

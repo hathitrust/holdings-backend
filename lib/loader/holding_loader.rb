@@ -27,12 +27,6 @@ module Loader
     def load(batch)
       Clustering::ClusterHolding.new(batch).cluster
     end
-
-    def final_line
-      if @update
-        Clustering::ClusterHolding.delete_old_holdings(@organization, @current_date)
-      end
-    end
   end
 
   ## Subclass that only overrides item_from_line
