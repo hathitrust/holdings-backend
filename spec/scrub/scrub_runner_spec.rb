@@ -75,6 +75,18 @@ RSpec.describe Scrub::ScrubRunner do
       expect(described_class.new.check_new_files(org1)).to eq ["b.tsv"]
     end
   end
+
+  describe "#run_file" do
+    it "runs" do
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d.ensure!
+      remote_d.ensure!
+      remote_file = File.join(remote_d.holdings_current, "test_mono_full_20220101.tsv")
+      FileUtils.touch(remote_file)
+      described_class.new.run_file(org1, remote_file)
+    end
+  end
   
   # test everything
   it "#run_some_members" do
