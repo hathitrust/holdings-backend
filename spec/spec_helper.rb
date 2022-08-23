@@ -82,6 +82,7 @@ RSpec.configure do |config|
     # stub external APIs
     Services.register(:pushgateway) { instance_double(Prometheus::Client::Push, add: true) }
     Services.register(:slack) { instance_double(Utils::SlackWriter, write: true) }
+    stub_request(:get, "https://www.oclc.org/apps/oclc/wwg").to_return(body: '{ "oclcNumber": "1000000000" }')
   end
 
   config.around(:each, type: "loaded_file") do |example|

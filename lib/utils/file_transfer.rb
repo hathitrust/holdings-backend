@@ -39,9 +39,9 @@ module Utils
     def lsjson(remote_dir)
       # Never parse ls output, let rclone do it for us.
       call = "#{call_prefix} lsjson \"#{remote_dir}\""
-      puts "call #{call}"
+      Services.logger.info "call #{call}"
       response = `#{call}`
-      puts "response #{response}"
+      Services.logger.info "response #{response}"
       JSON.parse(response)
     rescue JSON::ParserError => err
       raise Utils::FileTransferError, "Could not ls #{remote_dir}... #{err}"
@@ -50,7 +50,7 @@ module Utils
     private
 
     def make_call(sys_call)
-      puts sys_call
+      Services.logger.info sys_call
       # returns true/false based on exit code of the executed system call
       system sys_call
     end
@@ -69,8 +69,11 @@ module Utils
         raise Utils::FileTransferError, "dir #{dir} does not exist"
       end
 
-      puts "transfer #{file} to #{dir}"
-      make_call("#{call_prefix} copy #{file} #{dir}")
+      Services.logger.info "transfer #{file} to #{dir}"
+      exit_code = make_call("#{call_prefix} copy \"#{file}\" \"#{dir}\"")
+      unless exit_code
+        raise Utils::FileTransferError, "file transfer failed (#{file} => #{dir})"
+      end
     end
   end
 end

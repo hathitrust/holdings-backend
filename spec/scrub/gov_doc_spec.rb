@@ -4,6 +4,10 @@ require "scrub/gov_doc"
 require "services"
 
 RSpec.describe Scrub::GovDoc do
+  before(:each) do
+    # Need to reset or the order of tests might affect tests passing.
+    Services.register(:scrub_stats) { {} }
+  end
   it "allows and counts '0'" do
     expect(Services.scrub_stats["Scrub::GovDoc:0"].nil?).to be true
     expect(described_class.new("0").value).to eq ["0"]

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
-require "pathname"
+require "fileutils"
 require "json"
+require "pathname"
+require "services"
 
 module Scrub
   # Sets up a directory structure for storing autoscrub output files:
@@ -48,7 +50,10 @@ module Scrub
       unless member_id.is_a?(String)
         raise ArgumentError, "member_id must be a string"
       end
-
+      @scrub_base_path = Settings.scrub_base_path
+      if @scrub_base_path.nil?
+        raise ArgumentError, "Settings.scrub_base_path not set."
+      end
       @member_id = member_id
       @member_dir = mkbase!
       @member_log = mklog!
@@ -137,7 +142,7 @@ module Scrub
     end
 
     def mkdir!(*parts)
-      path_parts = [__dir__, "..", "data", "member_data", @member_id] + parts
+      path_parts = [@scrub_base_path, @member_id] + parts
       pathname = Pathname.new(File.join(path_parts)).expand_path
       FileUtils.mkdir_p(pathname)
 

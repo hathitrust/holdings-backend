@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "scrub/common"
+require "scrub/ocn_candidate"
 
 module Scrub
   class Ocn < Scrub::Common

@@ -155,4 +155,24 @@ RSpec.describe "phctl integration" do
         .to match(/^local_oclc/)
     end
   end
+
+  describe "Scrub" do
+    it "'scrub x' loads records and produces output for org x" do
+      # Needs a bit of setup.
+      local_d = "/tmp/local_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
+      remote_d = "/tmp/remote_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
+      logfile = File.join(remote_d, "umich_mono_#{Date.today}.log")
+      FileUtils.rm_rf(local_d)
+      FileUtils.mkdir_p(remote_d)
+      FileUtils.touch("/tmp/rclone.conf")
+      FileUtils.rm_rf(logfile)
+      FileUtils.cp("spec/fixtures/umich_mono_full_20220101.tsv", remote_d)
+      # Verify precondition:
+      expect(File.exist?(logfile)).to be false
+      # Actual tests:
+      expect { phctl(*%w[scrub umich]) }.to change { cluster_count(:holdings) }.by(6)
+      expect(File.exist?(logfile)).to be true
+      expect(File.exist?(local_d)).to be true
+    end
+  end
 end

@@ -13,6 +13,28 @@ module DataSources
   # remote_holdings = remote_d.holdings_current
   # local_holdings = local_d.holdings_current
   class DirectoryLocator
+    # Helper method that knows the base dirs for you, so just pass in :local or :remote.
+    # e.g. DataSources::DirectoryLocator.for(:local, "umich")
+    # or   DataSources::DirectoryLocator.for(:remote, "umich")
+    def self.for(location, organization)
+      root = nil
+      case location
+      when :local
+        root = Settings.local_member_data
+        if root.nil?
+          raise ArgumentError, "Settings.local_member_data not set."
+        end
+      when :remote
+        root = Settings.remote_member_data
+        if root.nil?
+          raise ArgumentError, "Settings.remote_member_data not set."
+        end
+      else
+        raise ArgumentError, "location must be :local or :remote. #{location} not allowed"
+      end
+      DataSources::DirectoryLocator.new(root, organization)
+    end
+
     attr_reader :root, :organization
     def initialize(root, organization)
       @root = root # the part of the file system where the member directories start

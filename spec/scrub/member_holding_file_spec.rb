@@ -15,6 +15,9 @@ RSpec.describe Scrub::MemberHoldingFile do
       "#{test_data}/haverford_mono_full_20200101_header.tsv"
     )
   end
+  let(:fail_header_mhf) do
+    described_class.new("spec/fixtures/umich_mono_full_20220101_headerfail.tsv")
+  end
 
   let(:ok_itype) { "mono" }
   let(:ok_col_map) { {"oclc" => 0, "local_id" => 1} }
@@ -98,5 +101,9 @@ RSpec.describe Scrub::MemberHoldingFile do
     # This should fail for any number of reasons,
     # so all we're catching/expecting is StandardError
     expect { bad_mhf.parse }.to raise_error(StandardError)
+  end
+
+  it "rejects file with disallowed header cols" do
+    expect { fail_header_mhf.parse }.to raise_error Scrub::MalFormedHeaderError
   end
 end

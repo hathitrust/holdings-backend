@@ -11,6 +11,10 @@ RSpec.describe Scrub::MaxOcn do
     FileUtils.rm(loc, force: true)
   end
 
+  after(:all) do
+    FileUtils.rm(described_class.memo_loc, force: true)
+  end
+
   it "starts with a clean slate" do
     expect(File.exist?(loc)).to be(false)
   end
