@@ -30,6 +30,8 @@ module Scrub
       # Once we have @member_id and @item_type,
       # build a log path and re-register the service logger to log to that path
       logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}.log")
+      puts "autoscrub logging to #{logger_path}"
+
       Services.register(:scrub_logger) do
         lgr = Logger.new(logger_path)
         # Show time, file:lineno, level for each log message
@@ -49,6 +51,10 @@ module Scrub
 
       # Figure out batch size for 100 batches.
       tot_lines = count_file_lines
+      if tot_lines <= 1
+        raise "File #{@path} has no data? Total lines #{tot_lines}."
+      end
+
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
       marker = Services.progress_tracker.new(batch_size)
@@ -90,7 +96,7 @@ module Scrub
 
     def count_file_lines
       # zcat -f works as plain cat if @path is not in gzip format.
-      `zcat -f #{@path} | wc -l`.match(/^(\d+)/)[0].to_i
+      `zcat -f "#{@path}" | wc -l`.match(/^(\d+)/)[0].to_i
     end
   end
 end
