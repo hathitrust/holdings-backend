@@ -70,7 +70,10 @@ module Utils
       end
 
       puts "transfer #{file} to #{dir}"
-      make_call("#{call_prefix} copy #{file} #{dir}")
+      exit_code = make_call("#{call_prefix} copy \"#{file}\" \"#{dir}\"")
+      unless exit_code
+        raise Utils::FileTransferError, "file transfer failed (#{file} => #{dir})"
+      end
     end
   end
 end
