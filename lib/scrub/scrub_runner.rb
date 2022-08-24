@@ -60,14 +60,15 @@ module Scrub
     # This should ideally spin off another (set of?) worker thread(s).
     def run_file(member, file)
       puts "running file #{file} for member #{member}"
-      download_to_work_dir(member, file)
-      scrubber = Scrub::AutoScrub.new(file)
+      downloaded_file = download_to_work_dir(member, file)
+      scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
+      puts "ok now what"
       # todo: chunk and hand off job to sidekiq
       # todo: figure out the output files that was just generated
-      upload_to_member(member, scrubber.reports.latest)
-      holding_loader = Loader::HoldingLoader.for(scrubber.output.latest)
-      Loader::FileLoader.new(holding_loader).load(scrubber.output.latest)
+      # upload_to_member(member, scrubber.reports.latest)
+      # holding_loader = Loader::HoldingLoader.for(scrubber.output.latest)
+      # Loader::FileLoader.new(holding_loader).load(scrubber.output.latest)
     end
 
     # Check member-uploaded files for any not previously seen files
@@ -80,10 +81,8 @@ module Scrub
       remote_files = @ft.lsjson(remote_dir).map { |f| f["Name"] }
       old_files = check_old_files(member)
       # Return new (as in previously not processed) files
-      puts "MATH"
       new_files = remote_files - old_files
-      puts "new(#{new_files.join(", ")}) = remote(#{remote_files.join(", ")}) - old(#{old_files.join(", ")})"
-      puts "found #{new_files.size} new files"
+      puts "found #{new_files.size} new file(s)"
       new_files
     end
 
@@ -94,7 +93,7 @@ module Scrub
         Settings.local_member_dir,
         member
       ).holdings_current
-      @ft.lsjson(local_dir).map { |f| f["Name"] }      
+      @ft.lsjson(local_dir).map { |f| f["Name"] }
     end
 
     def download_to_work_dir(member, file)
@@ -104,7 +103,8 @@ module Scrub
         member
       ).holdings_current
       @ft.download(file, work_dir)
-      work_dir + "/#{file}"
+      # Return the path to the downloaded file
+      File.join(work_dir, File.split(file).last)
     end
 
     def upload_to_member(member, file)
