@@ -63,10 +63,13 @@ module Scrub
       downloaded_file = download_to_work_dir(member, file)
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
-      puts "ok now what"
       # todo: chunk and hand off job to sidekiq
       # todo: figure out the output files that was just generated
-      # upload_to_member(member, scrubber.reports.latest)
+      scrubber.out_files.each do |scrubber_out_file|
+        puts "hey check out #{scrubber_out_file}"
+        upload_to_member(member, scrubber_out_file)
+      end
+
       # holding_loader = Loader::HoldingLoader.for(scrubber.output.latest)
       # Loader::FileLoader.new(holding_loader).load(scrubber.output.latest)
     end
