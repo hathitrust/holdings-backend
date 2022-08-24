@@ -15,7 +15,7 @@ module Scrub
   class AutoScrub
     # Won't put in accessors unless we find a solid case for running this
     # by another ruby class.
-    attr_reader :output_struct
+    attr_reader :output_struct, :out_files
 
     def initialize(path)
       @path = path
@@ -26,6 +26,7 @@ module Scrub
       @item_type = @member_holding_file.item_type_from_filename
       @output_dir = @output_struct.date_subdir!("output")
       @log_dir = @output_struct.date_subdir!("log")
+      @out_files = []
 
       # Once we have @member_id and @item_type,
       # build a log path and re-register the service logger to log to that path
@@ -77,6 +78,7 @@ module Scrub
           end
         end
         out_file.close
+        @out_files << out_file_path
       rescue => e
         # Any uncaught error that isn't a CustomError should be fatal
         # and is a sign that error handling needs to be improved.
