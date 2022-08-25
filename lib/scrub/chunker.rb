@@ -28,7 +28,7 @@ module Scrub
       # `split --number=l/x` only works on files, not on STDIN.
       # TODO: we might want another dir for sort -T .
       tmp_file = "#{@work_dir}/#{@uuid}/tmp_sorted.txt"
-      add_uuid_call = @add_uuid ? "| bundle exec ruby bin/add_uuid.rb" : "" 
+      add_uuid_call = @add_uuid ? "| bundle exec ruby bin/add_uuid.rb" : ""
       sort_call = "egrep -vh '^OCN' #{@glob} | " \
                   "sort -s -n -k1,1 -T ./ " \
                   "#{add_uuid_call} " \
