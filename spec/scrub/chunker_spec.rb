@@ -10,12 +10,12 @@ RSpec.describe Scrub::Chunker do
   let(:chunk_count) { 4 }
   let(:expected_chunk_line_count) { 4 }
   it "splits input file into the desired number of chunks" do
-    chunker = described_class.new(pre_chunked_file, chunk_count)
+    chunker = described_class.new(glob: pre_chunked_file, chunk_count: chunk_count)
 
     # Start out with zero chunks.
     expect(chunker.chunks.size).to eq 0
 
-    # Run chunker.
+    # Run Chunker, run!
     chunker.run
 
     # Get the expected number of files.

@@ -3,15 +3,17 @@
 require "spec_helper"
 require "scrub/scrub_runner"
 require "data_sources/directory_locator"
+require "data_sources/ht_organizations"
 
 RSpec.describe Scrub::ScrubRunner do
   Settings.rclone_config_path = "/tmp/rclone.conf"
   Settings.local_member_dir = "/tmp/local_member_dir"
   Settings.remote_member_dir = "/tmp/remote_member_dir"
+  Settings.scrub_chunk_work_dir = "/tmp"
 
   let(:sr) { described_class.new }
-  let(:org1) { "test" }
-  let(:fixture_file) { "/usr/src/app/spec/fixtures/test_mono_full_20220101.tsv" }
+  let(:org1) { "umich" }
+  let(:fixture_file) { "/usr/src/app/spec/fixtures/umich_mono_full_20220101.tsv" }
 
   before(:each) do
     FileUtils.touch(Settings.rclone_config_path)
@@ -87,7 +89,7 @@ RSpec.describe Scrub::ScrubRunner do
       local_d.ensure!
       remote_d.ensure!
       FileUtils.cp(fixture_file, remote_d.holdings_current)
-      remote_file = File.join(remote_d.holdings_current, "test_mono_full_20220101.tsv")
+      remote_file = File.join(remote_d.holdings_current, "umich_mono_full_20220101.tsv")
       sr.run_file(org1, remote_file)
     end
   end

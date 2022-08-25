@@ -78,7 +78,6 @@ module Scrub
           end
         end
         out_file.close
-        @out_files << out_file_path
       rescue => e
         # Any uncaught error that isn't a CustomError should be fatal
         # and is a sign that error handling needs to be improved.
@@ -91,6 +90,11 @@ module Scrub
       FileUtils.mv(out_file_path, @output_struct.member_ready_to_load)
       Services.scrub_logger.info(
         "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
+      )
+      # Move file and store new location in array.
+      @out_files << File.join(
+        @output_struct.member_ready_to_load,
+        File.split(out_file_path).last
       )
     end
 
