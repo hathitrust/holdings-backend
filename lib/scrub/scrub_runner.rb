@@ -8,15 +8,14 @@
 # ... should be able to do this for any number of members/files, at a whim or by cron,
 # ideally using a queue or pool of workers.
 
-require "data_sources/ht_organizations"
 require "data_sources/directory_locator"
+require "data_sources/ht_organizations"
+require "fileutils"
 require "loader/file_loader"
 require "loader/holding_loader"
 require "scrub/autoscrub"
 require "scrub/chunker"
 require "utils/file_transfer"
-require "fileutils"
-require "loader/holding_loader"
 
 # Example:
 # runner = Scrub::ScrubRunner.new
