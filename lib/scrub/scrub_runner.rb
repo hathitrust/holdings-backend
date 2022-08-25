@@ -54,27 +54,24 @@ module Scrub
       new_files = check_new_files(member)
       puts "Found #{new_files.size} new files: #{new_files.join(", ")}."
       new_files.each do |new_file|
-        run_file(member, file)
+        run_file(member, new_file)
       end
     end
 
     # This should ideally spin off another (set of?) worker thread(s).
     def run_file(member, file)
-      puts "running file #{file} for member #{member}"
+      puts "Running file #{file} for member #{member}"
       downloaded_file = download_to_work_dir(member, file)
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
       scrubber.out_files.each do |scrubber_out_file|
-        puts "Prepare loading of #{scrubber_out_file}"
-        system "cat \"#{scrubber_out_file}\""
+        puts "Ready to split #{scrubber_out_file} into chunks"
         chunker = Scrub::Chunker.new(glob: scrubber_out_file, chunk_count: 4)
         chunker.run
         chunker.chunks.each do |chunk|
-          puts "load chunk #{chunk}"
-          system("cat \"#{chunk}\"")
+          puts "Load chunk #{chunk}"
           batch_loader = Loader::HoldingLoader.for(".ndj")
           Loader::FileLoader.new(batch_loader: batch_loader).load(chunk)
-          puts "chunk loaded!"
         end
         chunker.cleanup! # maybe not yet?
         upload_to_member(member, scrubber_out_file)

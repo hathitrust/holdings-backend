@@ -82,18 +82,6 @@ RSpec.describe Scrub::ScrubRunner do
     end
   end
 
-  describe "#run_file" do
-    it "runs" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
-      local_d.ensure!
-      remote_d.ensure!
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
-      remote_file = File.join(remote_d.holdings_current, "umich_mono_full_20220101.tsv")
-      sr.run_file(org1, remote_file)
-    end
-  end
-
   # test everything
   it "#run_some_members" do
     orgs = ["smu", "umich"]
@@ -106,5 +94,32 @@ RSpec.describe Scrub::ScrubRunner do
       end
     end
     expect { sr.run_some_members(orgs) }.not_to raise_error
+  end
+
+  describe "#run_one_member" do
+    it "check a member for files and scrub+etc" do
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d.ensure!
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      # todo: fix the check_new/check_old files in scrub_runner so that they return paths
+      # BUT compare based on filename
+      sr.run_one_member(org1)
+    end
+  end
+  
+  describe "#run_file" do
+    it "downloads a file, scrub+etc it" do
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d.ensure!
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      remote_file = File.join(remote_d.holdings_current, "umich_mono_full_20220101.tsv")
+      sr.run_file(org1, remote_file)
+    end
   end
 end
