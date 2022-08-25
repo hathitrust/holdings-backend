@@ -13,8 +13,10 @@ require "data_sources/directory_locator"
 require "loader/file_loader"
 require "loader/holding_loader"
 require "scrub/autoscrub"
+require "scrub/chunker"
 require "utils/file_transfer"
 require "fileutils"
+require "loader/holding_loader"
 
 # Example:
 # runner = Scrub::ScrubRunner.new
@@ -63,15 +65,21 @@ module Scrub
       downloaded_file = download_to_work_dir(member, file)
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
-      # todo: chunk and hand off job to sidekiq
-      # todo: figure out the output files that was just generated
       scrubber.out_files.each do |scrubber_out_file|
-        puts "hey check out #{scrubber_out_file}"
+        puts "Prepare loading of #{scrubber_out_file}"
+        system "cat \"#{scrubber_out_file}\""
+        chunker = Scrub::Chunker.new(glob: scrubber_out_file, chunk_count: 4)
+        chunker.run
+        chunker.chunks.each do |chunk|
+          puts "load chunk #{chunk}"
+          system("cat \"#{chunk}\"")
+          batch_loader = Loader::HoldingLoader.for(".ndj")
+          Loader::FileLoader.new(batch_loader: batch_loader).load(chunk)
+          puts "chunk loaded!"
+        end
+        chunker.cleanup! # maybe not yet?
         upload_to_member(member, scrubber_out_file)
       end
-
-      # holding_loader = Loader::HoldingLoader.for(scrubber.output.latest)
-      # Loader::FileLoader.new(holding_loader).load(scrubber.output.latest)
     end
 
     # Check member-uploaded files for any not previously seen files
