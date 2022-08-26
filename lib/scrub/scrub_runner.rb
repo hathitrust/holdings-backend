@@ -22,6 +22,7 @@ require "utils/file_transfer"
 # runner.run_all_members
 # runner.run_some_members(["umich", ..., "harvard"])
 # runner.run_one_member("umich")
+#
 
 module Scrub
   # Scrubs and loads any new member-uploaded files.
