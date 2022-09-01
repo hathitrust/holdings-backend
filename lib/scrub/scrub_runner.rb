@@ -55,7 +55,7 @@ module Scrub
       new_files = check_new_files(member)
       puts "Found #{new_files.size} new files: #{new_files.join(", ")}."
       new_files.each do |new_file|
-        run_file(member, new_file)
+        run_file(member, new_file["Name"])
       end
     end
 
