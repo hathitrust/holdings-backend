@@ -37,5 +37,23 @@ module Reports
         end
       end
     end
+
+    def run(ocns = [], output_filename = report_file)
+      File.open(output_filename, "w") do |fh|
+        fh.puts header.join("\t")
+        for_ocns(ocns.map(&:to_i)) do |row|
+          fh.puts row.join("\t")
+        end
+      end
+    end
+
+    private
+
+    def report_file
+      FileUtils.mkdir_p(Settings.shared_print_report_path)
+      iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+      rand_str = SecureRandom.hex(8)
+      File.join(Settings.shared_print_report_path, "eligible_commitments_#{iso_stamp}_#{rand_str}.txt")
+    end
   end
 end

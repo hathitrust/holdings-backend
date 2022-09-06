@@ -79,121 +79,121 @@ RSpec.describe Reports::RareUncommitted do
     end
   end
 
-  describe "#run" do
+  describe "#clusters" do
     it "raises ArgumentError if all of h/sp_h/non_sp_h_count are nil" do
-      expect { report.run.to_a }.to raise_exception(ArgumentError)
+      expect { report.clusters.to_a }.to raise_exception(ArgumentError)
       # All other combos of h/sp_h/non_sp_h_count should, at least, not raise ArgumentError.
-      expect(report(max_h: 1).run.to_a).to eq []
-      expect(report(max_sp_h: 1).run.to_a).to eq []
-      expect(report(non_sp_h_count: 1).run.to_a).to eq []
-      expect(report(max_h: 1, max_sp_h: 1, non_sp_h_count: 1).run.to_a).to eq []
+      expect(report(max_h: 1).clusters.to_a).to eq []
+      expect(report(max_sp_h: 1).clusters.to_a).to eq []
+      expect(report(non_sp_h_count: 1).clusters.to_a).to eq []
+      expect(report(max_h: 1, max_sp_h: 1, non_sp_h_count: 1).clusters.to_a).to eq []
     end
 
     it "returns an empty array if there is no data" do
-      expect(report(max_sp_h: 2).run.to_a.empty?).to be true
+      expect(report(max_sp_h: 2).clusters.to_a.empty?).to be true
     end
 
     it "rejects a cluster with active commitments" do
       cluster_tap_save [hti1, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1).clusters.to_a.size).to eq 1
       cluster_tap_save [spc1] # add commitment to cluster
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "allows clusters with access:allow" do
       cluster_tap_save [hti1_deny, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "rejects clusters with access:deny" do
       cluster_tap_save [hti1_deny, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "allows clusters with mixed access" do
       cluster_tap_save [hti1, hti1_deny, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1).clusters.to_a.size).to eq 1
     end
 
     it "allows spm clusters" do
       cluster_tap_save [hti1_deny, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "rejects clusters with format:mpm" do
       mpm = build(:ht_item, :mpm, ocns: [ocn1], access: "allow")
       cluster_tap_save [mpm, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "rejects clusters with format:ser" do
       ser = build(:ht_item, :ser, ocns: [ocn1], access: "allow")
       cluster_tap_save [ser, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "rejects clusters with mixed format" do
       mpm = build(:ht_item, :mpm, ocns: [ocn1], access: "allow")
       ser = build(:ht_item, :ser, ocns: [ocn1], access: "allow")
       cluster_tap_save [mpm, ser, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
       # ... even if that mix contains spm
       cluster_tap_save [hti1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
     end
 
     it "allows a cluster with commitments, if they are deprecated" do
       cluster_tap_save [hti1, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1).clusters.to_a.size).to eq 1
       spc1.deprecate(status: "E")
       cluster_tap_save [spc1] # add commitment to cluster
-      expect(report(max_h: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1).clusters.to_a.size).to eq 1
     end
 
     it "allows a cluster with commitments, if their number matches commitment_count" do
       # Commitment count defaults to 0, so for now reject this cluster.
       cluster_tap_save [hti2, hol2_org1, spc2_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
       # Set commitment_count to 1 and we allow it.
-      expect(report(max_h: 1, commitment_count: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1, commitment_count: 1).clusters.to_a.size).to eq 1
       # Add another commitment to cluster to reject it again.
       cluster_tap_save [spc2_org2]
-      expect(report(max_h: 1, commitment_count: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1, commitment_count: 1).clusters.to_a.size).to eq 0
     end
 
     it "rejects a cluster where cluster_h is gt h" do
       cluster_tap_save [hti1, hol1_org1]
-      expect(report(max_h: 1).run.to_a.size).to eq 1
+      expect(report(max_h: 1).clusters.to_a.size).to eq 1
 
       # Increase cluster_h by adding another holding member...
       cluster_tap_save [hol1_org2]
       # ... and max_h:1 will be too low, cluster rejected.
-      expect(report(max_h: 1).run.to_a.size).to eq 0
+      expect(report(max_h: 1).clusters.to_a.size).to eq 0
 
       # Raise to max_h:2 and we get the cluster again.
-      expect(report(max_h: 2).run.to_a.size).to eq 1
+      expect(report(max_h: 2).clusters.to_a.size).to eq 1
     end
 
     it "rejects a cluster where cluster_sp_h is gt sp_h" do
       cluster_tap_save [hti1, hol1_org1]
-      expect(report(max_sp_h: 1).run.to_a.size).to eq 1
+      expect(report(max_sp_h: 1).clusters.to_a.size).to eq 1
 
       # Set up cluster 2, making org1 into a sp_org
       cluster_tap_save [hti2, hol2_org1, spc2_org1]
       expect(report(max_sp_h: 1).sp_organizations.sort).to eq [org1]
 
       # Still getting the cluster with max_sp_h:1
-      expect(report(max_sp_h: 1).run.to_a.size).to eq 1
+      expect(report(max_sp_h: 1).clusters.to_a.size).to eq 1
 
       # Add org2's hol to cluster 1...
       cluster_tap_save [hol1_org2]
       # ... and we're still getting the cluster with max_sp_h:1.
-      expect(report(max_sp_h: 1).run.to_a.size).to eq 1
+      expect(report(max_sp_h: 1).clusters.to_a.size).to eq 1
 
       # Add org2 to sp_orgs...
       cluster_tap_save [spc2_org2]
       # ... and now we're NOT getting the cluster with max_sp_h:1
-      res = report(max_sp_h: 1).run.to_a
+      res = report(max_sp_h: 1).clusters.to_a
       expect(res.size).to eq 0
     end
 
@@ -201,17 +201,17 @@ RSpec.describe Reports::RareUncommitted do
       # org1 does not have any commitments, so we should get 1 cluster back.
       cluster_tap_save [hti1, hol1_org1]
       expect(report(non_sp_h_count: 1).non_sp_organizations).to eq [org1]
-      expect(report(non_sp_h_count: 1).run.to_a.size).to eq 1
+      expect(report(non_sp_h_count: 1).clusters.to_a.size).to eq 1
 
       # adding a commitment should remove org1 from non_sp_organizations
       cluster_tap_save [hti2, hol2_org1, spc2_org1]
       expect(report(non_sp_h_count: 1).non_sp_organizations).to eq []
-      expect(report(non_sp_h_count: 1).run.to_a.size).to eq 0
+      expect(report(non_sp_h_count: 1).clusters.to_a.size).to eq 0
 
       # adding a second, non_sp, org to the first cluster should bring it back
       cluster_tap_save [hol1_org2]
       expect(report(non_sp_h_count: 1).non_sp_organizations).to eq [org2]
-      expect(report(non_sp_h_count: 1).run.to_a.size).to eq 1
+      expect(report(non_sp_h_count: 1).clusters.to_a.size).to eq 1
     end
   end
 

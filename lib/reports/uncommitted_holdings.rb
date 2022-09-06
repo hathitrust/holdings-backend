@@ -28,7 +28,15 @@ module Reports
       !@all && @ocn.empty? && @organization.empty?
     end
 
-    def run
+    def run(output_filename = report_file)
+      File.open(output_filename, "w") do |fh|
+        fh.puts header.join("\t")
+        records.each { |record| fh.puts record.to_s }
+      end
+    end
+
+    def records
+      return to_enum(__method__) unless block_given?
       refine_query
       warn "Query: #{@query}" if @verbose
 
@@ -59,6 +67,15 @@ module Reports
 
     def header
       ["organization", "oclc_sym", "ocn", "local_id"]
+    end
+
+    private
+
+    def report_file
+      FileUtils.mkdir_p(Settings.shared_print_report_path)
+      iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+      organization = @organization.join("_") || "all"
+      File.join(Settings.shared_print_report_path, "uncommitted_holdings_#{organization}_#{iso_stamp}.txt")
     end
   end
 end

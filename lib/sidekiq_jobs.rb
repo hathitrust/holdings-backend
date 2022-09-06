@@ -147,33 +147,21 @@ module Jobs
     class EligibleCommitments
       include Sidekiq::Job
       def perform(ocns)
-        report = Reports::CommitmentReplacements.new
-        puts report.header.join("\t")
-        report.for_ocns(ocns.map(&:to_i)) do |row|
-          puts row.join("\t")
-        end
+        Reports::CommitmentReplacements.new.run(ocns)
       end
     end
 
     class UncommittedHoldings
       include Sidekiq::Job
       def perform(**kwargs)
-        report = Reports::UncommittedHoldings.new(**kwargs)
-        puts report.header.join("\t")
-        report.run { |record| puts record.to_s }
+        Reports::UncommittedHoldings.new(**kwargs).run
       end
     end
 
     class RareUncommittedCounts
       include Sidekiq::Job
       def perform(**kwargs)
-        report = Reports::RareUncommitted.new(**kwargs)
-        report_data = kwargs[:organization].nil? ?
-                        report.output_counts : report.output_organization
-
-        report_data.each do |report_line|
-          puts report_line
-        end
+        Reports::RareUncommitted.new(**kwargs).run
       end
     end
   end

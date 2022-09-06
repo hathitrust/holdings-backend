@@ -16,13 +16,13 @@ module Reports
   # Usage:
   #
   # Find clusters held by up to 5 members:
-  # clusters = Reports::RareUncommitted.new(max_h: 5).run.to_a
+  # clusters = Reports::RareUncommitted.new(max_h: 5).clusters.to_a
   #
   # Find clusters held by up to 2 sp members:
-  # clusters = Reports::RareUncommitted.new(max_sp_h: 2).run.to_a
+  # clusters = Reports::RareUncommitted.new(max_sp_h: 2).clusters.to_a
   #
   # Find clusters held by up to 5 members and up to 2 sp members:
-  # clusters = Reports::RareUncommitted.new(max_h: 5, max_sp_h: 2).run.to_a
+  # clusters = Reports::RareUncommitted.new(max_h: 5, max_sp_h: 2).clusters.to_a
   class RareUncommitted
     def initialize(
       max_h: nil,
@@ -93,12 +93,12 @@ module Reports
 
     # Runs the report and condenses it down to counts.
     def counts
-      clusters = run.to_a
+      results = clusters.to_a
 
       {
-        h: populate_counts(clusters, @max_h, :h),
-        sp_h: populate_counts(clusters, @max_sp_h, :sp_h),
-        non_sp_h: populate_counts(clusters, @non_sp_h_count, :non_sp_h)
+        h: populate_counts(results, @max_h, :h),
+        sp_h: populate_counts(results, @max_sp_h, :sp_h),
+        non_sp_h: populate_counts(results, @non_sp_h_count, :non_sp_h)
       }
     end
 
@@ -115,7 +115,7 @@ module Reports
       ].join("\t")
       yield header
 
-      run do |cluster|
+      clusters do |cluster|
         cluster.holdings.each do |holding|
           if !@organization.nil?
             next unless holding.organization == @organization
@@ -136,9 +136,20 @@ module Reports
       end
     end
 
+    def run(output_filename = report_file)
+      report_data = @organization.nil? ?
+                      output_counts : output_organization
+
+      File.open(output_filename, "w") do |fh|
+        report_data.each do |report_line|
+          fh.puts report_line
+        end
+      end
+    end
+
     # Returns the clusters matching the query & holdings/commitments criteria.
-    def run
-      return enum_for(:run) unless block_given?
+    def clusters
+      return enum_for(:clusters) unless block_given?
 
       marker = Services.progress_tracker.new(1000)
       Cluster.where(@query).no_timeout.each do |cluster|
@@ -315,6 +326,17 @@ module Reports
     def cluster_non_sp_h(cluster)
       holding_non_sp_orgs = cluster.holdings.collect(&:organization).uniq & non_sp_organizations
       holding_non_sp_orgs.size
+    end
+
+    private
+
+    def report_file
+      FileUtils.mkdir_p(Settings.shared_print_report_path)
+      iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+      rand_str = SecureRandom.hex(8)
+      tag = "counts"
+      tag = @organization if @organization
+      File.join(Settings.shared_print_report_path, "rare_uncommitted_#{tag}_#{iso_stamp}_#{rand_str}.txt")
     end
   end
 end

@@ -97,16 +97,18 @@ RSpec.describe "Jobs" do
       Jobs::Load::ClusterFile.new.perform(fixture("cluster_2503661.json"))
     end
 
-    # FIXME: These should probably all go to an output file rather than stdout by default?
-
     it "CostReport produces output" do
-      expect { Jobs::Report::CostReport.new.perform(nil, nil) }
-        .to output(/Target cost: 9999/).to_stdout
+      Jobs::Report::CostReport.new.perform(nil, nil)
+
+      expect(File.read(Dir.glob("/tmp/cost_reports/*").first))
+        .to match(/Target cost: 9999/)
     end
 
     it "Estimate produces output" do
-      expect { Jobs::Report::Estimate.new.perform(fixture("ocn_list.txt")) }
-        .to output(/Total Estimated IC Cost/).to_stdout
+      Jobs::Report::Estimate.new.perform(fixture("ocn_list.txt"))
+
+      expect(File.read(Dir.glob("/tmp/estimates/ocn_list-estimate-*.txt").first))
+        .to match(/Total Estimated IC Cost/)
     end
 
     it "MemberCount produces output" do
@@ -127,21 +129,25 @@ RSpec.describe "Jobs" do
       expect(File.size("/tmp/etas_overlap_report_remote/umich-hathitrust-member-data/analysis/etas_overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end
 
-    # FIXME: this should go to an output file by default
-
     it "EligibleCommitments produces output" do
-      expect { Jobs::Report::EligibleCommitments.new.perform([1]) }
-        .to output(/^organization/).to_stdout
+      Jobs::Report::EligibleCommitments.new.perform([1])
+
+      expect(File.read(Dir.glob("/tmp/shared_print_reports/eligible_commitments_*").first))
+        .to match(/^organization/)
     end
 
     it "UncommittedHoldings produces output" do
-      expect { Jobs::Report::UncommittedHoldings.new.perform(organization: ["umich"]) }
-        .to output(/^organization/).to_stdout
+      Jobs::Report::UncommittedHoldings.new.perform(organization: ["umich"])
+
+      expect(File.read(Dir.glob("/tmp/shared_print_reports/uncommitted_holdings_umich_*").first))
+        .to match(/^organization/)
     end
 
     it "RareUncommittedCounts produces output" do
-      expect { Jobs::Report::RareUncommittedCounts.new.perform(max_h: 1) }
-        .to output(/^number of holding libraries/).to_stdout
+      Jobs::Report::RareUncommittedCounts.new.perform(max_h: 1)
+
+      expect(File.read(Dir.glob("/tmp/shared_print_reports/rare_uncommitted_counts_*").first))
+        .to match(/^number of holding libraries/)
     end
   end
 
