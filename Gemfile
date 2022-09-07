@@ -30,6 +30,7 @@ group :test do
   gem "faker"
   gem "rspec"
   gem "simplecov"
+  gem "simplecov-lcov"
   gem "webmock"
 end
 
