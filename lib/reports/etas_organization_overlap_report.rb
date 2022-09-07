@@ -101,6 +101,7 @@ module Reports
         holdings_matched = write_overlaps(cluster, organization)
         write_records_for_unmatched_holdings(cluster, holdings_matched)
       end
+      move_reports
     end
 
     def header

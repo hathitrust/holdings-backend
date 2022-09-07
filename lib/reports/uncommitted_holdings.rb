@@ -36,7 +36,7 @@ module Reports
     end
 
     def records
-      return to_enum(__method__) unless block_given?
+      return enum_for(:records) unless block_given?
       refine_query
       warn "Query: #{@query}" if @verbose
 

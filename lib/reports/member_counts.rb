@@ -23,11 +23,10 @@ module Reports
 
   # Runs report queries related to member-submitted holdings
   # and builds a report made out of MemberCountsRows.
-  class MemberCountsReport
-    attr_accessor :rows
-
-    def initialize(cost_report_freq = nil, members = Services.ht_organizations.members.keys)
+  class MemberCounts
+    def initialize(cost_report_freq = nil, output_dir = nil, members = Services.ht_organizations.members.keys)
       @cost_report_freq = cost_report_freq
+      @output_dir = output_dir
 
       @rows = {}
       # members is just an array of inst_ids, which makes it easy to mock
@@ -37,11 +36,26 @@ module Reports
       end
     end
 
-    # Execute queries and populate @rows.
-    def run
+    def rows
+      unless @rows_loaded
+        total_loaded
+        matching_volumes
+      end
+      @rows
+    end
+
+    def run(output_filename = report_file(@output_dir))
       total_loaded
       matching_volumes
-      self
+
+      File.open(output_filename, "w") do |fh|
+        fh.puts(Reports::MemberCountsRow.header)
+        rows.each do |org, data|
+          fh.puts([org, data].join("\t"))
+        end
+
+        fh.close
+      end
     end
 
     private
@@ -90,6 +104,16 @@ module Reports
           org, data = line.split("\t")
           yield [org, JSON.parse(data)]
         end
+      end
+    end
+
+    def report_file(output_dir)
+      if output_dir.nil?
+        $stdout
+      else
+        FileUtils.mkdir_p(output_dir)
+        ymd = Time.new.strftime("%F")
+        File.join(output_dir, "member_counts_#{ymd}.tsv")
       end
     end
   end

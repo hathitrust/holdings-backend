@@ -11,14 +11,19 @@ module Reports
   # AND for those clusters, report holdings that don't have a commitment.
   # Invoke via bin/reports/compile_commitment_replacements_report.rb
   class CommitmentReplacements
+    def initialize(ocns = [])
+      @ocns = ocns.map(&:to_i)
+      if ocns.empty?
+        raise ArgumentError, "No ocns given"
+      end
+    end
+
     def header
       ["organization", "oclc_sym", "ocn", "local_id"]
     end
 
-    def for_ocns(ocns = [])
-      if ocns.empty?
-        raise "No ocns given"
-      end
+    def replacements
+      return enum_for(:replacements) unless block_given?
 
       ocns.sort.uniq.each do |ocn|
         overlap = Overlap::HoldingCommitment.new(ocn)
@@ -38,16 +43,18 @@ module Reports
       end
     end
 
-    def run(ocns = [], output_filename = report_file)
+    def run(output_filename = report_file)
       File.open(output_filename, "w") do |fh|
         fh.puts header.join("\t")
-        for_ocns(ocns.map(&:to_i)) do |row|
+        replacements.each do |row|
           fh.puts row.join("\t")
         end
       end
     end
 
     private
+
+    attr_reader :ocns
 
     def report_file
       FileUtils.mkdir_p(Settings.shared_print_report_path)

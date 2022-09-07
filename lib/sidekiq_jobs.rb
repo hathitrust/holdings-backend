@@ -9,11 +9,11 @@ require "reports/commitment_replacements"
 require "reports/etas_organization_overlap_report"
 require "reports/uncommitted_holdings"
 require "reports/rare_uncommitted"
+require "reports/cost_report"
+require "reports/estimate"
+require "reports/member_counts"
 require "concordance_processing"
 require "ocn_concordance_diffs"
-require "reports/compile_cost_reports"
-require "reports/compile_estimated_IC_costs"
-require "reports/compile_member_counts_report"
 require "shared_print/updater"
 require "shared_print/replacer"
 require "shared_print/deprecator"
@@ -117,37 +117,35 @@ module Jobs
     class CostReport
       include Sidekiq::Job
       def perform(organization, target_cost)
-        CompileCostReport.new.run(organization, target_cost)
+        Reports::CostReport.new(organization, cost: target_cost).run
       end
     end
 
     class Estimate
       include Sidekiq::Job
       def perform(ocn_file)
-        CompileEstimate.new.run(ocn_file)
+        Reports::Estimate.new(ocn_file).run
       end
     end
 
     class MemberCounts
       include Sidekiq::Job
       def perform(cost_rpt_freq_file, output_dir)
-        CompileMemberCounts.new.run(cost_rpt_freq_file, output_dir)
+        Reports::MemberCounts.new(cost_rpt_freq_file, output_dir).run
       end
     end
 
     class EtasOverlap
       include Sidekiq::Job
       def perform(org)
-        rpt = Reports::EtasOrganizationOverlapReport.new(org)
-        rpt.run
-        rpt.move_reports
+        Reports::EtasOrganizationOverlapReport.new(org).run
       end
     end
 
     class EligibleCommitments
       include Sidekiq::Job
       def perform(ocns)
-        Reports::CommitmentReplacements.new.run(ocns)
+        Reports::CommitmentReplacements.new(ocns).run
       end
     end
 
