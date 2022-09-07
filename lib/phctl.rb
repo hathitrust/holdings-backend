@@ -14,7 +14,7 @@ module PHCTL
       Jobs::Load::Commitments.perform_async(filename)
     end
 
-    desc "ht_items FILENAME", "Add HT Items"
+    desc "ht-items FILENAME", "Add HT Items"
     def ht_items(filename)
       Jobs::Load::HtItems.perform_async(filename)
     end
@@ -24,7 +24,7 @@ module PHCTL
       Jobs::Load::Concordance.perform_async(date)
     end
 
-    desc "cluster_file FILENAME", "Add a whole file of clusters in JSON format."
+    desc "cluster-file FILENAME", "Add a whole file of clusters in JSON format."
     def cluster_file(filename)
       Jobs::Load::ClusterFile.perform_async(filename)
     end
@@ -57,12 +57,12 @@ module PHCTL
   class SharedPrintOps < Thor
     desc "update INFILE", "Update commitments based on provided records"
     def update(infile)
-      Jobs::SharedPrintOps::Update.perform_async(infile)
+      Jobs::Common.perform_async("SharedPrint::Updater", options, infile)
     end
 
     desc "replace INFILE", "Replace commitments based on provided records"
     def replace(infile)
-      Jobs::SharedPrintOps::Replace.perform_async(infile)
+      Jobs::Common.perform_async("SharedPrint::Replacer", options, infile)
     end
 
     desc "deprecate INFILE", "Deprecate commitments based on provided records"
@@ -77,27 +77,29 @@ module PHCTL
     option :organization, type: :string, default: nil
     option :target_cost, type: :numeric, default: nil
     def costreport
-      Jobs::Report::CostReport.perform_async(options[:organization], options[:target_cost])
+      Jobs::Common.perform_async("Reports::CostReport", options)
     end
 
     desc "estimate OCN_FILE", "Run an estimate"
     def estimate(ocn_file)
-      Jobs::Report::Estimate.perform_async(ocn_file)
+      Jobs::Common.perform_async("Reports::Estimate", options, ocn_file)
     end
 
     desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
     def member_counts(cost_rpt_freq_file, output_dir)
-      Jobs::Report::MemberCounts.perform_async(cost_rpt_freq_file, output_dir)
+      Jobs::Common.perform_async("Reports::MemberCounts", options, cost_rpt_freq_file, output_dir)
     end
 
     desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
     def etas_overlap(org = nil)
-      Jobs::Report::EtasOverlap.perform_async(org)
+      # TODO rename report class
+      Jobs::Common.perform_async("Reports::EtasOrganizationOverlapReport", options, org)
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"
     def eligible_commitments(*ocns)
-      Jobs::Report::EligibleCommitments.perform_async(ocns)
+      # TODO rename report class
+      Jobs::Common.perform_async("Reports::CommitmentReplacements", options, ocns)
     end
 
     desc "uncommitted-holdings", "Find holdings without commitments"
@@ -108,7 +110,7 @@ module PHCTL
     option :noop, type: :boolean, default: false
     def uncommitted_holdings
       options[:ocn] = options[:ocn].map(&:to_i)
-      Jobs::Report::UncommittedHoldings.perform_async(**options)
+      Jobs::Common.perform_async("Reports::UncommittedHoldings", options)
     end
 
     # E.g. phctl report rare-uncommitted-counts --max_sp_h 2 --max_h 1
@@ -119,7 +121,8 @@ module PHCTL
     option :commitment_count, type: :numeric, default: 0
     option :organization, type: :string, default: nil
     def rare_uncommitted_counts
-      Jobs::Report::RareUncommittedCounts.perform_async(**options)
+      # TODO rename command or report class
+      Jobs::Common.perform_async("Reports::RareUncommitted", options)
     end
   end
 

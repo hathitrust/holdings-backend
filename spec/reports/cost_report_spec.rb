@@ -98,11 +98,11 @@ RSpec.describe Reports::CostReport do
     end
 
     it "finds clusters with a matching HTItem : holding" do
-      expect(described_class.new("umich").matching_clusters.each.to_a.size).to eq(1)
+      expect(described_class.new(organization: "umich").matching_clusters.each.to_a.size).to eq(1)
     end
 
     it "finds a cluster if it only has an HTItem" do
-      expect(described_class.new("stanford").matching_clusters.each.to_a.size).to eq(1)
+      expect(described_class.new(organization: "stanford").matching_clusters.each.to_a.size).to eq(1)
     end
 
     it "does not find clusters with only access == allow" do

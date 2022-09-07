@@ -22,6 +22,13 @@ require "shared_print/deprecator"
 Services.register(:logger) { Sidekiq.logger }
 
 module Jobs
+  class Common
+    include Sidekiq::Job
+    def perform(klass, options = {}, *args)
+      Object.const_get(klass).new(*args, **options.symbolize_keys).run
+    end
+  end
+
   module Load
     class Commitments
       include Sidekiq::Job
@@ -91,75 +98,10 @@ module Jobs
   end
 
   module SharedPrintOps
-    class Update
-      include Sidekiq::Job
-      def perform(infile)
-        SharedPrint::Updater.new(infile).run
-      end
-    end
-
-    class Replace
-      include Sidekiq::Job
-      def perform(infile)
-        SharedPrint::Replacer.new(infile).run
-      end
-    end
-
     class Deprecate
       include Sidekiq::Job
       def perform(verbose, infiles)
         SharedPrint::Deprecator.new(verbose: verbose).run(infiles)
-      end
-    end
-  end
-
-  module Report
-    class CostReport
-      include Sidekiq::Job
-      def perform(organization, target_cost)
-        Reports::CostReport.new(organization, cost: target_cost).run
-      end
-    end
-
-    class Estimate
-      include Sidekiq::Job
-      def perform(ocn_file)
-        Reports::Estimate.new(ocn_file).run
-      end
-    end
-
-    class MemberCounts
-      include Sidekiq::Job
-      def perform(cost_rpt_freq_file, output_dir)
-        Reports::MemberCounts.new(cost_rpt_freq_file, output_dir).run
-      end
-    end
-
-    class EtasOverlap
-      include Sidekiq::Job
-      def perform(org)
-        Reports::EtasOrganizationOverlapReport.new(org).run
-      end
-    end
-
-    class EligibleCommitments
-      include Sidekiq::Job
-      def perform(ocns)
-        Reports::CommitmentReplacements.new(ocns).run
-      end
-    end
-
-    class UncommittedHoldings
-      include Sidekiq::Job
-      def perform(**kwargs)
-        Reports::UncommittedHoldings.new(**kwargs).run
-      end
-    end
-
-    class RareUncommittedCounts
-      include Sidekiq::Job
-      def perform(**kwargs)
-        Reports::RareUncommitted.new(**kwargs).run
       end
     end
   end

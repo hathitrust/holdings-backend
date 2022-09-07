@@ -11,27 +11,27 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   commands = {
     %w[load commitments somefile] => Jobs::Load::Commitments,
     %w[load concordance date] => Jobs::Load::Concordance,
-    %w[load ht_items somefile] => Jobs::Load::HtItems,
-    %w[load cluster_file somefile] => Jobs::Load::ClusterFile,
+    %w[load ht-items somefile] => Jobs::Load::HtItems,
+    %w[load cluster-file somefile] => Jobs::Load::ClusterFile,
     %w[load holdings somefile] => Jobs::Load::Holdings,
     %w[cleanup holdings instid date] => Jobs::Cleanup::Holdings,
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
     %w[concordance delta oldfile newfile] => Jobs::Concordance::Delta,
-    %w[sp update infile] => Jobs::SharedPrintOps::Update,
-    %w[sp replace infile] => Jobs::SharedPrintOps::Replace,
+    %w[sp update infile] => Jobs::Common,
+    %w[sp replace infile] => Jobs::Common,
     %w[sp deprecate infile] => Jobs::SharedPrintOps::Deprecate,
     %w[sp deprecate infile --verbose] => Jobs::SharedPrintOps::Deprecate,
-    %w[report estimate ocnfile] => Jobs::Report::Estimate,
-    %w[report eligible-commitments ocnfile] => Jobs::Report::EligibleCommitments,
-    %w[report uncommitted-holdings] => Jobs::Report::UncommittedHoldings,
+    %w[report estimate ocnfile] => Jobs::Common,
+    %w[report eligible-commitments ocnfile] => Jobs::Common,
+    %w[report uncommitted-holdings] => Jobs::Common,
 
     # Has wrappers in holdings/jobs
-    %w[report member-counts infile outpath] => Jobs::Report::MemberCounts,
-    %w[report costreport] => Jobs::Report::CostReport,
+    %w[report member-counts infile outpath] => Jobs::Common,
+    %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
-      someinst --target-cost 123456] => Jobs::Report::CostReport,
-    %w[report etas-overlap] => Jobs::Report::EtasOverlap,
-    %w[report etas-overlap someinst] => Jobs::Report::EtasOverlap,
+      someinst --target-cost 123456] => Jobs::Common,
+    %w[report etas-overlap] => Jobs::Common,
+    %w[report etas-overlap someinst] => Jobs::Common,
     %w[load concordance somefile] => Jobs::Load::Concordance
 
     # Not covered by phctl
