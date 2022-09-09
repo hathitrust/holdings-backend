@@ -24,6 +24,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report estimate ocnfile] => Jobs::Common,
     %w[report eligible-commitments ocnfile] => Jobs::Common,
     %w[report uncommitted-holdings] => Jobs::Common,
+    %w[report oclc-registration instid] => Jobs::Common,
 
     # Has wrappers in holdings/jobs
     %w[report member-counts infile outpath] => Jobs::Common,
