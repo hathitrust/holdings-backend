@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "reports/member_counts_report"
+require "reports/member_counts"
 require "reports/cost_report"
 
-RSpec.describe "MemberCountsReport" do
+RSpec.describe "MemberCounts" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }
 
   let(:mcr) do
-    Reports::MemberCountsReport.new("/dev/null", mokk_members)
+    Reports::MemberCounts.new("/dev/null", "/tmp/member_counts_reports", mokk_members)
   end
 
-  let(:rows) { mcr.run.rows }
+  let(:rows) { mcr.rows }
 
   let(:cluster) { build(:cluster) }
   let(:ht_item) { build(:ht_item) }
@@ -54,7 +54,7 @@ RSpec.describe "MemberCountsReport" do
           mono_multi_serial: "mono"
         )
         Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
-        expect(mcr.run.rows["umich"].total_loaded["mono"]).to eq(i)
+        expect(mcr.rows["umich"].total_loaded["mono"]).to eq(i)
       end
     end
   end
@@ -62,7 +62,7 @@ RSpec.describe "MemberCountsReport" do
   describe "matching_volumes" do
     it "reads a freq file and populates report accordingly" do
       freq_file = "spec/fixtures/freq.txt"
-      rows2 = Reports::MemberCountsReport.new(freq_file, mokk_members).run.rows
+      rows2 = Reports::MemberCounts.new(freq_file, "/tmp/member_counts", mokk_members).rows
       expect(rows2["umich"].matching_volumes["mono"]).to eq(1)
       expect(rows2["umich"].matching_volumes["multi"]).to eq(2)
       expect(rows2["umich"].matching_volumes["serial"]).to eq(1)

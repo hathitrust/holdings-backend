@@ -6,6 +6,7 @@ ENV["MONGOID_ENV"] = "test"
 
 require "factory_bot"
 require "simplecov"
+require "simplecov-lcov"
 require "webmock/rspec"
 require "fixtures/organizations"
 require "fixtures/collections"
@@ -13,7 +14,19 @@ require "fixtures/large_clusters"
 require "pry"
 require "settings"
 require "services"
+require "sidekiq/testing"
+
+SimpleCov::Formatter::LcovFormatter.config do |c|
+  c.report_with_single_file = true
+  c.single_report_path = "coverage/lcov.info"
+end
+SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
+  SimpleCov::Formatter::HTMLFormatter,
+  SimpleCov::Formatter::LcovFormatter
+])
 SimpleCov.start
+Sidekiq.strict_args!
+Sidekiq::Testing.inline!
 
 Mongoid.load!("mongoid.yml", Settings.environment)
 
@@ -81,6 +94,12 @@ RSpec.configure do |config|
       Services.register(:logger) { old_logger }
     end
   end
+
+  config.around(:each, type: "sidekiq_fake") do |example|
+    Sidekiq::Testing.fake! do
+      example.run
+    end
+  end
 end
 
 # Clusters and saves each element in an array of clusterables
@@ -97,4 +116,8 @@ def cluster_tap_save(clusterables)
       Clustering::ClusterCommitment
     end.new(clusterable).cluster.tap(&:save)
   end
+end
+
+def fixture(filename)
+  File.join(__dir__, "fixtures", filename)
 end

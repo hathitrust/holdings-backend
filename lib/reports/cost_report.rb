@@ -6,12 +6,53 @@ require "services"
 module Reports
   # Generates reports based on h_share
   class CostReport
-    attr_accessor :organization, :logger, :maxlines, :target_cost
+    attr_reader :organization, :logger, :maxlines, :target_cost, :batch_size, :marker
 
-    def initialize(org = nil, cost: Settings.target_cost, lines: 1_000_000, logger: Services.logger)
+    def to_tsv tsv = []
+      tsv << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
+      Services.ht_organizations.members.keys.sort.each do |member|
+        next unless organization.nil? || (member == organization)
+        tsv << [
+          member,
+          spm_costs(member),
+          mpm_costs(member),
+          ser_costs(member),
+          pd_cost_for_member(member),
+          Services.ht_organizations[member].weight,
+          extra_per_member,
+          total_cost_for_member(member)
+        ].join("\t")
+      end
+      tsv.join("\n")
+    end
+
+    def run(output_filename = report_file)
+      logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum maxlines}"
+
+      File.open(output_filename, "w") do |fh|
+        fh.puts "Target cost: #{target_cost}"
+        fh.puts "Num volumes: #{num_volumes}"
+        fh.puts "Num pd volumes: #{num_pd_volumes}"
+        fh.puts "Cost per volume: #{cost_per_volume}"
+        fh.puts "Total weight: #{total_weight}"
+        fh.puts "PD Cost: #{pd_cost}"
+        fh.puts "Num members: #{Services.ht_organizations.members.count}"
+
+        fh.puts to_tsv
+      end
+
+      # Dump freq table to file
+      ymd = Time.new.strftime("%F")
+      dump_freq_table("freq_#{ymd}.txt")
+      logger.info marker.final_line
+    end
+
+    def initialize(organization: nil, cost: Settings.target_cost, lines: 50_000, logger: Services.logger)
+      cost ||= Settings.target_cost
+
       raise "Target cost not set" if cost.nil?
 
-      @organization = org
+      @organization = organization
       @target_cost = Float(cost)
       @maxlines = lines
       @logger = logger
@@ -81,7 +122,7 @@ module Reports
     end
 
     def compile_frequency_table
-      marker = Services.progress_tracker.new(maxlines)
+      @marker = Services.progress_tracker.new(maxlines)
       logger.info("Begin compiling hscore frequency table.")
       matching_clusters.each do |c|
         c.ht_items.each do |ht_item|
@@ -144,6 +185,14 @@ module Reports
 
     def total_cost_for_member(member)
       total_ic_costs(member) + pd_cost_for_member(member) + extra_per_member
+    end
+
+    private
+
+    def report_file
+      FileUtils.mkdir_p(Settings.cost_report_path)
+      iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
+      File.join(Settings.cost_report_path, "cost_report_#{iso_stamp}.txt")
     end
   end
 end

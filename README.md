@@ -23,7 +23,7 @@ bash bin/setup/setup_dev.sh
 ## Clearing out/resetting the data
 For resetting everything (cleaning up containers & their persistent volumes):
 
-```shell script
+```bash
 # Clear it out
 docker-compose down # to stop services
 docker volume rm holdings-backend_data_db # to clear out the development database
@@ -31,6 +31,16 @@ docker volume rm holdings-backend_gem_cache # to clear out gems
 
 # Rebuild it
 bash bin/setup/setup_dev.sh
+```
+
+## Generating and loading fake data
+
+This will generate a synthetic OCLC concordance, HT items, and holdings for a
+single institution, and load it into mongo:
+
+```bash
+bash bin/setup/setup_dev.sh
+bash bin/load_test_data.sh
 ```
 
 ## Loading data

@@ -5,7 +5,6 @@ require "concordance_validation/concordance"
 require "concordance_validation/delta"
 
 class ConcordanceProcessing
-
   def validate(fin, fout)
     log = File.open("#{fout}.log", "w")
     fout = File.open(fout, "w")
@@ -32,6 +31,9 @@ class ConcordanceProcessing
 
       fout.puts [raw, c.terminal_ocn(raw)].join("\t")
     end
+
+    log.close
+    fout.close
   end
 
   # Compute deltas of new concordance with pre-existing validated concordance.
@@ -46,11 +48,4 @@ class ConcordanceProcessing
 
     Services.logger.info("Concordance adds and deletes waiting in #{conc_dir}/diffs")
   end
-  
 end
-
-
-   
-    
-
-

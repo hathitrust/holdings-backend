@@ -42,7 +42,10 @@ module SharedPrint
         report "Could not replace. #{err.message}"
       end
       report "Finished #{@path}"
+      @report&.close
     end
+
+    private
 
     # Report to file, set up if not set up.
     def report(msg)

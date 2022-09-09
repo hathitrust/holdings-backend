@@ -3,6 +3,7 @@
 require "spec_helper"
 require "shared_print/finder"
 require "shared_print/replacer"
+require "phctl"
 
 RSpec.describe SharedPrint::Replacer do
   let(:loc1) { "i111" }
@@ -27,14 +28,14 @@ RSpec.describe SharedPrint::Replacer do
     SharedPrint::Finder.new.commitments.to_a
   end
 
-  describe "#run" do
+  describe "integration test" do
     it "makes SharedPrint::ReplaceRecords from a file and applies them" do
       # Setup
       cluster_tap_save [spc1]
       # Pre-check
       expect(spc1.deprecated?).to be false
       # Action
-      described_class.new(update_file_path).run
+      PHCTL::PHCTL.start(["sp", "replace", update_file_path])
       # Post-check
       deprecated = get_deprecated
       active = get_active

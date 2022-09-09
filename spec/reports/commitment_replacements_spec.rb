@@ -33,11 +33,7 @@ RSpec.describe Reports::CommitmentReplacements do
   let(:spc) { build(:commitment, ocn: ocn1, organization: h_ch.organization, local_id: h_ch.local_id) }
 
   def run(ocns)
-    rows = []
-    report.for_ocns(ocns) do |row|
-      rows << row
-    end
-    rows
+    described_class.new(ocns).replacements.to_a
   end
 
   before(:each) do
@@ -46,7 +42,7 @@ RSpec.describe Reports::CommitmentReplacements do
 
   describe "#header" do
     it "looks like expected" do
-      expect(report.header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
+      expect(described_class.new([ocn1]).header).to eq(["organization", "oclc_sym", "ocn", "local_id"])
     end
   end
   describe "#for_ocns" do

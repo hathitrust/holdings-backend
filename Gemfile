@@ -17,6 +17,8 @@ gem "rgl"
 gem "sequel"
 gem "thor"
 gem "zinzout"
+gem "puma"
+gem "sidekiq"
 
 group :development, :test do
   gem "pry"
@@ -28,6 +30,7 @@ group :test do
   gem "faker"
   gem "rspec"
   gem "simplecov"
+  gem "simplecov-lcov"
   gem "webmock"
 end
 

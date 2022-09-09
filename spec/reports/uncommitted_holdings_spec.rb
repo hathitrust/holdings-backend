@@ -26,11 +26,7 @@ RSpec.describe Reports::UncommittedHoldings do
 
   # Runs report, returns records. Run, report. Run!
   def run_report(report)
-    returned_records = []
-    report.run do |record|
-      returned_records << record
-    end
-    returned_records
+    report.records.to_a
   end
 
   before(:each) do
