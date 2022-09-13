@@ -10,6 +10,7 @@ require "loader/ht_item_loader"
 require "loader/shared_print_loader"
 require "reports/commitment_replacements"
 require "reports/etas_organization_overlap_report"
+require "reports/oclc_registration"
 require "reports/uncommitted_holdings"
 require "reports/rare_uncommitted"
 $LOAD_PATH.unshift(File.dirname(__FILE__))
@@ -135,6 +136,14 @@ module PHCTL
                                                 noop: options[:noop])
       puts report.header.join("\t")
       report.run { |record| puts record.to_s }
+    end
+
+    desc "oclc-registration ORGANIZATION", "Output all commitments for ORG in OCLC Registration format"
+    def oclc_registration(organization)
+      report = Reports::OCLCRegistration.new(organization)
+ration format)
+      report.run
+      puts "Output written to #{report.output_file}"
     end
 
     # E.g. phctl report rare-uncommitted-counts --max_sp_h 2 --max_h 1
