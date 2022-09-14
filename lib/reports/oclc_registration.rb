@@ -55,7 +55,7 @@ module Reports
         com.oclc_sym,
         collection_id(com.oclc_sym),
         "committed to retain",
-        com.committed_date,
+        com.committed_date.strftime("%Y%m%d"),
         "20421231"
       ].join("\t")
     end
@@ -65,15 +65,15 @@ module Reports
     def collection_id(oclc_sym)
       if @collection_memo.empty?
         Utils::TSVReader.new(@collection_id_map_path).run do |rec|
-          @collection_memo[rec[:oclc_sym]] = rec[:collection_id]
+          @collection_memo[rec[:oclc_sym].upcase] = rec[:collection_id]
         end
       end
-      if @collection_memo[oclc_sym].nil?
+      if @collection_memo[oclc_sym.upcase].nil?
         raise KeyError,
           "No collection_id for oclc_sym \"#{oclc_sym}\"" \
           "in #{@collection_id_map_path}"
       end
-      @collection_memo[oclc_sym]
+      @collection_memo[oclc_sym.upcase]
     end
 
     private
@@ -83,7 +83,7 @@ module Reports
       # Require that a path for a dir for output files be set.
       raise "Settings.oclc_registration_report_path not set" if @outd.nil?
       # Require that a path to a file with oclc_collection mapping be set.
-      raise "Settings.oclc_collection_id_map not set" if @collection_id_map_path.nil?
+      raise "Settings.oclc_collection_id_map_path not set" if @collection_id_map_path.nil?
     end
   end
 end
