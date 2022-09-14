@@ -4,8 +4,8 @@ require "services"
 require "holding"
 require "cluster"
 
-DIGIT_RX = /\d/.freeze
-UUID_RX  = /^[0-9a-f\-]+$/.freeze
+DIGIT_RX = /\d/
+UUID_RX = /^[0-9a-f\-]+$/
 
 # Takes path(s) to file(s) with lines of:
 # ocn \t org \t holdings.uuid
@@ -33,7 +33,7 @@ def main
       next unless DIGIT_RX.match?(c_ocns)
       next unless UUID_RX.match?(h_uuid)
 
-      Cluster.find_by(ocns: c_ocns.to_i).holdings.select {|h| h.uuid == h_uuid }.each do |mh|
+      Cluster.find_by(ocns: c_ocns.to_i).holdings.select { |h| h.uuid == h_uuid }.each do |mh|
         puts ["deleting:", mh.to_json].join("\t")
         mh.delete
         org_counts[org] ||= 0

@@ -25,9 +25,9 @@ class HoldingsDeleter
   def initialize(args)
     @logger = Services.logger
     @matching_criteria = {} # These all go into the query.
-    @control_flags     = {} # These control program flow.
-    parse_opts(args)        # Set @matching_criteria
-    move_opts               # Move selected settings to @control_flags
+    @control_flags = {} # These control program flow.
+    parse_opts(args) # Set @matching_criteria
+    move_opts # Move selected settings to @control_flags
 
     if @matching_criteria.empty?
       raise "No matching criteria given."
@@ -55,7 +55,7 @@ class HoldingsDeleter
     keepalive_time = @control_flags[:session_keepalive_time] || DEFAULT_KEEPALIVE_TIME
     Utils::SessionKeepAlive.new(keepalive_time).run do
       # Construct query.
-      pull_query = { "$pull": { "holdings": { "$and": [@matching_criteria] } } }
+      pull_query = {"$pull": {holdings: {"$and": [@matching_criteria]}}}
       @logger.info "Pull-query: #{pull_query}" if @control_flags[:verbose]
 
       # Execute query/ies.
@@ -77,10 +77,10 @@ class HoldingsDeleter
   def delete_empty_clusters
     query = {
       "$and": [
-        { "ht_items.0":        { "$exists": 0 } },
-        { "holdings.0":        { "$exists": 0 } },
-        { "commitments.0":     { "$exists": 0 } },
-        { "ocn_resolutions.0": { "$exists": 0 } }
+        {"ht_items.0": {"$exists": 0}},
+        {"holdings.0": {"$exists": 0}},
+        {"commitments.0": {"$exists": 0}},
+        {"ocn_resolutions.0": {"$exists": 0}}
       ]
     }
 
@@ -151,7 +151,6 @@ class HoldingsDeleter
       end
     end
   end
-
 end
 
 if __FILE__ == $PROGRAM_NAME

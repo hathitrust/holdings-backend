@@ -14,12 +14,12 @@ end
 def records_with_enum_chrons
   return enum_for(:records_with_enum_chrons) unless block_given?
 
-  Cluster.where("$or": [{ "holdings.enum_chron": { "$ne": "" } },
-                        { "ht_items.enum_chron": { "$ne": "" } }]).each do |c|
-                          (c.holdings + c.ht_items).each do |item|
-                            yield item unless item.enum_chron == ""
-                          end
-                        end
+  Cluster.where("$or": [{"holdings.enum_chron": {"$ne": ""}},
+    {"ht_items.enum_chron": {"$ne": ""}}]).each do |c|
+    (c.holdings + c.ht_items).each do |item|
+      yield item unless item.enum_chron == ""
+    end
+  end
 end
 
 def main
@@ -31,7 +31,7 @@ def main
   records_with_enum_chrons.each do |rec|
     marker.incr
     renormalize(rec)
-    marker.on_batch {|m| logger.info m.batch_line }
+    marker.on_batch { |m| logger.info m.batch_line }
   end
   logger.info marker.final_line
 end

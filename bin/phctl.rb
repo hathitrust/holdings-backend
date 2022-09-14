@@ -57,8 +57,7 @@ module PHCTL
   end
 
   class Concordance < Thor
-
-    desc "validate INFILE OUTFILE",  "Validate a concordance file"
+    desc "validate INFILE OUTFILE", "Validate a concordance file"
     def validate(infile, outfile)
       ConcordanceProcessing.new.validate(infile, outfile)
     end
@@ -81,7 +80,7 @@ module PHCTL
     end
 
     desc "deprecate INFILE", "Decprecate commitments based on provided records"
-    option :verbose, :type => :boolean, :default => false
+    option :verbose, type: :boolean, default: false
     def deprecate(*infile)
       SharedPrint::Deprecator.new(verbose: options[:verbose]).run([*infile])
     end
@@ -89,8 +88,8 @@ module PHCTL
 
   class Report < Thor
     desc "costreport (--organization ORG) (--target_cost COST)", "Run a cost report"
-    option :organization, :type => :string, :default => nil
-    option :target_cost, :type => :numeric, :default => nil
+    option :organization, type: :string, default: nil
+    option :target_cost, type: :numeric, default: nil
     def costreport
       CompileCostReport.new.run(options[:organization], options[:target_cost])
     end
@@ -106,7 +105,7 @@ module PHCTL
     end
 
     desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
-    def etas_overlap(org=nil)
+    def etas_overlap(org = nil)
       rpt = Reports::EtasOrganizationOverlapReport.new(org)
       rpt.run
       rpt.move_reports
@@ -122,18 +121,18 @@ module PHCTL
     end
 
     desc "uncommitted-holdings", "Find holdings without commitments"
-    option :all, :type => :boolean, :default => false
-    option :verbose, :type => :boolean, :default => false
-    option :organization, :type => :array, :default => []
-    option :ocn, :type => :array, :default => []
-    option :noop, :type => :boolean, :default =>  false
+    option :all, type: :boolean, default: false
+    option :verbose, type: :boolean, default: false
+    option :organization, type: :array, default: []
+    option :ocn, type: :array, default: []
+    option :noop, type: :boolean, default: false
     def uncommitted_holdings
       options[:ocn] = options[:ocn].map(&:to_i)
       report = Reports::UncommittedHoldings.new(all: options[:all],
-                                                ocn: options[:ocn],
-                                                organization: options[:organization],
-                                                verbose: options[:verbose],
-                                                noop: options[:noop])
+        ocn: options[:ocn],
+        organization: options[:organization],
+        verbose: options[:verbose],
+        noop: options[:noop])
       puts report.header.join("\t")
       report.run { |record| puts record.to_s }
     end
@@ -141,18 +140,17 @@ module PHCTL
     desc "oclc-registration ORGANIZATION", "Output all commitments for ORG in OCLC Registration format"
     def oclc_registration(organization)
       report = Reports::OCLCRegistration.new(organization)
-ration format)
       report.run
       puts "Output written to #{report.output_file}"
     end
 
     # E.g. phctl report rare-uncommitted-counts --max_sp_h 2 --max_h 1
     desc "rare-uncommitted-counts", "Get counts of rare holdings"
-    option :max_h, :type => :numeric, :default => nil
-    option :max_sp_h, :type => :numeric, :default => nil
-    option :non_sp_h_count, :type => :numeric, :default => nil
-    option :commitment_count, :type => :numeric, :default => 0
-    option :organization, :type => :string, :default => nil
+    option :max_h, type: :numeric, default: nil
+    option :max_sp_h, type: :numeric, default: nil
+    option :non_sp_h_count, type: :numeric, default: nil
+    option :commitment_count, type: :numeric, default: 0
+    option :organization, type: :string, default: nil
     def rare_uncommitted_counts
       report = Reports::RareUncommitted.new(
         max_h: options[:max_h],
@@ -177,10 +175,12 @@ ration format)
       puts DataSources::HTOrganizations.new.members.keys
     end
 
+    # standard:disable Lint/Debugger
     desc "pry", "Opens a pry-shell with environment loaded"
     def pry
       binding.pry
     end
+    # standard:enable Lint/Debugger
 
     # report
     desc "report", "Generate a report"
@@ -195,7 +195,6 @@ ration format)
     desc "sp", "Shared print operations"
     subcommand "sp", SharedPrintOps
   end
-
 end
 
 PHCTL::PHCTL.start(ARGV)
