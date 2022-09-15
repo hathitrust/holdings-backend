@@ -10,9 +10,12 @@ hathifile_path: /tmp/hathifiles
 large_cluster_ocns: /tmp/large_cluster_ocns.txt
 loading_flag_path: /tmp/loading_flag
 local_report_path: /tmp/local_reports
+oclc_collection_id_map_path: spec/fixtures/oclc_collection_id_map.tsv
+oclc_registration_report_path: /tmp
 rclone_config_path: /tmp/rclone.conf
 replace_commitment_report_path: /tmp/replace_commitment_report
 shared_print_report_path: /tmp/shared_print_reports
 shared_print_update_report_path: /tmp/shared_print_update_report
 slack_endpoint: http://slack.test/endpoint
 target_cost: 9999
+

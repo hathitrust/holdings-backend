@@ -152,5 +152,11 @@ RSpec.describe "phctl integration" do
       expect(File.read(Dir.glob("/tmp/shared_print_reports/rare_uncommitted_counts_*").first))
         .to match(/^number of holding libraries/)
     end
+
+    it "OCLCRegistration produces output" do
+      phctl(*%w[report oclc-registration umich])
+      expect(File.read(Dir.glob("/tmp/oclc_registration_umich_*").first))
+        .to match(/^local_oclc/)
+    end
   end
 end

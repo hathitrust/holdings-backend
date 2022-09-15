@@ -124,6 +124,11 @@ module PHCTL
       # TODO rename command or report class
       Jobs::Common.perform_async("Reports::RareUncommitted", options)
     end
+
+    desc "oclc-registration ORGANIZATION", "Output all commitments for ORG in OCLC Registration format"
+    def oclc_registration(organization)
+      Jobs::Common.perform_async("Reports::OCLCRegistration", options, organization)
+    end
   end
 
   class PHCTL < Thor
