@@ -107,11 +107,13 @@ module Reports
       return enum_for(:output_organization) unless block_given?
 
       header = [
-        "organization",
+        "member_id",
         "local_id",
         "gov_doc",
         "condition",
-        "OCN"
+        "OCN",
+        "overlap_ht",
+        "overlap_sp"
       ].join("\t")
       yield header
 
@@ -129,7 +131,9 @@ module Reports
             holding.local_id,
             govdoc_bool_2_int,
             holding.condition,
-            holding.ocn
+            holding.ocn,
+            cluster_h(cluster),
+            cluster_sp_h(cluster)
           ].join("\t")
           yield record
         end

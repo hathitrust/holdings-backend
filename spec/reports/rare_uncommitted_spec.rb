@@ -277,4 +277,32 @@ RSpec.describe Reports::RareUncommitted do
       expect(counts).to eq expected
     end
   end
+
+  describe "#output_organization" do
+    it "returns an array of report rows, incl header" do
+      cluster_tap_save [hti1, hol1_org1, hti2, hol2_org1, spc2_org1]
+      out_arr = report(organization: org1, max_h: 5).output_organization.to_a
+      expect(out_arr).to be_a Array
+      expect(out_arr.size).to eq 2
+      compare_header = [
+        "member_id",
+        "local_id",
+        "gov_doc",
+        "condition",
+        "OCN",
+        "overlap_ht",
+        "overlap_sp"
+      ].join("\t")
+      header = out_arr.shift
+      expect(header).to eq compare_header
+
+      row_data = out_arr.shift.split("\t")
+      expect(row_data[0]).to eq "umich"
+      expect(row_data[1]).to eq hol1_org1.local_id
+      expect(row_data[2]).to eq hol1_org1.gov_doc_flag ? "1" : "0"
+      expect(row_data[3]).to eq hol1_org1.condition
+      expect(row_data[4]).to eq hol1_org1.ocn.to_s
+      puts out_arr
+    end
+  end
 end
