@@ -16,6 +16,11 @@ RSpec.describe Reports::OCLCRegistration do
     expect(rep.collection_id("BAR")).to eq "456"
   end
 
+  it "looks up collection_id case-insensitively" do
+    expect(rep.collection_id("FOO")).to eq "123"
+    expect(rep.collection_id("foo")).to eq "123"
+  end
+
   it "throws a key error if there is no mapping for an oclc_sym" do
     expect { rep.collection_id("QUX") }.to raise_error KeyError
   end
@@ -28,7 +33,7 @@ RSpec.describe Reports::OCLCRegistration do
       "FOO",
       "123",
       "committed to retain",
-      com.committed_date,
+      com.committed_date.strftime("%Y%m%d"),
       "20421231"
     ].join("\t")
   end
