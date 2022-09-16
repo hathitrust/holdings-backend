@@ -7,30 +7,17 @@ on:
     types: [ completed ]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+      - uses: hathitrust/github_actions/build@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build image and push to DockerHub
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          tags: 'ghcr.io/hathitrust/holdings-client-unstable:${{ github.sha }}, ghcr.io/hathitrust/holdings-client-unstable:latest'
-          file: Dockerfile.prod
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-
+          image: ghcr.io/hathitrust/holdings-client-unstable
+          dockerfile: Dockerfile.prod
+          tag: ${{ github.sha }}
+          push_latest: true
+          registry_token: ${{ github.token }}
