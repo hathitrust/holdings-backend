@@ -7,7 +7,7 @@
 # Run this outside docker; it will start all required services.
 # Running this script assumes you have already run --rm bin/setup_dev.sh
 
-docker-compose up -d sidekiq_web processor redis
+docker-compose up --scale processor=3 -d sidekiq_web processor redis 
 docker-compose run --rm dev bin/setup/wait-for redis:6379 -- echo "redis is ready"
 
 echo "generating fake data"

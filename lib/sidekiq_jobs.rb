@@ -19,6 +19,8 @@ require "shared_print/updater"
 require "shared_print/replacer"
 require "shared_print/deprecator"
 
+require_relative "../config/initializers/sidekiq"
+
 # Don't want to do this by default when we aren't running under sidekiq
 Services.register(:logger) { Sidekiq.logger }
 
