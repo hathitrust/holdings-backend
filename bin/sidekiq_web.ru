@@ -1,5 +1,6 @@
 require "sidekiq"
 require "sidekiq/web"
+require_relative "../config/initializers/sidekiq"
 
 SESSION_KEY = ".session.key"
 
