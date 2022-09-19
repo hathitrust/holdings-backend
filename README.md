@@ -79,7 +79,7 @@ representing a pair of OCLC numbers that should be treated as equivalent.
 
 There are ≈ 60M rows in this file. 
 
-Concordance files can be downloaded to concordance_path/raw/<yyyymm>_concordance.txt.gz_
+Concordance files can be downloaded from OCLC's website. See confluence for details.
 
 1. Validate, e.g. 
   `run_generic_job.sh conc-val bundle exec bin/phctl.rb concordance validate /htprep/holdings/concordance/raw/202205_concordance.txt.gz /htprep/holdings/concordance/validated/202205_concordance_validated.tsv`
