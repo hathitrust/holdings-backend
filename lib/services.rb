@@ -15,7 +15,7 @@ require "prometheus/client/push"
 
 Services = Canister.new
 Services.register(:mongo!) do
-  Mongoid.load!("mongoid.yml", Settings.environment)
+  Mongoid.load!(File.join(__dir__, "..", "config", "mongoid.yml"), Settings.environment)
 end
 
 Services.register(:holdings_db) { DataSources::HoldingsDB.new }

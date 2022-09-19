@@ -1,13 +1,13 @@
 production:
   clients:
     default:
-      database: holdings
+      database: "<%= Settings.mongodb.database %>"
       hosts:
         - "<%= Settings.mongodb.host %>"
       options:
-        user: holdings
+        user: "<%= Settings.mongodb.username %>"
         password: "<%= Settings.mongodb.password %>"
-        auth_source: admin
+        auth_source: "<%= Settings.mongodb.auth_source %>"
   options:
     raise_not_found_error: false
 
