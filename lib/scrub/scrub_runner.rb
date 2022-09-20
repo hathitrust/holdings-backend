@@ -55,7 +55,7 @@ module Scrub
       new_files = check_new_files(member)
       puts "Found #{new_files.size} new files: #{new_files.join(", ")}."
       new_files.each do |new_file|
-        run_file(member, new_file["Name"])
+        run_file(member, new_file)
       end
     end
 
@@ -81,38 +81,51 @@ module Scrub
 
     # Check member-uploaded files for any not previously seen files
     def check_new_files(member)
-      puts "check new files for member #{member}"
       remote_dir = DataSources::DirectoryLocator.new(
         Settings.remote_member_dir,
         member
       ).holdings_current
-      remote_files = @ft.lsjson(remote_dir).map { |f| f["Name"] }
+
+      # Return new (as in not in old) files
+      remote_files = @ft.lsjson(remote_dir)
       old_files = check_old_files(member)
-      # Return new (as in previously not processed) files
-      new_files = remote_files - old_files
-      puts "found #{new_files.size} new file(s)"
+
+      # Include in new_files only those remote_files whose name are not in old_files.
+      new_files = []
+      remote_files.each do |f|
+        if old_files.select { |oldf| f["Name"] == oldf["Name"] }.empty?
+          new_files << f
+        end
+      end
+
       new_files
     end
 
     # Check the member scrub_dir for previously scrubbed files.
     def check_old_files(member)
-      puts "check old files for #{member}"
       local_dir = DataSources::DirectoryLocator.new(
         Settings.local_member_dir,
         member
       ).holdings_current
-      @ft.lsjson(local_dir).map { |f| f["Name"] }
+      @ft.lsjson(local_dir)
     end
 
     def download_to_work_dir(member, file)
-      puts "download remote file #{file} to work dir for #{member}"
       work_dir = DataSources::DirectoryLocator.new(
         Settings.local_member_dir,
         member
       ).holdings_current
-      @ft.download(file, work_dir)
+
+      remote_dir = DataSources::DirectoryLocator.new(
+        Settings.remote_member_dir,
+        member
+      ).holdings_current
+
+      remote_file = File.join(remote_dir, file["Path"])
+      @ft.download(remote_file, work_dir)
+
       # Return the path to the downloaded file
-      File.join(work_dir, File.split(file).last)
+      File.join(work_dir, File.split(remote_file).last)
     end
 
     def upload_to_member(member, file)
