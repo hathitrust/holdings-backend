@@ -1,3 +1,4 @@
+---
 name: Manual Image Build
 
 on:
@@ -9,10 +10,12 @@ on:
 
 jobs:
   build_manual:
-    - uses: hathitrust/github_actions/build@v1
-      with:
-        dockerfile: Dockerfile.prod
-        image: ghcr.io/hathitrust/holdings-client-unstable
-        tag: ${{ github.event.inputs.tag }}
-        push_latest: false
-        registry_token: ${{ github.token }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hathitrust/github_actions/build@v1
+        with:
+          dockerfile: Dockerfile.prod
+          image: ghcr.io/hathitrust/holdings-client-unstable
+          tag: ${{ github.event.inputs.tag }}
+          push_latest: false
+          registry_token: ${{ github.token }}
