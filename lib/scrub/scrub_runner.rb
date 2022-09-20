@@ -74,8 +74,9 @@ module Scrub
           batch_loader = Loader::HoldingLoader.for(".ndj")
           Loader::FileLoader.new(batch_loader: batch_loader).load(chunk)
         end
-        chunker.cleanup! # maybe not yet?
-        upload_to_member(member, scrubber.logger_path)
+        # do when chunks are done, except we don;t know how really
+        # chunker.cleanup!
+        # upload_to_member(member, scrubber.logger_path)
       end
     end
 
