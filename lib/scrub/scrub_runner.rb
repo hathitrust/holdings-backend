@@ -81,13 +81,8 @@ module Scrub
 
     # Check member-uploaded files for any not previously seen files
     def check_new_files(member)
-      remote_dir = DataSources::DirectoryLocator.new(
-        Settings.remote_member_dir,
-        member
-      ).holdings_current
-
       # Return new (as in not in old) files
-      remote_files = @ft.lsjson(remote_dir)
+      remote_files = @ft.lsjson(remote_dir(member))
       old_files = check_old_files(member)
 
       # Include in new_files only those remote_files whose name are not in old_files.
@@ -116,12 +111,7 @@ module Scrub
         member
       ).holdings_current
 
-      remote_dir = DataSources::DirectoryLocator.new(
-        Settings.remote_member_dir,
-        member
-      ).holdings_current
-
-      remote_file = File.join(remote_dir, file["Path"])
+      remote_file = File.join(remote_dir(member), file["Path"])
       @ft.download(remote_file, work_dir)
 
       # Return the path to the downloaded file
@@ -130,14 +120,16 @@ module Scrub
 
     def upload_to_member(member, file)
       puts "upload local file #{file} to remote dir for #{member}"
-      # todo: something something rclone, upload scrub report to dropbox
-      remote_dir = DataSources::DirectoryLocator.new(
+      @ft.upload(file, remote_dir(member))
+    end
+
+    def remote_dir(member)
+      DataSources::DirectoryLocator.new(
         Settings.remote_member_dir,
         member
       ).holdings_current
-      @ft.upload(file, remote_dir)
     end
-
+    
     def move_to_scrubbed_dir(member, file)
       scrubbed_dir = "#{Settings.local_member_dir}/#{member}"
       puts "move #{file} to #{scrubbed_dir}"
