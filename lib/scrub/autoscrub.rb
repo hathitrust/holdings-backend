@@ -15,7 +15,7 @@ module Scrub
   class AutoScrub
     # Won't put in accessors unless we find a solid case for running this
     # by another ruby class.
-    attr_reader :output_struct, :out_files
+    attr_reader :output_struct, :out_files, :logger_path
 
     def initialize(path)
       @path = path
@@ -30,11 +30,12 @@ module Scrub
 
       # Once we have @member_id and @item_type,
       # build a log path and re-register the service logger to log to that path
-      logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}.log")
-      puts "autoscrub logging to #{logger_path}"
+      ymd = Time.new.strftime("%F")
+      @logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}_#{ymd}.log")
+      puts "autoscrub logging to #{@logger_path}"
 
       Services.register(:scrub_logger) do
-        lgr = Logger.new(logger_path)
+        lgr = Logger.new(@logger_path)
         # Show time, file:lineno, level for each log message
         lgr.formatter = proc do |severity, datetime, _progname, msg|
           file_line = caller(4..4).first.split(":")[0, 2].join(":")
@@ -44,7 +45,7 @@ module Scrub
       end
 
       Services.scrub_logger.info("INIT")
-      Services.logger.info("Logging to #{logger_path}")
+      Services.logger.info("Logging to #{@logger_path}")
     end
 
     def run

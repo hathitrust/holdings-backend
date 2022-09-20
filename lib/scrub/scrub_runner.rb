@@ -75,7 +75,7 @@ module Scrub
           Loader::FileLoader.new(batch_loader: batch_loader).load(chunk)
         end
         chunker.cleanup! # maybe not yet?
-        upload_to_member(member, scrubber_out_file)
+        upload_to_member(member, scrubber.logger_path)
       end
     end
 
@@ -131,6 +131,11 @@ module Scrub
     def upload_to_member(member, file)
       puts "upload local file #{file} to remote dir for #{member}"
       # todo: something something rclone, upload scrub report to dropbox
+      remote_dir = DataSources::DirectoryLocator.new(
+        Settings.remote_member_dir,
+        member
+      ).holdings_current
+      @ft.upload(file, remote_dir)
     end
 
     def move_to_scrubbed_dir(member, file)
