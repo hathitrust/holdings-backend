@@ -129,7 +129,7 @@ module Scrub
         member
       ).holdings_current
     end
-    
+
     def move_to_scrubbed_dir(member, file)
       scrubbed_dir = "#{Settings.local_member_dir}/#{member}"
       puts "move #{file} to #{scrubbed_dir}"
