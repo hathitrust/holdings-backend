@@ -20,14 +20,15 @@ module Scrub
         raise Scrub::ChunkerError, "Settings.scrub_chunk_work_dir must be set, is nil"
       end
       @uuid = SecureRandom.uuid
-      FileUtils.mkdir_p("#{@work_dir}/#{@uuid}")
+      @tmp_chunk_dir = File.join(@work_dir, @uuid)
+      FileUtils.mkdir_p(@tmp_chunk_dir)
     end
 
     def run
       # First we need to get all the data from @glob into one file.
       # `split --number=l/x` only works on files, not on STDIN.
       # TODO: we might want another dir for sort -T .
-      tmp_file = "#{@work_dir}/#{@uuid}/tmp_sorted.txt"
+      tmp_file = File.join(@tmp_chunk_dir, "tmp_sorted.txt")
       add_uuid_call = @add_uuid ? "| bundle exec ruby bin/add_uuid.rb" : ""
       sort_call = "egrep -vh '^OCN' #{@glob} | " \
                   "sort -s -n -k1,1 -T ./ " \
@@ -51,10 +52,10 @@ module Scrub
       end
 
       # Rename and tell ruby about the resulting files.
-      @chunks = Dir.new("#{@work_dir}/#{@uuid}")
+      @chunks = Dir.new(@tmp_chunk_dir)
         .select { |fn| fn =~ /^split_\d+$/ }
         .sort
-        .map { |fn| rename("#{@work_dir}/#{@uuid}/#{fn}") }
+        .map { |fn| rename(File.join(@tmp_chunk_dir, fn)) }
 
       # Tmp file serves no further purpose
       FileUtils.rm(tmp_file)
@@ -69,8 +70,8 @@ module Scrub
 
     # These can start taking up a lot of space and are ~worthless once loaded.
     def cleanup!
-      puts "rm -rf #{@work_dir}/#{@uuid}"
-      FileUtils.rm_rf("#{@work_dir}/#{@uuid}")
+      puts "rm -rf #{@tmp_chunk_dir}"
+      FileUtils.rm_rf(@tmp_chunk_dir)
     end
   end
 end
