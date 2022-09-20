@@ -42,7 +42,7 @@ RSpec.describe Scrub::ScrubRunner do
       local_d.ensure!
       FileUtils.touch(File.join(local_d.holdings_current, "a.txt"))
       FileUtils.touch(File.join(local_d.holdings_current, "b.txt"))
-      expect(sr.check_old_files(org1)).to eq ["a.txt", "b.txt"]
+      expect(sr.check_old_files(org1).map { |f| f["Name"] }).to eq ["a.txt", "b.txt"]
     end
   end
 
@@ -70,7 +70,7 @@ RSpec.describe Scrub::ScrubRunner do
 
       # When there are remote files but no local files:
       FileUtils.touch(File.join(remote_d.holdings_current, "a.tsv"))
-      expect(sr.check_new_files(org1)).to eq ["a.tsv"]
+      expect(sr.check_new_files(org1).first["Name"]).to eq "a.tsv"
 
       # When remote files == local files
       FileUtils.touch(File.join(local_d.holdings_current, "a.tsv"))
@@ -78,7 +78,7 @@ RSpec.describe Scrub::ScrubRunner do
 
       # When there is a remote file not in local
       FileUtils.touch(File.join(remote_d.holdings_current, "b.tsv"))
-      expect(sr.check_new_files(org1)).to eq ["b.tsv"]
+      expect(sr.check_new_files(org1).first["Name"]).to eq "b.tsv"
     end
   end
 
@@ -109,7 +109,7 @@ RSpec.describe Scrub::ScrubRunner do
       sr.run_one_member(org1)
     end
   end
-  
+
   describe "#run_file" do
     it "downloads a file, scrub+etc it" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
@@ -118,7 +118,7 @@ RSpec.describe Scrub::ScrubRunner do
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
-      remote_file = File.join(remote_d.holdings_current, "umich_mono_full_20220101.tsv")
+      remote_file = sr.check_new_files(org1).first
       sr.run_file(org1, remote_file)
     end
   end
