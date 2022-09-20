@@ -10,18 +10,25 @@ module Scrub
   # #{chunk_count} equal-sized (roughly) files from them.
   class Chunker
     attr_reader :glob, :chunks
-    def initialize(glob: "/dev/null", chunk_count: 16, add_uuid: false)
+    def initialize(glob: "/dev/null", chunk_count: 16, add_uuid: false, out_ext: nil)
       @glob = glob # to one or more files
       @chunks = [] # store paths to output files here
       @chunk_count = chunk_count
       @add_uuid = add_uuid
       @work_dir = Settings.scrub_chunk_work_dir
+      @uuid = SecureRandom.uuid
+      @out_ext = out_ext # Apply this extension to the resulting file(s).
+      @tmp_chunk_dir = File.join(@work_dir, @uuid)
+      FileUtils.mkdir_p(@tmp_chunk_dir)
+    end
+
+    def validate
       if @work_dir.nil?
         raise Scrub::ChunkerError, "Settings.scrub_chunk_work_dir must be set, is nil"
       end
-      @uuid = SecureRandom.uuid
-      @tmp_chunk_dir = File.join(@work_dir, @uuid)
-      FileUtils.mkdir_p(@tmp_chunk_dir)
+      if @out_ext.nil?
+        raise Scrub::ChunkerError, "No output extension specified (@out_ext)"
+      end
     end
 
     def run
@@ -63,9 +70,9 @@ module Scrub
 
     # Just adds file ext.
     def rename(fn)
-      FileUtils.mv(fn, "#{fn}.tsv")
+      FileUtils.mv(fn, "#{fn}.#{@out_ext}")
       # Return new name
-      "#{fn}.tsv"
+      "#{fn}.#{@out_ext}"
     end
 
     # These can start taking up a lot of space and are ~worthless once loaded.
