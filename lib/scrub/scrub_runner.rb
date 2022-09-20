@@ -22,7 +22,6 @@ require "utils/file_transfer"
 # runner.run_all_members
 # runner.run_some_members(["umich", ..., "harvard"])
 # runner.run_one_member("umich")
-#
 
 module Scrub
   # Scrubs and loads any new member-uploaded files.
@@ -39,8 +38,7 @@ module Scrub
 
     def run_all_members
       puts "Run all members."
-      @members = DataSources::HTOrganizations.new.members.keys.sort
-      run_some_members(@members)
+      run_some_members(DataSources::HTOrganizations.new.members.keys.sort)
     end
 
     def run_some_members(members)
@@ -63,21 +61,25 @@ module Scrub
     def run_file(member, file)
       puts "Running file #{file} for member #{member}"
       downloaded_file = download_to_work_dir(member, file)
+
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
       scrubber.out_files.each do |scrubber_out_file|
         puts "Ready to split #{scrubber_out_file} into chunks"
-        chunker = Scrub::Chunker.new(glob: scrubber_out_file, chunk_count: 4)
+        chunker = Scrub::Chunker.new(glob: scrubber_out_file, chunk_count: 4, out_ext: "ndj")
         chunker.run
         chunker.chunks.each do |chunk|
           puts "Load chunk #{chunk}"
-          batch_loader = Loader::HoldingLoader.for(".ndj")
-          Loader::FileLoader.new(batch_loader: batch_loader).load(chunk)
+          Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(chunk)).load(chunk)
         end
         # do when chunks are done, except we don;t know how really
         # chunker.cleanup!
         # upload_to_member(member, scrubber.logger_path)
       end
+    rescue
+      # If the scrub failed, remove the file from local storage, that we may try again.
+      FileUtils.rm(downloaded_file)
+      raise "Scrub failed, removing downloaded file #{downloaded_file}"
     end
 
     # Check member-uploaded files for any not previously seen files
@@ -86,7 +88,7 @@ module Scrub
       remote_files = @ft.lsjson(remote_dir(member))
       old_files = check_old_files(member)
 
-      # Include in new_files only those remote_files whose name are not in old_files.
+      # Include in new_files only those remote_files whose name is not in old_files.
       new_files = []
       remote_files.each do |f|
         if old_files.select { |oldf| f["Name"] == oldf["Name"] }.empty?
@@ -99,24 +101,16 @@ module Scrub
 
     # Check the member scrub_dir for previously scrubbed files.
     def check_old_files(member)
-      local_dir = DataSources::DirectoryLocator.new(
-        Settings.local_member_dir,
-        member
-      ).holdings_current
-      @ft.lsjson(local_dir)
+      @ft.lsjson(local_dir(member))
     end
 
+    # file here is annoyingly a RClone.lsjson hash with {"Path": x, "Name": y}
     def download_to_work_dir(member, file)
-      work_dir = DataSources::DirectoryLocator.new(
-        Settings.local_member_dir,
-        member
-      ).holdings_current
-
       remote_file = File.join(remote_dir(member), file["Path"])
-      @ft.download(remote_file, work_dir)
+      @ft.download(remote_file, local_dir(member))
 
       # Return the path to the downloaded file
-      File.join(work_dir, File.split(remote_file).last)
+      File.join(local_dir(member), File.split(remote_file).last)
     end
 
     def upload_to_member(member, file)
@@ -131,10 +125,11 @@ module Scrub
       ).holdings_current
     end
 
-    def move_to_scrubbed_dir(member, file)
-      scrubbed_dir = "#{Settings.local_member_dir}/#{member}"
-      puts "move #{file} to #{scrubbed_dir}"
-      FileUtils.mv(file, scrubbed_dir)
+    def local_dir(member)
+      DataSources::DirectoryLocator.new(
+        Settings.local_member_dir,
+        member
+      ).holdings_current
     end
   end
 end
