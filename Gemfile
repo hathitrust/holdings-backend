@@ -19,6 +19,7 @@ gem "thor"
 gem "zinzout"
 gem "puma"
 gem "sidekiq"
+gem "sidekiq-batch"
 
 group :development, :test do
   gem "pry"
@@ -29,6 +30,7 @@ group :test do
   gem "factory_bot"
   gem "faker"
   gem "rspec"
+  gem "rspec-sidekiq"
   gem "simplecov"
   gem "simplecov-lcov"
   gem "webmock"
