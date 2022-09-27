@@ -1,11 +1,11 @@
 # A fully automated scrubber would:
-# Check member directories for new member-submitted files
+# Check org directories for new org-submitted files
 # Compare remote files to processed files
 # Copy new files to work directory
 # Validate and scrub files into loadable format
 # Load files into db
-# Upload report to member dir
-# ... should be able to do this for any number of members/files, at a whim or by cron,
+# Upload report to org dir
+# ... should be able to do this for any number of orgs/files, at a whim or by cron,
 # ideally using a queue or pool of workers.
 
 require "data_sources/directory_locator"
@@ -22,7 +22,7 @@ require "utils/file_transfer"
 # runner.run
 
 module Scrub
-  # Scrubs and loads any new member-uploaded files.
+  # Scrubs and loads any new org-uploaded files.
   class ScrubRunner
     def initialize(organization)
       @organization = organization
@@ -43,7 +43,7 @@ module Scrub
     end
 
     def run
-      puts "Running member #{@organization}."
+      puts "Running org #{@organization}."
       new_files = check_new_files
       puts "Found #{new_files.size} new files: #{new_files.join(", ")}."
       new_files.each do |new_file|
@@ -51,11 +51,9 @@ module Scrub
       end
     end
 
-    # This should ideally spin off another (set of?) worker thread(s).
     def run_file(file)
       puts "Running file #{file}"
       downloaded_file = download_to_work_dir(file)
-
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
       scrubber.out_files.each do |scrubber_out_file|
@@ -76,7 +74,7 @@ module Scrub
       raise "Scrub failed, removing downloaded file #{downloaded_file}"
     end
 
-    # Check member-uploaded files for any not previously seen files
+    # Check org-uploaded files for any not previously seen files
     def check_new_files
       # Return new (as in not in old) files
       remote_files = @ft.lsjson(remote_dir)
@@ -93,12 +91,13 @@ module Scrub
       new_files
     end
 
-    # Check the member scrub_dir for previously scrubbed files.
+    # Check the org scrub_dir for previously scrubbed files.
     def check_old_files
       @ft.lsjson(local_dir)
     end
 
-    # file here is annoyingly a RClone.lsjson hash with {"Path": x, "Name": y}
+    # "file" here is annoyingly a RClone.lsjson output hash
+    # with format {"Path": x, "Name": y, ...}
     def download_to_work_dir(file)
       remote_file = File.join(remote_dir, file["Path"])
       @ft.download(remote_file, local_dir)

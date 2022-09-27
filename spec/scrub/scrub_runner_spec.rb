@@ -12,16 +12,13 @@ RSpec.describe Scrub::ScrubRunner do
   Settings.scrub_chunk_work_dir = "/tmp"
 
   let(:org1) { "umich" }
-  let(:org2) { "smu" }
   let(:sr) { described_class.new(org1) }
-
   let(:fixture_file) { "/usr/src/app/spec/fixtures/umich_mono_full_20220101.tsv" }
 
   before(:each) do
     FileUtils.touch(Settings.rclone_config_path)
     FileUtils.mkdir_p(Settings.local_member_dir)
     FileUtils.mkdir_p(Settings.remote_member_dir)
-
     stub_request(:get, OCLC_URL).to_return(body: '{ "oclcNumber": "1000000000" }')
   end
 
@@ -34,16 +31,21 @@ RSpec.describe Scrub::ScrubRunner do
   describe "#check_old_files" do
     it "local_d needs to exist first" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      # nothing there, at first.
       expect { sr.check_old_files }.to raise_error Utils::FileTransferError
+      # mkdir the missing dirs:
       local_d.ensure!
       expect { sr.check_old_files }.to_not raise_error
     end
 
-    it "gets the files in the requested dir" do
+    it "finds the files in the local dir" do
+      # Get a directory locator for local files.
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
       local_d.ensure!
+      # Put files in local dir.
       FileUtils.touch(File.join(local_d.holdings_current, "a.txt"))
       FileUtils.touch(File.join(local_d.holdings_current, "b.txt"))
+      # ScrubRunner sees them.
       expect(sr.check_old_files.map { |f| f["Name"] }).to eq ["a.txt", "b.txt"]
     end
   end
@@ -84,8 +86,8 @@ RSpec.describe Scrub::ScrubRunner do
     end
   end
 
-  describe "#run_one_member" do
-    it "check a member for files and scrub+etc" do
+  describe "#run" do
+    it "checks a member for new files and scrubs+loads them" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
       local_d.ensure!
@@ -97,7 +99,7 @@ RSpec.describe Scrub::ScrubRunner do
   end
 
   describe "#run_file" do
-    it "downloads a file, scrub+etc it" do
+    it "run for a specific remote file" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
       local_d.ensure!
