@@ -33,6 +33,12 @@ module PHCTL
     def holdings(filename)
       Jobs::Load::Holdings.perform_async(filename)
     end
+
+    desc "scrub ORG", "Downloads any new holdings, then scrubs & loads them."
+    def scrub(org)
+      # Jobs::Common.perform_async("Reports::Estimate", options, ocn_file)
+      Jobs::Common.perform_async(Scrub::ScrubRunner, options)
+    end
   end
 
   class Cleanup < Thor
