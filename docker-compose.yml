@@ -17,7 +17,6 @@ services:
       - .:/usr/src/app
       - gem_cache:/gems
     environment:
-      REDIS_URL: redis://redis/
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
       PUSHGATEWAY: http://pushgateway:9091
     entrypoint: bundle exec ruby bin/phctl.rb
@@ -29,11 +28,10 @@ services:
       - .:/usr/src/app
       - gem_cache:/gems
       - ./example/datasets:/tmp/datasets
-    command: bundle exec sidekiq -r ./lib/sidekiq_jobs.rb
+    command: bundle exec sidekiq -c 1 -r ./lib/sidekiq_jobs.rb
     environment:
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
       PUSHGATEWAY: http://pushgateway:9091
-      REDIS_URL: redis://redis/
 
   mongo_dev:
     image: mongo:5.0.9

@@ -28,7 +28,7 @@ SimpleCov.start
 Sidekiq.strict_args!
 Sidekiq::Testing.inline!
 
-Mongoid.load!("mongoid.yml", Settings.environment)
+Services.mongo!
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"

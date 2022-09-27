@@ -13,8 +13,11 @@ large_cluster_ocns: /usr/src/app/config/large_cluster_ocns.txt
 loading_flag_path: <%= ENV["LOADING_FLAG_PATH"] %>
 local_report_path: <%= ENV["LOCAL_REPORT_PATH"] %>
 mongodb:
+  database: holdings
+  username: holdings
   host: <%= ENV["MONGODB_HOST"] %>
   password: <%= ENV["MONGODB_PASSWORD"] %>
+  auth_source: admin
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
 rclone_config_path: <%= ENV["RCLONE_CONFIG_PATH"] %>
 replace_commitment_report_path: <%= ENV["REPLACE_COMMITMENT_REPORT_PATH"] %>
