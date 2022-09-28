@@ -14,7 +14,8 @@ require "fixtures/large_clusters"
 require "pry"
 require "settings"
 require "services"
-require "sidekiq/testing"
+require "sidekiq/batch"
+require "rspec-sidekiq"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true

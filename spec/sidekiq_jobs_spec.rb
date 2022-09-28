@@ -2,7 +2,12 @@
 
 require "spec_helper"
 require "sidekiq_jobs"
-require "sidekiq/testing"
+
+class TestCallback
+  def on_success(status, options)
+    options[:status].ran = true
+  end
+end
 
 class FakeJob
   def initialize(required, optional = "default", kw_required:, kw_optional: "default")
@@ -43,6 +48,24 @@ RSpec.describe Jobs::Common do
         kw_required: "kw_required",
         kw_optional: "default"
       })
+  end
+
+  it "can batch jobs and call callbacks" do
+    callback_status = OpenStruct.new
+
+    batch = Sidekiq::Batch.new
+    batch.description = "Test Batching"
+    batch.on(:success, TestCallback, status: callback_status)
+    batch.jobs do
+      5.times do |i|
+        Jobs::Common.perform_async("FakeJob", {"kw_required" => i}, i)
+      end
+    end
+
+    # wait for jobs to complete
+    batch.status.join
+
+    expect(callback_status.ran).to be true
   end
 
   xit "failed job goes to retry queue"
