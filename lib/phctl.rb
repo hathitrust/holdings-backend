@@ -8,6 +8,16 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # or on the cluster with
 # `ht_tanka/environments/holdings/jobs/run_generic_job.sh bin/phctl.rb <command>`
 module PHCTL
+
+  # Todo: plug in this method and add setting.
+  def run_job(klass, *args, **kwargs)
+    if Settings.run_phctl_in_redis
+      klass.perform_async(*args, **kwargs)
+    else
+      klass.new.perform(*args, **kwargs)
+    end
+  end
+
   class Load < Thor
     desc "commitments FILENAME", "Add shared print commitments"
     def commitments(filename)
