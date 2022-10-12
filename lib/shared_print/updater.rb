@@ -68,10 +68,25 @@ module SharedPrint
       commitment = @commitments.first
       @update_record.updater_fields.each do |k, v|
         report "updating #{k}=#{v}"
-        commitment.send("#{k}=", v)
+        commitment.send("#{strip_new_from_symbol(k)}=", v)
       end
       report "OK."
       commitment.save
+    end
+
+    # Remove /^new_/ from :new_local_id and :new_ocn.
+    def strip_new_from_symbol(key)
+      # :new_ocn  -> :ocn
+      # :local_id -> :local_id
+      # :anything_else -> :anything_else (output=input)
+      case key
+      when :new_ocn
+        :ocn
+      when :new_local_id
+        :local_id
+      else
+        key
+      end
     end
 
     # Removes local_id from search and tries finding commitments again.

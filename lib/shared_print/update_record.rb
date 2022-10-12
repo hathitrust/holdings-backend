@@ -85,7 +85,9 @@ module SharedPrint
         local_item_location: :string,
         local_shelving_type: :string,
         oclc_sym: :string, # might be called oclc_symbol in places, TODO: check that.
-        retention_date: :date_time
+        retention_date: :date_time,
+        new_local_id: :string,
+        new_ocn: :integer
       }
     end
 
