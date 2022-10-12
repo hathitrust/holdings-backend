@@ -7,6 +7,7 @@ require "phctl"
 
 RSpec.describe SharedPrint::Updater do
   let(:ocn1) { 1 }
+  let(:ocn2) { 2 }
   let(:org1) { "umich" }
   let(:loc1) { "i111" }
   let(:loc2) { "i222" }
@@ -24,6 +25,7 @@ RSpec.describe SharedPrint::Updater do
   # only local_id differs between upd1 and upd2
   let(:upd1) { {ocn: ocn1, organization: org1, local_id: loc1, local_bib_id: bib2} }
   let(:upd2) { {ocn: ocn1, organization: org1, local_id: loc2, local_bib_id: bib2} }
+  let(:upd3) { {ocn: ocn1, organization: org1, local_id: loc1, new_ocn: ocn2} }
 
   let(:updater) { described_class.new("/dev/null") }
 
@@ -60,6 +62,27 @@ RSpec.describe SharedPrint::Updater do
     updater.process_record(upd1)
     refresh_spc1 = SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first
     expect(refresh_spc1.local_bib_id).to eq "a"
+  end
+
+  it "strips new_ from :new_ocn and :new_local_id (for identifier updates)" do
+    expect(updater.strip_new_from_symbol(:new_ocn)).to eq :ocn
+    expect(updater.strip_new_from_symbol(:new_local_id)).to eq :local_id
+    expect(updater.strip_new_from_symbol(:new_anything_else)).to eq :new_anything_else
+    expect(updater.strip_new_from_symbol(:anything_else)).to eq :anything_else
+  end
+
+  it "can update identifiers as well" do
+    cluster_tap_save [spc1]
+    check_spc1 = SharedPrint::Finder.new(ocn: [ocn1], local_id: [loc1]).commitments.to_a
+    check_spc2 = SharedPrint::Finder.new(ocn: [ocn2], local_id: [loc1]).commitments.to_a
+    expect(check_spc1.size).to eq 1
+    expect(check_spc2.size).to eq 0
+    updater.process_record(upd3)
+    # Results are now other way around.
+    check_spc1 = SharedPrint::Finder.new(ocn: [ocn1], local_id: [loc1]).commitments.to_a
+    check_spc2 = SharedPrint::Finder.new(ocn: [ocn2], local_id: [loc1]).commitments.to_a
+    expect(check_spc1.size).to eq 0
+    expect(check_spc2.size).to eq 1
   end
 
   it "Full integration test" do
