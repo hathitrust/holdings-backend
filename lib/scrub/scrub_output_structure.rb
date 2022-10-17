@@ -2,6 +2,7 @@
 
 require "pathname"
 require "json"
+require "fileutils"
 
 module Scrub
   # Sets up a directory structure for storing autoscrub output files:
