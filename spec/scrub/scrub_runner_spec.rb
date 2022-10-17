@@ -4,6 +4,7 @@ require "spec_helper"
 require "scrub/scrub_runner"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
+require "date"
 
 RSpec.describe Scrub::ScrubRunner do
   Settings.rclone_config_path = "/tmp/rclone.conf"
@@ -27,20 +28,19 @@ RSpec.describe Scrub::ScrubRunner do
   end
 
   describe "#check_old_files" do
-    it "local_d needs to exist first" do
+    it "create the local directory if if does not exist" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       # nothing there, at first.
-      expect { sr.check_old_files }.to raise_error Utils::FileTransferError
-      # mkdir the missing dirs:
-      local_d.ensure!
-      expect { sr.check_old_files }.to_not raise_error
+      expect(File.exist?(local_d.holdings_current)).to be false
+      sr.check_old_files
+      expect(File.exist?(local_d.holdings_current)).to be true
     end
 
     it "finds the files in the local dir" do
       # Get a directory locator for local files.
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
-      local_d.ensure!
       # Put files in local dir.
+      FileUtils.mkdir_p(local_d.holdings_current)
       FileUtils.touch(File.join(local_d.holdings_current, "a.txt"))
       FileUtils.touch(File.join(local_d.holdings_current, "b.txt"))
       # ScrubRunner sees them.
@@ -49,15 +49,11 @@ RSpec.describe Scrub::ScrubRunner do
   end
 
   describe "#check_new_files" do
-    it "needs both remote and local dirs to exist" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+    it "needs remote dir to exist" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
-      # Neither exist, raise
+      # Remote does not exist, raise
       expect { sr.check_new_files }.to raise_error Utils::FileTransferError
-      # One exists, the other does not, raise
-      local_d.ensure!
-      expect { sr.check_new_files }.to raise_error Utils::FileTransferError
-      # Both exist, OK.
+      # Remote exist, OK.
       remote_d.ensure!
       expect { sr.check_new_files }.to_not raise_error
     end
@@ -65,7 +61,6 @@ RSpec.describe Scrub::ScrubRunner do
     it "lists files in the remote dir whose names do not match old files in the local dir" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
-      local_d.ensure!
       remote_d.ensure!
       # When there are no files:
       expect(sr.check_new_files).to eq []
@@ -86,26 +81,24 @@ RSpec.describe Scrub::ScrubRunner do
 
   describe "#run" do
     it "checks a member for new files and scrubs+loads them" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
-      local_d.ensure!
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
-      sr.run
+      expect { sr.run }.to change { cluster_count(:holdings) }.by(6)
     end
   end
 
   describe "#run_file" do
     it "run for a specific remote file" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
-      local_d.ensure!
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
-      sr.run_file(remote_file)
+      expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
+      # Expect log file to end up in the remote dir
+      expect(File.exist?(File.join(remote_d.holdings_current, "umich_mono_#{Date.today}.log"))).to be true
     end
   end
 end

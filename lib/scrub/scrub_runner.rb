@@ -65,8 +65,8 @@ module Scrub
           Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(chunk)).load(chunk)
         end
         # do when chunks are done, except we don;t know how really
-        # chunker.cleanup!
-        # upload_to_member(scrubber.logger_path)
+        chunker.cleanup!
+        upload_to_member(scrubber.logger_path)
       end
     rescue
       # If the scrub failed, remove the file from local storage, that we may try again.
@@ -83,6 +83,8 @@ module Scrub
       # Include in new_files only those remote_files whose name is not in old_files.
       new_files = []
       remote_files.each do |f|
+        # Possibly filtering other files here.
+        next if f["Name"].end_with?(".log")
         if old_files.select { |oldf| f["Name"] == oldf["Name"] }.empty?
           new_files << f
         end
@@ -93,6 +95,7 @@ module Scrub
 
     # Check the org scrub_dir for previously scrubbed files.
     def check_old_files
+      DataSources::DirectoryLocator.for(:local, @organization).ensure!
       @ft.lsjson(local_dir)
     end
 

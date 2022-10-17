@@ -16,6 +16,11 @@ module Scrub
       @chunk_count = chunk_count
       @add_uuid = add_uuid
       @work_dir = Settings.scrub_chunk_work_dir
+
+      if @work_dir.nil?
+        raise ArgumentError, "Missing Settings.scrub_chunk_work_dir"
+      end
+
       @uuid = SecureRandom.uuid
       @out_ext = out_ext # Apply this extension to the resulting file(s).
       @tmp_chunk_dir = File.join(@work_dir, @uuid)

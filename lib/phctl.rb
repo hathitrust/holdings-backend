@@ -8,7 +8,6 @@ $LOAD_PATH.unshift(File.dirname(__FILE__))
 # or on the cluster with
 # `ht_tanka/environments/holdings/jobs/run_generic_job.sh bin/phctl.rb <command>`
 module PHCTL
-
   # Todo: plug in this method and add setting.
   def run_job(klass, *args, **kwargs)
     if Settings.run_phctl_in_redis
@@ -157,7 +156,8 @@ module PHCTL
 
     desc "scrub ORG", "Download ORG's new files from DropBox and load them"
     def scrub(org)
-      Jobs::Common.perform_async("Scrub::ScrubRunner", options)
+      # Jobs::Common.perform_async("Scrub::ScrubRunner", options)
+      Scrub::ScrubRunner.new(org).run
     end
 
     # report
