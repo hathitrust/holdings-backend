@@ -7,8 +7,6 @@ require "data_sources/ht_organizations"
 
 RSpec.describe Scrub::ScrubRunner do
   Settings.rclone_config_path = "/tmp/rclone.conf"
-  Settings.local_member_dir = "/tmp/local_member_dir"
-  Settings.remote_member_dir = "/tmp/remote_member_dir"
   Settings.scrub_chunk_work_dir = "/tmp"
 
   let(:org1) { "umich" }
@@ -17,20 +15,20 @@ RSpec.describe Scrub::ScrubRunner do
 
   before(:each) do
     FileUtils.touch(Settings.rclone_config_path)
-    FileUtils.mkdir_p(Settings.local_member_dir)
-    FileUtils.mkdir_p(Settings.remote_member_dir)
+    FileUtils.mkdir_p(Settings.local_member_data)
+    FileUtils.mkdir_p(Settings.remote_member_data)
     stub_request(:get, OCLC_URL).to_return(body: '{ "oclcNumber": "1000000000" }')
   end
 
   after(:each) do
     FileUtils.rm_f(Settings.rclone_config_path)
-    FileUtils.rm_rf(Settings.local_member_dir)
-    FileUtils.rm_rf(Settings.remote_member_dir)
+    FileUtils.rm_rf(Settings.local_member_data)
+    FileUtils.rm_rf(Settings.remote_member_data)
   end
 
   describe "#check_old_files" do
     it "local_d needs to exist first" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       # nothing there, at first.
       expect { sr.check_old_files }.to raise_error Utils::FileTransferError
       # mkdir the missing dirs:
@@ -40,7 +38,7 @@ RSpec.describe Scrub::ScrubRunner do
 
     it "finds the files in the local dir" do
       # Get a directory locator for local files.
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
       local_d.ensure!
       # Put files in local dir.
       FileUtils.touch(File.join(local_d.holdings_current, "a.txt"))
@@ -52,8 +50,8 @@ RSpec.describe Scrub::ScrubRunner do
 
   describe "#check_new_files" do
     it "needs both remote and local dirs to exist" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       # Neither exist, raise
       expect { sr.check_new_files }.to raise_error Utils::FileTransferError
       # One exists, the other does not, raise
@@ -65,8 +63,8 @@ RSpec.describe Scrub::ScrubRunner do
     end
 
     it "lists files in the remote dir whose names do not match old files in the local dir" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       local_d.ensure!
       remote_d.ensure!
       # When there are no files:
@@ -88,8 +86,8 @@ RSpec.describe Scrub::ScrubRunner do
 
   describe "#run" do
     it "checks a member for new files and scrubs+loads them" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       local_d.ensure!
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
@@ -100,8 +98,8 @@ RSpec.describe Scrub::ScrubRunner do
 
   describe "#run_file" do
     it "run for a specific remote file" do
-      local_d = DataSources::DirectoryLocator.new(Settings.local_member_dir, org1)
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_dir, org1)
+      local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       local_d.ensure!
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",

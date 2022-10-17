@@ -31,11 +31,11 @@ module Scrub
     end
 
     def validate
-      if Settings.local_member_dir.nil?
-        raise "Need Settings.local_member_dir to be set"
+      if Settings.local_member_data.nil?
+        raise "Need Settings.local_member_data to be set"
       end
-      if Settings.remote_member_dir.nil?
-        raise "Need Settings.remote_member_dir to be set"
+      if Settings.remote_member_data.nil?
+        raise "Need Settings.remote_member_data to be set"
       end
       if @organization.nil?
         raise "Need @organization to be set"
@@ -112,17 +112,11 @@ module Scrub
     end
 
     def remote_dir
-      DataSources::DirectoryLocator.new(
-        Settings.remote_member_dir,
-        @organization
-      ).holdings_current
+      DataSources::DirectoryLocator.for(:remote, @organization).holdings_current
     end
 
     def local_dir
-      DataSources::DirectoryLocator.new(
-        Settings.local_member_dir,
-        @organization
-      ).holdings_current
+      DataSources::DirectoryLocator.for(:local, @organization).holdings_current
     end
   end
 end
