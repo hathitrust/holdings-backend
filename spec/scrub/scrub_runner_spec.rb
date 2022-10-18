@@ -7,8 +7,6 @@ require "data_sources/ht_organizations"
 require "date"
 
 RSpec.describe Scrub::ScrubRunner do
-  Settings.rclone_config_path = "/tmp/rclone.conf"
-
   let(:org1) { "umich" }
   let(:sr) { described_class.new(org1) }
   let(:fixture_file) { "/usr/src/app/spec/fixtures/umich_mono_full_20220101.tsv" }
