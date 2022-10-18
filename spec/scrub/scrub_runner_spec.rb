@@ -8,7 +8,6 @@ require "date"
 
 RSpec.describe Scrub::ScrubRunner do
   Settings.rclone_config_path = "/tmp/rclone.conf"
-  Settings.scrub_chunk_work_dir = "/tmp"
 
   let(:org1) { "umich" }
   let(:sr) { described_class.new(org1) }
