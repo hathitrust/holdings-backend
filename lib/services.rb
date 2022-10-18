@@ -54,3 +54,4 @@ Services.register(:prometheus_metrics) do
 end
 
 Services.register(:progress_tracker) { Utils::PushMetricsMarker }
+Services.register(:redis_config) { raise "Redis not configured" }
