@@ -4,10 +4,6 @@ require "spec_helper"
 require "phctl"
 
 RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
-  def phctl(*args)
-    PHCTL::PHCTL.start(*args)
-  end
-
   commands = {
     %w[load commitments somefile] => Jobs::Load::Commitments,
     %w[load concordance date] => Jobs::Load::Concordance,
@@ -44,6 +40,22 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   commands.each do |args, job_class|
     it "command '#{args.join(" ")}' queues a #{job_class}" do
       expect { PHCTL::PHCTL.start(args) }.to change(job_class.jobs, :size).by(1)
+    end
+  end
+
+  describe "running inline" do
+    before(:each) do
+      Cluster.each(&:delete)
+    end
+
+    it "does not queue a sidekiq job" do
+      expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
+        .not_to change(Jobs::Load::HtItems.jobs, :size)
+    end
+
+    it "does the thing" do
+      expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
+        .to change { cluster_count(:ht_items) }.by(5)
     end
   end
 end

@@ -4,10 +4,6 @@ require "spec_helper"
 require "phctl"
 
 RSpec.describe "phctl integration" do
-  def cluster_count(field)
-    Cluster.all.map { |c| c.public_send(field).count }.reduce(0, :+)
-  end
-
   def phctl(*args)
     PHCTL::PHCTL.start(args)
   end
