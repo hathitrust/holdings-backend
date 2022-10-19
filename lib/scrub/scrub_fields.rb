@@ -26,14 +26,15 @@ module Scrub
     end
 
     def local_id(str)
-      Scrub::LocalId.new(str).value
+      # Scrub::LocalId.new(str).value comes as an array
+      Scrub::LocalId.new(str).value.join(",")
     end
 
     # Given a string, checks if there are any valid-looking issns,
     # Returns a bit of a mess...
     # ... a  single element array, where [0] is a ;-joined string.
     def issn(str)
-      Scrub::Issn.new(str).value
+      Scrub::Issn.new(str).value.first
     end
 
     # Given an enumchron str, returns an array with a norm'd enum and norm'd chron
@@ -45,17 +46,17 @@ module Scrub
 
     # checks that the given string contains an ok status
     def status(str)
-      Scrub::Status.new(str).value
+      Scrub::Status.new(str).value.first
     end
 
     # checks that the given string contains an ok condition
     def condition(str)
-      Scrub::Condition.new(str).value
+      Scrub::Condition.new(str).value.first
     end
 
     # checks that the given string contains an ok govdoc
     def govdoc(str)
-      Scrub::GovDoc.new(str).value
+      Scrub::GovDoc.new(str).value.first
     end
   end
 end
