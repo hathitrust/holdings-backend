@@ -11,9 +11,7 @@ if !File.exist?(SESSION_KEY)
   end
 end
 
-Sidekiq.configure_client do |config|
-  config.redis = {size: 1}
-end
+Services.redis_config[:size] = 1
 
 use Rack::Session::Cookie, secret: File.read(SESSION_KEY), same_site: true, max_age: 86400
 
