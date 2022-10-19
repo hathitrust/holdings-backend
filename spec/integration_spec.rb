@@ -168,11 +168,16 @@ RSpec.describe "phctl integration" do
       logfile = File.join(remote_d, "umich_mono_#{Date.today}.log")
       FileUtils.rm_rf(local_d)
       FileUtils.mkdir_p(remote_d)
-      FileUtils.rm(logfile)
+      FileUtils.touch("/tmp/rclone.conf")
+      FileUtils.rm_rf(logfile)
       FileUtils.cp("spec/fixtures/umich_mono_full_20220101.tsv", remote_d)
+      # Stub for getting the latest/greatest OCN.
+      stub_request(:get, OCLC_URL).to_return(body: '{ "oclcNumber": "2000000000" }')
+      # Actual tests:
       expect(File.exist?(File.join(remote_d, "umich_mono_#{Date.today}.log"))).to be false
       expect { phctl(*%w[scrub umich]) }.to change { cluster_count(:holdings) }.by(6)
       expect(File.exist?(logfile)).to be true
+      expect(File.exist?(local_d)).to be true
     end
   end
 end

@@ -4,6 +4,10 @@ require "scrub/issn"
 require "services"
 
 RSpec.describe Scrub::Issn do
+  before(:each) do
+    # Need to reset or the order of tests might affect tests passing.
+    Services.register(:scrub_stats) { {} }
+  end
   it "rejects invalid ISSNs" do
     expect(described_class.new("1").value).to eq([""])
     expect(described_class.new("12345-678").value).to eq([""])

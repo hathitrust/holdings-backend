@@ -27,6 +27,7 @@ RSpec.describe Scrub::ScrubRunner do
   describe "#check_old_files" do
     it "create the local directory if if does not exist" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
+      FileUtils.rm_rf(local_d.holdings_current)
       # nothing there, at first.
       expect(File.exist?(local_d.holdings_current)).to be false
       sr.check_old_files

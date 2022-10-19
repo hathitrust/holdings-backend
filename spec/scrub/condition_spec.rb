@@ -4,6 +4,10 @@ require "scrub/condition"
 require "services"
 
 RSpec.describe Scrub::Condition do
+  before(:each) do
+    # Need to reset or the order of tests might affect tests passing.
+    Services.register(:scrub_stats) { {} }
+  end
   it "allows and counts 'BRT'" do
     expect(Services.scrub_stats["Scrub::Condition:BRT"].nil?).to be true
     expect(described_class.new("BRT").value).to eq ["BRT"]
