@@ -122,3 +122,7 @@ end
 def fixture(filename)
   File.join(__dir__, "fixtures", filename)
 end
+
+def cluster_count(field)
+  Cluster.all.map { |c| c.public_send(field).count }.reduce(0, :+)
+end
