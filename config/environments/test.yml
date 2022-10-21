@@ -17,7 +17,9 @@ rclone_config_path: /tmp/rclone.conf
 remote_member_data: /tmp/remote_member_data
 replace_commitment_report_path: /tmp/replace_commitment_report
 scrub_base_path: /tmp/scrub_data
+scrub_chunk_count: 4
 scrub_chunk_work_dir: /tmp
+scrub_line_count_diff_max: 0.05
 shared_print_report_path: /tmp/shared_print_reports
 shared_print_update_report_path: /tmp/shared_print_update_report
 slack_endpoint: http://slack.test/endpoint

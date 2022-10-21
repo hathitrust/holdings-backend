@@ -16,7 +16,7 @@ module Scrub
   class AutoScrub
     # Won't put in accessors unless we find a solid case for running this
     # by another ruby class.
-    attr_reader :output_struct, :out_files, :logger_path
+    attr_reader :output_struct, :out_files, :logger_path, :item_type
 
     def initialize(path)
       @path = path

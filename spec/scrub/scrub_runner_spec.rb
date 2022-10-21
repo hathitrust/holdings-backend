@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "scrub/record_counter"
 require "scrub/scrub_runner"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
@@ -17,6 +18,7 @@ RSpec.describe Scrub::ScrubRunner do
     FileUtils.touch(Settings.rclone_config_path)
     FileUtils.mkdir_p(Settings.local_member_data)
     FileUtils.mkdir_p(Settings.remote_member_data)
+    FileUtils.rm_rf("/tmp/scrub_data/#{org1}/")
   end
 
   after(:each) do
@@ -98,6 +100,27 @@ RSpec.describe Scrub::ScrubRunner do
       expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
       # Expect log file to end up in the remote dir
       expect(File.exist?(File.join(remote_d.holdings_current, "umich_mono_#{Date.today}.log"))).to be true
+    end
+    it "will refuse a file if it breaks Settings.scrub_line_count_diff_max" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      remote_file = sr.check_new_files.first
+
+      FileUtils.mkdir_p("/tmp/scrub_data/#{org1}/loaded/")
+      File.open("/tmp/scrub_data/#{org1}/loaded/umich_mono_1.ndj", "w") do |file|
+        1.upto(20) do |i|
+          file.puts i
+        end
+      end
+      expect { sr.run_file(remote_file) }.to raise_error RuntimeError
+      # BUT will do it if we force it
+      sr_force = described_class.new(
+        org1,
+        {"force" => true, "force_holding_loader_cleanup_test" => true}
+      )
+      expect { sr_force.run_file(remote_file) }.not_to raise_error
     end
   end
 end
