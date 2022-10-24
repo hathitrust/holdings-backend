@@ -4,6 +4,10 @@ require "scrub/status"
 require "services"
 
 RSpec.describe Scrub::Status do
+  before(:each) do
+    # Need to reset or the order of tests might affect tests passing.
+    Services.register(:scrub_stats) { {} }
+  end
   it "keeps tally of what was rejected & why" do
     Services.register(:scrub_stats) { {} }
     stats_key = "Scrub::Status:foo"

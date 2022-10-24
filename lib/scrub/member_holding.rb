@@ -33,8 +33,7 @@ module Scrub
       if str.nil? || str.empty?
         raise Scrub::ColValError, "bad str (class #{str.class}): #{str}"
       end
-
-      cols = str.split("\t")
+      cols = split_preserve_trailing(str, "\t")
       if cols.size != @col_map.keys.size
         @violations << "Wrong number of cols " \
           "(expected #{@col_map.keys.size}, got #{cols.size})"
@@ -120,6 +119,26 @@ module Scrub
         n_enum: n_enum,
         n_chron: n_chron
       }.to_json
+    end
+
+    private
+
+    # Traditional split removes any trailing nils, meaning
+    # "123|456|".split("|") # => ["123", "456"]
+    # and split_preserve_trailing is what you need if you want
+    # ["123", "456", ""] instead.
+    # Holdings files can contain lines ending with empty values,
+    # so we need to do something to preserve them. This is that.
+    def split_preserve_trailing(str, pat)
+      # Check if str ends with any number of split delimiters.
+      md = str.match(/(#{pat}+)$/)
+      if md.nil?
+        # If not, fine, just split as normal.
+        str.split(pat)
+      else
+        # But if it did, fill up the return array with as many empty strings.
+        str.split(pat) + ([""] * md[1].size)
+      end
     end
   end
 end

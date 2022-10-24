@@ -66,6 +66,9 @@ module Scrub
       @cols.each_with_index do |col, i|
         if possible_cols.include?(col)
           col_map[col] = i
+        else
+          raise Scrub::MalFormedHeaderError,
+            "Column #{col} is not allowed. Possible columns are: #{possible_cols.join(", ")}"
         end
       end
 

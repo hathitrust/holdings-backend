@@ -50,7 +50,6 @@ module Scrub
       @filepath = path
       @filename = File.basename(path)
       @error_count = 0
-
       @item_type = item_type_from_filename
       @member_id = member_id_from_filename
 
@@ -70,9 +69,7 @@ module Scrub
       end
 
       scrub_stats = Services.scrub_stats
-
       each_holding(&block)
-
       log("Scrub stats:")
       scrub_stats.keys.sort.each do |ssk|
         log("#{ssk}\t#{scrub_stats[ssk]}")
@@ -200,7 +197,6 @@ module Scrub
       end
 
       holding = MemberHolding.new(col_map)
-
       all_ok = holding.parse(line)
 
       unless all_ok

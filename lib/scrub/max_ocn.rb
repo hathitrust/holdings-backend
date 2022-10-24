@@ -18,7 +18,6 @@ module Scrub
     def initialize(age_limit: ONE_DAY_SEC, mock: false)
       @age_limit = age_limit
       @mock = mock
-      @log = Services.logger
     end
 
     def self.memo_loc
@@ -35,16 +34,12 @@ module Scrub
 
     def ocn
       if File.exist?(MaxOcn.memo_loc)
-        @log.info "memo hit"
         if memo_expired?
-          @log.info "... but memo file expired"
           write_file
         else
-          @log.info "... and memo file still good"
           read_file
         end
       else
-        @log.info "memo miss"
         write_file
       end
     end
@@ -55,12 +50,10 @@ module Scrub
       mtime = File.stat(MEMO_LOC).mtime.to_i
       epoch = Time.now.to_i
       time_diff = epoch - mtime
-      @log.info "time diff #{time_diff}"
       time_diff > @age_limit
     end
 
     def write_file
-      @log.info "writing new memo file"
       data = JSON.parse(make_call)
       f = File.open(MaxOcn.memo_loc, "w")
       @ocn = data["oclcNumber"].to_i
@@ -71,7 +64,6 @@ module Scrub
 
     def make_call
       if @mock
-        @log.info "mock call"
         IO.read("spec/fixtures/max_oclc_response.json")
       else
         URI.parse(OCLC_URL).open.read

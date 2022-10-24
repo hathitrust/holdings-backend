@@ -168,6 +168,12 @@ module PHCTL
     end
     # standard:enable Lint/Debugger
 
+    desc "scrub ORG", "Download ORG's new files from DropBox and load them"
+    def scrub(org)
+      # Jobs::Common.perform_async("Scrub::ScrubRunner", options)
+      Scrub::ScrubRunner.new(org).run
+    end
+
     # report
     desc "report", "Generate a report"
     subcommand "report", Report

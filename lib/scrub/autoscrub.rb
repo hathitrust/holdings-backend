@@ -3,6 +3,7 @@
 require "services"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
+require "utils/line_counter"
 
 module Scrub
   # Usage:
@@ -15,7 +16,7 @@ module Scrub
   class AutoScrub
     # Won't put in accessors unless we find a solid case for running this
     # by another ruby class.
-    attr_reader :output_struct
+    attr_reader :output_struct, :out_files, :logger_path
 
     def initialize(path)
       @path = path
@@ -26,12 +27,16 @@ module Scrub
       @item_type = @member_holding_file.item_type_from_filename
       @output_dir = @output_struct.date_subdir!("output")
       @log_dir = @output_struct.date_subdir!("log")
+      @out_files = []
 
       # Once we have @member_id and @item_type,
       # build a log path and re-register the service logger to log to that path
-      logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}.log")
+      ymd = Time.new.strftime("%F")
+      @logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}_#{ymd}.log")
+      Services.logger.info "autoscrub logging to #{@logger_path}"
+
       Services.register(:scrub_logger) do
-        lgr = Logger.new(logger_path)
+        lgr = Logger.new(@logger_path)
         # Show time, file:lineno, level for each log message
         lgr.formatter = proc do |severity, datetime, _progname, msg|
           file_line = caller(4..4).first.split(":")[0, 2].join(":")
@@ -41,14 +46,18 @@ module Scrub
       end
 
       Services.scrub_logger.info("INIT")
-      Services.logger.info("Logging to #{logger_path}")
+      Services.logger.info("Logging to #{@logger_path}")
     end
 
     def run
       Services.scrub_logger.info("Started scrubbing #{@path}")
 
       # Figure out batch size for 100 batches.
-      tot_lines = count_file_lines
+      tot_lines = Utils::LineCounter.count_file_lines(@path)
+      if tot_lines <= 1
+        raise "File #{@path} has no data? Total lines #{tot_lines}."
+      end
+
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
       Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
       marker = Services.progress_tracker.new(batch_size)
@@ -84,13 +93,11 @@ module Scrub
       Services.scrub_logger.info(
         "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
       )
-    end
-
-    private
-
-    def count_file_lines
-      # zcat -f works as plain cat if @path is not in gzip format.
-      `zcat -f #{@path} | wc -l`.match(/^(\d+)/)[0].to_i
+      # Move file and store new location in array.
+      @out_files << File.join(
+        @output_struct.member_ready_to_load,
+        File.split(out_file_path).last
+      )
     end
   end
 end
