@@ -34,7 +34,7 @@ services:
       PUSHGATEWAY: http://pushgateway:9091
 
   mongo_dev:
-    image: mongo:5.0.9
+    image: mongo:6.0.2
     volumes:
       - data_db:/data/db
     command: --replSet rs0 --bind_ip localhost,mongo_dev
@@ -42,7 +42,7 @@ services:
       - ./bin:/tmp/bin
 
   mongo_test:
-    image: mongo:5.0.9
+    image: mongo:6.0.2
     command: --replSet rs0 --bind_ip localhost,mongo_test
     volumes:
       - ./bin:/tmp/bin
