@@ -16,7 +16,7 @@ RSpec.describe Loader::ClusterLoader do
   end
 
   def count_clusters
-    Cluster.find_by(ocns: ocn).to_a.size
+    Cluster.for_ocns([ocn]).count
   end
 
   describe "#load" do
