@@ -5,10 +5,12 @@ require "scrub/scrub_runner"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
 require "date"
+require "loader/holding_loader"
 
 RSpec.describe Scrub::ScrubRunner do
   let(:org1) { "umich" }
-  let(:sr) { described_class.new(org1) }
+  # Only set force_holding_loader_cleanup_test to true in testing.
+  let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true}) }
   let(:fixture_file) { "spec/fixtures/umich_mono_full_20220101.tsv" }
 
   before(:each) do

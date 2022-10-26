@@ -15,6 +15,8 @@ require "loader/file_loader"
 require "loader/holding_loader"
 require "scrub/autoscrub"
 require "scrub/chunker"
+require "sidekiq_jobs"
+require "sidekiq/batch"
 require "utils/file_transfer"
 
 # Example:
@@ -24,9 +26,11 @@ require "utils/file_transfer"
 module Scrub
   # Scrubs and loads any new org-uploaded files.
   class ScrubRunner
-    def initialize(organization)
+    def initialize(organization, options = {})
       @organization = organization
       @ft = Utils::FileTransfer.new
+      # Only set force_holding_loader_cleanup_test to true in testing.
+      @force_holding_loader_cleanup_test = options["force_holding_loader_cleanup_test"]
       validate
     end
 
@@ -60,13 +64,27 @@ module Scrub
         Services.logger.info "Ready to split #{scrubber_out_file} into chunks"
         chunker = Scrub::Chunker.new(scrubber_out_file, chunk_count: 4, out_ext: "ndj")
         chunker.run
-        chunker.chunks.each do |chunk|
-          Services.logger.info "Load chunk #{chunk}"
-          Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(chunk)).load(chunk)
+        batch = Sidekiq::Batch.new
+        batch.description = "Holdings load for #{scrubber_out_file}"
+        cleanup_data = {
+          "tmp_chunk_dir" => chunker.tmp_chunk_dir,
+          "organization" => @organization,
+          "scrub_log" => scrubber.logger_path,
+          "remote_dir" => remote_dir
+        }
+        batch.on(:success, Loader::HoldingLoader::Cleanup, cleanup_data)
+        batch.jobs do
+          chunker.chunks.each do |chunk|
+            Services.logger.info "Queueing chunk #{chunk}"
+            Jobs::Load::Holdings.perform_async(chunk)
+          end
         end
-        # do when chunks are done, except we don;t know how really
-        chunker.cleanup!
-        upload_to_member(scrubber.logger_path)
+        # In test, where sidekiq is not running, we do this
+        # instead of relying on the on_success-hook.
+        if @force_holding_loader_cleanup_test
+          Services.logger.info "Forcing Loader::HoldingLoader::Cleanup, TEST ONLY!"
+          Loader::HoldingLoader::Cleanup.new.on_success(:success, cleanup_data)
+        end
       end
     rescue
       # If the scrub failed, remove the file from local storage, that we may try again.
@@ -79,7 +97,6 @@ module Scrub
       # Return new (as in not in old) files
       remote_files = @ft.lsjson(remote_dir)
       old_files = check_old_files
-
       # Include in new_files only those remote_files whose name is not in old_files.
       new_files = []
       remote_files.each do |f|
@@ -107,11 +124,6 @@ module Scrub
 
       # Return the path to the downloaded file
       File.join(local_dir, File.split(remote_file).last)
-    end
-
-    def upload_to_member(file)
-      Services.logger.info "upload local file #{file} to remote dir"
-      @ft.upload(file, remote_dir)
     end
 
     def remote_dir

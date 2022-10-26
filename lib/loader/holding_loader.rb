@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "clustering/cluster_holding"
+require "utils/file_transfer"
 
 module Loader
   # Constructs batches of Holdings from incoming file data
@@ -45,6 +46,25 @@ module Loader
       Clusterable::Holding.new_from_scrubbed_file_line(line).tap do |h|
         @organization ||= h.organization
         @current_date ||= h.date_received
+      end
+    end
+  end
+
+  class HoldingLoader::Cleanup
+    def on_success(status, options)
+      if status == :success
+        Services.logger.info "removing chunks from #{options["tmp_chunk_dir"]}"
+        FileUtils.rm_rf(options["tmp_chunk_dir"])
+
+        Services.logger.info "uploading scrub log #{options["scrub_log"]} " \
+        "to remote dir #{options["remote_dir"]}"
+        Utils::FileTransfer.new.upload(
+          options["scrub_log"],
+          options["remote_dir"]
+        )
+        Services.logger.info "cleanup done"
+      else
+        raise "well that was not the status i was hoping for (#{status})"
       end
     end
   end

@@ -9,7 +9,7 @@ module Scrub
   # Take a glob of scrubbed files, sort, and then make
   # #{chunk_count} equal-sized (roughly) files from them.
   class Chunker
-    attr_reader :glob, :chunks
+    attr_reader :glob, :chunks, :tmp_chunk_dir
     def initialize(glob, chunk_count: 16, add_uuid: false, out_ext: nil)
       @glob = glob # to one or more files
       @chunks = [] # store paths to output files here
