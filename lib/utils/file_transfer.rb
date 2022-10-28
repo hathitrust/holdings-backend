@@ -52,7 +52,8 @@ module Utils
     def make_call(sys_call)
       Services.logger.info sys_call
       # returns true/false based on exit code of the executed system call
-      system sys_call
+      # direct output to devnull so we don't pollute stderr
+      system("#{sys_call} > /dev/null")
     end
 
     # Any call will start with:
