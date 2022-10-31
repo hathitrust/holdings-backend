@@ -105,22 +105,6 @@ module Scrub
       raise "Scrub failed, removing downloaded file #{downloaded_file}"
     end
 
-    # If we just scrubbed a umich mono we want to know what the line count was
-    # in the most recent umich mono so we can warn if that number is way +/-.
-    def count_lines_last_loaded(scrubber)
-      # Look for files by the same org and item_type
-      rx = /^#{scrubber.output_struct.member_id}_#{scrubber.item_type}.+\.ndj$/
-      loaded = scrubber.output_struct.member_loaded.entries.select { |f| f.match?(rx) }
-      # If we find any, count lines of the most recent one.
-      if loaded.empty?
-        0
-      else
-        Utils::LineCounter.count_file_lines(
-          File.join(scrubber.output_struct.member_loaded, loaded.max)
-        )
-      end
-    end
-
     # Check org-uploaded files for any not previously seen files
     def check_new_files
       # Return new (as in not in old) files

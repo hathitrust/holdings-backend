@@ -124,17 +124,4 @@ RSpec.describe Scrub::ScrubRunner do
       expect { sr_force.run_file(remote_file) }.not_to raise_error
     end
   end
-  describe "#count_lines_last_loaded" do
-    it "counts the number of records in the last scrubbed file that matches org & item_type" do
-      scrubber = Scrub::AutoScrub.new(fixture_file)
-      expect(sr.count_lines_last_loaded(scrubber)).to eq 0
-      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
-      remote_d.ensure!
-      # Copy fixture to "dropbox" so there is a "new file" to "download",
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
-      sr.run
-      linecount_sans_header = (File.new(fixture_file).count - 1)
-      expect(sr.count_lines_last_loaded(scrubber)).to eq linecount_sans_header
-    end
-  end
 end
