@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-require "spec_helper"
-require "scrub/record_counter"
-require "scrub/scrub_runner"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
 require "date"
 require "loader/holding_loader"
+require "scrub/autoscrub"
+require "scrub/record_counter"
+require "scrub/scrub_runner"
+require "spec_helper"
 
 RSpec.describe Scrub::ScrubRunner do
   let(:org1) { "umich" }
@@ -121,6 +122,19 @@ RSpec.describe Scrub::ScrubRunner do
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
       expect { sr_force.run_file(remote_file) }.not_to raise_error
+    end
+  end
+  describe "#count_lines_last_loaded" do
+    it "counts the number of records in the last scrubbed file that matches org & item_type" do
+      scrubber = Scrub::AutoScrub.new(fixture_file)
+      expect(sr.count_lines_last_loaded(scrubber)).to eq 0
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      sr.run
+      linecount_sans_header = (File.new(fixture_file).count - 1)
+      expect(sr.count_lines_last_loaded(scrubber)).to eq linecount_sans_header
     end
   end
 end

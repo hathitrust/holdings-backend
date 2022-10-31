@@ -62,6 +62,8 @@ module Loader
           options["scrub_log"],
           options["remote_dir"]
         )
+        Services.logger.info "moving loaded file to scrubber.member_loaded"
+        FileUtils.mv(options["loaded_file"], options["loaded_dir"])
         Services.logger.info "cleanup done"
       else
         raise "well that was not the status i was hoping for (#{status})"

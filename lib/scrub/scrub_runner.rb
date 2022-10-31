@@ -39,30 +39,6 @@ module Scrub
       validate
     end
 
-    def validate
-      if Settings.local_member_data.nil?
-        raise "Need Settings.local_member_data to be set"
-      end
-      if Settings.remote_member_data.nil?
-        raise "Need Settings.remote_member_data to be set"
-      end
-      if Settings.scrub_chunk_count.nil?
-        raise "Need Settings.scrub_chunk_count to be set"
-      end
-      if Settings.scrub_line_count_diff_max.nil?
-        raise "Need Settings.scrub_line_count_diff_max to be set"
-      end
-      if @organization.nil?
-        raise "Need @organization to be set"
-      end
-      unless [true, false].include?(@force)
-        raise "Need @force to be true/false"
-      end
-      unless [true, false].include?(@force_holding_loader_cleanup_test)
-        raise "Need @force_holding_loader_cleanup_test to be true/false"
-      end
-    end
-
     def run
       Services.logger.info "Running org #{@organization}."
       new_files = check_new_files
@@ -104,7 +80,9 @@ module Scrub
           "tmp_chunk_dir" => chunker.tmp_chunk_dir,
           "organization" => @organization,
           "scrub_log" => scrubber.logger_path,
-          "remote_dir" => remote_dir
+          "remote_dir" => remote_dir,
+          "loaded_file" => scrubber_out_file,
+          "loaded_dir" => scrubber.output_struct.member_loaded
         }
         batch.on(:success, Loader::HoldingLoader::Cleanup, cleanup_data)
         batch.jobs do
@@ -183,6 +161,30 @@ module Scrub
 
     def local_dir
       DataSources::DirectoryLocator.for(:local, @organization).holdings_current
+    end
+
+    def validate
+      if Settings.local_member_data.nil?
+        raise "Need Settings.local_member_data to be set"
+      end
+      if Settings.remote_member_data.nil?
+        raise "Need Settings.remote_member_data to be set"
+      end
+      if Settings.scrub_chunk_count.nil?
+        raise "Need Settings.scrub_chunk_count to be set"
+      end
+      if Settings.scrub_line_count_diff_max.nil?
+        raise "Need Settings.scrub_line_count_diff_max to be set"
+      end
+      if @organization.nil?
+        raise "Need @organization to be set"
+      end
+      unless [true, false].include?(@force)
+        raise "Need @force to be true/false"
+      end
+      unless [true, false].include?(@force_holding_loader_cleanup_test)
+        raise "Need @force_holding_loader_cleanup_test to be true/false"
+      end
     end
   end
 end
