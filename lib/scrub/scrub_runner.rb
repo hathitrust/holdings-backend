@@ -155,6 +155,8 @@ module Scrub
       File.join(local_dir, File.split(remote_file).last)
     end
 
+    private
+
     def remote_dir
       DataSources::DirectoryLocator.for(:remote, @organization).holdings_current
     end
