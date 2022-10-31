@@ -101,10 +101,3 @@ module Scrub
     end
   end
 end
-
-if $PROGRAM_NAME == __FILE__
-  ARGV.each do |path|
-    autoscrub = Scrub::AutoScrub.new(path)
-    autoscrub.run
-  end
-end
