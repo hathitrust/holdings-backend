@@ -20,9 +20,6 @@
 # Intellij/Rubymine
 /.idea/
 
-# rspec config
-/.rspec
-
 # test coverage
 /coverage
 

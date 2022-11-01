@@ -36,22 +36,7 @@ Services.register(:scrub_stats) { {} }
 Services.register(:large_clusters) { DataSources::LargeClusters.new }
 Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }
 
-Services.register(:pushgateway) { Prometheus::Client::Push.new(job: File.basename($PROGRAM_NAME), gateway: Settings.pushgateway) }
 Services.register(:prometheus_registry) { Prometheus::Client.registry }
-Services.register(:prometheus_metrics) do
-  {
-    duration: Prometheus::Client::Gauge.new(:job_duration_seconds,
-      docstring: "Time spend running job in seconds"),
-
-    last_success: Prometheus::Client::Gauge.new(:job_last_success,
-      docstring: "Last Unix time when job successfully completed"),
-
-    records_processed: Prometheus::Client::Gauge.new(:job_records_processed,
-      docstring: "Records processed by job"),
-    success_interval: Prometheus::Client::Gauge.new(:job_expected_success_interval,
-      docstring: "Maximum expected time in seconds between job completions")
-  }.tap { |m| m.each_value { |metric| Services.prometheus_registry.register(metric) } }
-end
-
+Services.register(:pushgateway) { Prometheus::Client::Push.new(job: File.basename($PROGRAM_NAME), gateway: Settings.pushgateway) }
 Services.register(:progress_tracker) { Utils::PushMetricsMarker }
 Services.register(:redis_config) { raise "Redis not configured" }
