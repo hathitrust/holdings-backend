@@ -169,8 +169,9 @@ module PHCTL
     # standard:enable Lint/Debugger
 
     desc "scrub ORG", "Download ORG's new files from DropBox and load them"
-    option :force_holding_loader_cleanup_test, type: :boolean, default: false
     # Only set force_holding_loader_cleanup_test to true in testing.
+    option :force_holding_loader_cleanup_test, type: :boolean, default: false
+    option :force, type: :boolean, default: false
     def scrub(org)
       Scrub::ScrubRunner.new(org, options).run
     end

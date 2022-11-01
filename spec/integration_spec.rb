@@ -171,7 +171,7 @@ RSpec.describe "phctl integration" do
       expect(File.exist?(logfile)).to be false
       # Actual tests:
       # Only set force_holding_loader_cleanup_test to true in testing.
-      expect { phctl(*%w[scrub umich --force_holding_loader_cleanup_test]) }.to change { cluster_count(:holdings) }.by(6)
+      expect { phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force]) }.to change { cluster_count(:holdings) }.by(6)
       expect(File.exist?(logfile)).to be true
       expect(File.exist?(local_d)).to be true
     end

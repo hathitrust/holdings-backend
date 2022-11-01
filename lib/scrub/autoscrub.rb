@@ -16,7 +16,7 @@ module Scrub
   class AutoScrub
     # Won't put in accessors unless we find a solid case for running this
     # by another ruby class.
-    attr_reader :output_struct, :out_files, :logger_path
+    attr_reader :output_struct, :out_files, :logger_path, :item_type
 
     def initialize(path)
       @path = path
@@ -99,12 +99,5 @@ module Scrub
         File.split(out_file_path).last
       )
     end
-  end
-end
-
-if $PROGRAM_NAME == __FILE__
-  ARGV.each do |path|
-    autoscrub = Scrub::AutoScrub.new(path)
-    autoscrub.run
   end
 end

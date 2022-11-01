@@ -15,9 +15,12 @@ require "loader/file_loader"
 require "loader/holding_loader"
 require "scrub/autoscrub"
 require "scrub/chunker"
+require "scrub/malformed_file_error"
+require "scrub/record_counter"
 require "sidekiq_jobs"
 require "sidekiq/batch"
 require "utils/file_transfer"
+require "utils/line_counter"
 
 # Example:
 # runner = Scrub::ScrubRunner.new(ORG)
@@ -28,22 +31,12 @@ module Scrub
   class ScrubRunner
     def initialize(organization, options = {})
       @organization = organization
+      # @force: force loading a file even if it exceeds diff limit
+      @force = options["force"] || false
+      # @force_holding_loader_cleanup_test: only set to true in testing.
+      @force_holding_loader_cleanup_test = options["force_holding_loader_cleanup_test"] || false
       @ft = Utils::FileTransfer.new
-      # Only set force_holding_loader_cleanup_test to true in testing.
-      @force_holding_loader_cleanup_test = options["force_holding_loader_cleanup_test"]
       validate
-    end
-
-    def validate
-      if Settings.local_member_data.nil?
-        raise "Need Settings.local_member_data to be set"
-      end
-      if Settings.remote_member_data.nil?
-        raise "Need Settings.remote_member_data to be set"
-      end
-      if @organization.nil?
-        raise "Need @organization to be set"
-      end
     end
 
     def run
@@ -60,9 +53,26 @@ module Scrub
       downloaded_file = download_to_work_dir(file)
       scrubber = Scrub::AutoScrub.new(downloaded_file)
       scrubber.run
+
+      rc = Scrub::RecordCounter.new(@organization, scrubber.item_type)
+      unless rc.acceptable_diff? || @force
+        raise MalformedFileError, [
+          "Unacceptable diff for #{@organization} when scrubbing #{file["Name"]}.",
+          "Last loaded file (#{rc.last_loaded}) had #{rc.count_loaded} records",
+          "The scrubbed file (#{rc.last_ready}) has #{rc.count_ready} records.",
+          "Diff is #{rc.diff}, which is greater than Settings.scrub_line_count_diff_max",
+          "... which is #{Settings.scrub_line_count_diff_max}.",
+          "Run again with --force to load anyways."
+        ].join("\n")
+      end
+
       scrubber.out_files.each do |scrubber_out_file|
         Services.logger.info "Ready to split #{scrubber_out_file} into chunks"
-        chunker = Scrub::Chunker.new(scrubber_out_file, chunk_count: 4, out_ext: "ndj")
+        chunker = Scrub::Chunker.new(
+          scrubber_out_file,
+          chunk_count: Settings.scrub_chunk_count,
+          out_ext: "ndj"
+        )
         chunker.run
         batch = Sidekiq::Batch.new
         batch.description = "Holdings load for #{scrubber_out_file}"
@@ -70,7 +80,9 @@ module Scrub
           "tmp_chunk_dir" => chunker.tmp_chunk_dir,
           "organization" => @organization,
           "scrub_log" => scrubber.logger_path,
-          "remote_dir" => remote_dir
+          "remote_dir" => remote_dir,
+          "loaded_file" => scrubber_out_file,
+          "loaded_dir" => scrubber.output_struct.member_loaded
         }
         batch.on(:success, Loader::HoldingLoader::Cleanup, cleanup_data)
         batch.jobs do
@@ -86,8 +98,9 @@ module Scrub
           Loader::HoldingLoader::Cleanup.new.on_success(:success, cleanup_data)
         end
       end
-    rescue
+    rescue => err
       # If the scrub failed, remove the file from local storage, that we may try again.
+      Services.logger.error err
       FileUtils.rm(downloaded_file)
       raise "Scrub failed, removing downloaded file #{downloaded_file}"
     end
@@ -126,12 +139,38 @@ module Scrub
       File.join(local_dir, File.split(remote_file).last)
     end
 
+    private
+
     def remote_dir
       DataSources::DirectoryLocator.for(:remote, @organization).holdings_current
     end
 
     def local_dir
       DataSources::DirectoryLocator.for(:local, @organization).holdings_current
+    end
+
+    def validate
+      if Settings.local_member_data.nil?
+        raise "Need Settings.local_member_data to be set"
+      end
+      if Settings.remote_member_data.nil?
+        raise "Need Settings.remote_member_data to be set"
+      end
+      if Settings.scrub_chunk_count.nil?
+        raise "Need Settings.scrub_chunk_count to be set"
+      end
+      if Settings.scrub_line_count_diff_max.nil?
+        raise "Need Settings.scrub_line_count_diff_max to be set"
+      end
+      if @organization.nil?
+        raise "Need @organization to be set"
+      end
+      unless [true, false].include?(@force)
+        raise "Need @force to be true/false"
+      end
+      unless [true, false].include?(@force_holding_loader_cleanup_test)
+        raise "Need @force_holding_loader_cleanup_test to be true/false"
+      end
     end
   end
 end
