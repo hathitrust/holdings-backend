@@ -2,6 +2,7 @@
 
 require "utils/push_metrics_marker"
 require "prometheus/client/push"
+require "faraday"
 require "services"
 
 RSpec.describe Utils::PushMetricsMarker do
@@ -152,6 +153,48 @@ RSpec.describe Utils::PushMetricsMarker do
   describe "Services.pushgateway" do
     it "initiates OK" do
       expect { Services.pushgateway }.not_to raise_error
+    end
+  end
+
+  describe "integration test" do
+    before(:each) do
+      Faraday.put("#{ENV["PUSHGATEWAY"]}/api/v1/admin/wipe")
+    end
+
+    let(:batch_size) { 5 }
+    let(:tracker) { Utils::PushMetricsMarker.new(batch_size) }
+    let(:metrics) { Faraday.get("#{ENV["PUSHGATEWAY"]}/metrics").body }
+
+    describe "#on_batch" do
+
+      before(:each) do
+        tracker.incr(batch_size)
+        tracker.on_batch { }
+      end
+
+      it "updates job_duration_seconds" do
+        require 'pry'
+        binding.pry
+        expect(metrics).to match(/^job_duration_seconds\S* [\d.]+$/m)
+      end
+
+      it "updates job_records_processed" do
+        expect(metrics).to match(/^job_records_processed\S* \d+$/m)
+      end
+
+      it "does not update job_last_success" do
+        expect(metrics).not_to match(/^job_last_success/m)
+      end
+
+      it "by default does not update job_expected_success_interval" do
+        expect(metrics).not_to match(/^job_expected_success_interval/m)
+      end
+    end
+
+    it "can record success" do
+      tracker.final_line
+      # job_last_success is nonzero
+      expect(metrics).to match(/^job_last_success\S* \S+/m)
     end
   end
 end

@@ -56,6 +56,10 @@ services:
 
   pushgateway:
     image: prom/pushgateway
+    command:
+      - --web.enable-admin-api
+    ports:
+      - 9091:9091
 
   sidekiq_web:
     build: .
