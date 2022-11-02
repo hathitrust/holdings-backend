@@ -27,7 +27,7 @@ GEM
       deep_merge
     factory_bot (6.2.1)
       activesupport (>= 5.0.0)
-    faker (2.23.0)
+    faker (3.0.0)
       i18n (>= 1.8.11, < 2)
     faraday (2.6.0)
       faraday-net_http (>= 2.0, < 3.1)
@@ -62,31 +62,32 @@ GEM
     public_suffix (5.0.0)
     puma (6.0.0)
       nio4r (~> 2.0)
-    rack (2.2.4)
+    rack (3.0.0)
     rainbow (3.1.1)
-    redis (4.8.0)
+    redis-client (0.11.0)
+      connection_pool
     regexp_parser (2.6.0)
     rexml (3.2.5)
     rgl (0.5.9)
       pairing_heap (>= 0.3.0)
       rexml (~> 3.2, >= 3.2.4)
       stream (~> 0.5.3)
-    rspec (3.11.0)
-      rspec-core (~> 3.11.0)
-      rspec-expectations (~> 3.11.0)
-      rspec-mocks (~> 3.11.0)
-    rspec-core (3.11.0)
-      rspec-support (~> 3.11.0)
-    rspec-expectations (3.11.1)
+    rspec (3.12.0)
+      rspec-core (~> 3.12.0)
+      rspec-expectations (~> 3.12.0)
+      rspec-mocks (~> 3.12.0)
+    rspec-core (3.12.0)
+      rspec-support (~> 3.12.0)
+    rspec-expectations (3.12.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.11.0)
-    rspec-mocks (3.11.2)
+      rspec-support (~> 3.12.0)
+    rspec-mocks (3.12.0)
       diff-lcs (>= 1.2.0, < 2.0)
-      rspec-support (~> 3.11.0)
+      rspec-support (~> 3.12.0)
     rspec-sidekiq (3.1.0)
       rspec-core (~> 3.0, >= 3.0.0)
       sidekiq (>= 2.4.0)
-    rspec-support (3.11.1)
+    rspec-support (3.12.0)
     rubocop (1.35.1)
       json (~> 2.3)
       parallel (~> 1.10)
@@ -105,11 +106,12 @@ GEM
     ruby-prof (1.4.3)
     ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.5)
-    sequel (5.61.0)
-    sidekiq (6.5.7)
-      connection_pool (>= 2.2.5)
-      rack (~> 2.0)
-      redis (>= 4.5.0, < 5)
+    sequel (5.62.0)
+    sidekiq (7.0.0)
+      concurrent-ruby (< 2)
+      connection_pool (>= 2.3.0)
+      rack (>= 2.2.4)
+      redis-client (>= 0.9.0)
     sidekiq-batch (0.1.9)
       sidekiq (>= 3)
     simplecov (0.21.2)
@@ -137,7 +139,7 @@ GEM
     zinzout (0.1.1)
 
 PLATFORMS
-  ruby
+  x86_64-linux
 
 DEPENDENCIES
   canister
@@ -170,4 +172,4 @@ DEPENDENCIES
   zinzout
 
 BUNDLED WITH
-   2.3.7
+   2.3.25
