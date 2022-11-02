@@ -22,7 +22,7 @@ require "shared_print/deprecator"
 
 require_relative "../config/initializers/sidekiq"
 
-if $0 == 'sidekiq'
+if $0 == "sidekiq"
   Services.register(:logger) { Sidekiq.logger }
 end
 

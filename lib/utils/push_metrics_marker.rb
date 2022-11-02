@@ -70,7 +70,7 @@ module Utils
 
     def register_metric(name, **kwargs)
       registry.get(name) ||
-      Prometheus::Client::Gauge.new(name, **kwargs).tap { |m| registry.register(m) }
+        Prometheus::Client::Gauge.new(name, **kwargs).tap { |m| registry.register(m) }
     end
   end
 end

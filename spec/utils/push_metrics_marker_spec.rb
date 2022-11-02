@@ -4,35 +4,13 @@ require "utils/push_metrics_marker"
 require "prometheus/client/push"
 require "faraday"
 require "services"
+require "pry-byebug"
 
 RSpec.describe Utils::PushMetricsMarker do
   let(:batch_size) { rand(100) }
   let(:seconds_so_far) { rand(100) }
   let(:records_so_far) { rand(100) }
   let(:success_interval) { 24 * 60 * 60 * rand(7) }
-
-  let(:marker) do
-    instance_double(Milemarker,
-      final_line: true,
-      total_seconds_so_far: seconds_so_far,
-      count: records_so_far).tap do |d|
-      allow(d).to receive(:on_batch).and_yield(d)
-    end
-  end
-
-  let(:pushgateway) { instance_double(Prometheus::Client::Push, add: true) }
-
-  let(:params) do
-    {
-      marker: marker,
-      pushgateway: pushgateway
-    }
-  end
-
-  let(:pm_marker) do
-    described_class.new(batch_size, **params)
-  end
-
   let(:metrics) { Services.prometheus_registry }
 
   before(:each) do
@@ -40,109 +18,133 @@ RSpec.describe Utils::PushMetricsMarker do
     Services.register(:prometheus_registry) { Prometheus::Client::Registry.new }
   end
 
-  describe "#initialize" do
-    it "can be constructed" do
-      expect(pm_marker).not_to be(nil)
+  describe "unit tests" do
+    let(:marker) do
+      instance_double(Milemarker,
+        final_line: true,
+        total_seconds_so_far: seconds_so_far,
+        count: records_so_far).tap do |d|
+        allow(d).to receive(:on_batch).and_yield(d)
+      end
     end
 
-    it "sets initial values for duration and records processed" do
-      pm_marker
+    let(:pushgateway) { instance_double(Prometheus::Client::Push, add: true) }
 
-      expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
-      expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
+    let(:params) do
+      {
+        marker: marker,
+        pushgateway: pushgateway
+      }
     end
 
-    it "doesn't set last success" do
-      pm_marker
-
-      expect(metrics.get(:job_last_success)).to be(nil)
+    let(:pm_marker) do
+      described_class.new(batch_size, **params)
     end
 
-    it "by default doesn't set success interval" do
-      pm_marker
+    describe "#initialize" do
+      it "can be constructed" do
+        expect(pm_marker).not_to be(nil)
+      end
 
-      expect(metrics.get(:job_expected_success_interval)).to be(nil)
+      it "sets initial values for duration and records processed" do
+        pm_marker
+
+        expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
+        expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
+      end
+
+      it "doesn't set last success" do
+        pm_marker
+
+        expect(metrics.get(:job_last_success)).to be(nil)
+      end
+
+      it "by default doesn't set success interval" do
+        pm_marker
+
+        expect(metrics.get(:job_expected_success_interval)).to be(nil)
+      end
+
+      it "sets success interval metric with constructor param" do
+        described_class.new(batch_size, **params.merge({success_interval: success_interval}))
+
+        expect(metrics.get(:job_expected_success_interval).get).to eq(success_interval)
+      end
+
+      it "pushes initial metrics to pushgateway" do
+        expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
+
+        pm_marker
+      end
     end
 
-    it "sets success interval metric with constructor param" do
-      described_class.new(batch_size, **params.merge({success_interval: success_interval}))
-
-      expect(metrics.get(:job_expected_success_interval).get).to eq(success_interval)
+    describe "#incr" do
+      it "delegates to marker" do
+        expect(marker).to receive(:incr)
+        pm_marker.incr
+      end
     end
 
-    it "pushes initial metrics to pushgateway" do
-      expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
+    describe "#final_line" do
+      it "delegates to milemarker" do
+        expect(marker).to receive(:final_line)
 
-      pm_marker
-    end
-  end
+        pm_marker.final_line
+      end
 
-  describe "#incr" do
-    it "delegates to marker" do
-      expect(marker).to receive(:incr)
-      pm_marker.incr
-    end
-  end
+      it "returns what milemarker returns" do
+        allow(marker).to receive(:final_line).and_return("milemarker return")
 
-  describe "#final_line" do
-    it "delegates to milemarker" do
-      expect(marker).to receive(:final_line)
+        expect(pm_marker.final_line).to eq("milemarker return")
+      end
 
-      pm_marker.final_line
-    end
+      it "updates the metrics" do
+        pm_marker.final_line
 
-    it "returns what milemarker returns" do
-      allow(marker).to receive(:final_line).and_return("milemarker return")
+        expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
+        expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
+        expect(metrics.get(:job_last_success).get).to eq(Time.now.to_i)
+      end
 
-      expect(pm_marker.final_line).to eq("milemarker return")
-    end
+      it "pushes metrics to pushgateway" do
+        expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
 
-    it "updates the metrics" do
-      pm_marker.final_line
-
-      expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
-      expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
-      expect(metrics.get(:job_last_success).get).to eq(Time.now.to_i)
+        pm_marker.final_line
+      end
     end
 
-    it "pushes metrics to pushgateway" do
-      expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
+    describe "#on_batch" do
+      it "delegates to marker" do
+        expect(marker).to receive(:on_batch)
 
-      pm_marker.final_line
+        pm_marker.on_batch {}
+      end
+
+      it "updates the metrics" do
+        pm_marker.on_batch {}
+
+        expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
+        expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
+      end
+
+      it "pushes metrics to pushgateway" do
+        expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
+
+        pm_marker.on_batch {}
+      end
+
+      it "doesn't overwrite last success metric" do
+        pm_marker.on_batch {}
+
+        expect(metrics.get(:job_last_success)).to be(nil)
+      end
     end
-  end
 
-  describe "#on_batch" do
-    it "delegates to marker" do
-      expect(marker).to receive(:on_batch)
-
-      pm_marker.on_batch {}
-    end
-
-    it "updates the metrics" do
-      pm_marker.on_batch {}
-
-      expect(metrics.get(:job_duration_seconds).get).to eq(seconds_so_far)
-      expect(metrics.get(:job_records_processed).get).to eq(records_so_far)
-    end
-
-    it "pushes metrics to pushgateway" do
-      expect(pushgateway).to receive(:add).with(Services.prometheus_registry)
-
-      pm_marker.on_batch {}
-    end
-
-    it "doesn't overwrite last success metric" do
-      pm_marker.on_batch {}
-
-      expect(metrics.get(:job_last_success)).to be(nil)
-    end
-  end
-
-  describe "#count" do
-    it "delegates to marker" do
-      expect(marker).to receive(:count)
-      pm_marker.count
+    describe "#count" do
+      it "delegates to marker" do
+        expect(marker).to receive(:count)
+        pm_marker.count
+      end
     end
   end
 
@@ -154,17 +156,26 @@ RSpec.describe Utils::PushMetricsMarker do
 
   describe "integration test" do
     before(:each) do
+      @old_push = Services.pushgateway
       WebMock.disable!
+      Services.register(:pushgateway) do
+        Prometheus::Client::Push.new(job: "rspec", gateway: ENV["PUSHGATEWAY"])
+      end
       Faraday.put("#{ENV["PUSHGATEWAY"]}/api/v1/admin/wipe")
     end
 
-    let(:batch_size) { 5 }
+    after(:each) do
+      Services.register(:pushgateway) { @old_push }
+      WebMock.enable!
+    end
+
     let(:metrics) { Faraday.get("#{ENV["PUSHGATEWAY"]}/metrics").body }
+    let(:pm_marker) { described_class.new(batch_size) }
 
     describe "#on_batch" do
-
       before(:each) do
-        pm_marker.on_batch { }
+        pm_marker.incr(batch_size)
+        pm_marker.on_batch {}
       end
 
       it "updates job_duration_seconds" do
@@ -185,8 +196,7 @@ RSpec.describe Utils::PushMetricsMarker do
     end
 
     it "can record success" do
-      require 'pry'
-      tracker.final_line
+      pm_marker.final_line
       # job_last_success is nonzero
       expect(metrics).to match(/^job_last_success\S* \S+/m)
     end
