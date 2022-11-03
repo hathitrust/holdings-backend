@@ -81,7 +81,10 @@ module SharedPrint
       raise SharedPrint::DeprecationError, "No commitments by organization:#{organization} in cluster." if org_commitments.empty?
       raise SharedPrint::DeprecationError, "Only deprecated commitments found." if undeprecated_commitments.empty?
       raise SharedPrint::DeprecationError, "No commitment with local_id:#{@local_id} found" if local_id_matches.empty?
-      raise SharedPrint::DeprecationError, "Multiple local_ids found: #{local_id_matches.join(", ")}" unless validate_single_match
+      unless validate_single_match
+        raise SharedPrint::DeprecationError,
+          "Multiple local_ids found:\n#{local_id_matches.map(&:inspect).join("\n")}"
+      end
       local_id_matches.first
     end
 
