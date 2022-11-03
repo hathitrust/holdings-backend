@@ -161,12 +161,20 @@ RSpec.describe SharedPrint::DeprecationRecord do
       expect(dep.validate_single_match).to be true
     end
   end
-
-  it "be OK when asked to find commitments when there is no cluster" do
-    expect {
-      described_class.parse_line(
-        "ou\t780750\t99334010002042\tL"
-      ).find_commitment
-    }.to raise_error SharedPrint::DeprecationError
+  describe "#find_commitment" do
+    it "be OK when asked to find commitments when there is no cluster" do
+      expect {
+        described_class.parse_line(
+          "ou\t780750\t99334010002042\tL"
+        ).find_commitment
+      }.to raise_error SharedPrint::DeprecationError
+    end
+    it "shows full commitment data for duplicates, including uuid" do
+      make_commitment(ocn, org, loc)
+      make_commitment(ocn, org, loc)
+      dep = described_class.new(organization: org, ocn: ocn, local_id: loc, status: sta)
+      expect { dep.find_commitment }.to raise_error SharedPrint::DeprecationError
+      expect { dep.find_commitment }.to raise_error(/uuid/)
+    end
   end
 end
