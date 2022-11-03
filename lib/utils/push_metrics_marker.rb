@@ -13,7 +13,6 @@ module Utils
     def initialize(batch_size,
       marker: Milemarker.new(batch_size: batch_size),
       registry: Services.prometheus_registry,
-      metrics: Services.prometheus_metrics,
       pushgateway: Services.pushgateway,
       success_interval: ENV["JOB_SUCCESS_INTERVAL"])
       @marker = marker
@@ -24,14 +23,14 @@ module Utils
       super(@marker)
 
       if success_interval
-        metrics[:success_interval].set(success_interval.to_i)
+        success_interval_metric.set(success_interval.to_i)
       end
 
       update_metrics
     end
 
     def final_line
-      metrics[:last_success].set(Time.now.to_i)
+      last_success_metric.set(Time.now.to_i)
       update_metrics
       marker.final_line
     end
@@ -48,9 +47,30 @@ module Utils
     attr_reader :marker, :pushgateway, :registry, :metrics
 
     def update_metrics
-      metrics[:duration].set(@marker.total_seconds_so_far)
-      metrics[:records_processed].set(@marker.count)
+      duration_metric.set(@marker.total_seconds_so_far)
+      records_processed_metric.set(@marker.count)
       pushgateway.add(registry)
+    end
+
+    def duration_metric
+      @duration_metric ||= register_metric(:job_duration_seconds, docstring: "Time spend running job in seconds")
+    end
+
+    def last_success_metric
+      @last_success_metric ||= register_metric(:job_last_success, docstring: "Last Unix time when job successfully completed")
+    end
+
+    def records_processed_metric
+      @records_processed ||= register_metric(:job_records_processed, docstring: "Records processed by job")
+    end
+
+    def success_interval_metric
+      @success_interval ||= register_metric(:job_expected_success_interval, docstring: "Maximum expected time in seconds between job completions")
+    end
+
+    def register_metric(name, **kwargs)
+      registry.get(name) ||
+        Prometheus::Client::Gauge.new(name, **kwargs).tap { |m| registry.register(m) }
     end
   end
 end
