@@ -25,7 +25,6 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
   SimpleCov::Formatter::HTMLFormatter,
   SimpleCov::Formatter::LcovFormatter
 ])
-SimpleCov.start
 Sidekiq.strict_args!
 Sidekiq::Testing.inline!
 
