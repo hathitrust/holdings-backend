@@ -10,11 +10,12 @@ module SharedPrint
   # * call clusters()    to yield the matching clusters,
   # * call commitments() to yield the matching commitments.
   class Finder
-    attr_reader :organization, :ocn, :local_id, :deprecated, :query
-    def initialize(organization: [], ocn: [], local_id: [], deprecated: false)
+    attr_reader :organization, :ocn, :local_id, :uuid, :deprecated, :query
+    def initialize(organization: [], ocn: [], local_id: [], uuid: [], deprecated: false)
       @organization = organization
       @ocn = ocn
       @local_id = local_id
+      @uuid = uuid
       @deprecated = deprecated # nil = don't care, could be deprecated or not.
 
       # Put together a query based on the criteria gathered.
@@ -56,6 +57,9 @@ module SharedPrint
       if @local_id.any?
         q["commitments.local_id"] = {"$in": @local_id}
       end
+      if @uuid.any?
+        q["commitments.uuid"] = {"$in": @uuid}
+      end
 
       q
     end
@@ -67,7 +71,9 @@ module SharedPrint
       (@deprecated.nil? || @deprecated == commitment.deprecated?) &&
         empty_or_include?(@organization, commitment.organization) &&
         empty_or_include?(@ocn, commitment.ocn) &&
-        empty_or_include?(@local_id, commitment.local_id)
+        empty_or_include?(@local_id, commitment.local_id) &&
+        empty_or_include?(@uuid, commitment.uuid)
+
     end
 
     # A commitment matches e.g. the @ocn acriterion if @ocn == []

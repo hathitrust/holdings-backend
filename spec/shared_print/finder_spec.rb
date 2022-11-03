@@ -92,6 +92,19 @@ RSpec.describe SharedPrint::Finder do
       res = described_class.new(local_id: [loc1, loc2]).commitments.to_a
       expect(res.map(&:local_id)).to eq [loc1, loc2]
     end
+    it "can search by single uuid" do
+      cluster_tap_save [spc1, spc2]
+      uuid1 = spc1.uuid
+      res = described_class.new(uuid: [uuid1]).commitments.to_a
+      expect(res.map(&:uuid)).to eq [uuid1]
+    end
+    it "can search by multiple uuids" do
+      cluster_tap_save [spc1, spc2]
+      uuid1 = spc1.uuid
+      uuid2 = spc2.uuid
+      res = described_class.new(uuid: [uuid1, uuid2]).commitments.to_a
+      expect(res.map(&:uuid)).to eq [uuid1, uuid2]
+    end
   end
 
   describe "deprecated records" do
