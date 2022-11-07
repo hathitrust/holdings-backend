@@ -19,6 +19,9 @@ module Reports
       @num_items_ic = 0
       @clusters_seen = Set.new
       @marker = Services.progress_tracker.new(batch_size)
+      if Settings.estimates_path.nil?
+        raise ArgumentError, "Settings.estimates_path must be set."
+      end
     end
 
     def cost_report
