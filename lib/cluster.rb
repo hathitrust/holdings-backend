@@ -178,7 +178,7 @@ class Cluster
   end
 
   def update_ocns
-    self.ocns = [clusterable_ocn_tuples].flatten.uniq
+    self.ocns = [ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns)].flatten.uniq
     save
   end
 
