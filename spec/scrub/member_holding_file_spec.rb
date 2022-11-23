@@ -85,6 +85,10 @@ RSpec.describe Scrub::MemberHoldingFile do
     expect(value.size).to be(3)
   end
 
+  it "rejects empty lines" do
+    expect { ok_header_mhf.item_from_line("", ok_col_map) }.to raise_error Scrub::MalformedRecordError
+  end
+
   it "can read a file and yield MemberHolding records" do
     expect { ok_header_mhf.parse { |record| } }.not_to raise_error
 

@@ -193,7 +193,7 @@ module Scrub
 
     def item_from_line(line, col_map)
       if line.nil? || line.empty?
-        raise "bad line (nil/empty)"
+        raise Scrub::MalformedRecordError, "bad line (nil/empty)"
       end
 
       holding = MemberHolding.new(col_map)
