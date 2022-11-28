@@ -115,13 +115,13 @@ RSpec.describe Scrub::ScrubRunner do
           file.puts i
         end
       end
-      expect { sr.run_file(remote_file) }.to raise_error RuntimeError
+      expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(0)
       # BUT will do it if we force it
       sr_force = described_class.new(
         org1,
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
-      expect { sr_force.run_file(remote_file) }.not_to raise_error
+      expect { sr_force.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
     end
   end
 end

@@ -62,8 +62,9 @@ module Scrub
           "The scrubbed file (#{rc.last_ready}) has #{rc.count_ready} records.",
           "Diff is #{rc.diff}, which is greater than Settings.scrub_line_count_diff_max",
           "... which is #{Settings.scrub_line_count_diff_max}.",
-          "Run again with --force to load anyways."
+          "This file will not be loaded."
         ].join("\n")
+        # Run again with --force to load anyways.
       end
 
       scrubber.out_files.each do |scrubber_out_file|
@@ -75,7 +76,7 @@ module Scrub
         )
         chunker.run
         batch = Sidekiq::Batch.new
-        batch.description = "Holdings load for #{scrubber_out_file}"
+        batch.description = "Holdings load for #{@organization}'s #{scrubber_out_file}"
         cleanup_data = {
           "tmp_chunk_dir" => chunker.tmp_chunk_dir,
           "organization" => @organization,
@@ -98,11 +99,16 @@ module Scrub
           Loader::HoldingLoader::Cleanup.new.on_success(:success, cleanup_data)
         end
       end
-    rescue => err
+    rescue MalformedFileError => err
       # If the scrub failed, remove the file from local storage, that we may try again.
-      Services.logger.error err
+      Services.logger.error err.message # we don't need the whole stack trace for this specific error.
+      Services.scrub_logger.error err.message
       FileUtils.rm(downloaded_file)
-      raise "Scrub failed, removing downloaded file #{downloaded_file}"
+    rescue => err # AnyOtherError
+      Services.logger.error err
+      Services.scrub_logger.error "Unexpected error. Please contact HathiTrust."
+      Services.scrub_logger.error err.message
+      FileUtils.rm(downloaded_file)
     end
 
     # Check org-uploaded files for any not previously seen files
