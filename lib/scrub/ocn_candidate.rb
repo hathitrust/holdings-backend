@@ -28,8 +28,8 @@ module Scrub
       return if is_digit_mix?
       return unless is_ok_prefix?
       capture_numeric
-      return if numeric_too_large?
       return if numeric_zero?
+      return if numeric_too_large?
       @valid = true
     end
 
@@ -89,14 +89,18 @@ module Scrub
     end
 
     def numeric_zero?
-      if @numeric_part.zero?
+      if @numeric_part.nil?
+        count_x("ocn rejected: numeric part is nil", @numeric_part)
+      elsif @numeric_part.zero?
         count_x("ocn rejected: numeric part is zero", @numeric_part)
       end
     end
 
     def capture_numeric
       md = @candidate.match(NUMERIC_PART)
-      @numeric_part = md[0].to_i
+      unless md.nil?
+        @numeric_part = md[0].to_i
+      end
     end
   end
 end

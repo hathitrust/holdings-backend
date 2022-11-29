@@ -15,4 +15,10 @@ RSpec.describe Scrub::OcnCandidate do
     expect(cand.numeric_part).to eq 0
     expect(cand.valid?).to be false
   end
+
+  it "invalidates nil" do
+    cand = described_class.new("")
+    expect(cand.numeric_part).to eq nil
+    expect(cand.valid?).to be false
+  end
 end

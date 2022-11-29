@@ -71,23 +71,17 @@ module Scrub
       out_file = File.open(out_file_path, "w")
       Services.scrub_logger.info("Outputting to #{out_file_path}")
 
-      begin
-        @member_holding_file.parse do |holding|
-          out_file.puts(holding.to_json)
-          marker.incr
-          marker.on_batch do |m|
-            Services.scrub_logger.info(m.batch_line)
-          end
+      @member_holding_file.parse do |holding|
+        out_file.puts(holding.to_json)
+        marker.incr
+        marker.on_batch do |m|
+          Services.scrub_logger.info(m.batch_line)
         end
-        out_file.close
       rescue => e
-        # Any uncaught error that isn't a CustomError should be fatal
-        # and is a sign that error handling needs to be improved.
-        Services.scrub_logger.fatal(e)
-        Services.scrub_logger.fatal(e.backtrace.join("\n"))
-        Services.scrub_logger.fatal("Premature exit, exit status 1.")
-        exit 1
+        Services.scrub_logger.error(e)
+        Services.scrub_logger.error(e.backtrace.join("\n"))
       end
+      out_file.close
       Services.scrub_logger.info("Finished scrubbing #{@path}")
       FileUtils.mv(out_file_path, @output_struct.member_ready_to_load)
       Services.scrub_logger.info(
