@@ -42,8 +42,15 @@ module Scrub
       # TODO: we might want another dir for sort -T .
       tmp_file = File.join(@tmp_chunk_dir, "tmp_sorted.txt")
       add_uuid_call = @add_uuid ? "| bundle exec ruby bin/add_uuid.rb" : ""
+      # Sort call explained:
+      # input lines look like {"ocn":7804,"local_id":"991000029949706390", ... }
+      # -t:   = split lines into fields on :
+      # -k2,2 = only sort based on the 2nd field (7804,"local_id")
+      # -s    = stable sort, which should make it faster?
+      # -n    = numeric sort so [1, 3, 20] instead of [1, 20, 3]
+      # -T ./ = put temporary files in the current directory
       sort_call = "egrep -vh '^OCN' #{@glob} | " \
-                  "sort -s -n -k1,1 -T ./ " \
+                  "sort -t: -k2,2 -s -n -T ./ " \
                   "#{add_uuid_call} " \
                   "> #{tmp_file}"
       Services.logger.info sort_call

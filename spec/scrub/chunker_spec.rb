@@ -35,7 +35,7 @@ RSpec.describe Scrub::Chunker do
       expect(chunk_line_count).to be_within(1).of(expected_chunk_line_count)
 
       # is internally sorted:
-      expect(system("sort -c #{chunker.chunks[i]}")).to be true
+      expect(system("sort -t: -k2,2 -s -n -c #{chunker.chunks[i]}")).to be true
     end
 
     # Check that the line count of all the chunks add up to the line count of pre_chunked_file
