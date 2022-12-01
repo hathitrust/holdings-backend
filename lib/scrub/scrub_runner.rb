@@ -83,7 +83,7 @@ module Scrub
           "scrub_log" => scrubber.logger_path,
           "remote_dir" => remote_dir,
           "loaded_file" => scrubber_out_file,
-          "loaded_dir" => scrubber.output_struct.member_loaded
+          "loaded_dir" => scrubber.output_struct.member_loaded.path
         }
         batch.on(:success, Loader::HoldingLoader::Cleanup, cleanup_data)
         batch.jobs do
