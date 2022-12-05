@@ -190,9 +190,15 @@ module Reports
     private
 
     def report_file
-      FileUtils.mkdir_p(Settings.cost_report_path)
-      iso_stamp = Time.now.strftime("%Y%m%d-%H%M%S")
-      File.join(Settings.cost_report_path, "cost_report_#{iso_stamp}.txt")
+      year = Time.now.year.to_s
+      FileUtils.mkdir_p(File.join(Settings.cost_report_path, year))
+      iso_stamp = Time.now.strftime("%Y%m%d")
+
+      File.join(
+        Settings.cost_report_path,
+        year,
+        "cost_report_#{iso_stamp}.tsv"
+      )
     end
   end
 end

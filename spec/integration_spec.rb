@@ -98,8 +98,8 @@ RSpec.describe "phctl integration" do
 
     it "CostReport produces output" do
       phctl(*%w[report costreport])
-
-      expect(File.read(Dir.glob("/tmp/cost_reports/*").first))
+      year = Time.new.year.to_s
+      expect(File.read(Dir.glob("/tmp/cost_reports/#{year}/*").first))
         .to match(/Target cost: 9999/)
     end
 
