@@ -24,7 +24,7 @@ def newline(member, ocn, status: "CH", gov: "")
     "",
     "2020-09-01",
     "",
-    "mono",
+    "spm",
     "",
     "",
     "",
@@ -85,7 +85,7 @@ end
 
 # Now print it all out.
 schools.each do |s|
-  File.open("HT003_#{s}.mono.tsv", "w:utf-8") do |f|
+  File.open("HT003_#{s}.spm.tsv", "w:utf-8") do |f|
     f.puts header.join("\t")
     holdings[s].each do |line|
       f.puts line.map(&:to_s).join("\t")

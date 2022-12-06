@@ -8,7 +8,7 @@ RSpec.describe Overlap::ETASOverlap do
     described_class.new(organization: "umich",
       ocn: rand(1_000_000),
       local_id: rand(1_000_000).to_s,
-      item_type: "mono",
+      item_type: "spm",
       rights: "ic",
       access: "deny",
       catalog_id: rand(1_000_000),
@@ -26,7 +26,7 @@ RSpec.describe Overlap::ETASOverlap do
     end
 
     it "has an item_type" do
-      expect(eo.item_type).to be_in(["mono", "multi", "serial"])
+      expect(eo.item_type).to be_in(["mix", "mon", "spm", "mpm", "ser"])
     end
 
     it "has an access" do
@@ -71,7 +71,7 @@ RSpec.describe Overlap::ETASOverlap do
   describe "#to_s" do
     it "creates a report record in order: ocn, local_id, item_type, rights, access, catalog_id,
          volume_id, enum_chron" do
-           record = "#{eo.ocn}\t#{eo.local_id}\tmono\tic\tdeny" \
+           record = "#{eo.ocn}\t#{eo.local_id}\tspm\tic\tdeny" \
              "\t#{eo.catalog_id}\t#{eo.volume_id}\tV.1"
            expect(eo.to_s).to eq(record)
          end

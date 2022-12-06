@@ -31,13 +31,14 @@ end
 
 def generate_holdings(count = 50000, inst = "umich", date = Date.parse("2020-01-01"))
   # holdings
+  FileUtils.mkdir_p(OUTDIR)
   outfile = File.join(OUTDIR, "umich_fake_holdings.ndj")
   return if warn_exists(outfile)
   File.open(outfile, "w") do |out|
     count.times do
       holding = FactoryBot.build(:holding,
         organization: "umich",
-        mono_multi_serial: "mono",
+        mono_multi_serial: "mon",
         ocn: rand(MAX_OCN),
         date_received: date)
       out.puts(holding.as_document.except("_id").to_json)

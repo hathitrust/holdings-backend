@@ -51,10 +51,10 @@ RSpec.describe "MemberCounts" do
           :holding,
           ocn: ht_item.ocns.first,
           organization: "umich",
-          mono_multi_serial: "mono"
+          mono_multi_serial: "spm"
         )
         Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
-        expect(mcr.rows["umich"].total_loaded["mono"]).to eq(i)
+        expect(mcr.rows["umich"].total_loaded["spm"]).to eq(i)
       end
     end
   end
@@ -63,9 +63,9 @@ RSpec.describe "MemberCounts" do
     it "reads a freq file and populates report accordingly" do
       freq_file = "spec/fixtures/freq.txt"
       rows2 = Reports::MemberCounts.new(freq_file, "/tmp/member_counts", mokk_members).rows
-      expect(rows2["umich"].matching_volumes["mono"]).to eq(1)
-      expect(rows2["umich"].matching_volumes["multi"]).to eq(2)
-      expect(rows2["umich"].matching_volumes["serial"]).to eq(1)
+      expect(rows2["umich"].matching_volumes["spm"]).to eq(1)
+      expect(rows2["umich"].matching_volumes["mpm"]).to eq(2)
+      expect(rows2["umich"].matching_volumes["ser"]).to eq(1)
     end
   end
 end

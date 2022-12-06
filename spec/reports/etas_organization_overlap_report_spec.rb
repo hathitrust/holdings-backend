@@ -132,7 +132,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
     end
 
     it "has records for holdings that don't match HTItems" do
-      no_match = build(:holding, mono_multi_serial: "multi", enum_chron: "V.1")
+      no_match = build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1")
       Clustering::ClusterHolding.new(no_match).cluster.tap(&:save)
       Clustering::ClusterHtItem.new(build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn],
         enum_chron: "V.2")).cluster.tap(&:save)
@@ -146,9 +146,9 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
   end
 
   context "when holdings have the same id" do
-    let(:h1) { build(:holding, mono_multi_serial: "multi", enum_chron: "V.1") }
+    let(:h1) { build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1") }
     let(:h2) do
-      build(:holding, mono_multi_serial: "multi", ocn: h1.ocn,
+      build(:holding, mono_multi_serial: "mpm", ocn: h1.ocn,
         organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
     end
 

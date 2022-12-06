@@ -105,8 +105,8 @@ class HoldingsDeleter
       opts.on("--issn STR", String)
       opts.on("--leave_empties")
       opts.on("--local_id STR", String)
-      opts.on("--mono_multi_serial STR (mono/multi/serial)", String) do |mms|
-        opt_regex(:mono_multi_serial, mms, /^(mono|multi|serial)$/)
+      opts.on("--mono_multi_serial STR (mix/mon/spm/mpm/ser)", String) do |mms|
+        opt_regex(:mono_multi_serial, mms, /^(mix|mon|spm|mpm|ser)$/)
       end
       opts.on("--n_chron STR", String)
       opts.on("--n_enum STR", String)

@@ -33,7 +33,7 @@ module Clusterable
     embedded_in :cluster
 
     validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
-    validates_inclusion_of :mono_multi_serial, in: ["mono", "multi", "serial"]
+    validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
 
     def initialize(params = nil)
       super

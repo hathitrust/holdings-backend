@@ -4,9 +4,11 @@ require "scrub/member_holding_header_factory"
 require "scrub/item_type_error"
 
 RSpec.describe Scrub::MemberHoldingHeaderFactory do
-  let(:mon) { "mono" }
-  let(:mul) { "multi" }
-  let(:ser) { "serial" }
+  let(:mix) { "mix" }
+  let(:mon) { "mon" }
+  let(:spm) { "spm" }
+  let(:mpm) { "mpm" }
+  let(:ser) { "ser" }
   let(:failme) { "FAIL ME" }
 
   let(:min_ok_hed) { "oclc\tlocal_id" }
@@ -16,9 +18,11 @@ RSpec.describe Scrub::MemberHoldingHeaderFactory do
   end
 
   it "returns the correct subclass" do
-    expect(check_class(mon, min_ok_hed)).to be_a(Scrub::MonoHoldingHeader)
-    expect(check_class(mul, min_ok_hed)).to be_a(Scrub::MultiHoldingHeader)
-    expect(check_class(ser, min_ok_hed)).to be_a(Scrub::SerialHoldingHeader)
+    expect(check_class(mix, min_ok_hed)).to be_a(Scrub::MixHoldingHeader)
+    expect(check_class(mon, min_ok_hed)).to be_a(Scrub::MonHoldingHeader)
+    expect(check_class(spm, min_ok_hed)).to be_a(Scrub::SpmHoldingHeader)
+    expect(check_class(mpm, min_ok_hed)).to be_a(Scrub::MpmHoldingHeader)
+    expect(check_class(ser, min_ok_hed)).to be_a(Scrub::SerHoldingHeader)
   end
 
   it "raises an error given an illegal item_type" do
@@ -31,6 +35,16 @@ RSpec.describe Scrub::MemberHoldingHeaderFactory do
     expect(col_map.keys.size).to be(2)
     expect(col_map["oclc"]).to be(0)
     expect(col_map["local_id"]).to be(1)
+  end
+
+  it "tells you what the possible cols are for a given type" do
+    mon_cols = described_class.for(spm, min_ok_hed).possible_cols
+    expect(mon_cols.include?("oclc")).to be true
+    expect(mon_cols.include?("enumchron")).to be false
+
+    mpm_cols = described_class.for(mpm, min_ok_hed).possible_cols
+    expect(mpm_cols.include?("oclc")).to be true
+    expect(mpm_cols.include?("enumchron")).to be true
   end
 
   it "reports violations" do

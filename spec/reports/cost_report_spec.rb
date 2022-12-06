@@ -193,7 +193,7 @@ RSpec.describe Reports::CostReport do
     end
   end
 
-  describe "Integration testing of spm/mpm/serial behavior" do
+  describe "Integration testing of spm/mpm/ser behavior" do
     let(:cr) { described_class.new }
 
     before(:each) do
@@ -240,7 +240,7 @@ RSpec.describe Reports::CostReport do
         Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
         mpm_holding = spm_holding.clone
         mpm_holding.n_enum = "1"
-        mpm_holding.mono_multi_serial = "multi"
+        mpm_holding.mono_multi_serial = "mpm"
         cluster = Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
         cluster.add_holdings(mpm_holding).tap(&:save)
         cr.matching_clusters.each do |c|

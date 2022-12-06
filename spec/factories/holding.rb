@@ -8,7 +8,7 @@ FactoryBot.define do
     ocn { rand(1_000_000) }
     organization { ["umich", "upenn", "smu"].sample }
     local_id { rand(1_000_000).to_s }
-    mono_multi_serial { ["mono", "multi", "serial"].sample }
+    mono_multi_serial { ["mix", "mon", "spm", "mpm", "ser"].sample }
     date_received { Date.today }
     condition { "" }
     issn {}
