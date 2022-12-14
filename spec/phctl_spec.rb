@@ -48,14 +48,35 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
       Cluster.each(&:delete)
     end
 
-    it "does not queue a sidekiq job" do
-      expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
-        .not_to change(Jobs::Load::HtItems.jobs, :size)
+    context "load ht_items" do
+      it "does not queue a sidekiq job" do
+        expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
+          .not_to change(Jobs::Load::HtItems.jobs, :size)
+      end
+
+      it "does the thing" do
+        expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
+          .to change { cluster_count(:ht_items) }.by(5)
+      end
     end
 
-    it "does the thing" do
-      expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
-        .to change { cluster_count(:ht_items) }.by(5)
+    context "common job" do
+      # need some data or it gets upset
+      before(:each) do
+        PHCTL::PHCTL.start(["load", "cluster_file", "--inline", fixture("cluster_2503661.json")])
+      end
+
+      it "does not queue a sidekiq job" do
+        expect { PHCTL::PHCTL.start(["report", "costreport", "--inline"]) }
+          .not_to change(Jobs::Common.jobs, :size)
+      end
+
+      it "does the thing" do
+        PHCTL::PHCTL.start(["report", "costreport", "--inline"])
+        year = Time.new.year.to_s
+        expect(File.read(Dir.glob("/tmp/cost_reports/#{year}/*").first))
+          .to match(/Target cost: 9999/)
+      end
     end
   end
 end
