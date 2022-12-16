@@ -161,12 +161,12 @@ RSpec.describe "phctl integration" do
       # Needs a bit of setup.
       local_d = "/tmp/local_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
       remote_d = "/tmp/remote_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
-      logfile = File.join(remote_d, "umich_mono_#{Date.today}.log")
+      logfile = File.join(remote_d, "umich_mon_#{Date.today}.log")
       FileUtils.rm_rf(local_d)
       FileUtils.mkdir_p(remote_d)
       FileUtils.touch("/tmp/rclone.conf")
       FileUtils.rm_rf(logfile)
-      FileUtils.cp("spec/fixtures/umich_mono_full_20220101.tsv", remote_d)
+      FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
       # Verify precondition:
       expect(File.exist?(logfile)).to be false
       # Actual tests:

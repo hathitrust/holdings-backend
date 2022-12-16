@@ -5,7 +5,7 @@ require "scrub/record_counter"
 
 RSpec.describe Scrub::RecordCounter do
   let(:org) { "umich" }
-  let(:item_type) { "mono" }
+  let(:item_type) { "spm" }
   let(:rc) { described_class.new(org, item_type) }
   let(:loaded_file) {
     File.join(rc.struct.member_loaded, "#{org}_#{item_type}_2020-01-01.ndj")

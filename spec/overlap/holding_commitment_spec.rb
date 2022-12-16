@@ -25,7 +25,7 @@ RSpec.describe Overlap::HoldingCommitment do
 
   def make_holding(ocn, org, local_id)
     hol = build(:holding, ocn: ocn, organization: org, local_id: local_id,
-      status: "CH", mono_multi_serial: "mono")
+      status: "CH", mono_multi_serial: "mon")
     Clustering::ClusterHolding.new(hol).cluster.tap(&:save)
   end
 

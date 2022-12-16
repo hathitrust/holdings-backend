@@ -36,7 +36,7 @@ module Overlap
     # For a holding to be considered for commitments, it must be:
     # a currently held single part monograph that isn't brittle.
     def eligible_holding?(hol)
-      hol.mono_multi_serial == "mono" &&
+      (hol.mono_multi_serial == "spm" || hol.mono_multi_serial == "mon") &&
         (hol.status.empty? || hol.status == "CH") &&
         hol.condition.empty?
     end

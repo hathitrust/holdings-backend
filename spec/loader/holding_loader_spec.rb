@@ -14,7 +14,7 @@ RSpec.describe Loader::HoldingLoader do
       "", # CONDITION
       "2020-01-01", # DATE
       "", # ENUM_CHRON
-      "mono", # TYPE
+      "spm", # TYPE
       "", # ISSN
       "", # N_ENUM
       "", # N_CHRON

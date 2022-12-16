@@ -86,20 +86,18 @@ module Scrub
     end
   end
 
-  # Subclass for monos
-  class MonoHoldingHeader < MemberHoldingHeader
+  # Subclass for mix
+  class MixHoldingHeader < MemberHoldingHeader
     def initialize(header_line)
       super
       @opt_header_cols = [
-        "status",
-        "condition",
         "govdoc"
       ]
     end
   end
 
-  # Subclass for multis
-  class MultiHoldingHeader < MemberHoldingHeader
+  # Subclass for mon
+  class MonHoldingHeader < MemberHoldingHeader
     def initialize(header_line)
       super
       @opt_header_cols = [
@@ -111,8 +109,33 @@ module Scrub
     end
   end
 
-  # Subclass for serials
-  class SerialHoldingHeader < MemberHoldingHeader
+  # Subclass for spm
+  class SpmHoldingHeader < MemberHoldingHeader
+    def initialize(header_line)
+      super
+      @opt_header_cols = [
+        "status",
+        "condition",
+        "govdoc"
+      ]
+    end
+  end
+
+  # Subclass for mpm
+  class MpmHoldingHeader < MemberHoldingHeader
+    def initialize(header_line)
+      super
+      @req_header_cols << "enumchron"
+      @opt_header_cols = [
+        "status",
+        "condition",
+        "govdoc"
+      ]
+    end
+  end
+
+  # Subclass for ser
+  class SerHoldingHeader < MemberHoldingHeader
     def initialize(header_line)
       super
       @opt_header_cols = [

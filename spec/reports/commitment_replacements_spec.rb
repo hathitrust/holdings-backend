@@ -10,7 +10,7 @@ RSpec.describe Reports::CommitmentReplacements do
   def build_h(org, ocn, local_id, status)
     build(
       :holding,
-      mono_multi_serial: "mono",
+      mono_multi_serial: "mon",
       organization: org,
       ocn: ocn,
       local_id: local_id,

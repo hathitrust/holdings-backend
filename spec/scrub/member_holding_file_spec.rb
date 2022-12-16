@@ -8,18 +8,18 @@ RSpec.describe Scrub::MemberHoldingFile do
 
   # Vars for tests expected to pass, prefix "ok_"
   let(:ok_mem) { "umich" }
-  let(:ok_fn) { "umich_mono_full_20201230_corrected.tsv" }
+  let(:ok_fn) { "umich_mon_full_20201230_corrected.tsv" }
   let(:ok_mhf) { described_class.new(ok_fn) }
   let(:ok_header_mhf) do
     described_class.new(
-      "#{test_data}/haverford_mono_full_20200101_header.tsv"
+      "spec/fixtures/haverford_mon_full_20200101_header.tsv"
     )
   end
   let(:fail_header_mhf) do
-    described_class.new("spec/fixtures/umich_mono_full_20220101_headerfail.tsv")
+    described_class.new("spec/fixtures/umich_mon_full_20220101_headerfail.tsv")
   end
 
-  let(:ok_itype) { "mono" }
+  let(:ok_itype) { "mon" }
   let(:ok_col_map) { {"oclc" => 0, "local_id" => 1} }
 
   # Vars for tests expected to fail, prefix "bad_"
@@ -54,11 +54,11 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   context "with bad filenames" do
-    let(:bad_fn_1) { "!!!!!_mono_full_20201230.tsv" } # bad member_id
+    let(:bad_fn_1) { "!!!!!_mon_full_20201230.tsv" } # bad member_id
     let(:bad_fn_2) { "umich_!!!!_full_20201230.tsv" } # bad item_type
-    let(:bad_fn_3) { "umich_mono_!!!!_20201230.tsv" } # bad update type
-    let(:bad_fn_4) { "umich_mono_full_!!!!!!!!.tsv" } # bad date
-    let(:bad_fn_5) { "umich_mono_full_20201230.!!!" } # bad extension
+    let(:bad_fn_3) { "umich_mon_!!!!_20201230.tsv" } # bad update type
+    let(:bad_fn_4) { "umich_mon_full_!!!!!!!!.tsv" } # bad date
+    let(:bad_fn_5) { "umich_mon_full_20201230.!!!" } # bad extension
 
     it "Raises an error if it can't figure out member_id or item_type" do
       expect { described_class.new(bad_fn_1).valid_filename? }.to raise_error(Scrub::FileNameError)

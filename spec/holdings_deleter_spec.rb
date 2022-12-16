@@ -68,7 +68,7 @@ RSpec.describe HoldingsDeleter do
         "--n_chron", "1",
         "--status", "CH",
         "--condition", "BRT",
-        "--mono_multi_serial", "mono",
+        "--mono_multi_serial", "spm",
         "--country_code", "se",
         "--uuid", "1",
         "--issn", "1",

@@ -5,21 +5,16 @@ require "data_sources/ht_organizations"
 require "json"
 
 module Reports
-  MON = "mono"
-  MUL = "multi"
-  SER = "serial"
+  MIX = "mix"
+  MON = "mon"
+  SPM = "spm"
+  MPM = "mpm"
+  SER = "ser"
   MCR_LABELS = [
     "total_loaded",
     "matching_volumes"
   ].freeze
-  MCR_FORMATS = [MON, MUL, SER].freeze
-
-  # Alternate format names used in cost-report freq table.
-  ALT_FORMATS = {
-    MON => "spm",
-    MUL => "mpm",
-    SER => "ser"
-  }.freeze
+  MCR_FORMATS = [MIX, MON, SPM, MPM, SER].freeze
 
   # Runs report queries related to member-submitted holdings
   # and builds a report made out of MemberCountsRows.
@@ -53,8 +48,6 @@ module Reports
         rows.each do |org, data|
           fh.puts([org, data].join("\t"))
         end
-
-        fh.close
       end
     end
 
@@ -87,9 +80,9 @@ module Reports
     def matching_volumes
       unless @cost_report_freq.nil?
         read_freq do |org, data|
-          ALT_FORMATS.each do |fmt, alt|
-            if data.key?(alt) && @rows.key?(org)
-              @rows[org].matching_volumes[fmt] = data[alt].values.sum
+          MCR_FORMATS.each do |fmt|
+            if data.key?(fmt) && @rows.key?(org)
+              @rows[org].matching_volumes[fmt] = data[fmt].values.sum
             end
           end
         end
@@ -124,8 +117,9 @@ module Reports
 
     def initialize(org)
       @org = org
-      @total_loaded = {MON => 0, MUL => 0, SER => 0}
-      @matching_volumes = {MON => 0, MUL => 0, SER => 0}
+      # Make hashes where key is in MCR_FORMATS and val is 0
+      @total_loaded = MCR_FORMATS.collect { |fmt| [fmt, 0] }.to_h
+      @matching_volumes = MCR_FORMATS.collect { |fmt| [fmt, 0] }.to_h
     end
 
     # 2-row header, like:
@@ -135,7 +129,7 @@ module Reports
       row1 = ["org"]
       row2 = []
       MCR_LABELS.each do |label|
-        row1 << ["<", label, ">"]
+        row1 << ["<", "...", label, "...", ">"]
         row2 << MCR_FORMATS
       end
       (row1 + ["\n"] + row2).join("\t")

@@ -22,13 +22,13 @@ module Scrub
     SPEC_RX = {
       # A single regex for file name pass/fail.
       FILENAME: /^
-      [a-z\-]+              # member_id
-      _(mono|multi|serial)  # item_type
-      _(full|partial)       # update_type
-      _\d{8}                # date_str (loosest possible YYYYMMDD check)
-      (_.+)?                # optional "rest" part
-      .tsv                  # must have a .tsv extension
-      (.gz)?                # may have a .gz extension
+      [a-z\-]+               # member_id
+      _(mix|mon|spm|mpm|ser) # item_type
+      _(full|partial)        # update_type
+      _\d{8}                 # date_str (loosest possible YYYYMMDD check)
+      (_.+)?                 # optional "rest" part
+      .tsv                   # must have a .tsv extension
+      (.gz)?                 # may have a .gz extension
       $/x,
 
       # Split filename on these to get the individual parts.
@@ -36,8 +36,8 @@ module Scrub
 
       # If filename fail, further regexes to discover why.
       MEMBER_ID: /^[a-z_\-]+$/,
-      ITEM_TYPE: /^(mono|multi|serial)$/,
-      ITEM_TYPE_CONTEXT: /_(mono|multi|serial)_/,
+      ITEM_TYPE: /^(mix|mon|spm|mpm|ser)$/,
+      ITEM_TYPE_CONTEXT: /_(mix|mon|spm|mpm|ser)_/,
       UPDATE_TYPE: /^(full|partial)$/,
 
       # A YYYYMMDD date string is expected,
@@ -165,8 +165,8 @@ module Scrub
 
     # 'rest' is the remaining part of the filename, after the required
     # parts, and includes the required file extension(s).
-    # This is so we can allow umich_mono_full_20201230.tsv
-    # as well as              umich_mono_full_20201230_fix_pt2.tsv.gz
+    # This is so we can allow umich_mon_full_20201230.tsv
+    # as well as              umich_mon_full_20201230_fix_pt2.tsv.gz
     def analyze_rest(arr)
       return "must not be empty" if arr.empty?
 
