@@ -6,8 +6,21 @@ require "shared_print/updater"
 require "phctl"
 
 RSpec.describe SharedPrint::Updater do
-  let(:ocn1) { 1 }
-  let(:ocn2) { 2 }
+  let(:clu1) { build(:cluster) }
+  let(:clu2) { build(:cluster) }
+  let(:clu3) { build(:cluster) }
+  let(:clu4) { build(:cluster) } # does not have ht_item
+
+  let(:ocn1) { clu1.ocns.first }
+  let(:ocn2) { clu2.ocns.first }
+  let(:ocn3) { clu3.ocns.first }
+  let(:ocn4) { clu4.ocns.first }
+
+  let(:ht1) { build(:ht_item, :spm, ocns: clu1.ocns) }
+  let(:ht2) { build(:ht_item, :spm, ocns: clu2.ocns) }
+  let(:ht3) { build(:ht_item, :spm, ocns: clu3.ocns) }
+  # no ht_4, no cluster for clu4
+
   let(:org1) { "umich" }
   let(:loc1) { "i111" }
   let(:loc2) { "i222" }
@@ -71,20 +84,6 @@ RSpec.describe SharedPrint::Updater do
     expect(updater.strip_new_from_symbol(:anything_else)).to eq :anything_else
   end
 
-  it "can update identifiers as well" do
-    cluster_tap_save [spc1]
-    check_spc1 = SharedPrint::Finder.new(ocn: [ocn1], local_id: [loc1]).commitments.to_a
-    check_spc2 = SharedPrint::Finder.new(ocn: [ocn2], local_id: [loc1]).commitments.to_a
-    expect(check_spc1.size).to eq 1
-    expect(check_spc2.size).to eq 0
-    updater.process_record(upd3)
-    # Results are now other way around.
-    check_spc1 = SharedPrint::Finder.new(ocn: [ocn1], local_id: [loc1]).commitments.to_a
-    check_spc2 = SharedPrint::Finder.new(ocn: [ocn2], local_id: [loc1]).commitments.to_a
-    expect(check_spc1.size).to eq 0
-    expect(check_spc2.size).to eq 1
-  end
-
   it "Full integration test" do
     single_match = build(:commitment, ocn: 1, organization: "umich", local_id: "i1", local_bib_id: "a")
     multi_match_1 = build(:commitment, ocn: 9, organization: "umich", local_id: "i9", local_bib_id: "b")
@@ -96,5 +95,81 @@ RSpec.describe SharedPrint::Updater do
     # Only single_match should have an updated local_bib_id.
     arr = SharedPrint::Finder.new.commitments.to_a
     expect(arr.map(&:local_bib_id).sort).to eq ["b", "c", "d", "updated"]
+  end
+
+  context "updating ocns" do
+    it "can update commitment ocn and move commitment to another cluster" do
+      cluster_tap_save [spc1, ht1, ht2]
+      expect(Cluster.find_by(ocns: ocn1).commitments.count).to eq 1
+      expect(Cluster.find_by(ocns: ocn2).commitments.count).to eq 0
+      updater.process_record(upd3)
+      expect(Cluster.find_by(ocns: ocn1).commitments.count).to eq 0
+      expect(Cluster.find_by(ocns: ocn2).commitments.count).to eq 1
+    end
+
+    it "moves to a new cluster if updating to the ocn of another cluster " do
+      # Start with a commitment on a cluster with ocns:[ocn1]
+      cluster_tap_save [ht1, ht2, spc1]
+
+      original_cluster_id = spc1.cluster._id
+      expect(spc1.cluster.ocns).to eq [spc1.ocn]
+
+      # If we update the commitment to ocn2
+      updater.process_record(upd3)
+      # ...the commitment should move to another cluster
+
+      new_cluster = Cluster.find_by(ocns: [ocn2])
+      expect(new_cluster.nil?).to be false
+      expect(new_cluster._id).not_to eq original_cluster_id
+    end
+
+    it "can update to an ocn on the same cluster" do
+      # set up a cluster with ocn1 and ocn2
+      resolution = build(:ocn_resolution, deprecated: ocn1, resolved: ocn2)
+      cluster = build(:cluster, ocns: [ocn1, ocn2])
+      cluster.save
+      cluster.add_ocn_resolutions(resolution)
+      expect(cluster.ocns).to eq [ocn1, ocn2]
+
+      # add an spc that has ocn1 (and a matching ht_item)
+      cluster_tap_save [spc1, ht1]
+      expect(Cluster.count).to eq 1
+      expect(Cluster.first.commitments.count).to eq 1
+
+      # Verify that ocn1 and ocn2 lead to the same cluster
+      expect(Cluster.find_by(ocns: ocn1)._id).to eq Cluster.find_by(ocns: ocn2)._id
+
+      # Check that the commitment is on the cluster
+      expect(Cluster.find_by(ocns: ocn1).commitments.count).to eq 1
+      expect(Cluster.find_by(ocns: ocn1).commitments.first.ocn).to eq ocn1
+
+      # Update the spc ocn to another ocn on the same cluster
+      # and check that the spc is still there
+      updater.process_record(upd3)
+      expect(Cluster.find_by(ocns: ocn2).commitments.count).to eq 1
+      expect(Cluster.find_by(ocns: ocn1).commitments.first.ocn).to eq ocn2
+      expect(Cluster.find_by(ocns: ocn2).commitments.first.ocn).to eq ocn2
+    end
+
+    it "cannot update ocn to a cluster that does not exist" do
+      # set up a cluster with just a ht_item and commitment with ocn1
+      cluster_tap_save [spc1, ht1]
+      # Try to update the spc ocn to another ocn that does not have a cluster
+      # ... and expect error.
+      expect { updater.process_record(upd3) }.to raise_error(
+        /no cluster for ocn #{ocn2}/
+      )
+    end
+
+    it "cannot update ocn to a cluster that does not have any ht_items" do
+      # set up a cluster with just a ht_item and commitment with ocn1
+      hol2 = build(:holding, ocn: ocn2)
+      cluster_tap_save [spc1, ht1, hol2]
+      # Try to update the spc ocn to another ocn that does not have a cluster
+      # ... and expect error.
+      expect { updater.process_record(upd3) }.to raise_error(
+        /no htitems on cluster for ocn #{ocn2}/
+      )
+    end
   end
 end
