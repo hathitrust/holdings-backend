@@ -24,7 +24,9 @@ module Utils
       @inf.close
     end
 
-    def process_header(line = @inf.gets.strip)
+    alias_method :each, :run
+
+    def process_header(line = @inf.gets.chomp)
       @header = line
       @header_hash = {}
       @header_index = {}
@@ -40,12 +42,12 @@ module Utils
       # For each line, get a copy of header_hash and populate it using header_index
       # so that cols_hash = {ocn: 11, local_id: i11}
       @inf.each_line do |line|
-        yield line_to_hash(line.strip)
+        yield line_to_hash(line.chomp)
       end
     end
 
     def line_to_hash(line)
-      cols = line.split(@delim)
+      cols = line.split(@delim, -1)
       if cols.size != @header_hash.keys.size
         raise IndexError, "Line cols: #{cols.size}, header cols: (#{@header_hash.keys.size})."
       end

@@ -13,9 +13,16 @@ RSpec.describe "phctl integration" do
   end
 
   describe "load" do
-    it "commitments loads json file of commitments" do
-      expect { phctl("load", "commitments", fixture("sp_commitment.json")) }
-        .to change { cluster_count(:commitments) }.by(1)
+    describe "commitments" do
+      it "loads json file" do
+        expect { phctl("load", "commitments", fixture("sp_commitment.ndj")) }
+          .to change { cluster_count(:commitments) }.by(1)
+      end
+
+      it "loads tsv file with policies" do
+        expect { phctl("load", "commitments", fixture("sp_commitment_policies.tsv")) }
+          .to change { cluster_count(:commitments) }.by(1)
+      end
     end
 
     it "HtItems loads hathifiles" do

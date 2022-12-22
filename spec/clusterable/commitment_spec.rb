@@ -19,16 +19,16 @@ RSpec.describe Clusterable::Commitment do
   end
 
   it "validates local_shelving_type" do
-    expect(comm.valid?).to be true
+    expect(comm).to be_valid
     comm.local_shelving_type = "invalid"
-    expect(comm.valid?).to be false
+    expect(comm).not_to be_valid
     comm.local_shelving_type = "cloa"
-    expect(comm.valid?).to be true
+    expect(comm).to be_valid
   end
 
   it "has a uuid" do
-    expect(comm.uuid.nil?).to be false
-    expect(comm.uuid.empty?).to be false
+    expect(comm.uuid).not_to be_nil
+    expect(comm.uuid).not_to be_empty
   end
 
   it "gets a default committed_date if none given" do
@@ -38,14 +38,14 @@ RSpec.describe Clusterable::Commitment do
 
   describe "deprecated?" do
     it "is deprecated if it has a deprecation status" do
-      expect(comm.deprecated?).to be false
-      expect(build(:commitment, :deprecated).deprecated?).to be true
+      expect(comm).not_to be_deprecated
+      expect(build(:commitment, :deprecated)).to be_deprecated
     end
 
     it "validates deprecation" do
-      expect(comm.valid?).to be true
+      expect(comm).to be_valid
       comm.deprecation_status = "C"
-      expect(comm.valid?).to be false
+      expect(comm).not_to be_valid
     end
   end
 
@@ -53,9 +53,9 @@ RSpec.describe Clusterable::Commitment do
     it "deprecate sets deprecated? == true" do
       c.commitments << comm
       depped = c.commitments.first
-      expect(depped.deprecated?).to be false
+      expect(depped).not_to be_deprecated
       depped.deprecate(status: "C")
-      expect(depped.deprecated?).to be true
+      expect(depped).to be_deprecated
     end
 
     it "adds status, date and replacement id" do
@@ -63,9 +63,9 @@ RSpec.describe Clusterable::Commitment do
       replacement = build(:commitment, ocn: comm.ocn)
       depped = c.commitments.first
       d = DateTime.parse("2020-01-01")
-      expect(depped.deprecated?).to be false
+      expect(depped).not_to be_deprecated
       depped.deprecate(status: "C", replacement: replacement, date: d)
-      expect(depped.deprecated?).to be true
+      expect(depped).to be_deprecated
       expect(depped.deprecation_status).to eq("C")
       expect(depped.deprecation_date).to eq(d)
       expect(depped.deprecation_replaced_by).to eq(replacement._id.to_s)
@@ -97,11 +97,11 @@ RSpec.describe Clusterable::Commitment do
     let(:comm3) { build(:commitment, ocn: 456) }
 
     it "batches with a commitment with the same ocn" do
-      expect(comm1.batch_with?(comm2)).to be true
+      expect(comm1).to be_batch_with(comm2)
     end
 
     it "doesn't batch with a commitment with a different ocn" do
-      expect(comm1.batch_with?(comm3)).to be false
+      expect(comm1).not_to be_batch_with(comm3)
     end
   end
 
@@ -118,6 +118,22 @@ RSpec.describe Clusterable::Commitment do
       Clustering::ClusterHolding.new(h).cluster
       Clustering::ClusterCommitment.new(comm).cluster
       expect(Cluster.first.commitments.first.matching_holdings).to eq([h])
+    end
+  end
+
+  describe "policies" do
+    ["blo", "digitizeondemand", "non-circ"].each do |policy|
+      it "accepts #{policy}" do
+        expect(build(:commitment, policies: [policy])).to be_valid
+      end
+    end
+
+    it "accepts multiple policies" do
+      expect(build(:commitment, policies: ["blo", "digitizeondemand"])).to be_valid
+    end
+
+    it "rejects other policies" do
+      expect(build(:commitment, policies: ["unknown"])).not_to be_valid
     end
   end
 end

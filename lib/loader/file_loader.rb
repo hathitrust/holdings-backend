@@ -19,14 +19,14 @@ module Loader
     # @param [Regexp] skip_match The regexp which indicates that the first line should be skipped
     # @return [Iterator] An iterator with the first line possibly skipped
     def skip_matching_header(filehandle, skip_match)
-      return filehandle unless skip_match
+      filehandle.tap do |f|
+        next unless skip_match
 
-      iter = filehandle.enum_for(:each)
-      nextline = iter.next
-      unless skip_match.match(nextline)
-        iter.rewind
+        nextline = f.next
+        unless skip_match.match(nextline)
+          f.rewind
+        end
       end
-      iter
     end
 
     # Load the given file
@@ -36,7 +36,8 @@ module Loader
     # @return [Integer] Number of records loaded
     def load(filename, filehandle: Zinzout.zin(filename), skip_header_match: nil)
       logger.info "Loading #{filename}, batches of #{ppnum @batch_size}"
-      skip_matching_header(filehandle, skip_header_match).each.lazy
+
+      skip_matching_header(filehandle.enum_for(:each), skip_header_match).lazy
         .map { |line| log_and_parse(line) }
         .chunk_while { |item1, item2| item1.batch_with?(item2) }
         .each do |batch|
