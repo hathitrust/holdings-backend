@@ -39,7 +39,8 @@ module Jobs
       include Sidekiq::Job
       def perform(filename)
         Services.logger.info "Loading Shared Print Commitments: #{filename}"
-        Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.new).load(filename)
+        Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.for(filename))
+          .load(filename, filehandle: Loader::SharedPrintLoader.filehandle_for(filename))
       end
     end
 
