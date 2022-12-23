@@ -343,6 +343,13 @@ RSpec.describe Reports::RareUncommitted do
       # Adding holdings from a member who's not in group with ucalgary also does nothing
       cluster_tap_save [hol1_org1]
       expect(r.group_overlap(Cluster.first)).to eq 1
+
+      # Check that the text output looks as expected.
+      # We expect a 2-line tsv, with overlap_group in the 8th (index 7) column.
+      out_arr = r.output_organization.to_a
+      expect(out_arr.size).to eq 2
+      expect(out_arr.first.split("\t")[7]).to eq "overlap_group"
+      expect(out_arr.last.split("\t")[7]).to eq "1"
     end
   end
 end
