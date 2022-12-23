@@ -2,6 +2,7 @@
 
 require "cluster"
 require "services"
+require "shared_print/groups"
 Services.mongo!
 
 module Reports
@@ -47,6 +48,7 @@ module Reports
       @commitment_count = commitment_count
       # If given an organization, do record output for that organization
       @organization = organization
+      @sp_groups = SharedPrint::Groups.new
 
       # A selected cluster should always have at least items and holdings.
       @query = {
@@ -114,8 +116,10 @@ module Reports
         "OCN",
         "overlap_ht",
         "overlap_sp"
-      ].join("\t")
-      yield header
+      ]
+      # If @organization is in any @sp_groups then we need to track that.
+      header << "overlap_group" if in_group.any?
+      yield header.join("\t")
 
       clusters do |cluster|
         cluster.holdings.each do |holding|
@@ -134,8 +138,9 @@ module Reports
             holding.ocn,
             cluster_h(cluster),
             cluster_sp_h(cluster)
-          ].join("\t")
-          yield record
+          ]
+          record << group_overlap(cluster) if in_group.any?
+          yield record.join("\t")
         end
       end
     end
@@ -201,6 +206,25 @@ module Reports
       all_organizations - sp_organizations
     end
 
+    # The groups that @organization is a member of, if any
+    def in_group
+      @in_group ||= (@sp_groups.org_to_groups(@organization) || [])
+    end
+
+    # The other orgs in the groups that @organization is member of, if any
+    def other_orgs_in_group
+      if @other_orgs_in_group.nil? && in_group.any?
+        @other_orgs_in_group = []
+        in_group.each do |group|
+          @other_orgs_in_group << @sp_groups
+            .group_to_orgs(group)
+            .reject { |org| org == @organization }
+        end
+        @other_orgs_in_group.flatten!
+      end
+      @other_orgs_in_group
+    end
+
     # Populate one section (based on h_type) of the counts structure
     def populate_counts(clusters, counter, h_type)
       h_type_counts = {}
@@ -238,8 +262,6 @@ module Reports
         cluster_non_sp_h(cluster)
       end
     end
-
-    private
 
     def log(msg)
       Services.logger.debug msg
@@ -330,6 +352,13 @@ module Reports
     def cluster_non_sp_h(cluster)
       holding_non_sp_orgs = cluster.holdings.collect(&:organization).uniq & non_sp_organizations
       holding_non_sp_orgs.size
+    end
+
+    # counts how many other organizations that are part of the same “group“
+    # have holdings in the same cluster.
+    def group_overlap(cluster)
+      group_overlap_orgs = cluster.holdings.collect(&:organization).uniq & other_orgs_in_group
+      group_overlap_orgs.size
     end
 
     private

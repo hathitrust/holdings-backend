@@ -302,7 +302,47 @@ RSpec.describe Reports::RareUncommitted do
       expect(row_data[2]).to eq hol1_org1.gov_doc_flag ? "1" : "0"
       expect(row_data[3]).to eq hol1_org1.condition
       expect(row_data[4]).to eq hol1_org1.ocn.to_s
-      puts out_arr
+    end
+    it "group_overlap" do
+      # When we do output_organization for an org that is in a SharedPrint::Group
+      # with other orgs, we add a column for how many other members of that group
+      # have holdings in that same cluster
+      #
+      # Setup: make a report using organization: ucalgary,
+      # who should be in the group coppul together with ualberta.
+      r = report(organization: "ucalgary", max_h: 5)
+      expect(r.in_group).to eq ["coppul"]
+      expect(r.other_orgs_in_group).to eq ["ualberta"]
+
+      # Gotta make ucalgary and ualberta temp orgs for testing purposes.
+      ["ualberta", "ucalgary"].each do |temp_org|
+        Services.ht_organizations.add_temp(
+          DataSources::HTOrganization.new(
+            inst_id: temp_org, country_code: "xx", weight: 1.0, status: false
+          )
+        )
+      end
+
+      # When only ucalgary has holdings in the cluster, group_overlap is 0
+      hol1_ucalgary = build(:holding, ocn: ocn1, organization: "ucalgary")
+      cluster_tap_save [hti1, hol1_ucalgary]
+      expect(r.group_overlap(Cluster.first)).to eq 0
+
+      # When we add a ualberta holdings record to to the cluster (another member of coppul)
+      # group_overlap goes up to 1
+      hol1_ualberta = build(:holding, ocn: ocn1, organization: "ualberta")
+      cluster_tap_save [hol1_ualberta]
+      expect(r.group_overlap(Cluster.first)).to eq 1
+
+      # When we add ANOTHER ualberta holdings record to to the cluster
+      # group_overlap remains 1
+      hol2_ualberta = build(:holding, ocn: ocn1, organization: "ualberta")
+      cluster_tap_save [hol2_ualberta]
+      expect(r.group_overlap(Cluster.first)).to eq 1
+
+      # Adding holdings from a member who's not in group with ucalgary also does nothing
+      cluster_tap_save [hol1_org1]
+      expect(r.group_overlap(Cluster.first)).to eq 1
     end
   end
 end
