@@ -2,6 +2,7 @@
 
 require "clusterable/commitment"
 require "clustering/cluster_commitment"
+require "utils/tsv_reader"
 
 module Loader
   # Constructs batches of Commitments from incoming file data

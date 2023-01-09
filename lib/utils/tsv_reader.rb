@@ -1,3 +1,5 @@
+require "English"
+
 module Utils
   class TSVReader
     # Takes a .tsv file with a header and turns it into hashes,
@@ -49,7 +51,7 @@ module Utils
     def line_to_hash(line)
       cols = line.split(@delim, -1)
       if cols.size != @header_hash.keys.size
-        raise IndexError, "Line cols: #{cols.size}, header cols: (#{@header_hash.keys.size})."
+        raise IndexError, "Line #{$INPUT_LINE_NUMBER} has #{cols.size} cols, header has #{@header_hash.keys.size} cols."
       end
       col_hash = @header_hash.clone
       cols.each_with_index do |col_val, i|

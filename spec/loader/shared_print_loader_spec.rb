@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "loader/file_loader"
 require "loader/shared_print_loader"
 
 RSpec.describe Loader::SharedPrintLoader do
@@ -22,7 +23,6 @@ RSpec.describe Loader::SharedPrintLoader do
     it { expect(comm.other_retention_date).to be_nil }
     it { expect(comm.deprecation_status).to be_nil }
     it { expect(comm.deprecation_date).to be_nil }
-
     it { expect(comm).to be_valid }
   end
 
@@ -67,5 +67,21 @@ RSpec.describe Loader::SharedPrintLoader do
     let(:comm) { described_class.for("whatever.tsv").item_from_line(fields) }
 
     it_behaves_like "valid commitment with expected fields"
+  end
+
+  describe "when saving policies to db" do
+    it "saves as an array" do
+      # Setup, load commitments from fixture
+      Cluster.collection.find.delete_many
+      fixt = fixture "sp_commitment_policies.tsv"
+      Loader::FileLoader.new(batch_loader: described_class.for(fixt))
+        .load(fixt, filehandle: described_class.filehandle_for(fixt))
+      # Get policies on all loaded commitments
+      all_policies = Cluster.each.map do |cluster|
+        cluster.commitments.map(&:policies).flatten
+      end # -> e.g. [["blo", "digitizeondemand"], ["non-repro", "blo"], []]
+      # Check that the loaded policies were saved as arrays
+      expect(all_policies).to all be_a Array
+    end
   end
 end

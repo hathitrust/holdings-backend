@@ -21,7 +21,7 @@ RSpec.describe "phctl integration" do
 
       it "loads tsv file with policies" do
         expect { phctl("load", "commitments", fixture("sp_commitment_policies.tsv")) }
-          .to change { cluster_count(:commitments) }.by(1)
+          .to change { cluster_count(:commitments) }.by(3)
       end
     end
 

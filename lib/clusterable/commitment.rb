@@ -31,7 +31,7 @@ module Clusterable
       :facsimile
     validates_inclusion_of :local_shelving_type, in: ["cloa", "clca", "sfca", "sfcahm", "sfcaasrs"],
       allow_nil: true
-    validates_inclusion_of :policies, in: ["blo", "digitizeondemand", "non-circ"], allow_nil: true
+    validates_inclusion_of :policies, in: ["blo", "digitizeondemand", "non-circ", "non-repro"], allow_nil: true
     validate :deprecation_validation
 
     def initialize(_params = nil)
