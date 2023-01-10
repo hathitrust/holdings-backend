@@ -122,7 +122,11 @@ RSpec.describe Clusterable::Commitment do
   end
 
   describe "policies" do
-    ["blo", "digitizeondemand", "non-circ"].each do |policy|
+    it "accepts empty policy" do
+      expect(build(:commitment, policies: [])).to be_valid
+    end
+
+    ["blo", "digitizeondemand", "non-circ", "non-repro"].each do |policy|
       it "accepts #{policy}" do
         expect(build(:commitment, policies: [policy])).to be_valid
       end

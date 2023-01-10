@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-require "utils/tsv_reader"
 require "spec_helper"
-require "fileutils"
+require "utils/tsv_reader"
 
 RSpec.describe Utils::TSVReader do
   let(:reader) { described_class.new("spec/fixtures/test_sp_update_file.tsv") }
@@ -24,9 +23,11 @@ RSpec.describe Utils::TSVReader do
       # Set up a header with 3 cols and try to parse lines of different length.
       reader.process_header("a\tb\tc")
       # Too short
-      expect { reader.line_to_hash("x\ty") }.to raise_error IndexError
+      rx1 = /Line \d+ has 2 cols, header has 3 cols/
+      rx2 = /Line \d+ has 4 cols, header has 3 cols/
+      expect { reader.line_to_hash("x\ty") }.to raise_error(IndexError, rx1)
       # Too long
-      expect { reader.line_to_hash("x\ty\tz\tfoo") }.to raise_error IndexError
+      expect { reader.line_to_hash("x\ty\tz\tfoo") }.to raise_error(IndexError, rx2)
       # Just right!
       expect { reader.line_to_hash("x\ty\tz") }.not_to raise_error
     end
