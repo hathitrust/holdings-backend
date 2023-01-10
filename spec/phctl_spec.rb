@@ -17,6 +17,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[sp replace infile] => Jobs::Common,
     %w[sp deprecate infile] => Jobs::SharedPrintOps::Deprecate,
     %w[sp deprecate infile --verbose] => Jobs::SharedPrintOps::Deprecate,
+    %w[sp phase3load somefile] => Jobs::Common,
     %w[report estimate ocnfile] => Jobs::Common,
     %w[report eligible-commitments ocnfile] => Jobs::Common,
     %w[report uncommitted-holdings] => Jobs::Common,
