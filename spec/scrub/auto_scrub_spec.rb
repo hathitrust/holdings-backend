@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "scrub/autoscrub"
+require "utils/line_counter"
 
 RSpec.describe Scrub::AutoScrub do
   # Set up a minimal OK input file, which should result in success.
@@ -53,5 +54,12 @@ RSpec.describe Scrub::AutoScrub do
   it "cleans up after the last test" do
     FileUtils.remove_dir(out_struct.member_dir)
     expect(Dir.exist?(out_struct.member_dir)).to be(false)
+  end
+
+  it "ok with enum_chron in the header line" do
+    mpm_scrubber = described_class.new(fixture("umich_mpm_full_20221118.tsv"))
+    expect { mpm_scrubber.run }.not_to raise_error
+    expect(mpm_scrubber.out_files.size).to eq 1
+    expect(Utils::LineCounter.count_file_lines(mpm_scrubber.out_files.first)).to eq 3
   end
 end

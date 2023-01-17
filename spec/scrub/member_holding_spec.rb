@@ -17,7 +17,7 @@ RSpec.describe Scrub::MemberHolding do
       "local_id" => 1,
       "status" => 2,
       "condition" => 3,
-      "enumchron" => 4,
+      "enum_chron" => 4,
       "govdoc" => 5
     }
   end

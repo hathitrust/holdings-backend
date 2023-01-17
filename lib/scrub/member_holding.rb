@@ -69,7 +69,7 @@ module Scrub
         @condition = @scrubfields.condition(col_val)
       when "govdoc"
         @gov_doc_flag = @scrubfields.govdoc(col_val)
-      when "enumchron"
+      when "enum_chron"
         @enum_chron = col_val
         normalized = @scrubfields.enumchron(col_val)
         @n_enum = normalized[0]

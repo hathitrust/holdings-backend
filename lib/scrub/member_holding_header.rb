@@ -104,7 +104,7 @@ module Scrub
         "status",
         "condition",
         "govdoc",
-        "enumchron"
+        "enum_chron"
       ]
     end
   end
@@ -125,7 +125,7 @@ module Scrub
   class MpmHoldingHeader < MemberHoldingHeader
     def initialize(header_line)
       super
-      @req_header_cols << "enumchron"
+      @req_header_cols << "enum_chron"
       @opt_header_cols = [
         "status",
         "condition",
