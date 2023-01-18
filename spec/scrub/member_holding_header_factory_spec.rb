@@ -40,11 +40,11 @@ RSpec.describe Scrub::MemberHoldingHeaderFactory do
   it "tells you what the possible cols are for a given type" do
     mon_cols = described_class.for(spm, min_ok_hed).possible_cols
     expect(mon_cols.include?("oclc")).to be true
-    expect(mon_cols.include?("enumchron")).to be false
+    expect(mon_cols.include?("enum_chron")).to be false
 
     mpm_cols = described_class.for(mpm, min_ok_hed).possible_cols
     expect(mpm_cols.include?("oclc")).to be true
-    expect(mpm_cols.include?("enumchron")).to be true
+    expect(mpm_cols.include?("enum_chron")).to be true
   end
 
   it "reports violations" do

@@ -36,6 +36,7 @@ module Clusterable
     validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
 
     def initialize(params = nil)
+      params&.transform_keys!(&:to_sym)
       super
       set_organization_data if organization
     end
