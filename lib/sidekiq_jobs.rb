@@ -19,6 +19,7 @@ require "scrub/scrub_runner"
 require "shared_print/updater"
 require "shared_print/replacer"
 require "shared_print/deprecator"
+require "shared_print/phase_3_validator"
 
 require_relative "../config/initializers/sidekiq"
 

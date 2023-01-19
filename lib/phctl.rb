@@ -87,6 +87,11 @@ module PHCTL
     def deprecate(*infile)
       run_job(Jobs::SharedPrintOps::Deprecate, options[:verbose], [*infile])
     end
+
+    desc "phase3load INFILE", "Load Phase 3 commitments, if valid, from file"
+    def phase3load(infile)
+      run_common_job(SharedPrint::Phase3Validator, options, infile)
+    end
   end
 
   class Report < JobCommand
