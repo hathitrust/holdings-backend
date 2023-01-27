@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "clusterable/commitment"
+
 module SharedPrint
   # An individual update record. Consists of find-fields and update-fields
   class UpdateRecord
@@ -54,7 +56,13 @@ module SharedPrint
       when :bool
         {"true" => true, "false" => false}[val]
       when :array
-        val.split(",").map(&:strip)
+        split_vals = val.split(",").map(&:strip)
+        if key == :policies
+          if Clusterable::Commitment.incompatible_policies?(split_vals)
+            raise ArgumentError, "Policies contain mutually exclusive commitments."
+          end
+        end
+        split_vals
       else
         raise ArgumentError, "Did not know how to cast #{key} (= #{val})"
       end
@@ -79,15 +87,15 @@ module SharedPrint
       {
         committed_date: :date_time,
         facsimile: :bool,
-        policies: :array, # spec probably calls these lending_policy/scanning_repro_policy
         local_bib_id: :string,
         local_item_id: :string,
         local_item_location: :string,
         local_shelving_type: :string,
-        oclc_sym: :string, # might be called oclc_symbol in places, TODO: check that.
-        retention_date: :date_time,
         new_local_id: :string,
-        new_ocn: :integer
+        new_ocn: :integer,
+        oclc_sym: :string, # might be called oclc_symbol in places, TODO: check that.
+        policies: :array,
+        retention_date: :date_time
       }
     end
 

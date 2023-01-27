@@ -67,6 +67,11 @@ module Clusterable
       self.deprecation_replaced_by = replacement._id unless replacement.nil?
     end
 
+    # Extra policy validation on top of validates_inclusion_of :policies, in: [...]
+    def self.incompatible_policies?(policies)
+      policies.include?("digitizeondemand") && policies.include?("non-repro")
+    end
+
     private
 
     # If one of the deprecation fields is set they both must be set

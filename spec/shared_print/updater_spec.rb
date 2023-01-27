@@ -29,16 +29,32 @@ RSpec.describe SharedPrint::Updater do
 
   # only local_bib_id differs between spc1 and spc2
   let(:spc1) {
-    build(:commitment, ocn: ocn1, organization: org1, local_id: loc1, local_bib_id: bib1)
+    build(
+      :commitment,
+      ocn: ocn1,
+      organization: org1,
+      local_id: loc1,
+      local_bib_id: bib1,
+      policies: []
+    )
   }
   let(:spc2) {
-    build(:commitment, ocn: ocn1, organization: org1, local_id: loc1, local_bib_id: bib2)
+    build(
+      :commitment,
+      ocn: ocn1,
+      organization: org1,
+      local_id: loc1,
+      local_bib_id: bib2,
+      policies: ["digitizeondemand"]
+    )
   }
 
   # only local_id differs between upd1 and upd2
   let(:upd1) { {ocn: ocn1, organization: org1, local_id: loc1, local_bib_id: bib2} }
   let(:upd2) { {ocn: ocn1, organization: org1, local_id: loc2, local_bib_id: bib2} }
   let(:upd3) { {ocn: ocn1, organization: org1, local_id: loc1, new_ocn: ocn2} }
+  let(:upd4) { {ocn: ocn1, organization: org1, local_id: loc1, policies: "blo"} }
+  let(:upd5) { {ocn: ocn1, organization: org1, local_id: loc1, policies: "digitizeondemand, non-repro"} }
 
   let(:updater) { described_class.new("/dev/null") }
 
@@ -97,7 +113,7 @@ RSpec.describe SharedPrint::Updater do
     expect(arr.map(&:local_bib_id).sort).to eq ["b", "c", "d", "updated"]
   end
 
-  context "updating ocns" do
+  describe "updating ocns" do
     it "can update commitment ocn and move commitment to another cluster" do
       cluster_tap_save [spc1, ht1, ht2]
       expect(Cluster.find_by(ocns: ocn1).commitments.count).to eq 1
@@ -170,6 +186,33 @@ RSpec.describe SharedPrint::Updater do
       expect { updater.process_record(upd3) }.to raise_error(
         /no htitems on cluster for ocn #{ocn2}/
       )
+    end
+  end
+  describe "updating policies" do
+    # Policies are different than the other commitment fields, because it
+    # is an array and there are some specific rules about policies
+    it "can update policies on a commitment that has empty policies" do
+      cluster_tap_save [spc1]
+      # Pre check, make sure policies is empty
+      expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq []
+      updater.process_record(upd4)
+      # Post check, make sure policies got populated
+      expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["blo"]
+    end
+    it "can update policies on a commitment that already has policies" do
+      cluster_tap_save [spc2]
+      # Pre check, make sure policies is populated
+      expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["digitizeondemand"]
+      updater.process_record(upd4)
+      # Post check, make sure policies is updated
+      expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["blo"]
+    end
+    it "cannot update policies to something mutually exclusive" do
+      cluster_tap_save [spc1]
+      # Pre check, make sure policies is empty
+      expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq []
+      # Post check, upd5 contains non-repro and digitizeondemand which are mutually exclusive
+      expect { updater.process_record(upd5) }.to raise_error(ArgumentError, /mutually exclusive/)
     end
   end
 end
