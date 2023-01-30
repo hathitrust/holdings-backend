@@ -67,7 +67,7 @@ module SharedPrint
       require_matching_cluster(cluster)
       require_valid_cluster(cluster)
       require_cluster_ht_items(cluster)
-
+      require_compatible_policies(commitment)
       # Check that org has a matching holdings record in the cluster
       require_matching_org_holding(cluster, commitment.organization)
       # Check that commitment satisfies phase 3 policy rules
@@ -101,6 +101,13 @@ module SharedPrint
     def require_cluster_ht_items(cluster)
       if cluster.ht_items.empty?
         raise SharedPrint::Phase3Error, "Cluster has no ht_items"
+      end
+    end
+
+    def require_compatible_policies(commitment)
+      if Clusterable::Commitment.incompatible_policies?(commitment.policies)
+        msg = "Commitment contains mutually exclusive policies."
+        raise SharedPrint::Phase3Error, msg
       end
     end
 

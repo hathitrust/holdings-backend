@@ -49,6 +49,19 @@ RSpec.describe SharedPrint::Phase3Validator do
       cluster = Cluster.find_by(ocns: [spc.ocn])
       expect { p3v.require_cluster_ht_items(cluster) }.to_not raise_error
     end
+    it "requires compatible policies" do
+      spc.policies = []
+      expect { p3v.require_compatible_policies(spc) }.to_not raise_error
+      # add non-repro, should still be good
+      spc.policies = ["non-repro"]
+      expect { p3v.require_compatible_policies(spc) }.to_not raise_error
+      # add blo, should still be good
+      spc.policies = ["non-repro", "blo"]
+      expect { p3v.require_compatible_policies(spc) }.to_not raise_error
+      # add digitizeondemand should blow it up
+      spc.policies = ["non-repro", "blo", "digitizeondemand"]
+      expect { p3v.require_compatible_policies(spc) }.to raise_error SharedPrint::Phase3Error
+    end
     it "rejects a commitment if no matching holding in cluster" do
       cluster_tap_save [spc]
       cluster = Cluster.find_by(ocns: [spc.ocn])
@@ -82,6 +95,21 @@ RSpec.describe SharedPrint::Phase3Validator do
       spc.policies = ["blo"]
       expect(p3v.pass_validation?(spc)).to be true
       expect(p3v.last_error).to be nil
+    end
+    it "allows DIGITIZEONDEMAND if mixed with required ph3 policy/ies" do
+      ht = build(:ht_item, ocns: [spc.ocn])
+      hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
+      cluster_tap_save [ht, hol]
+      spc.policies = ["blo", "digitizeondemand"]
+      expect(p3v.pass_validation?(spc)).to be true
+    end
+    it "does not allow DIGITIZEONDEMAND mixed with NON-REPRO" do
+      ht = build(:ht_item, ocns: [spc.ocn])
+      hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
+      cluster_tap_save [ht, hol]
+      spc.policies = ["blo", "non-repro", "digitizeondemand"]
+      expect(p3v.pass_validation?(spc)).to be false
+      expect(p3v.last_error.message).to match(/mutually exclusive policies/)
     end
     it "reports any raised errors" do
       ht = build(:ht_item, ocns: [spc.ocn])
