@@ -62,4 +62,11 @@ RSpec.describe Scrub::AutoScrub do
     expect(mpm_scrubber.out_files.size).to eq 1
     expect(Utils::LineCounter.count_file_lines(mpm_scrubber.out_files.first)).to eq 3
   end
+
+  it "raises if given a file with illegal utf sequence" do
+    path = "/tmp/umich_mpm_full_20200101_badutf.tsv"
+    FileUtils.cp(fixture("non_valid_utf8.txt"), path)
+    scrubber = described_class.new(path)
+    expect { scrubber.run }.to raise_error EncodingError
+  end
 end

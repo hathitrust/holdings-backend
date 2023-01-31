@@ -4,6 +4,7 @@ require "services"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
 require "utils/line_counter"
+require "utils/encoding"
 
 module Scrub
   # Usage:
@@ -25,6 +26,7 @@ module Scrub
       @member_id = @member_holding_file.member_id
       @output_struct = Scrub::ScrubOutputStructure.new(@member_id)
       @item_type = @member_holding_file.item_type_from_filename
+      @encoding = Utils::Encoding.new(@path)
       @output_dir = @output_struct.date_subdir!("output")
       @log_dir = @output_struct.date_subdir!("log")
       @out_files = []
@@ -51,6 +53,13 @@ module Scrub
 
     def run
       Services.scrub_logger.info("Started scrubbing #{@path}")
+
+      unless @encoding.ascii_or_utf8?
+        Services.scrub_logger.error(
+          "Encoding error in #{@path} (unsupported #{@encoding.uchardet})"
+        )
+        raise EncodingError
+      end
 
       # Figure out batch size for 100 batches.
       tot_lines = Utils::LineCounter.count_file_lines(@path)
@@ -81,6 +90,7 @@ module Scrub
         Services.scrub_logger.error(e)
         Services.scrub_logger.error(e.backtrace.join("\n"))
       end
+
       out_file.close
       Services.scrub_logger.info("Finished scrubbing #{@path}")
       FileUtils.mv(out_file_path, @output_struct.member_ready_to_load)
