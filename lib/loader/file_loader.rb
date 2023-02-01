@@ -2,14 +2,14 @@
 
 require "services"
 require "zinzout"
-require "utils/ppnum"
+require "ppnum"
 
 module Loader
   # Loads file of records that have been sorted by OCN
   class FileLoader
     def initialize(batch_loader:, batch_size: 10_000)
       @logger = Services.logger
-      @marker = Services.progress_tracker.new(batch_size)
+      @marker = Services.progress_tracker.call(batch_size: batch_size)
       @batch_size = batch_size
       @batch_loader = batch_loader
     end
