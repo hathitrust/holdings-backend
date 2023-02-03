@@ -20,6 +20,7 @@ gem "zinzout"
 gem "puma"
 gem "sidekiq", "~> 6.0"
 gem "sidekiq-batch"
+gem "marc"
 
 group :development, :test do
   gem "pry"
