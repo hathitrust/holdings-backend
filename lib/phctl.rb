@@ -87,6 +87,18 @@ module PHCTL
     end
   end
 
+  class Parse < JobCommand
+    desc "parse-holdings-xml --organization ORG --files LIST (--output-dir PATH)",
+      "Parse ExLibris holdings xml files from ORG"
+    option :organization, type: :string
+    option :files, type: :array
+    option :output_dir, type: :string, default: nil
+
+    def parse_holdings_xml
+      run_common_job(ExLibrisHoldingsXmlParser, options)
+    end
+  end
+
   class Report < JobCommand
     desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--precomputed-frequency-table-dir /path/to/tables)", "Run a cost report. If neither --precomputed-frequency-table nor --frequency-table-dir is specified, generate a new frequency table."
     option :organization, type: :string, default: nil
@@ -236,6 +248,9 @@ module PHCTL
 
     desc "load <clusterable> <args>", "Load clusterable records"
     subcommand "load", Load
+
+    desc "parse", "various parsing commands"
+    subcommand "parse", Parse
 
     desc "concordance", "Validate or validate and compute deltas"
     subcommand "concordance", Concordance
