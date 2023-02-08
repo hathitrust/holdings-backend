@@ -116,7 +116,11 @@ RSpec.describe Scrub::ScrubRunner do
         end
       end
       expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(0)
-      # BUT will do it if we force it
+      # Log should have been uploaded.
+      log = File.join(remote_d.holdings_current, "umich_mon_#{Date.today}.log")
+      expect(File.exist?(log)).to be true
+
+      # We can still force the file through.
       sr_force = described_class.new(
         org1,
         {"force" => true, "force_holding_loader_cleanup_test" => true}

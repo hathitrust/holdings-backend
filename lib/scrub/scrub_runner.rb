@@ -57,11 +57,11 @@ module Scrub
       rc = Scrub::RecordCounter.new(@organization, scrubber.item_type)
       unless rc.acceptable_diff? || @force
         raise MalformedFileError, [
-          "Unacceptable diff for #{@organization} when scrubbing #{file["Name"]}.",
+          "Diff too big for #{@organization} when scrubbing #{file["Name"]}.",
           "Last loaded file (#{rc.last_loaded}) had #{rc.count_loaded} records",
           "The scrubbed file (#{rc.last_ready}) has #{rc.count_ready} records.",
-          "Diff is #{rc.diff}, which is greater than Settings.scrub_line_count_diff_max",
-          "... which is #{Settings.scrub_line_count_diff_max}.",
+          "Diff is #{rc.diff * 100}%, which is greater than diff_max",
+          "(#{Settings.scrub_line_count_diff_max * 100}%).",
           "This file will not be loaded."
         ].join("\n")
         # Run again with --force to load anyways.
@@ -99,16 +99,13 @@ module Scrub
           Loader::HoldingLoader::Cleanup.new.on_success(:success, cleanup_data)
         end
       end
-    rescue MalformedFileError => err
-      # If the scrub failed, remove the file from local storage, that we may try again.
-      Services.logger.error err.message # we don't need the whole stack trace for this specific error.
-      Services.scrub_logger.error err.message
-      FileUtils.rm(downloaded_file)
-    rescue => err # AnyOtherError
+    rescue => err
       Services.logger.error err
       Services.scrub_logger.error "Unexpected error. Please contact HathiTrust."
       Services.scrub_logger.error err.message
+      # Do things Loader::HoldingLoader::Cleanup normally does
       FileUtils.rm(downloaded_file)
+      Utils::FileTransfer.new.upload(scrubber.logger_path, remote_dir)
     end
 
     # Check org-uploaded files for any not previously seen files
