@@ -95,6 +95,7 @@ module SharedPrint
         new_ocn: :integer,
         oclc_sym: :string, # might be called oclc_symbol in places, TODO: check that.
         policies: :array,
+        retention_condition: :string,
         retention_date: :date_time
       }
     end
