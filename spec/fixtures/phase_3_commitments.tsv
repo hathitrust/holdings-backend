@@ -1,4 +1,4 @@
-uuid	organization	ocn	local_id	oclc_sym	committed_date	retention_date	local_bib_id	local_item_id	local_item_location	local_shelving_type	policies
-e78047da-1193-43c7-aab0-492067d13f9c	umich	2	i6536255x	CUS	2019-02-28						BLO,DIGITIZEONDEMAND
-e78047da-1193-43c7-aab0-492067d13f9d	umich	3	i6536255y	CUS	2019-02-28						NON-REPRO,BLO
-e78047da-1193-43c7-aab0-492067d13f9e	umich	4	i6536255z	CUS	2019-02-28						
+uuid	organization	ocn	local_id	oclc_sym	committed_date	retention_date	local_bib_id	local_item_id	local_item_location	local_shelving_type	policies	retention_condition
+e78047da-1193-43c7-aab0-492067d13f9c	umich	2	i6536255x	CUS	2019-02-28						BLO,DIGITIZEONDEMAND	EXCELLENT
+e78047da-1193-43c7-aab0-492067d13f9d	umich	3	i6536255y	CUS	2019-02-28						NON-REPRO,BLO	EXCELLENT
+e78047da-1193-43c7-aab0-492067d13f9e	umich	4	i6536255z	CUS	2019-02-28							EXCELLENT

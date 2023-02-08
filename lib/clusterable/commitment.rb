@@ -18,6 +18,7 @@ module Clusterable
     field :local_item_location, type: String
     field :local_shelving_type, type: String
     field :policies, type: Array, default: []
+    field :retention_condition, type: String
     field :facsimile, type: Boolean, default: false
     field :other_program, type: String
     field :other_retention_date, type: DateTime
@@ -32,6 +33,8 @@ module Clusterable
     validates_inclusion_of :local_shelving_type, in: ["cloa", "clca", "sfca", "sfcahm", "sfcaasrs"],
       allow_nil: true
     validates_inclusion_of :policies, in: ["blo", "digitizeondemand", "non-circ", "non-repro"], allow_nil: true
+
+    validates_inclusion_of :retention_condition, in: ["EXCELLENT", "ACCEPTABLE"], allow_nil: true
     validate :deprecation_validation
 
     def initialize(_params = nil)

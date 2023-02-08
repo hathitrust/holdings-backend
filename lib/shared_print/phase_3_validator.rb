@@ -72,6 +72,9 @@ module SharedPrint
       require_matching_org_holding(cluster, commitment.organization)
       # Check that commitment satisfies phase 3 policy rules
       require_phase_3_policies(commitment)
+      # Check that commitment satisfies condition rule
+      require_retention_condition(commitment)
+
       # We made it. The commitment should be safe to load.
       true
     rescue SharedPrint::Phase3Error => err
@@ -107,6 +110,16 @@ module SharedPrint
     def require_compatible_policies(commitment)
       if Clusterable::Commitment.incompatible_policies?(commitment.policies)
         msg = "Commitment contains mutually exclusive policies."
+        raise SharedPrint::Phase3Error, msg
+      end
+    end
+
+    def require_retention_condition(commitment)
+      # blank is allowed for phase 1-2, but not in phase 3
+      req_one = ["EXCELLENT", "ACCEPTABLE"]
+      unless req_one.include?(commitment.retention_condition)
+        msg = "Commitment lacks required retention_condition " \
+              "(#{commitment.retention_condition} not in #{req_one.join(",")})"
         raise SharedPrint::Phase3Error, msg
       end
     end

@@ -4,7 +4,7 @@ require "cluster"
 RSpec.describe SharedPrint::Phase3Validator do
   let(:fixt) { fixture("phase_3_commitments.tsv") }
   let(:p3v) { described_class.new(fixt) }
-  let(:spc) { build(:commitment) }
+  let(:spc) { build(:commitment, retention_condition: "ACCEPTABLE") }
 
   before(:each) do
     Cluster.collection.find.delete_many
@@ -86,6 +86,18 @@ RSpec.describe SharedPrint::Phase3Validator do
       spc.policies = ["blo"]
       expect { p3v.require_phase_3_policies(spc) }.to_not raise_error
     end
+    it "requires a valid retention_condition" do
+      spc.policies = ["blo"]
+      # should work
+      spc.retention_condition = "ACCEPTABLE"
+      expect { p3v.require_retention_condition(spc) }.to_not raise_error
+      # should work
+      spc.retention_condition = "EXCELLENT"
+      expect { p3v.require_retention_condition(spc) }.to_not raise_error
+      # should not
+      spc.retention_condition = ""
+      expect { p3v.require_retention_condition(spc) }.to raise_error SharedPrint::Phase3Error
+    end
   end
   describe "pass_validation? itself" do
     it "validates a commitment that satisfies all the checks" do
@@ -118,6 +130,18 @@ RSpec.describe SharedPrint::Phase3Validator do
       spc.policies = [] # this should raise something
       expect(p3v.pass_validation?(spc)).to be false
       expect(p3v.last_error.message).to match(/Required policies mismatch/)
+    end
+  end
+
+  describe "retention_condition" do
+    it "works" do
+      ht = build(:ht_item, ocns: [spc.ocn])
+      hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
+      cluster_tap_save [ht, hol]
+      spc.policies = ["blo"]
+      spc.retention_condition = "EXCELLENT"
+      expect(p3v.pass_validation?(spc)).to be true
+      expect(p3v.last_error).to be nil
     end
   end
 
