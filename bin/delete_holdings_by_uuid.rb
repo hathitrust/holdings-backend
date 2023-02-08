@@ -18,7 +18,7 @@ def main
   org_counts = {}
 
   ARGV.each do |path|
-    marker = Services.progress_tracker.new(1000)
+    marker = Services.progress_tracker.call(batch_size: 1000)
     inf = File.open(path, "r")
     inf.each_line do |line|
       marker.incr

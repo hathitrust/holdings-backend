@@ -12,7 +12,7 @@ module Overlap
 
     def initialize(cutoff_date = nil, batch_size = 100_000)
       @cutoff_date = cutoff_date || Date.today - 1.5
-      @marker = Services.progress_tracker.new(batch_size)
+      @marker = Services.progress_tracker.call(batch_size: batch_size)
       @num_deletes = 0
       @num_adds = 0
     end

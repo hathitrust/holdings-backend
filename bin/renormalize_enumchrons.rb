@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "services"
-require "utils/ppnum"
+require "ppnum"
 require "cluster"
 
 Services.mongo!
@@ -24,7 +24,7 @@ end
 
 def main
   batch_size = 1_000
-  marker = Services.progress_tracker.new(batch_size)
+  marker = Services.progress_tracker.call(batch_size: batch_size)
   logger = Services.logger
   logger.info "Starting renormalization of enum chrons. Batches of #{ppnum batch_size}"
 

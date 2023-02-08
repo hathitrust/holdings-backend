@@ -122,7 +122,7 @@ module Reports
     end
 
     def compile_frequency_table
-      @marker = Services.progress_tracker.new(maxlines)
+      @marker = Services.progress_tracker.call(batch_size: maxlines)
       logger.info("Begin compiling hscore frequency table.")
       matching_clusters.each do |c|
         c.ht_items.each do |ht_item|

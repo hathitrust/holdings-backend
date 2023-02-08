@@ -28,7 +28,7 @@ old_to_new = {
 
 clusters_changed_count = 0
 holdings_changed_count = 0
-marker = Services.progress_tracker.new(1000)
+marker = Services.progress_tracker.call(batch_size: 1000)
 
 # For each cluster:
 begin

@@ -41,7 +41,7 @@ module DataSources
     def load_tab_delimited_file(tablename:, filepath:,
       maxlines: 1_000_000, pause_in_seconds: 10,
       logger: Services.logger)
-      marker = Services.progress_tracker.new(maxlines)
+      marker = Services.progress_tracker.call(batch_size: maxlines)
       logger.info("Begin load data infile of #{filepath} into #{tablename}")
       Dir.mktmpdir("#{tablename}_tmp_load", ".") do |dir|
         split_files = split_out_large_file(dir, filepath, maxlines)

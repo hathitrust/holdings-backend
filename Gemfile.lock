@@ -1,3 +1,12 @@
+GIT
+  remote: https://github.com/hathitrust/push_metrics.git
+  revision: 3e8755220ba0ca9fac616600ab0a5df608a3790d
+  tag: v0.9.0
+  specs:
+    push_metrics (0.9.0)
+      milemarker (~> 1.0)
+      prometheus-client (~> 4.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -146,7 +155,6 @@ DEPENDENCIES
   factory_bot
   faker
   faraday
-  milemarker
   mongo
   mongoid
   mysql2
@@ -154,6 +162,7 @@ DEPENDENCIES
   pry
   pry-byebug
   puma
+  push_metrics!
   rgl
   rspec
   rspec-sidekiq

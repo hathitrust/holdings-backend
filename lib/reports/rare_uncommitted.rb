@@ -160,7 +160,7 @@ module Reports
     def clusters
       return enum_for(:clusters) unless block_given?
 
-      marker = Services.progress_tracker.new(1000)
+      marker = Services.progress_tracker.call(batch_size: 1000)
       Cluster.where(@query).no_timeout.each do |cluster|
         marker.incr
         marker.on_batch { |m| Services.logger.info m.batch_line }
