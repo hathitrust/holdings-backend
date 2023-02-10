@@ -30,7 +30,7 @@ keep_lines="^($member_list";
 keep_lines+="_header|member_id)\t";
 
 # Get all reports (recursively) from $in_dir
-all_reports=`find $in_dir -regex '.*/costreport_[0-9]+.tsv$' | sort -n | tr '\n' ' '`;
+all_reports=`find $in_dir -regex '.*/cost_?report_[0-9]+.tsv$' | sort -n | tr '\n' ' '`;
 
 # Find all totals files and append them.
 function append_totals () {
