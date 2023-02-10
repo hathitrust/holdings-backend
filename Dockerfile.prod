@@ -6,7 +6,7 @@ ARG UID=1000
 ARG GID=1000
 
 RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
-  nodejs rclone uchardet
+  nodejs rclone
 
 RUN gem install bundler
 RUN groupadd -g $GID -o $UNAME
