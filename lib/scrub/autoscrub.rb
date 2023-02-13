@@ -22,6 +22,15 @@ module Scrub
     def initialize(path)
       @path = path
 
+      # @member_id and @item_type are used in the path to scrub_logger, but we
+      # also need somewhere to log to before we know @member_id and @item_type
+      scrub_dir = File.dirname(@path)
+      early_scrub_logger_path = File.join(scrub_dir, "scrub.log")
+      Services.register(:scrub_logger) do
+        Logger.new(early_scrub_logger_path)
+      end
+      Services.scrub_logger.info("Getting basic info from #{@path}")
+
       @member_holding_file = Scrub::MemberHoldingFile.new(@path)
       @member_id = @member_holding_file.member_id
       @output_struct = Scrub::ScrubOutputStructure.new(@member_id)
@@ -30,14 +39,17 @@ module Scrub
       @output_dir = @output_struct.date_subdir!("output")
       @log_dir = @output_struct.date_subdir!("log")
       @out_files = []
+      Services.register(:scrub_stats) { {} }
 
       # Once we have @member_id and @item_type,
-      # build a log path and re-register the service logger to log to that path
-      ymd = Time.new.strftime("%F")
+      # build a new log path and re-register the service logger to that path
+      ymd = Time.new.strftime("%Y%m%d")
       @logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}_#{ymd}.log")
       Services.logger.info "autoscrub logging to #{@logger_path}"
 
       Services.register(:scrub_logger) do
+        # Get the early log in there.
+        FileUtils.mv(early_scrub_logger_path, @logger_path)
         lgr = Logger.new(@logger_path)
         # Show time, file:lineno, level for each log message
         lgr.formatter = proc do |severity, datetime, _progname, msg|
