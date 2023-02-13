@@ -100,7 +100,8 @@ RSpec.describe Scrub::ScrubRunner do
       remote_file = sr.check_new_files.first
       expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
       # Expect log file to end up in the remote dir
-      expect(File.exist?(File.join(remote_d.holdings_current, "umich_mon_#{Date.today}.log"))).to be true
+      log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
+      expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
     end
     it "will refuse a file if it breaks Settings.scrub_line_count_diff_max" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
@@ -117,8 +118,8 @@ RSpec.describe Scrub::ScrubRunner do
       end
       expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(0)
       # Log should have been uploaded.
-      log = File.join(remote_d.holdings_current, "umich_mon_#{Date.today}.log")
-      expect(File.exist?(log)).to be true
+      log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
+      expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
 
       # We can still force the file through.
       sr_force = described_class.new(
