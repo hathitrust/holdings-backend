@@ -3,6 +3,7 @@
 require "services"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
+require "securerandom"
 require "utils/line_counter"
 require "utils/encoding"
 
@@ -74,7 +75,8 @@ module Scrub
       end
 
       # Figure out batch size for 100 batches.
-      tot_lines = Utils::LineCounter.count_file_lines(@path)
+      line_counter = Utils::LineCounter.new(@path)
+      tot_lines = line_counter.count_lines
       if tot_lines <= 1
         raise "File #{@path} has no data? Total lines #{tot_lines}."
       end
