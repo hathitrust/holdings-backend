@@ -27,10 +27,6 @@ RSpec.describe Scrub::MemberHoldingFile do
   let(:bad_fn) { "FAIL ME PLEASE" }
   let(:bad_mhf) { described_class.new(bad_fn) }
 
-  # file headers
-  let(:ok_hed_min) { ["oclc", "local_id"] }
-  let(:ok_hed_mul) { ["oclc", "local_id", "status", "condition", "enumchron", "govdoc"] }
-
   it "finds member_id in filename" do
     expect(ok_mhf.member_id_from_filename(ok_fn)).to eq(ok_mem)
     expect(ok_mhf.member_id_from_filename).to eq(ok_mem)
@@ -109,5 +105,17 @@ RSpec.describe Scrub::MemberHoldingFile do
 
   it "rejects file with disallowed header cols" do
     expect { fail_header_mhf.parse }.to raise_error Scrub::MalFormedHeaderError
+  end
+
+  it "handles a file with a BOM correctly" do
+    # If not handled correctly, the BOM will be read as part of the header line
+    # and the first element in the col_map won't be "oclc" but "<BOM>oclc".
+    bom_mhf = described_class.new(fixture("umich_mpm_full_20230106_utf8bom.tsv"))
+    expect { bom_mhf.parse }.not_to raise_error
+    bom_mhf.read_file do |line, line_no, col_map|
+      expect(col_map["oclc"]).to eq 0
+      expect(col_map["local_id"]).to eq 1
+      break
+    end
   end
 end

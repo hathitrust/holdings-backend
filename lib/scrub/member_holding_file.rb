@@ -6,7 +6,7 @@ require "scrub/member_holding"
 require "scrub/member_holding_header_factory"
 require "scrub/scrub_fields"
 require "services"
-require "zinzout"
+require "utils/agnostic_opener"
 
 module Scrub
   # Context:
@@ -210,7 +210,7 @@ module Scrub
     end
 
     def read_file
-      Zinzout.zin(filepath) do |fh|
+      Utils::AgnosticOpener.new(filepath).open do |fh|
         header = MemberHoldingHeaderFactory.for(@item_type, fh.readline)
         col_map = header.get_col_map
         line_no = 0
