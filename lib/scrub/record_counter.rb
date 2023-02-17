@@ -56,7 +56,7 @@ module Scrub
       if path.nil?
         0
       else
-        Utils::LineCounter.count_file_lines(path)
+        Utils::LineCounter.new(path).count_lines
       end
     end
 

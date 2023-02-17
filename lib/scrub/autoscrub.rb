@@ -3,6 +3,7 @@
 require "services"
 require "scrub/member_holding_file"
 require "scrub/scrub_output_structure"
+require "securerandom"
 require "utils/line_counter"
 require "utils/encoding"
 
@@ -74,9 +75,32 @@ module Scrub
       end
 
       # Figure out batch size for 100 batches.
-      tot_lines = Utils::LineCounter.count_file_lines(@path)
+      line_counter = Utils::LineCounter.new(@path)
+      tot_lines = line_counter.count_lines
       if tot_lines <= 1
-        raise "File #{@path} has no data? Total lines #{tot_lines}."
+        Services.scrub_logger.warn("#{tot_lines} lines in #{@path}")
+        Services.scrub_logger.info("Checking line count with '\\r' newlines...")
+        # Did we get zero lines because the file uses \r newlines?
+        rand_str = SecureRandom.hex(8)
+        tmp_file = File.open("/tmp/autoscrub_#{rand_str}.tmp", "w")
+        line_counter.io.open(@path) do |f|
+          # Read lines as delimited by \r,
+          # write lines to tmp_file as delimited by \n
+          while (line = f.gets("\r"))
+            tmp_file.puts(line)
+          end
+        end
+        tmp_file.close
+        # If so, use the temporary file as the real one.
+        tmp_lines = Utils::LineCounter.new(tmp_file.path).count_lines
+        Services.scrub_logger.info("Got #{tmp_lines} lines using '\\r' newlines")
+        if tmp_lines > tot_lines
+          FileUtils.mv(tmp_file.path, @path)
+          tot_lines = tmp_lines
+        else
+          # Nope, file is actually empty.
+          raise "File #{@path} has no data? Total lines #{tot_lines}."
+        end
       end
 
       batch_size = tot_lines < 100 ? 100 : tot_lines / 100
