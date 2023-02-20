@@ -14,10 +14,6 @@ module Scrub
     def initialize(header_line)
       @header_line = header_line.chomp
 
-      # strip UTF-8 BOM
-      utf8_bom_regex = /^\xEF\xBB\xBF/
-      @header_line.gsub!(utf8_bom_regex, "")
-
       Services.scrub_logger.info("Getting header information from: #{header_line}")
 
       @cols = @header_line.downcase.split("\t")

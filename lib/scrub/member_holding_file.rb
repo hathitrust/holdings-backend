@@ -210,7 +210,9 @@ module Scrub
     end
 
     def read_file
-      Zinzout.zin(filepath) do |fh|
+      # encoding:"BOM|..." allows it to ignore any UTF-8 BOM.
+      # Other encoding checks are performed by: Scrub::AutoScrub.
+      Zinzout.zin(filepath, encoding: "BOM|UTF-8") do |fh|
         header = MemberHoldingHeaderFactory.for(@item_type, fh.readline)
         col_map = header.get_col_map
         line_no = 0

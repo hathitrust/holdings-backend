@@ -56,12 +56,4 @@ RSpec.describe Scrub::MemberHoldingHeaderFactory do
     mhh = described_class.for(mon, failme)
     expect(mhh.check_violations.empty?).to be(false)
   end
-
-  it "handles (by ignoring) UTF-8 BOM" do
-    File.open(fixture("umich_mpm_full_20230106_utf8bom.tsv")) do |f|
-      utf_bom_header = f.gets
-      mhh = described_class.for(mpm, utf_bom_header)
-      expect(mhh.check_violations).to be_empty
-    end
-  end
 end
