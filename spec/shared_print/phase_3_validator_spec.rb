@@ -15,10 +15,8 @@ RSpec.describe SharedPrint::Phase3Validator do
       expect(p3v.last_error).to be nil
     end
     it "raises if missing settings" do
-      original_setting = Settings.local_report_path
       Settings.local_report_path = nil
       expect { described_class.new(fixt) }.to raise_error(/Missing Settings/)
-      Settings.local_report_path = original_setting
     end
   end
 

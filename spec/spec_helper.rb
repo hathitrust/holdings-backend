@@ -16,6 +16,7 @@ require "settings"
 require "services"
 require "sidekiq/batch"
 require "rspec-sidekiq"
+require "fileutils"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true
@@ -101,6 +102,16 @@ RSpec.configure do |config|
       example.run
     end
   end
+
+  config.around(:each) do |example|
+    Dir.mktmpdir("holdings-testing") do |tmpdir|
+      ENV["TEST_TMP"] = tmpdir
+      Settings.reload!
+      FileUtils.touch(Settings.rclone_config_path)
+      example.run
+      ENV.delete("TEST_TMP")
+    end
+  end
 end
 
 # Clusters and saves each element in an array of clusterables
@@ -125,4 +136,8 @@ end
 
 def cluster_count(field)
   Cluster.all.map { |c| c.public_send(field).count }.reduce(0, :+)
+end
+
+def Settings.reload!
+  merge!(Ettin.for(Ettin.settings_files("config", environment)))
 end

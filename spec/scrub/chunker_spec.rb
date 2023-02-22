@@ -3,7 +3,6 @@
 require "spec_helper"
 require "scrub/chunker"
 
-Settings.scrub_chunk_work_dir = "/tmp/scrub_chunks"
 RSpec.describe Scrub::Chunker do
   let(:pre_chunked_file) { "spec/fixtures/pre_chunk.tsv" }
   let(:input_line_count) { 16 }

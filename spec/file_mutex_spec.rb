@@ -5,10 +5,8 @@ require "file_mutex"
 require "fileutils"
 
 RSpec.describe FileMutex do
-  let(:path) { "/tmp/file_mutex" }
+  let(:path) { "#{ENV["TEST_TMP"]}/file_mutex" }
   let(:mutex) { described_class.new(path) }
-
-  before(:each) { FileUtils.rm_f(path) }
 
   describe "#with_lock" do
     context "when the file exists" do

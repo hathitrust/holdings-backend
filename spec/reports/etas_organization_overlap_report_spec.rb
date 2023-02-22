@@ -9,17 +9,6 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
   let(:tmp_pers) { Settings.etas_overlap_reports_path }
   let(:tmp_rmt) { Settings.etas_overlap_reports_remote_path }
 
-  before(:each) do
-    FileUtils.rm_rf(tmp_pers)
-    FileUtils.rm_rf(tmp_rmt)
-  end
-
-  after(:each) do
-    FileUtils.rm_rf(tmp_local)
-    FileUtils.rm_rf(tmp_pers)
-    FileUtils.rm_rf(tmp_rmt)
-  end
-
   describe "#initialize" do
     it "makes the directory if it doesn't exist" do
       rpt = described_class.new

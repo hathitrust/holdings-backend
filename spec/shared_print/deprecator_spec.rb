@@ -27,7 +27,6 @@ RSpec.describe SharedPrint::Deprecator do
 
   before(:each) do
     Cluster.collection.find.delete_many
-    FileUtils.rm(Dir.glob("/tmp/deprecation_report/*"))
     dep.clear_err
   end
 
@@ -77,7 +76,7 @@ RSpec.describe SharedPrint::Deprecator do
     make_commitment(5, org_2, "E")
     make_commitment(6, org_2, "F")
     # Make a deprecation file (#7)
-    deprecation_file_path = "/tmp/acceptance_criteria_file.tsv"
+    deprecation_file_path = "#{ENV["TEST_TMP"]}/acceptance_criteria_file.tsv"
     File.open(deprecation_file_path, "w") do |f|
       f.puts "organization\tocn\tlocal_id\tdeprecation_status"
       f.puts "umich\t3\tC\tM"
@@ -98,7 +97,7 @@ RSpec.describe SharedPrint::Deprecator do
     expect(lookup_commitment(1).deprecated?).to be false
     expect(lookup_commitment(2).deprecated?).to be false
 
-    report_slurp = File.read(Dir.glob("/tmp/deprecation_report/commitments_deprecator_*").first).split("\n")
+    report_slurp = File.read(Dir.glob("#{ENV["TEST_TMP"]}/deprecation_report/commitments_deprecator_*").first).split("\n")
     # We logged what we did and what we could not do (#11 & 12).
     today = Date.today.strftime("%Y-%m-%d")
     expect(report_slurp.count { |x| x =~ /Commitment deprecated.+deprecation_date: #{today}/ }).to eq 2

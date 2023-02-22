@@ -80,7 +80,7 @@ RSpec.describe Scrub::MemberHolding do
   end
 
   context "with known scrub logger" do
-    let(:tmp_log) { "/tmp/member_holding_spec.log" }
+    let(:tmp_log) { "#{ENV["TEST_TMP"]}/member_holding_spec.log" }
 
     around(:each) do |example|
       # FIXME should log to string in RAM; duplicative of the around(:each, type: "loaded_file")

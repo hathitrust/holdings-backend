@@ -15,9 +15,6 @@ RSpec.describe Scrub::RecordCounter do
   }
   let(:hundo) { 100 }
   let(:small_diff) { (Settings.scrub_line_count_diff_max * 100) - 1 }
-  before(:each) do
-    FileUtils.rm_rf("/tmp/scrub_data/#{org}/")
-  end
   def put_x_lines_in_file(x, file)
     File.open(file, "w") do |f|
       1.upto(x) do |i|

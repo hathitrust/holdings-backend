@@ -7,7 +7,7 @@ require "services"
 
 # Since rclone does not care what the remote location is,
 # and since we do not have a separate test dropbox,
-# these tests use directories under /tmp/ as a fake remote location.
+# these tests use directories under TEST_TMP as a fake remote location.
 #
 # So, CAVEAT EMPTOR, it does not truly test rclone's ability to
 # transfer files to a remote location, just that the wrapper code
@@ -15,17 +15,15 @@ require "services"
 
 RSpec.describe Utils::FileTransfer do
   let(:ft) { described_class.new }
-  # Do not change local_dir or remote_dir to something important,
-  # as they WILL be deleted during these tests.
-  let(:local_dir) { "/tmp/file_transfer_test/local" }
-  let(:remote_dir) { "/tmp/file_transfer_test/remote" }
+  let(:local_dir) { "#{ENV["TEST_TMP"]}/file_transfer_test/local" }
+  let(:remote_dir) { "#{ENV["TEST_TMP"]}/file_transfer_test/remote" }
   let(:local_file_name) { "test_file_a.txt" }
   let(:remote_file_name) { "test_file_b.txt" }
   let(:local_file_path) { "#{local_dir}/#{local_file_name}" }
   let(:remote_file_path) { "#{remote_dir}/#{remote_file_name}" }
   let(:conf) { Settings.rclone_config_path }
-  let(:missing_dir) { "/dev/null/foo" }
-  let(:missing_file) { "/dev/null/foo.txt" }
+  let(:missing_dir) { "/nonexistent/foo" }
+  let(:missing_file) { "/nonexistent/foo.txt" }
 
   # Clean up temporary files and directories
   before(:each) do
@@ -38,18 +36,11 @@ RSpec.describe Utils::FileTransfer do
     FileUtils.touch remote_file_path
   end
 
-  after(:each) do
-    FileUtils.rm_rf local_dir
-    FileUtils.rm_rf remote_dir
-  end
-
   describe "initialize" do
     it "requires conf file to be set in Settings" do
       expect { described_class.new }.not_to raise_error
-      original_path = Settings.rclone_config_path
       Settings.rclone_config_path = nil
       expect { described_class.new }.to raise_error RuntimeError
-      Settings.rclone_config_path = original_path
     end
     it "requires conf file to exist" do
       expect { described_class.new }.not_to raise_error

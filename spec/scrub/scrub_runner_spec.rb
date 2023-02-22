@@ -19,13 +19,6 @@ RSpec.describe Scrub::ScrubRunner do
     FileUtils.touch(Settings.rclone_config_path)
     FileUtils.mkdir_p(Settings.local_member_data)
     FileUtils.mkdir_p(Settings.remote_member_data)
-    FileUtils.rm_rf("/tmp/scrub_data/#{org1}/")
-  end
-
-  after(:each) do
-    FileUtils.rm_f(Settings.rclone_config_path)
-    FileUtils.rm_rf(Settings.local_member_data)
-    FileUtils.rm_rf(Settings.remote_member_data)
   end
 
   describe "#check_old_files" do
@@ -110,8 +103,8 @@ RSpec.describe Scrub::ScrubRunner do
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
 
-      FileUtils.mkdir_p("/tmp/scrub_data/#{org1}/loaded/")
-      File.open("/tmp/scrub_data/#{org1}/loaded/umich_mon_1.ndj", "w") do |file|
+      FileUtils.mkdir_p("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/")
+      File.open("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/umich_mon_1.ndj", "w") do |file|
         1.upto(20) do |i|
           file.puts i
         end
