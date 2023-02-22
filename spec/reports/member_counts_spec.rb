@@ -8,7 +8,7 @@ RSpec.describe "MemberCounts" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }
 
   let(:mcr) do
-    Reports::MemberCounts.new("/dev/null", "/tmp/member_counts_reports", mokk_members)
+    Reports::MemberCounts.new("/dev/null", "#{ENV["TEST_TMP"]}/member_counts_reports", mokk_members)
   end
 
   let(:rows) { mcr.rows }
@@ -62,7 +62,7 @@ RSpec.describe "MemberCounts" do
   describe "matching_volumes" do
     it "reads a freq file and populates report accordingly" do
       freq_file = "spec/fixtures/freq.txt"
-      rows2 = Reports::MemberCounts.new(freq_file, "/tmp/member_counts", mokk_members).rows
+      rows2 = Reports::MemberCounts.new(freq_file, "#{ENV["TEST_TMP"]}/member_counts", mokk_members).rows
       expect(rows2["umich"].matching_volumes["spm"]).to eq(1)
       expect(rows2["umich"].matching_volumes["mpm"]).to eq(2)
       expect(rows2["umich"].matching_volumes["ser"]).to eq(1)

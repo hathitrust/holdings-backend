@@ -11,8 +11,8 @@ RSpec.describe Utils::Encoding do
     it "requires a path to something existing" do
       expect { described_class.new(valid_fixt) }.to_not raise_error
       expect { described_class.new(nil) }.to raise_error IOError
-      FileUtils.rm_f("/tmp/no_file")
-      expect { described_class.new("/tmp/no_file") }.to raise_error IOError
+      FileUtils.rm_f("#{ENV["TEST_TMP"]}/no_file")
+      expect { described_class.new("#{ENV["TEST_TMP"]}/no_file") }.to raise_error IOError
     end
   end
 

@@ -3,17 +3,14 @@
 require "utils/line_counter"
 require "spec_helper"
 
-# Because when declared as a `let` it does not work in the after(:all) hook.
-test_dir = "/tmp/line_counter_test"
 RSpec.describe Utils::LineCounter do
+  let(:test_dir) { "#{ENV["TEST_TMP"]}/line_counter_test" }
+
   before(:each) do
-    FileUtils.rm_rf(test_dir)
     FileUtils.mkdir_p(test_dir)
   end
-  after(:all) do
-    FileUtils.rm_rf(test_dir)
-  end
-  let(:null_path) { "/tmp/i/do/not/exist" }
+
+  let(:null_path) { "/nonexistent" }
   let(:empty_file) { File.join(test_dir, "empty_file") }
   let(:ten_line_file) { File.join(test_dir, "ten_line_file") }
   let(:gzip_file) { File.join(test_dir, "gzip_file.gz") }

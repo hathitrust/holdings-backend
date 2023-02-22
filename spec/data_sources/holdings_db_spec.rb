@@ -35,40 +35,27 @@ RSpec.describe DataSources::HoldingsDB do
       expect(c.tables).to include(:ht_billing_members)
     end
 
-    context "with clean settings" do
-      around :each do |example|
-        old_db_setting = Settings.database
-        Settings.database = nil
+    it "connects with url" do
+      Settings.database = {url: connection_string}
+      c = described_class.connection
+      expect(c.tables).to include(:ht_billing_members)
+    end
 
-        begin
-          example.run
-        ensure
-          Settings.database = old_db_setting
-        end
-      end
+    it "connects with keyword options" do
+      Settings.database = {opts: opts}
+      c = described_class.connection
+      expect(c.tables).to include(:ht_billing_members)
+    end
 
-      it "connects with url" do
-        Settings.database = {url: connection_string}
-        c = described_class.connection
-        expect(c.tables).to include(:ht_billing_members)
-      end
+    it "fails as expected with bad user" do
+      Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
+      expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
+    end
 
-      it "connects with keyword options" do
-        Settings.database = {opts: opts}
-        c = described_class.connection
-        expect(c.tables).to include(:ht_billing_members)
-      end
-
-      it "fails as expected with bad user" do
-        Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
-        expect { described_class.connection }.to raise_error(Sequel::DatabaseConnectionError)
-      end
-
-      it "provided opts override settings" do
-        Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
-        c = described_class.connection(opts: opts)
-        expect(c.tables).to include(:ht_billing_members)
-      end
+    it "provided opts override settings" do
+      Settings.database = {opts: opts.merge(user: "NO_SUCH_USER")}
+      c = described_class.connection(opts: opts)
+      expect(c.tables).to include(:ht_billing_members)
     end
   end
 

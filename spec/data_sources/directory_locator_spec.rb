@@ -2,27 +2,22 @@
 
 require "spec_helper"
 require "data_sources/directory_locator"
+require "fileutils"
 
 # Conf file must exist, or Utils::FileTransfer raises an error.
 FileUtils.touch(Settings.rclone_config_path)
 
 RSpec.describe DataSources::DirectoryLocator do
   let(:org) { "test" }
-  let(:root) { "/tmp/directory_locator_test" }
+  let(:root) { ENV["TEST_TMP"] }
   let(:dl) { described_class.new(root, org) }
   let(:year) { Time.new.year.to_s }
-  let(:base_x) { "/tmp/directory_locator_test/test-hathitrust-member-data" }
-  let(:holdings_x) { "/tmp/directory_locator_test/test-hathitrust-member-data/print holdings" }
-  let(:sp_x) { "/tmp/directory_locator_test/test-hathitrust-member-data/shared print" }
-  let(:analysis_x) { "/tmp/directory_locator_test/test-hathitrust-member-data/analysis" }
+  let(:base_x) { "#{root}/test-hathitrust-member-data" }
+  let(:holdings_x) { "#{root}/test-hathitrust-member-data/print holdings" }
+  let(:sp_x) { "#{root}/test-hathitrust-member-data/shared print" }
+  let(:analysis_x) { "#{root}/test-hathitrust-member-data/analysis" }
 
-  before(:each) do
-    FileUtils.rm_rf(root)
-  end
-
-  after(:each) do
-    FileUtils.rm_rf(root)
-  end
+  before(:each) { FileUtils.touch(Settings.rclone_config_path) }
 
   describe "attr_reader" do
     it "are set on initialize and readable" do

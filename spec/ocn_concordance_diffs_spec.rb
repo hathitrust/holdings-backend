@@ -6,9 +6,9 @@ require "ocn_concordance_diffs"
 RSpec.describe OCNConcordanceDiffs, type: "loaded_file" do
   let(:logger) { double(:logger, info: true) }
   let(:concordance_diffs) { described_class.new(Date.parse("2021-04-02")) }
-  let(:expected_filename) { Pathname.new("/tmp/concordance/diffs/comm_diff_2021-04-02.txt") }
-  let(:expected_adds) { Pathname.new("/tmp/concordance/diffs/comm_diff_2021-04-02.txt.adds") }
-  let(:expected_deletes) { Pathname.new("/tmp/concordance/diffs/comm_diff_2021-04-02.txt.deletes") }
+  let(:expected_filename) { Pathname.new("#{ENV["TEST_TMP"]}/concordance/diffs/comm_diff_2021-04-02.txt") }
+  let(:expected_adds) { Pathname.new("#{ENV["TEST_TMP"]}/concordance/diffs/comm_diff_2021-04-02.txt.adds") }
+  let(:expected_deletes) { Pathname.new("#{ENV["TEST_TMP"]}/concordance/diffs/comm_diff_2021-04-02.txt.deletes") }
 
   it "computes the path to concordance diffs" do
     expect(concordance_diffs.filename).to eq(expected_filename)

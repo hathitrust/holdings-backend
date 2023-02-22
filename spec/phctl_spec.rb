@@ -75,7 +75,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
       it "does the thing" do
         PHCTL::PHCTL.start(["report", "costreport", "--inline"])
         year = Time.new.year.to_s
-        expect(File.read(Dir.glob("/tmp/cost_reports/#{year}/*").first))
+        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first))
           .to match(/Target cost: 9999/)
       end
     end
