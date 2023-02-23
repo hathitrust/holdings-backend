@@ -2,7 +2,6 @@
 # Usage:
 # Utils::LineCounter.new(some_file).count_lines # -> number of lines (as an int)
 require "utils/agnostic_opener"
-
 module Utils
   class LineCounter
     def initialize(path)
