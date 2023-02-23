@@ -69,7 +69,7 @@ RSpec.describe Scrub::AutoScrub do
     mpm_scrubber = described_class.new(fixture("umich_mpm_full_20221118.tsv"))
     expect { mpm_scrubber.run }.not_to raise_error
     expect(mpm_scrubber.out_files.size).to eq 1
-    expect(Utils::LineCounter.count_file_lines(mpm_scrubber.out_files.first)).to eq 3
+    expect(Utils::LineCounter.new(mpm_scrubber.out_files.first).count_lines).to eq 3
   end
 
   it "raises if given a file with illegal utf sequence" do
@@ -77,5 +77,16 @@ RSpec.describe Scrub::AutoScrub do
     FileUtils.cp(fixture("non_valid_utf8.txt"), path)
     scrubber = described_class.new(path)
     expect { scrubber.run }.to raise_error EncodingError
+  end
+
+  it "can deal with a file using mac style newlines" do
+    # This test might overwrite input file, so run on a copy in /tmp/
+    fn = "umich_mon_full_20220101_macstyle_newline.tsv"
+    fixture_tmp = "/tmp/#{fn}"
+    FileUtils.cp(fixture(fn), fixture_tmp)
+    scrubber = described_class.new(fixture_tmp)
+    expect { scrubber.run }.not_to raise_error
+    expect(scrubber.out_files.size).to eq 1
+    FileUtils.rm(fixture_tmp)
   end
 end
