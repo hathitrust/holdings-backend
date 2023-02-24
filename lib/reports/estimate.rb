@@ -42,6 +42,7 @@ module Reports
         count_matching_items(cluster)
 
         marker.on_batch { |m| Services.logger.info m.batch_line }
+        Thread.pass
       end
       Services.logger.info marker.final_line
     end

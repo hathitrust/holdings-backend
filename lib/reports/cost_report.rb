@@ -132,6 +132,7 @@ module Reports
           add_ht_item_to_freq_table(ht_item)
           marker.on_batch { |m| logger.info m.batch_line }
         end
+        Thread.pass
       end
     end
 

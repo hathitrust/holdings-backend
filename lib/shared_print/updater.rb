@@ -21,6 +21,7 @@ module SharedPrint
         report "{"
         process_record(rec)
         report "}"
+        Thread.pass
       end
       report "Done with #{file}."
       @report&.close

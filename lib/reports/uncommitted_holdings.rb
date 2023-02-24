@@ -51,6 +51,7 @@ module Reports
         cluster.holdings.each do |holding|
           yield Reports::UncommittedHoldingsRecord.new(holding)
         end
+        Thread.pass
       end
     end
 
