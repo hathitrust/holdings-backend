@@ -48,6 +48,7 @@ module SharedPrint
         else
           @log.puts "Failed to load #{commitment.inspect}"
         end
+        Thread.pass
       end
     ensure
       # Close log files

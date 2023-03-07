@@ -48,6 +48,7 @@ module Reports
         fh.puts header.join("\t")
         replacements.each do |row|
           fh.puts row.join("\t")
+          Thread.pass
         end
       end
     end

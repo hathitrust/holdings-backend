@@ -40,6 +40,7 @@ module SharedPrint
       end
       inf.each_line do |line|
         try_deprecate(line.strip)
+        Thread.pass
       rescue SharedPrint::DeprecationError => e
         append_report "Could not deprecate record. #{e}"
       end

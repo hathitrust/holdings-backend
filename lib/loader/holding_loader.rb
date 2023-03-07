@@ -43,6 +43,7 @@ module Loader
   ## Subclass that only overrides item_from_line
   class HoldingLoaderNDJ < HoldingLoader
     def item_from_line(line)
+      Thread.pass # for sidekiq
       Clusterable::Holding.new_from_scrubbed_file_line(line).tap do |h|
         @organization ||= h.organization
         @current_date ||= h.date_received

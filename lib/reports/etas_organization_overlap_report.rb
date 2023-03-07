@@ -100,6 +100,7 @@ module Reports
         next if cluster.nil?
         holdings_matched = write_overlaps(cluster, organization)
         write_records_for_unmatched_holdings(cluster, holdings_matched)
+        Thread.pass
       end
       move_reports
     end

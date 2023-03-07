@@ -64,6 +64,7 @@ module Clustering
         c.holdings
           .select { |h| h.organization == org && h.date_received < date }
           .map { |h| ClusterHolding.new(h).delete }
+        Thread.pass
       end
     end
 

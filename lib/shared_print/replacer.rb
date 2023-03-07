@@ -36,6 +36,7 @@ module SharedPrint
         rep_rec.apply
         report "Success: #{rep_rec.verify}"
         report rep_rec.replaced.inspect
+        Thread.pass
       rescue ArgumentError => err
         report "Could not replace. #{err.message}"
       rescue IndexError => err

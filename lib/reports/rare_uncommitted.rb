@@ -176,6 +176,7 @@ module Reports
         # If we didn't find reason to reject cluster, then the cluster goes in the report.
         log "yield cluster #{cluster.ocns}"
         yield cluster
+        Thread.pass
       end
       Services.logger.info marker.final_line
     end
