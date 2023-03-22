@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "scrub/autoscrub"
+require "utils/encoding"
 require "utils/line_counter"
 
 RSpec.describe Scrub::AutoScrub do
@@ -72,11 +73,15 @@ RSpec.describe Scrub::AutoScrub do
     expect(Utils::LineCounter.new(mpm_scrubber.out_files.first).count_lines).to eq 3
   end
 
-  it "raises if given a file with illegal utf sequence" do
+  it "converts a file with illegal utf sequence to valid utf8" do
     path = "#{ENV["TEST_TMP"]}/umich_mpm_full_20200101_badutf.tsv"
     FileUtils.cp(fixture("non_valid_utf8.txt"), path)
     scrubber = described_class.new(path)
-    expect { scrubber.run }.to raise_error EncodingError
+    expect { scrubber.run }.not_to raise_error
+    # output should be valid utf8, or we messed something up along the way
+    scrubbed = scrubber.out_files.first
+    scrubbed_enc = Utils::Encoding.new(scrubbed)
+    expect(scrubbed_enc.ascii_or_utf8?).to be true
   end
 
   it "can deal with a file using mac style newlines" do

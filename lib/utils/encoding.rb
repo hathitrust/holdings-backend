@@ -6,6 +6,7 @@ require "securerandom"
 
 module Utils
   class Encoding
+    attr_reader :path, :encoding, :utf8_output, :diff
     def initialize(path)
       @path = path
       if @path.nil?
@@ -15,6 +16,9 @@ module Utils
         raise IOError, "No valid file given (#{@path.inspect})"
       end
       @encoding = uchardet
+      # Set by force_utf8
+      @utf8_output = nil
+      @diff = nil
     end
 
     # If a file is utf8 or ascii, then we can load it w/o conversion.
@@ -24,15 +28,33 @@ module Utils
 
     # Takes an input path to a file and forces it into utf8, discarding
     # any "illegal input sequence" from the output.
-    # Writes output to a file in /tmp/.
+    # Writes output and diff to files in /tmp/.
+    # Returns bool.
     def force_utf8
-      out = "/tmp/#{SecureRandom.uuid}"
-      cmd = "zcat -f '#{@path}' | iconv -f #{uchardet} - -t utf8 -c > #{out}"
-      res = capture_outs(cmd)[:stderr]
+      # Start by unzipping input
+      unzipped_input = "/tmp/Utils_Encoding_in_#{SecureRandom.uuid}"
+      output = "/tmp/Utils_Encoding_out_#{SecureRandom.uuid}"
+      diff = "/tmp/Utils_Encoding_diff_#{SecureRandom.uuid}"
+      `zcat -f '#{@path}' > #{unzipped_input}`
+      # and forcibly converting it to UTF-8
+      iconv_cmd = "iconv #{unzipped_input} -f #{@encoding} -t utf8 -c > #{output}"
+
+      # Check iconv output for errors
+      res = capture_outs(iconv_cmd)[:stderr]
       unless res.empty?
         raise EncodingError, res
       end
-      out
+
+      # Then get the diff input <> output
+      `diff #{unzipped_input} #{output} | grep -P '^>' > #{diff}`
+      @diff = diff
+      # Clean up
+      FileUtils.rm(unzipped_input)
+      # Return the path of the unzipped and converted output
+      @utf8_output = output
+      true
+    rescue
+      false
     end
 
     # Execute command and return its stat, stderr and stdout in a hash.
