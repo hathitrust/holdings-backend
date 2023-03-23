@@ -52,11 +52,6 @@ module Scrub
       @error_count = 0
       @item_type = item_type_from_filename
       @member_id = member_id_from_filename
-
-      # get a file
-      # check filename for member_id, item_type etc.
-      # parse header & set up the column map
-      # check individual lines
     end
 
     def log(msg)
