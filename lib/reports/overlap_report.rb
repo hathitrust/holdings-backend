@@ -106,7 +106,7 @@ module Reports
       if @ph
         cluster
           .holdings
-          .select(&:organization)
+          .map(&:organization)
           .uniq
           .count
       end
@@ -127,7 +127,7 @@ module Reports
         cluster
           .commitments
           .select { |spc| !spc.deprecated? }
-          .select(&:organization)
+          .map(&:organization)
           .uniq
           .count
       end
