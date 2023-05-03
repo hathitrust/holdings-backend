@@ -198,7 +198,7 @@ module Reports
       File.join(
         Settings.cost_report_path,
         year,
-        "cost_report_#{iso_stamp}.tsv"
+        "costreport_#{iso_stamp}.tsv"
       )
     end
   end
