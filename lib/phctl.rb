@@ -160,6 +160,11 @@ module PHCTL
     def organization_holdings_overlap
       run_common_job(Reports::OverlapReport, options)
     end
+
+    desc "holdings-by-date", "List the last time an org submitted holdings, grouped by org and mono_multi_serial"
+    def holdings_by_date
+      run_common_job(Reports::HoldingsByDateReport, options)
+    end
   end
 
   class PHCTL < Thor
