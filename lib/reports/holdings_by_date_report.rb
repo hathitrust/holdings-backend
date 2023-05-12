@@ -68,7 +68,7 @@ module Reports
     def to_row(res)
       org = res["_id"]["org"]
       fmt = res["_id"]["fmt"]
-      max_date = res["max_date"].strftime("%Y-%m-%d")
+      max_date = res["max_date"].strftime("%Y")
 
       [org, fmt, max_date].join("\t")
     end

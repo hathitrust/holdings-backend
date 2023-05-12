@@ -44,7 +44,7 @@ RSpec.describe Reports::HoldingsByDateReport do
   end
   it "formats a query result to a tab separated line" do
     tn = Time.now
-    tn_expect = tn.strftime("%Y-%m-%d")
+    tn_expect = tn.strftime("%Y")
     res = {"_id" => {"org" => "O", "fmt" => "F"}, "max_date" => tn}
     expect(rpt.to_row(res)).to eq "O\tF\t#{tn_expect}"
   end
@@ -135,12 +135,12 @@ RSpec.describe Reports::HoldingsByDateReport do
 
     expected_report = [
       "organization\tformat\tmax_load_date",
-      "smu\tmpm\t2002-01-01",
-      "smu\tser\t2002-01-01",
-      "smu\tspm\t2002-01-01",
-      "umich\tmpm\t2002-01-01",
-      "umich\tser\t2002-01-01",
-      "umich\tspm\t2002-01-01"
+      "smu\tmpm\t2002",
+      "smu\tser\t2002",
+      "smu\tspm\t2002",
+      "umich\tmpm\t2002",
+      "umich\tser\t2002",
+      "umich\tspm\t2002"
     ]
 
     rpt.run
