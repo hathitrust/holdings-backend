@@ -5,10 +5,15 @@ require "cluster"
 require "clustering/cluster_ht_item"
 require "data_sources/large_clusters"
 require "large_cluster_error"
+require "loader/holding_loader"
+require "utils/line_counter"
 
 RSpec.describe DataSources::LargeClusters do
   let(:mock_data) { [1_759_445, 8_878_489].to_set }
   let(:large_clusters) { described_class.new(mock_data) }
+  let(:lrg_ocn) { large_clusters.ocns.first }
+  let(:org1) { "umich" }
+  let(:org2) { "smu" }
 
   before(:each) do
     Cluster.each(&:delete)
@@ -25,6 +30,49 @@ RSpec.describe DataSources::LargeClusters do
       `echo "1001117803" > #{Settings.large_cluster_ocns}`
       large_clusters = described_class.new
       expect(large_clusters.ocns).to include(1_001_117_803)
+    end
+  end
+
+  describe "adding holdings to a LargeCluster via cluster_tap_save" do
+    it "adding 2 hol from 1 org results in 1 hol (the first) on cluster" do
+      # setup
+      hol1 = build(:holding, ocn: lrg_ocn, organization: org1)
+      hol2 = build(:holding, ocn: lrg_ocn, organization: org1)
+      cluster_tap_save [hol1, hol2]
+      cluster_holdings_uuids = Cluster.where(ocns: lrg_ocn).first.holdings.map(&:uuid)
+      # execution
+      expect(hol1.uuid == hol2.uuid).to be false
+      expect(cluster_holdings_uuids.size).to eq 1
+      expect(cluster_holdings_uuids).to eq [hol1.uuid]
+    end
+    it "adding 2 hol from 2 orgs results in 2 hol on cluster" do
+      # setup
+      hol1 = build(:holding, ocn: lrg_ocn, organization: org1)
+      hol2 = build(:holding, ocn: lrg_ocn, organization: org2) # <<< org diff
+      cluster_tap_save [hol1, hol2]
+      cluster_holdings_uuids = Cluster.where(ocns: lrg_ocn).first.holdings.map(&:uuid)
+      # execution
+      expect(hol1.uuid == hol2.uuid).to be false
+      expect(cluster_holdings_uuids.size).to eq 2
+      expect(cluster_holdings_uuids).to eq [hol1.uuid, hol2.uuid]
+    end
+  end
+
+  describe "loading holdings via holdingloader" do
+    it "only adds one holding to a LargeCluster even if given many similar" do
+      fixt = fixture("large_cluster.ndj") # 100 umich holdings for lrg_ocn
+      batch = []
+      batch_loader = Loader::HoldingLoaderNDJ.new
+
+      cluster_tap_save [build(:ht_item, ocns: [lrg_ocn])]
+      File.open(fixt, "r") do |f|
+        f.each_line do |line|
+          batch << batch_loader.item_from_line(line)
+        end
+      end
+      Loader::HoldingLoader.new.load(batch)
+      expect(Utils::LineCounter.new(fixt).count_lines).to eq 100
+      expect(Cluster.where(ocns: lrg_ocn).first.holdings.size).to eq 1
     end
   end
 
