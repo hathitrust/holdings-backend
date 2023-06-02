@@ -165,6 +165,14 @@ module PHCTL
     def holdings_by_date
       run_common_job(Reports::HoldingsByDateReport, options)
     end
+
+    desc "shared-print-newly-ingested (--start_date=x) (--ht_item_ids_file=y)",
+      "Get list of volumes ingested since DATE, for SP purposes"
+    option :start_date, type: :string, default: nil
+    option :ht_item_ids_file, type: :string, default: nil
+    def shared_print_newly_ingested
+      run_common_job(Reports::SharedPrintNewlyIngested, options)
+    end
   end
 
   class PHCTL < Thor

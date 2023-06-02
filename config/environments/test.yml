@@ -22,6 +22,7 @@ scrub_chunk_work_dir: <%= ENV["TEST_TMP"] %>
 scrub_line_count_diff_max: 0.05
 shared_print_report_path: <%= ENV["TEST_TMP"] %>/shared_print_reports
 shared_print_update_report_path: <%= ENV["TEST_TMP"] %>/shared_print_update_report
+sp_newly_ingested_report_path: <%= ENV["TEST_TMP"] %>/sp_newly_ingested_report
 slack_endpoint: http://slack.test/endpoint
 target_cost: 9999
 

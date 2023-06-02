@@ -161,6 +161,14 @@ RSpec.describe "phctl integration" do
       expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/oclc_registration_umich_*").first))
         .to match(/^local_oclc/)
     end
+
+    it "SharedPrintNewlyIngested produces output" do
+      phctl(*%w[report shared-print-newly-ingested --start_date=2021-01-01 --ht_item_ids_file=spec/fixtures/shared_print_newly_ingested_ht_items.tsv --inline])
+      snir = "sp_newly_ingested_report"
+      glob = Dir.glob("#{ENV["TEST_TMP"]}/#{snir}/#{snir}_*").first
+      rpt_out = File.read(glob)
+      expect(rpt_out).to match(/contributor/)
+    end
   end
 
   describe "Scrub" do
