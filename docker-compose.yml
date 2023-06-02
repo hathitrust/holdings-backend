@@ -35,10 +35,9 @@ services:
 
   mongo_dev:
     image: mongo:6.0.2
-    volumes:
-      - data_db:/data/db
     command: --replSet rs0 --bind_ip localhost,mongo_dev
     volumes:
+      - data_db:/data/db
       - ./bin:/tmp/bin
 
   mongo_test:
