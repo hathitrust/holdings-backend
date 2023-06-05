@@ -142,20 +142,24 @@ module Reports
       return enum_for(:matching_item_ids_from_db) unless block_given?
       db = Services.holdings_db
       db.run("USE ht")
-      query = %w[
+      db.fetch(query, @start_date) do |row|
+        yield row[:ht_id], row[:min_time]
+      end
+    end
+
+    # The query string, if going via matching_item_ids_from_db
+    def query
+      <<~HEREDOC
         SELECT
-        CONCAT(namespace, '.', id) AS ht_id,
+        CONCAT(namespace, '.', id)         AS ht_id,
         MIN(DATE_FORMAT(time, "%Y-%m-%d")) AS min_time
         FROM
         rights_log
         GROUP BY
         namespace, id
         HAVING
-        MIN(time) >= '#{@start_date}'
-      ].join(" ")
-      db.fetch(query) do |row|
-        yield row[:ht_id], row[:min_time]
-      end
+        min_time >= ?
+      HEREDOC
     end
 
     # For testing or caching purposes, read matching items from file rather than db.
