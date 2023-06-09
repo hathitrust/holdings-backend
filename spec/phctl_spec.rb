@@ -31,7 +31,8 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report etas-overlap] => Jobs::Common,
     %w[report etas-overlap someinst] => Jobs::Common,
     %w[report organization-holdings-overlap --organization=umich --ph=true] => Jobs::Common,
-    %w[load concordance somefile] => Jobs::Load::Concordance
+    %w[load concordance somefile] => Jobs::Load::Concordance,
+    %w[report weeding_decision someinst] => Jobs::Common
 
     # Not covered by phctl
     # bin/cost_changes.sh
