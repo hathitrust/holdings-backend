@@ -135,7 +135,7 @@ module SharedPrint
       pols = commitment.policies
       # pols must match ONE AND ONLY ONE of the required policies.
       unless (pols & @phase_3_required_policies).count == 1
-        msg = "Required policies mismatch. Commitment has #{pols.join(",")}. " \
+        msg = "Required policies mismatch. Commitment policies is #{pols.inspect}. " \
               "Exactly one of #{@phase_3_required_policies.join(",")} is required"
         raise SharedPrint::Phase3Error, msg
       end
