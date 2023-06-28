@@ -7,11 +7,10 @@
 # Run this outside docker; it will start all required services.
 # Running this script assumes you have already run --rm bin/setup_dev.sh
 
-docker-compose up --scale processor=3 -d sidekiq_web processor redis 
-docker-compose run --rm dev bin/setup/wait-for redis:6379 -- echo "redis is ready"
+docker-compose up --scale processor=3 -d processor
 
 echo "generating fake data"
-docker-compose run --rm dev bundle exec ruby bin/generate_fake_data.rb
+docker-compose run --rm processor bundle exec ruby bin/generate_fake_data.rb
 
 # also a good test of concurrency & split/merge operations -- concordance rules
 # being loaded at the same time htitems are being loaded

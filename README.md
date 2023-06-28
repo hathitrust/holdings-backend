@@ -18,14 +18,14 @@ bash bin/setup/setup_dev.sh
 
 ## Running the tests
 
-`docker-compose run --rm dev bundle exec rspec`
+`docker compose run --rm test bundle exec rspec`
 
 ## Clearing out/resetting the data
 For resetting everything (cleaning up containers & their persistent volumes):
 
 ```bash
 # Clear it out
-docker-compose down # to stop services
+docker compose down # to stop services
 docker volume rm holdings-backend_data_db # to clear out the development database
 docker volume rm holdings-backend_gem_cache # to clear out gems
 
@@ -65,30 +65,28 @@ Files:
 * Can be gzipped or not -- the scripts will figure it out
 
 Script command cheat sheet:
-* `docker-compose run --rm dev bundle exec bin/phctl load ht_items <filepath>`
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb
- <filepath>` (full file)
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb -u
+* `docker compose run --rm phctl load ht_items <filepath>`
+* `docker compose run --rm phctl load holdings <filepath>` (full file)
  <filepath>` (update file)
 
 
 ### OCLC Concordance file 
 
-The _oclc concordance file_ is a single file with two columns, each line
-representing a pair of OCLC numbers that should be treated as equivalent.
+The _oclc concordance file_ is a file provided to HathiTrust by OCLC. It is a
+single file with two columns, each line representing a pair of OCLC numbers
+that should be treated as equivalent.
 
-There are ≈ 60M rows in this file. 
-
-Concordance files can be downloaded from OCLC's website. See confluence for details.
+There are ≈ 60M rows in a full real file. Validating or loading a full file in
+development is not recommended because of the size.
 
 1. Validate, e.g. 
-  `run_generic_job.sh conc-val bundle exec bin/phctl.rb concordance validate /htprep/holdings/concordance/raw/202205_concordance.txt.gz /htprep/holdings/concordance/validated/202205_concordance_validated.tsv`
+  `docker compose run --rm phctl concordance validate concordance_sample.txt.gz /htprep/holdings/concordance/validated/202205_concordance_validated.tsv`
 
 2. Compute deltas, e.g. 
-  `run_generic_job.sh conc-delta bundle exec bin/phctl.rb concordance delta /htprep/holdings/concordance/validated/202205_concordance_validated.tsv /htprep/holdings/concordance/validated/202112_concordance_validated.tsv.gz`
+  `docker compose run --rm phctl concordance delta 202205_concordance_validated.tsv 202112_concordance_validated.tsv.gz`
 
 3. Load deltas, e.g.
-  `run_generic_job.sh load-conc bundle exec bin/phctl.rb load concordance 2022-05`
+  `docker compose run --rm phctl load concordance 2022-05`
   
 ### Loading the HathiFiles
 
@@ -102,7 +100,7 @@ for more info if you're interested.
 To load a Hathifile (either a full file or an update) in development:
   * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
   or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
-  * `docker-compose run --rm dev bundle exec bin/phctl.rb load ht_items <filepath>`
+  * `docker compose run --rm phctl load ht_items <filepath>`
   where the components are exactly as for the OCLC concordance file.
 
 ### Loading (scrubbed) print holdings
@@ -118,15 +116,7 @@ These raw files are "scrubbed" and verified, resulting in scrubbed files.
 To load a scrubbed file in development:
   * Get the file(s) you want from `/htapps/mwarin.babel/phdb_scripts/data/loadfiles/`
   * Add UUIDs for tracking whether the individual line has been processed: `bin ruby/add_uuid.rb infile > outfile`
-  * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
-
-## K8s Cronjob
-`kubectl create -f cron_job.yaml`
-
-Runs `validate_and_delta.rb` daily at 2300UTC, which is presumed EOD for the parties involved.
-`validate_and_delta.rb` checks the concordance directory for new un-validated concordance files, validates them and diffs with a previous concordance.
-Posts a message to the slack channel so we know there is an update to be loaded. 
-It does NOT attempt to update the concordance as it may conflict with reporting operations. This would require more complicated orchestration of jobs.
+  * `docker compose run --rm phctl load holdings outfile`
 
 ## Other Actions
 

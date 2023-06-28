@@ -2,7 +2,7 @@ version: '3'
 
 services:
 
-  dev:
+  test:
     build: .
     volumes:
       - .:/usr/src/app
@@ -10,6 +10,14 @@ services:
     environment:
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
       PUSHGATEWAY: http://pushgateway:9091
+      MONGOID_ENV: test
+    profiles:
+      - test
+    depends_on:
+      - redis
+      - mongo_test
+      - mariadb
+      - pushgateway
 
   phctl:
     build: .
@@ -19,7 +27,15 @@ services:
     environment:
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
       PUSHGATEWAY: http://pushgateway:9091
+      MONGOID_ENV: development
     entrypoint: bundle exec ruby bin/phctl.rb
+    profiles:
+      - phctl
+    depends_on:
+      - redis
+      - mongo_dev
+      - mariadb
+      - processor
 
   processor:
     build: .
@@ -32,6 +48,12 @@ services:
     environment:
       MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
       PUSHGATEWAY: http://pushgateway:9091
+      MONGOID_ENV: development
+    depends_on:
+      - redis
+      - mongo_dev
+      - mariadb
+      - pushgateway
 
   mongo_dev:
     image: mongo:6.0.2
@@ -45,11 +67,19 @@ services:
     command: --replSet rs0 --bind_ip localhost,mongo_test
     volumes:
       - ./bin:/tmp/bin
+    profiles:
+      - test
 
   mariadb:
     image: mariadb
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MARIADB_ROOT_PASSWORD: mariadbroot
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "status", "-uroot", "-pmariadbroot"]
+      interval: 5s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
     volumes:
       - ./sql:/docker-entrypoint-initdb.d/
 
@@ -59,6 +89,16 @@ services:
       - --web.enable-admin-api
     ports:
       - 9091:9091
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost:9091", "-O","/dev/null"]
+      interval: 5s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+
+  redis:
+    image: redis
+    restart: always
 
   sidekiq_web:
     build: .
@@ -68,15 +108,12 @@ services:
       - gem_cache:/gems
     command: bundle exec puma bin/sidekiq_web.ru
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     ports:
       - 9292:9292
     environment:
       REDIS_URL: redis://redis/
-
-  redis:
-    image: redis
-    restart: always
 
 volumes:
   gem_cache:
