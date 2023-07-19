@@ -3,6 +3,7 @@
 require "cluster"
 require "loader/shared_print_loader"
 require "services"
+require "date"
 Services.mongo!
 
 module SharedPrint
@@ -20,7 +21,7 @@ module SharedPrint
 
       # Any commitment in Phase 3 should have 1+ of these policies:
       @phase_3_required_policies = ["blo", "non-circ"]
-
+      @phase_3_date = DateTime.parse("2023-01-31")
       # Setup dirs
       if Settings.local_report_path.nil?
         raise "Missing Settings.local_report_path"
@@ -42,6 +43,7 @@ module SharedPrint
         # commitment is an unsaved commitment until it has passed
         # validation and is then saved by load()
         commitment = loader.item_from_line(line)
+        commitment.committed_date = @phase_3_date
         if pass_validation? commitment
           loader.load commitment
           @log.puts "Loaded #{commitment.inspect}"
