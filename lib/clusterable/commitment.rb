@@ -36,6 +36,7 @@ module Clusterable
 
     validates_inclusion_of :retention_condition, in: ["EXCELLENT", "ACCEPTABLE"], allow_nil: true
     validate :deprecation_validation
+    validate :other_commitment_validation
 
     def initialize(_params = nil)
       super
@@ -83,6 +84,15 @@ module Clusterable
         errors.add(:deprecation_status, "can't be set without a deprecation date.")
       elsif deprecation_status.nil? && deprecation_date
         errors.add(:deprecation_date, "can't be set without a deprecation status.")
+      end
+    end
+
+    # If one of other_program/other_retention_date is set they must both be set
+    def other_commitment_validation
+      if other_program && other_retention_date.nil?
+        errors.add(:other_program, "cannot be set if other_retention_date is nil")
+      elsif other_program.nil? && other_retention_date
+        errors.add(:other_retention_date, "cannot be set if other_program is nil")
       end
     end
   end

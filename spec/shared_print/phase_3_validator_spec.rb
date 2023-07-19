@@ -162,4 +162,52 @@ RSpec.describe SharedPrint::Phase3Validator do
       expect(File.exist?(p3v.log.path)).to be true
     end
   end
+
+  describe "handling optional other_commitments column" do
+    # other_commitments is an optional column that contains 2 values
+    # or is empty. The values are analyzed as other_program & other_retention_date
+    # and comes as a string like "program_name:YYYY-MM-DD"
+    # that need to be parsed out and stored separately.
+    # The heavy lifting happens in Loader::SharedPrintLoader
+    before(:each) do
+      # setting up the same htitem and holding for a matching commitment
+      ocn = 3
+      htitem = build(:ht_item, ocns: [ocn])
+      holding = build(:holding, ocn: ocn, organization: "umich")
+      cluster_tap_save [htitem, holding]
+      spc.organization = "umich"
+      spc.ocn = ocn
+      spc.policies = ["blo"]
+    end
+    it "accepts a commitment with a proper other_commitments" do
+      spc.other_program = "EAST"
+      spc.other_retention_date = DateTime.parse("2099-09-09")
+      pass = p3v.pass_validation?(spc)
+      expect(pass).to be true
+      expect(p3v.last_error).to be nil
+    end
+    it "error if other_retention_date is set & other_program is nil" do
+      # setting other_retention_date but not other_program
+      # should result in failed validation
+      spc.other_retention_date = DateTime.parse("2099-09-09")
+      pass = p3v.pass_validation?(spc)
+      expect(pass).to be false
+      expect(p3v.last_error.to_s).to match(/cannot be set if other_program is nil/)
+    end
+    it "error if other_program is set & other_retention_date is nil" do
+      # setting other_program but not other_retention_date
+      # should result in failed validation
+      spc.other_program = "EAST"
+      pass = p3v.pass_validation?(spc)
+      expect(pass).to be false
+      expect(p3v.last_error.to_s).to match(/cannot be set if other_retention_date is nil/)
+    end
+    it "accepts a commitment with no other_commitments" do
+      # setting other_program but not other_retention_date
+      # should result in failed validation
+      pass = p3v.pass_validation?(spc)
+      expect(pass).to be true
+      expect(p3v.last_error).to be nil
+    end
+  end
 end
