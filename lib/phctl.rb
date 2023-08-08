@@ -173,6 +173,11 @@ module PHCTL
     def shared_print_newly_ingested
       run_common_job(Reports::SharedPrintNewlyIngested, options)
     end
+
+    desc "weeding-decision ORGANIZATION", "Generate a report to help ORG decide what to weed"
+    def weeding_decision(organization)
+      run_common_job(Reports::WeedingDecision, options, organization)
+    end
   end
 
   class PHCTL < Thor
