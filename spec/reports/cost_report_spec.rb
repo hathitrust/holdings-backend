@@ -7,12 +7,18 @@ require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 
 RSpec.describe Reports::CostReport do
+  let(:alo) { "allow" }
+  let(:dni) { "deny" }
+  let(:pd) { "pd" }
+  let(:ic) { "ic" }
+  let(:icus) { "icus" }
+
   let(:cr) { described_class.new(cost: 10) }
   let(:c) { build(:cluster) }
   let(:c2) { build(:cluster) }
-  let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: "deny", billing_entity: "smu") }
-  let(:mpm) { build(:ht_item, :mpm, billing_entity: "stanford", access: "deny") }
-  let(:ht_allow) { build(:ht_item, access: "allow") }
+  let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: dni, rights: ic, billing_entity: "smu") }
+  let(:mpm) { build(:ht_item, :mpm, billing_entity: "stanford", access: dni, rights: ic) }
+  let(:ht_allow) { build(:ht_item, access: alo, rights: pd) }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
@@ -32,12 +38,44 @@ RSpec.describe Reports::CostReport do
     end
   end
 
+  describe "making sure that access and rights come out the way they go in" do
+    it "pd == allow" do
+      cluster_tap_save [build(:ht_item, access: alo, rights: pd, ocns: [111])]
+      cluster = Cluster.find_by(ocns: 111)
+      expect(cluster.ht_items.count).to eq 1
+      expect(cluster.ht_items.first.rights).to eq pd
+      expect(cluster.ht_items.first.access).to eq alo
+    end
+    it "icus == allow" do
+      cluster_tap_save [build(:ht_item, access: alo, rights: icus, ocns: [222])]
+      cluster = Cluster.find_by(ocns: 222)
+      expect(cluster.ht_items.count).to eq 1
+      expect(cluster.ht_items.first.rights).to eq icus
+      expect(cluster.ht_items.first.access).to eq alo
+    end
+    it "ic == deny" do
+      cluster_tap_save [build(:ht_item, access: dni, rights: ic, ocns: [333])]
+      cluster = Cluster.find_by(ocns: 333)
+      expect(cluster.ht_items.count).to eq 1
+      expect(cluster.ht_items.first.rights).to eq ic
+      expect(cluster.ht_items.first.access).to eq dni
+    end
+  end
+
   describe "#num_pd_volumes" do
     it "counts the number of pd volumes" do
-      Clustering::ClusterHtItem.new(ht_allow).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(build(:ht_item, access: "allow", ocns: ht_allow.ocns))
-        .cluster.tap(&:save)
+      cluster_tap_save [ht_allow, build(:ht_item, access: alo, rights: pd, ocns: ht_allow.ocns)]
       expect(cr.num_pd_volumes).to eq(2)
+    end
+    it "counts icus towards pd regardless of access" do
+      # Put 10 icus items in...
+      1.upto(10) do
+        cluster_tap_save [build(:ht_item, rights: icus)]
+      end
+      # Expect all 10 when you call num_pd_volumes
+      expect(cr.num_pd_volumes).to eq(10)
+      # Expect none when you call ic_volumes
+      expect(cr.ic_volumes.count { |v| v.rights == icus }).to eq(0)
     end
   end
 
@@ -70,11 +108,14 @@ RSpec.describe Reports::CostReport do
 
   describe "#compile_frequency_table" do
     it "ignores PD items" do
-      pd_item = build(:ht_item,
-        access: "allow",
+      pd_item = build(
+        :ht_item,
+        access: alo,
+        rights: pd,
         enum_chron: "1",
         n_enum: "1",
-        billing_entity: "upenn")
+        billing_entity: "upenn"
+      )
       Clustering::ClusterHtItem.new(pd_item).cluster.tap(&:save)
       expect(cr.freq_table[:upenn][:mpm]).to eq({})
     end
@@ -101,7 +142,7 @@ RSpec.describe Reports::CostReport do
     end
 
     it "does not find clusters with only access == allow" do
-      Clustering::ClusterHtItem.new(build(:ht_item, access: "allow")).cluster.tap(&:save)
+      Clustering::ClusterHtItem.new(build(:ht_item, access: alo, rights: pd)).cluster.tap(&:save)
       expect(described_class.new.matching_clusters.each.to_a.size).to eq(2)
     end
   end
@@ -200,10 +241,13 @@ RSpec.describe Reports::CostReport do
 
     describe "multiple HTItem/Holding spms" do
       let(:ht_copy) do
-        build(:ht_item, :spm,
+        build(
+          :ht_item, :spm,
           ocns: spm.ocns,
           billing_entity: spm.billing_entity,
-          access: "deny")
+          access: dni,
+          rights: ic
+        )
       end
       let(:spm_holding) do
         build(:holding,
@@ -291,15 +335,17 @@ RSpec.describe Reports::CostReport do
 
     describe "Serials" do
       let(:ht_serial) do
-        build(:ht_item, :ser,
-          access: "deny")
+        build(:ht_item, :ser, access: dni, rights: ic)
       end
       let(:ht_serial2) do
-        build(:ht_item, :ser,
+        build(
+          :ht_item, :ser,
           ht_bib_key: ht_serial.ht_bib_key,
           ocns: ht_serial.ocns,
           billing_entity: "not_ht_serial.billing_entity",
-          access: "deny")
+          access: dni,
+          rights: ic
+        )
       end
       let(:holding_serial) do
         build(:holding,
@@ -343,36 +389,56 @@ RSpec.describe Reports::CostReport do
     # - 2 mpm with the same ocns with 1 holding
     # - 1 spm with access = allow
     let(:cr) { Reports::CostReport.new(cost: 5) }
+    let(:alo) { "allow" }
+    let(:dni) { "deny" }
+    let(:pd) { "pd" }
+    let(:ic) { "ic" }
+    let(:icus) { "icus" }
 
     let(:ht_serial) do
-      build(:ht_item, :ser,
+      build(
+        :ht_item, :ser,
         collection_code: "MIU",
-        access: "deny")
+        access: dni,
+        rights: ic
+      )
     end
     let(:ht_spm) do
-      build(:ht_item, :spm,
+      build(
+        :ht_item, :spm,
         collection_code: "MIU",
-        access: "deny")
+        access: dni,
+        rights: ic
+      )
     end
     let(:ht_mpm1) do
-      build(:ht_item, :mpm,
+      build(
+        :ht_item, :mpm,
         enum_chron: "1",
         n_enum: "1",
         collection_code: "MIU",
-        access: "deny")
+        access: dni,
+        rights: ic
+      )
     end
     let(:ht_mpm2) do
-      build(:ht_item, :mpm,
+      build(
+        :ht_item, :mpm,
         ocns: ht_mpm1.ocns,
         ht_bib_key: ht_mpm1.ht_bib_key,
         enum_chron: "",
         collection_code: "PU",
-        access: "deny")
+        access: dni,
+        rights: ic
+      )
     end
     let(:ht_spm_pd) do
-      build(:ht_item, :spm,
+      build(
+        :ht_item, :spm,
         collection_code: "MIU",
-        access: "allow")
+        access: alo,
+        rights: pd
+      )
     end
     let(:holding_serial1) { build(:holding, ocn: ht_serial.ocns.first, organization: "umich") }
     let(:holding_serial2) { build(:holding, ocn: ht_serial.ocns.first, organization: "utexas") }

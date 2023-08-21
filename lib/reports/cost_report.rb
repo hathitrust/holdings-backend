@@ -3,6 +3,10 @@
 require "overlap/ht_item_overlap"
 require "services"
 
+# In Aug 2023 we decided that items with rights:icus should behave as if
+# they were access:allow (PD, everybody pay), instead of the traditional
+# access:deny (IC, holders pay).
+
 module Reports
   # Generates reports based on h_share
   class CostReport
@@ -81,11 +85,27 @@ module Reports
       @num_pd_volumes ||= Cluster.collection.aggregate(
         [
           {"$match": {"ht_items.0": {"$exists": 1}}},
-          {"$group": {_id: nil,
-                      items_count: {"$sum": {"$size": {
-                        "$filter": {input: "$ht_items", as:    "item",
-                                    cond: {"$eq": ["$$item.access", "allow"]}}
-                      }}}}}
+          {
+            "$group": {
+              _id: nil,
+              items_count: {
+                "$sum": {
+                  "$size": {
+                    "$filter": {
+                      input: "$ht_items",
+                      as: "item",
+                      cond: {
+                        "$or": [
+                          {"$eq": ["$$item.access", "allow"]},
+                          {"$eq": ["$$item.rights", "icus"]}
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         ]
       ).first[:items_count]
     end
@@ -121,18 +141,27 @@ module Reports
       dump_file.close
     end
 
+    # Broken out of compile_frequency_table for testability and
+    # to have a counterpart to num_pd_volumes
+    def ic_volumes
+      return enum_for(:ic_volumes) unless block_given?
+      matching_clusters.each do |c|
+        c.ht_items.each do |ht_item|
+          # Only for IC volumes.
+          next if ht_item.access == "allow" || ht_item.rights == "icus"
+          yield ht_item
+        end
+        Thread.pass
+      end
+    end
+
     def compile_frequency_table
       @marker = Services.progress_tracker.call(batch_size: maxlines)
       logger.info("Begin compiling hscore frequency table.")
-      matching_clusters.each do |c|
-        c.ht_items.each do |ht_item|
-          next unless ht_item.access == "deny"
-
-          marker.incr
-          add_ht_item_to_freq_table(ht_item)
-          marker.on_batch { |m| logger.info m.batch_line }
-        end
-        Thread.pass
+      ic_volumes do |ht_item|
+        marker.incr
+        add_ht_item_to_freq_table(ht_item)
+        marker.on_batch { |m| logger.info m.batch_line }
       end
     end
 
@@ -145,14 +174,22 @@ module Reports
     end
 
     def matching_clusters
+      # We don't apply the icus rule here, since we're getting clusters not items.
+      # Any items gotten from these clusters need to be checked for icus though.
       if @organization.nil?
-        Cluster.where("ht_items.0": {"$exists": 1},
-          "ht_items.access": "deny").no_timeout
+        Cluster.where(
+          "ht_items.0": {"$exists": 1},
+          "ht_items.access": "deny"
+        ).no_timeout
       else
-        Cluster.where("ht_items.0": {"$exists": 1},
+        Cluster.where(
+          "ht_items.0": {"$exists": 1},
           "ht_items.access": "deny",
-          "$or": [{"holdings.organization": @organization},
-            {"ht_items.billing_entity": @organization}]).no_timeout
+          "$or": [
+            {"holdings.organization": @organization},
+            {"ht_items.billing_entity": @organization}
+          ]
+        ).no_timeout
       end
     end
 
