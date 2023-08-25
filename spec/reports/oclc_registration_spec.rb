@@ -46,7 +46,7 @@ RSpec.describe Reports::OCLCRegistration do
     )
     FileUtils.rm_f(outf)
     rep.run
-    expect(rep.output_file).to eq outf
-    expect(File.exist?(rep.output_file)).to be true
+    expect(rep.output_path).to eq outf
+    expect(File.exist?(rep.output_path)).to be true
   end
 end

@@ -8,7 +8,6 @@ module Reports
   # Runs a report for an organization, outputting all of their
   # shared print commitments in an OCLC Registration-like format.
   class OCLCRegistration
-    attr_reader :output_file
     def initialize(organization)
       @organization = organization
       @outd = Settings.oclc_registration_report_path
@@ -17,21 +16,25 @@ module Reports
       @collection_memo = {}
     end
 
-    # Get all the commitments for @organization and ouptut to file.
-    def run
-      # Get commitments
-      finder = SharedPrint::Finder.new(organization: [@organization])
+    def output_path
       # Set up path for output
       date = Time.new.strftime("%Y%m%d")
-      outp = File.join(@outd, "oclc_registration_#{@organization}_#{date}.tsv")
+      File.join(@outd, "oclc_registration_#{@organization}_#{date}.tsv")
+    end
+
+    # Get all the commitments for @organization and ouptut to file.
+    def run
       # Open file and write header & formatted commitments
-      File.open(outp, "w") do |outf|
+      File.open(output_path, "w") do |outf|
         outf.puts hed
         finder.commitments.each do |commitment|
           outf.puts(fmt(commitment))
         end
       end
-      @output_file = outp
+    end
+
+    def finder
+      SharedPrint::Finder.new(organization: [@organization])
     end
 
     # Generate report header.

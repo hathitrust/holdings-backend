@@ -1,4 +1,5 @@
 require "shared_print/phase_3_validator"
+require "shared_print/phases"
 require "cluster"
 
 RSpec.describe SharedPrint::Phase3Validator do
@@ -211,7 +212,7 @@ RSpec.describe SharedPrint::Phase3Validator do
     end
   end
   describe "committed_date" do
-    it "should default to 2023-01-31 for phase 3 commitments" do
+    it "should default to PHASE_3_DATE for phase 3 commitments" do
       # Set up clusters
       [2, 3].each do |ocn|
         cluster_tap_save [
@@ -220,7 +221,7 @@ RSpec.describe SharedPrint::Phase3Validator do
         ]
       end
       p3v.run
-      p3_date = DateTime.parse("2023-01-31")
+      p3_date = DateTime.parse(SharedPrint::Phases::PHASE_3_DATE)
       # All p3 commitments should have the p3 date
       expect(Cluster.first.commitments.first.committed_date).to eq p3_date
       expect(Cluster.last.commitments.first.committed_date).to eq p3_date

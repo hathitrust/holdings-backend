@@ -152,6 +152,11 @@ module PHCTL
       run_common_job(Reports::OCLCRegistration, options, organization)
     end
 
+    desc "phase3-oclc-registration ORGANIZATION", "Output all phase 3 commitments for ORG in OCLC Registration format"
+    def phase3_oclc_registration(organization)
+      run_common_job(Reports::Phase3OCLCRegistration, options, organization)
+    end
+
     desc "organization-holdings-overlap", "Organization-based overlap report that counts overlaps with holdings, commitments and/or items"
     option :organization, type: :string, default: nil
     option :ph, type: :string, default: nil
