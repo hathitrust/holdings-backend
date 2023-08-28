@@ -10,9 +10,9 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (7.0.4.3)
-      activesupport (= 7.0.4.3)
-    activesupport (7.0.4.3)
+    activemodel (7.0.7.2)
+      activesupport (= 7.0.7.2)
+    activesupport (7.0.7.2)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -43,12 +43,12 @@ GEM
       ruby2_keywords (>= 0.0.4)
     faraday-net_http (3.0.1)
     hashdiff (1.0.1)
-    i18n (1.12.0)
+    i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     json (2.6.2)
     method_source (1.0.0)
     milemarker (1.0.0)
-    minitest (5.18.0)
+    minitest (5.19.0)
     mongo (2.18.1)
       bson (>= 4.14.1, < 5.0.0)
     mongoid (8.0.3)
