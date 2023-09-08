@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "mongoid"
+require "shared_print/phases"
 
 module Clusterable
   # A shared print commitment
@@ -25,6 +26,7 @@ module Clusterable
     field :deprecation_status, type: String
     field :deprecation_date, type: DateTime
     field :deprecation_replaced_by, type: String
+    field :phase, type: Integer, default: 0
 
     embedded_in :cluster
 
@@ -37,6 +39,7 @@ module Clusterable
     validates_inclusion_of :retention_condition, in: ["EXCELLENT", "ACCEPTABLE"], allow_nil: true
     validate :deprecation_validation
     validate :other_commitment_validation
+    validate :phase_validation
 
     def initialize(_params = nil)
       super
@@ -93,6 +96,12 @@ module Clusterable
         errors.add(:other_program, "cannot be set if other_retention_date is nil")
       elsif other_program.nil? && other_retention_date
         errors.add(:other_retention_date, "cannot be set if other_program is nil")
+      end
+    end
+
+    def phase_validation
+      unless SharedPrint::Phases.list.include?(phase)
+        errors.add(:phase, "Not a recognized phase")
       end
     end
   end

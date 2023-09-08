@@ -20,6 +20,17 @@ module SharedPrint
       @phase = phase
       # Put together a query based on the criteria gathered.
       @query = build_query
+      validate!
+    end
+
+    def validate!
+      if @phase.any?
+        @phase.each do |p|
+          unless SharedPrint::Phases.list.include?(p)
+            raise ArgumentError, "#{p} is not a recognized shared print phase"
+          end
+        end
+      end
     end
 
     # Yield matching clusters.
@@ -58,7 +69,7 @@ module SharedPrint
         q["commitments.local_id"] = {"$in": @local_id}
       end
       if @phase.any?
-        q["commitments.committed_date"] = {"$in": phase_to_date}
+        q["commitments.phase"] = {"$in": @phase}
       end
 
       q
@@ -78,21 +89,6 @@ module SharedPrint
     # or if @ocn contains commitment.ocn.
     def empty_or_include?(arr, val)
       arr.empty? || arr.include?(val)
-    end
-
-    def phase_to_date(phase = @phase)
-      # In shared print, we've accepted commitments in phases, with slightly different
-      # criteria. E.g. policies and condition were added as required fields for phase
-      # 3. Phases are associated with the date they were committed. So this is a map
-      # from phase to date, so we can find the commitments for a certain phase.
-      phase_hash = SharedPrint::Phases.phase_to_date
-      phase.uniq.map do |p|
-        if phase_hash.key?(p)
-          phase_hash[p]
-        else
-          raise ArgumentError, "Phase #{p} is not a recognized shared print phase"
-        end
-      end
     end
   end
 end

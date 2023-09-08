@@ -66,9 +66,9 @@ RSpec.describe Reports::Phase3OCLCRegistration do
       )
     end
     # Set phase 1 for the first 3, phase 2 for the mid 3, phase 3 for the last 3
-    comms[0..2].each { |c| c.committed_date = SharedPrint::Phases::PHASE_1_DATE }
-    comms[3..5].each { |c| c.committed_date = SharedPrint::Phases::PHASE_2_DATE }
-    comms[6..8].each { |c| c.committed_date = SharedPrint::Phases::PHASE_3_DATE }
+    comms[0..2].each { |c| c.phase = SharedPrint::Phases::PHASE_1 }
+    comms[3..5].each { |c| c.phase = SharedPrint::Phases::PHASE_2 }
+    comms[6..8].each { |c| c.phase = SharedPrint::Phases::PHASE_3 }
     cluster_tap_save(*comms) # ... and save.
 
     # Only expect to see header & the phase 3 commitments in report:

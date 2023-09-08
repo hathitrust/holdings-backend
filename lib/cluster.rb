@@ -17,24 +17,35 @@ require "cluster_error"
 class Cluster
   include Mongoid::Document
   store_in collection: "clusters"
+
+  # Cluster level stuff:
   field :ocns
   field :last_modified, type: DateTime
-  embeds_many :holdings, class_name: "Clusterable::Holding"
-  embeds_many :ht_items, class_name: "Clusterable::HtItem"
-  embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
-  embeds_many :commitments, class_name: "Clusterable::Commitment"
-  index({ocns: 1},
-    unique: true,
-    partial_filter_expression: {ocns: {:$gt => 0}})
-  index({"ht_items.item_id": 1}, unique: true, sparse: true)
-  index({"ocn_resolutions.ocns": 1}, unique: true, sparse: true)
+  index({ocns: 1}, unique: true, partial_filter_expression: {ocns: {:$gt => 0}})
   index({last_modified: 1})
+  scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
+
+  # Holdings level stuff:
+  embeds_many :holdings, class_name: "Clusterable::Holding"
+
+  # HtItems level stuff:
+  embeds_many :ht_items, class_name: "Clusterable::HtItem"
+  index({"ht_items.item_id": 1}, unique: true, sparse: true)
+  scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
+
+  # OCNResolution level stuff:
+  embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
+  index({"ocn_resolutions.ocns": 1}, unique: true, sparse: true)
   scope :for_resolution, lambda { |resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
-  scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
-  scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 
+  # Commitments level stuff:
+  embeds_many :commitments, class_name: "Clusterable::Commitment"
+  index({"commitments.phase": 1}, unique: false, sparse: true) # keep
+  index({"commitments.committed_date": 1}, unique: false, sparse: true) # discard once phase is set
+
+  # Hooks:
   before_save { |c| c.last_modified = Time.now.utc }
 
   validates_each :ocns do |record, attr, value|
