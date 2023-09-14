@@ -18,7 +18,7 @@ gem "sequel"
 gem "thor"
 gem "zinzout"
 gem "puma"
-gem "sidekiq", "~> 6.0"
+gem "sidekiq", "~> 7.1"
 gem "sidekiq-batch"
 
 group :development, :test do
