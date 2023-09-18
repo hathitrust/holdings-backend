@@ -38,7 +38,7 @@ RSpec.describe DataSources::LargeClusters do
       # setup
       hol1 = build(:holding, ocn: lrg_ocn, organization: org1)
       hol2 = build(:holding, ocn: lrg_ocn, organization: org1)
-      cluster_tap_save [hol1, hol2]
+      cluster_tap_save(hol1, hol2)
       cluster_holdings_uuids = Cluster.where(ocns: lrg_ocn).first.holdings.map(&:uuid)
       # execution
       expect(hol1.uuid == hol2.uuid).to be false
@@ -49,7 +49,7 @@ RSpec.describe DataSources::LargeClusters do
       # setup
       hol1 = build(:holding, ocn: lrg_ocn, organization: org1)
       hol2 = build(:holding, ocn: lrg_ocn, organization: org2) # <<< org diff
-      cluster_tap_save [hol1, hol2]
+      cluster_tap_save(hol1, hol2)
       cluster_holdings_uuids = Cluster.where(ocns: lrg_ocn).first.holdings.map(&:uuid)
       # execution
       expect(hol1.uuid == hol2.uuid).to be false
@@ -64,7 +64,7 @@ RSpec.describe DataSources::LargeClusters do
       batch = []
       batch_loader = Loader::HoldingLoaderNDJ.new
 
-      cluster_tap_save [build(:ht_item, ocns: [lrg_ocn])]
+      cluster_tap_save build(:ht_item, ocns: [lrg_ocn])
       File.open(fixt, "r") do |f|
         f.each_line do |line|
           batch << batch_loader.item_from_line(line)

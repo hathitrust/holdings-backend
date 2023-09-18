@@ -31,7 +31,7 @@ RSpec.describe SharedPrint::Replacer do
   describe "integration test" do
     it "makes SharedPrint::ReplaceRecords from a file and applies them" do
       # Setup
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       # Pre-check
       expect(spc1.deprecated?).to be false
       # Action

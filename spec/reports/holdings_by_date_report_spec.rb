@@ -62,10 +62,10 @@ RSpec.describe Reports::HoldingsByDateReport do
   end
   it "gets data from a populated db" do
     # Add 2 records (different orgs) to db
-    cluster_tap_save [
+    cluster_tap_save(
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn1, org2, spm, tim1)
-    ]
+    )
 
     # Get 2 records out
     expect(rpt.data.count).to eq 2
@@ -81,10 +81,10 @@ RSpec.describe Reports::HoldingsByDateReport do
   end
   it "reports the max date for a group" do
     # Add 2 records (same org, diff dates) to db
-    cluster_tap_save [
+    cluster_tap_save(
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn2, org1, spm, tim2)
-    ]
+    )
 
     # Get 1 record out (because select max, group on org+fmt)
     res = rpt.data
@@ -95,28 +95,28 @@ RSpec.describe Reports::HoldingsByDateReport do
     expect(res.first).to eq expected
   end
   it "reports orgs separately" do
-    cluster_tap_save [
+    cluster_tap_save(
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn1, org2, spm, tim1)
-    ]
+    )
     expect(rpt.data.count).to eq 2
   end
   it "reports mono_multi_serial separately" do
-    cluster_tap_save [
+    cluster_tap_save(
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn1, org1, mpm, tim1)
-    ]
+    )
     expect(rpt.data.count).to eq 2
   end
   it "ignores ocn for grouping and reporting purposes" do
-    cluster_tap_save [
+    cluster_tap_save(
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn2, org1, spm, tim1)
-    ]
+    )
     expect(rpt.data.count).to eq 1
   end
   it "writes a report file" do
-    cluster_tap_save [
+    cluster_tap_save(
       # org1
       bld_hol(ocn1, org1, spm, tim1),
       bld_hol(ocn1, org1, mpm, tim1),
@@ -131,7 +131,7 @@ RSpec.describe Reports::HoldingsByDateReport do
       bld_hol(ocn1, org2, spm, tim2), # should count
       bld_hol(ocn1, org2, mpm, tim2), # should count
       bld_hol(ocn1, org2, ser, tim2) ## should count
-    ]
+    )
 
     expected_report = [
       "organization\tformat\tmax_load_date",

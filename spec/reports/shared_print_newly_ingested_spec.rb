@@ -92,11 +92,11 @@ RSpec.describe Reports::SharedPrintNewlyIngested do
       expect(rpt.matching_ht_items.to_a).to eq []
     end
     it "returns all records that match criteria" do
-      cluster_tap_save [
+      cluster_tap_save(
         build_item(itm1, ocn1, org1),
         build_item(itm2, ocn2, org1),
         build_item(itm3, ocn3, org1)
-      ]
+      )
       expect(rpt.matching_ht_items.to_a.size).to eq 3
     end
     it "returns fewer records if date criterion restricts" do
@@ -104,31 +104,31 @@ RSpec.describe Reports::SharedPrintNewlyIngested do
         ht_item_ids_file: ht_item_ids_file,
         start_date: "2021-06-01"
       )
-      cluster_tap_save [
+      cluster_tap_save(
         build_item(itm1, ocn1, org1),
         build_item(itm2, ocn2, org1),
         build_item(itm3, ocn3, org1)
-      ]
+      )
       expect(rpt_21.matching_ht_items.to_a.size).to eq 1
     end
   end
   describe "#holders_minus_contributor" do
     it "returns empty string if nobody holds" do
       item = build_item(itm1, ocn1, org1)
-      cluster_tap_save [item]
+      cluster_tap_save item
       other_holders = rpt.holders_minus_contributor(Cluster.find_by(ocns: ocn1), org1)
       expect(other_holders).to eq ""
     end
     it "returns empty string if only contributor holds" do
       item = build_item(itm1, ocn1, org1)
-      cluster_tap_save [item]
+      cluster_tap_save item
       other_holders = rpt.holders_minus_contributor(Cluster.find_by(ocns: ocn1), org1)
       expect(other_holders).to eq ""
     end
     it "returns the holders in a cluster minus the given contributor" do
       item = build_item(itm1, ocn1, org1)
       hol = build(:holding, ocn: ocn1, organization: org2)
-      cluster_tap_save [item, hol]
+      cluster_tap_save(item, hol)
       other_holders = rpt.holders_minus_contributor(Cluster.find_by(ocns: ocn1), org1)
       expect(other_holders).to eq org2
     end
@@ -138,15 +138,15 @@ RSpec.describe Reports::SharedPrintNewlyIngested do
       expect(rpt.matching_clusters.to_a).to be_empty
     end
     it "returns nothing if there are no matching clusters" do
-      cluster_tap_save [build_item("test.nomatch123", ocn1, org1)]
+      cluster_tap_save build_item("test.nomatch123", ocn1, org1)
       expect(rpt.matching_clusters.to_a).to be_empty
     end
     it "returns the matching clusters (based on start_date)" do
-      cluster_tap_save [
+      cluster_tap_save(
         build_item(itm1, ocn1, org1),
         build_item(itm2, ocn2, org1),
         build_item(itm3, ocn3, org1)
-      ]
+      )
 
       # In these 3 tests, start_date goes up
       # and matching_clusters.count goes down
@@ -199,11 +199,11 @@ RSpec.describe Reports::SharedPrintNewlyIngested do
       ).to be_empty
     end
     it "returns records matching criteria" do
-      cluster_tap_save [
+      cluster_tap_save(
         build_item(itm1, ocn1, org1),
         build_item(itm2, ocn2, org1),
         build_item(itm3, ocn3, org1)
-      ]
+      )
       expect(
         described_class.new(
           start_date: dat1,
@@ -221,12 +221,12 @@ RSpec.describe Reports::SharedPrintNewlyIngested do
   describe "#run" do
     it "generates a report" do
       # Put 3 items and one holding in the db.
-      cluster_tap_save [
+      cluster_tap_save(
         build_item(itm1, ocn1, org1),
         build_item(itm2, ocn2, org1),
         build_item(itm3, ocn3, org1),
         build(:holding, ocn: ocn3, organization: org2)
-      ]
+      )
       # File pops into existence upon rpt.run
       expect(File.exist?(outf)).to be false
       expect { rpt.run }.not_to raise_error

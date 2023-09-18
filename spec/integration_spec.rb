@@ -27,10 +27,10 @@ RSpec.describe "phctl integration" do
       it "loads tsv file with phase 3 commitments" do
         # Setup, need populated clusters to load commitments
         [2, 3].each do |ocn|
-          cluster_tap_save [
+          cluster_tap_save(
             build(:ht_item, ocns: [ocn]),
             build(:holding, ocn: ocn, organization: "umich")
-          ]
+          )
         end
         expect { phctl("sp", "phase3load", fixture("phase_3_commitments.tsv")) }
           .to change { cluster_count(:commitments) }.by(2)

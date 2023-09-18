@@ -117,7 +117,7 @@ end
 # Clusters and saves each element in an array of clusterables
 # DRY for the many times the tests need to do something like:
 # Clustering::ClusterXYZ.new(xyz).cluster.tap(&:save)
-def cluster_tap_save(clusterables)
+def cluster_tap_save(*clusterables)
   clusterables.each do |clusterable|
     case clusterable
     when Clusterable::Holding
@@ -126,6 +126,8 @@ def cluster_tap_save(clusterables)
       Clustering::ClusterHtItem
     when Clusterable::Commitment
       Clustering::ClusterCommitment
+    when Clusterable::OCNResolution
+      Clustering::ClusterOCNResolution
     end.new(clusterable).cluster.tap(&:save)
   end
 end

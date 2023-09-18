@@ -31,7 +31,7 @@ RSpec.describe MongoUpdater do
   # Feel free to add tests for the other clusterables.
   describe "clusterable = commitments" do
     it "Requires a clusterable string" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect {
         described_class.update_embedded(
           matcher: {ocn: ocn1},
@@ -41,7 +41,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Requires a matcher" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect {
         described_class.update_embedded(
           clusterable: "commitments",
@@ -51,7 +51,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Requires an updater" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect {
         described_class.update_embedded(
           clusterable: "commitments",
@@ -61,7 +61,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Updates matching embedded documents" do
-      cluster_tap_save [spc1, spc2, spc3, spc4]
+      cluster_tap_save(spc1, spc2, spc3, spc4)
       described_class.update_embedded(
         clusterable: "commitments",
         matcher: {ocn: ocn1},
@@ -72,7 +72,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Gets more specific with additional matching criteria" do
-      cluster_tap_save [spc1, spc2, spc3, spc4]
+      cluster_tap_save(spc1, spc2, spc3, spc4)
       described_class.update_embedded(
         clusterable: "commitments",
         matcher: {ocn: ocn1, local_id: loc1},
@@ -83,7 +83,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Allows updating multiple fields on the same embedded document" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       described_class.update_embedded(
         clusterable: "commitments",
         matcher: {ocn: ocn1, local_id: loc1},
@@ -96,7 +96,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "Allows updating multiple fields on multiple embedded document" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       described_class.update_embedded(
         clusterable: "commitments",
         matcher: {ocn: ocn1},
@@ -109,7 +109,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "can match on undefined fields being null" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       described_class.update_embedded(
         clusterable: "commitments",
         matcher: {field_missing: nil},
@@ -122,7 +122,7 @@ RSpec.describe MongoUpdater do
     end
 
     it "can set a field that does not exist" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect(Cluster.first.commitments.first.local_item_id).to eq nil
       described_class.update_embedded(
         clusterable: "commitments",

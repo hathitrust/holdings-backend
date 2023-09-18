@@ -63,7 +63,7 @@ RSpec.describe SharedPrint::Updater do
   end
 
   it "Updates a field on a commitment if Finder finds 1 commitment." do
-    cluster_tap_save [spc1]
+    cluster_tap_save spc1
     expect(spc1.local_bib_id).to eq "a"
     # Should update local_bib_id on 1 record.
     updater.process_record(upd1)
@@ -76,7 +76,7 @@ RSpec.describe SharedPrint::Updater do
   end
 
   it "If Finder finds 0 committments, relax search and report finds but do not update." do
-    cluster_tap_save [spc1]
+    cluster_tap_save spc1
     expect(spc1.local_bib_id).to eq "a"
     # Should not update local_bib_id, because local_id mismatch
     updater.process_record(upd2)
@@ -85,7 +85,7 @@ RSpec.describe SharedPrint::Updater do
   end
 
   it "If Finder finds multiple committments, report finds but do not update." do
-    cluster_tap_save [spc1, spc2]
+    cluster_tap_save(spc1, spc2)
     expect(spc1.local_bib_id).to eq "a"
     # Should not update local_bib_id, because multiple matches
     updater.process_record(upd1)
@@ -105,7 +105,7 @@ RSpec.describe SharedPrint::Updater do
     multi_match_1 = build(:commitment, ocn: 9, organization: "umich", local_id: "i9", local_bib_id: "b")
     multi_match_2 = build(:commitment, ocn: 9, organization: "umich", local_id: "i9", local_bib_id: "c")
     zero_match = build(:commitment, ocn: 999, organization: "yale", local_id: "i999", local_bib_id: "d")
-    cluster_tap_save [single_match, multi_match_1, multi_match_2, zero_match]
+    cluster_tap_save(single_match, multi_match_1, multi_match_2, zero_match)
     # This fixture wants to make 4 updates but only matches the commitment in single_match.
     PHCTL::PHCTL.start(%w[sp update spec/fixtures/test_sp_update_file.tsv])
     # Only single_match should have an updated local_bib_id.
@@ -115,7 +115,7 @@ RSpec.describe SharedPrint::Updater do
 
   describe "updating ocns" do
     it "can update commitment ocn and move commitment to another cluster" do
-      cluster_tap_save [spc1, ht1, ht2]
+      cluster_tap_save(spc1, ht1, ht2)
       expect(Cluster.find_by(ocns: ocn1).commitments.count).to eq 1
       expect(Cluster.find_by(ocns: ocn2).commitments.count).to eq 0
       updater.process_record(upd3)
@@ -125,7 +125,7 @@ RSpec.describe SharedPrint::Updater do
 
     it "moves to a new cluster if updating to the ocn of another cluster " do
       # Start with a commitment on a cluster with ocns:[ocn1]
-      cluster_tap_save [ht1, ht2, spc1]
+      cluster_tap_save(ht1, ht2, spc1)
 
       original_cluster_id = spc1.cluster._id
       expect(spc1.cluster.ocns).to eq [spc1.ocn]
@@ -148,7 +148,7 @@ RSpec.describe SharedPrint::Updater do
       expect(cluster.ocns).to eq [ocn1, ocn2]
 
       # add an spc that has ocn1 (and a matching ht_item)
-      cluster_tap_save [spc1, ht1]
+      cluster_tap_save(spc1, ht1)
       expect(Cluster.count).to eq 1
       expect(Cluster.first.commitments.count).to eq 1
 
@@ -169,7 +169,7 @@ RSpec.describe SharedPrint::Updater do
 
     it "cannot update ocn to a cluster that does not exist" do
       # set up a cluster with just a ht_item and commitment with ocn1
-      cluster_tap_save [spc1, ht1]
+      cluster_tap_save(spc1, ht1)
       # Try to update the spc ocn to another ocn that does not have a cluster
       # ... and expect error.
       expect { updater.process_record(upd3) }.to raise_error(
@@ -180,7 +180,7 @@ RSpec.describe SharedPrint::Updater do
     it "cannot update ocn to a cluster that does not have any ht_items" do
       # set up a cluster with just a ht_item and commitment with ocn1
       hol2 = build(:holding, ocn: ocn2)
-      cluster_tap_save [spc1, ht1, hol2]
+      cluster_tap_save(spc1, ht1, hol2)
       # Try to update the spc ocn to another ocn that does not have a cluster
       # ... and expect error.
       expect { updater.process_record(upd3) }.to raise_error(
@@ -192,7 +192,7 @@ RSpec.describe SharedPrint::Updater do
     # Policies are different than the other commitment fields, because it
     # is an array and there are some specific rules about policies
     it "can update policies on a commitment that has empty policies" do
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       # Pre check, make sure policies is empty
       expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq []
       updater.process_record(upd4)
@@ -200,7 +200,7 @@ RSpec.describe SharedPrint::Updater do
       expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["blo"]
     end
     it "can update policies on a commitment that already has policies" do
-      cluster_tap_save [spc2]
+      cluster_tap_save spc2
       # Pre check, make sure policies is populated
       expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["digitizeondemand"]
       updater.process_record(upd4)
@@ -208,7 +208,7 @@ RSpec.describe SharedPrint::Updater do
       expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq ["blo"]
     end
     it "cannot update policies to something mutually exclusive" do
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       # Pre check, make sure policies is empty
       expect(SharedPrint::Finder.new(ocn: [ocn1]).commitments.to_a.first.policies).to eq []
       # Post check, upd5 contains non-repro and digitizeondemand which are mutually exclusive
