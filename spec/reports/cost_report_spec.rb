@@ -40,21 +40,21 @@ RSpec.describe Reports::CostReport do
 
   describe "making sure that access and rights come out the way they go in" do
     it "pd == allow" do
-      cluster_tap_save [build(:ht_item, access: alo, rights: pd, ocns: [111])]
+      cluster_tap_save build(:ht_item, access: alo, rights: pd, ocns: [111])
       cluster = Cluster.find_by(ocns: 111)
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq pd
       expect(cluster.ht_items.first.access).to eq alo
     end
     it "icus == allow" do
-      cluster_tap_save [build(:ht_item, access: alo, rights: icus, ocns: [222])]
+      cluster_tap_save build(:ht_item, access: alo, rights: icus, ocns: [222])
       cluster = Cluster.find_by(ocns: 222)
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq icus
       expect(cluster.ht_items.first.access).to eq alo
     end
     it "ic == deny" do
-      cluster_tap_save [build(:ht_item, access: dni, rights: ic, ocns: [333])]
+      cluster_tap_save build(:ht_item, access: dni, rights: ic, ocns: [333])
       cluster = Cluster.find_by(ocns: 333)
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq ic
@@ -64,13 +64,13 @@ RSpec.describe Reports::CostReport do
 
   describe "#num_pd_volumes" do
     it "counts the number of pd volumes" do
-      cluster_tap_save [ht_allow, build(:ht_item, access: alo, rights: pd, ocns: ht_allow.ocns)]
+      cluster_tap_save ht_allow, build(:ht_item, access: alo, rights: pd, ocns: ht_allow.ocns)
       expect(cr.num_pd_volumes).to eq(2)
     end
     it "counts icus towards pd regardless of access" do
       # Put 10 icus items in...
       1.upto(10) do
-        cluster_tap_save [build(:ht_item, rights: icus)]
+        cluster_tap_save build(:ht_item, rights: icus)
       end
       # Expect all 10 when you call num_pd_volumes
       expect(cr.num_pd_volumes).to eq(10)

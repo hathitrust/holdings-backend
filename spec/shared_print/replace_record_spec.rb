@@ -42,12 +42,12 @@ RSpec.describe SharedPrint::ReplaceRecord do
       expect { described_class.new }.to raise_error ArgumentError
     end
     it "allows :existing to be a Clusterable::Commitment" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect { described_class.new(existing: spc1, replacement: spc2) }.not_to raise_error
       expect { described_class.new(existing: obj, replacement: spc2) }.to raise_error ArgumentError
     end
     it "allows :replacement to be either a hash or a Clusterable::Commitment" do
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       expect { described_class.new(existing: spc1, replacement: spc2_hash) }.not_to raise_error
       expect { described_class.new(existing: spc1, replacement: spc2) }.not_to raise_error
       expect { described_class.new(existing: spc1, replacement: obj) }.to raise_error ArgumentError
@@ -56,13 +56,13 @@ RSpec.describe SharedPrint::ReplaceRecord do
 
   describe "fail gracefully" do
     it "when the :existing commitment cannot be found" do
-      cluster_tap_save [spc2]
+      cluster_tap_save spc2
       expect {
         described_class.new(existing: spc1, replacement: spc2).apply
       }.to raise_error IndexError
     end
     it "when the :replacement hash cannot be turned into a commitment" do
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       expect {
         described_class.new(existing: spc1, replacement: {}).apply
       }.to raise_error ArgumentError
@@ -72,7 +72,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
   describe "#apply" do
     it "replace an active commitment with an existing commitment" do
       # Setup
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       # Pre-check
       expect(SharedPrint::Finder.new.commitments.to_a.size).to eq 2
       expect(spc1.deprecated?).to be false
@@ -92,7 +92,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
     end
     it "replace a deprecated commitment with an existing commitment" do
       # Setup
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       spc1.deprecate(status: "E")
       # Pre-check
       expect(spc1.deprecated?).to be true
@@ -109,7 +109,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
     end
     it "replace an active commitment with a new commitment" do
       # Setup
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       # Pre-check
       expect(spc1.deprecated?).to be false
       # Action
@@ -127,7 +127,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
     end
     it "replace a deprecated commitment with a new commitment" do
       # Setup
-      cluster_tap_save [spc1]
+      cluster_tap_save spc1
       spc1.deprecate(status: "E")
       # Pre-check
       expect(spc1.deprecated?).to be true
@@ -148,7 +148,7 @@ RSpec.describe SharedPrint::ReplaceRecord do
   describe "#apply_broken" do
     it "copy of 'replace an active commitment with an existing commitment' using broken_apply, left in for science" do
       # Setup
-      cluster_tap_save [spc1, spc2]
+      cluster_tap_save(spc1, spc2)
       # Pre-check
       expect(SharedPrint::Finder.new.commitments.to_a.size).to eq 2
       expect(spc1.deprecated?).to be false

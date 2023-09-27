@@ -17,7 +17,7 @@ RSpec.describe KeioUpdater do
     ht_item = build(:ht_item, ocns: [ocn], collection_code: big_k, billing_entity: hword)
     ht_item2 = build(:ht_item, ocns: [ocn], collection_code: "PU", billing_entity: upenn)
     create(:cluster, ocns: [ocn])
-    cluster_tap_save [ht_item, ht_item2]
+    cluster_tap_save(ht_item, ht_item2)
   end
 
   def get_all

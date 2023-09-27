@@ -38,14 +38,14 @@ RSpec.describe Reports::UncommittedHoldings do
       expect(report_all.header).to eq ["organization", "oclc_sym", "ocn", "local_id"]
     end
     it "returns an array of UncommittedHoldingsRecord" do
-      cluster_tap_save [hol1, ht_spm1]
+      cluster_tap_save(hol1, ht_spm1)
       results = run_report(report_all)
       expect(results).to be_a Array
       expect(results.first).to be_a Reports::UncommittedHoldingsRecord
       expect(results.first.ocn).to eq ocn1
     end
     it "does nothing if :noop=true" do
-      cluster_tap_save [hol1, ht_spm1]
+      cluster_tap_save(hol1, ht_spm1)
       results = run_report(described_class.new(all: true, noop: true))
       expect(results).to be_a Array
       expect(results.size).to eq 0
@@ -57,41 +57,41 @@ RSpec.describe Reports::UncommittedHoldings do
 
   describe "all search" do
     it "can search the whole collection" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       expect(run_report(report_all).size).to eq 2
     end
     it "returns holdings for clusters that do not have commitments" do
-      cluster_tap_save [hol1, ht_spm1]
+      cluster_tap_save(hol1, ht_spm1)
       expect(run_report(report_all).size).to eq 1
     end
     it "returns no holdings from clusters that have active commitments" do
-      cluster_tap_save [hol1, ht_spm1, com1]
+      cluster_tap_save(hol1, ht_spm1, com1)
       expect(run_report(report_all).size).to eq 0
     end
     it "returns holdings from clusters that have deprecated commitments" do
       com1.deprecate(status: "E")
-      cluster_tap_save [hol1, ht_spm1, com1]
+      cluster_tap_save(hol1, ht_spm1, com1)
       expect(run_report(report_all).size).to eq 1
     end
     it "ignores mpm" do
-      cluster_tap_save [hol1, mpm]
+      cluster_tap_save(hol1, mpm)
       expect(run_report(report_all).size).to eq 0
     end
     it "ignores ser" do
-      cluster_tap_save [hol1, ser]
+      cluster_tap_save(hol1, ser)
       expect(run_report(report_all).size).to eq 0
     end
   end
 
   describe "search by OCN(s)" do
     it "can search by a single OCN" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(ocn: [ocn1]))
       expect(results.size).to eq 1
       expect(results.first.ocn).to eq ocn1
     end
     it "can search by multiple OCNs" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(ocn: [ocn1, ocn2]))
       expect(results.size).to eq 2
     end
@@ -99,13 +99,13 @@ RSpec.describe Reports::UncommittedHoldings do
 
   describe "search by organization(s)" do
     it "can search by a single organization" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(organization: [org1]))
       expect(results.size).to eq 1
       expect(results.first.organization).to eq org1
     end
     it "can search by multiple organizations" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(organization: [org1, org2]))
       expect(results.size).to eq 2
     end
@@ -113,13 +113,13 @@ RSpec.describe Reports::UncommittedHoldings do
 
   describe "combined search" do
     it "can do a combined search using both a single OCN and a single organization" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(ocn: [ocn1], organization: [org1]))
       expect(results.size).to eq 1
       expect(results.first.ocn).to eq ocn1
     end
     it "can do a combined search using both multiple OCNs and multiple organizations" do
-      cluster_tap_save [hol1, ht_spm1, hol2, ht_spm2]
+      cluster_tap_save(hol1, ht_spm1, hol2, ht_spm2)
       results = run_report(described_class.new(ocn: [ocn1, ocn2], organization: [org1, org2]))
       expect(results.size).to eq 2
     end

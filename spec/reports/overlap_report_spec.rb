@@ -53,7 +53,7 @@ RSpec.describe Reports::OverlapReport do
   describe "#clusters" do
     it "returns an enumerator for clusters" do
       # Gotta put something in the db or rep_short.clusters.first is nil
-      cluster_tap_save [hol1]
+      cluster_tap_save hol1
       expect(rep_short.clusters).to be_a Enumerator
       expect(rep_short.clusters.first).to be_a Cluster
     end
@@ -70,22 +70,22 @@ RSpec.describe Reports::OverlapReport do
       expect(rep_short.count_cluster_ph(c0)).to eq 0
 
       # 1 if there is one org with holdings in cluster
-      cluster_tap_save([hol1])
+      cluster_tap_save hol1
       expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
 
       # 2 if there are two orgs with holdings in cluster, ... n
-      cluster_tap_save([hol2])
+      cluster_tap_save hol2
       expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 2
     end
     it "counts multiple holdings on the same cluster by the same org as 1" do
-      cluster_tap_save([hol1])
+      cluster_tap_save hol1
       expect(Cluster.where(ocns: [ocn1]).first.holdings.count).to eq 1
       expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
 
       # Add another holding with the same org & ocn, then holdings should go to 2
       # but count_cluster_ph should stay 1
       hol2.organization = org1
-      cluster_tap_save([hol2])
+      cluster_tap_save hol2
       expect(Cluster.where(ocns: [ocn1]).first.holdings.count).to eq 2
       expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
     end
@@ -96,11 +96,11 @@ RSpec.describe Reports::OverlapReport do
       expect(rep.count_cluster_htdl(c0)).to eq 0
 
       # 1 if there is one ht_item in cluster
-      cluster_tap_save([ht1])
+      cluster_tap_save ht1
       expect(rep.count_cluster_htdl(Cluster.where(ocns: [ocn1]).first)).to eq 1
 
       # 2 if there are 2 org ht_items_in cluster in cluster, ... n
-      cluster_tap_save([ht2])
+      cluster_tap_save ht2
       expect(rep.count_cluster_htdl(Cluster.where(ocns: [ocn1]).first)).to eq 2
     end
   end
@@ -110,23 +110,23 @@ RSpec.describe Reports::OverlapReport do
       expect(rep.count_cluster_sp(c0)).to eq 0
 
       # 1 if there is one org w commitment in cluster
-      cluster_tap_save([spc1])
+      cluster_tap_save spc1
       expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
 
       # 2 if there are 2 orgs w commitment in cluster, ... n
-      cluster_tap_save([spc2])
+      cluster_tap_save spc2
       expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 2
     end
     it "counts multiple commitments on the same cluster by the same org as 1" do
       rep = described_class.new(organization: org1, sp: true)
-      cluster_tap_save([spc1])
+      cluster_tap_save spc1
       expect(Cluster.where(ocns: [ocn1]).first.commitments.count).to eq 1
       expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
 
       # Add another holding with the same org & ocn, then holdings should go to 2
       # but count_cluster_ph should stay 1
       spc2.organization = org1
-      cluster_tap_save([spc2])
+      cluster_tap_save spc2
       expect(Cluster.where(ocns: [ocn1]).first.commitments.count).to eq 2
       expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
     end
@@ -134,7 +134,7 @@ RSpec.describe Reports::OverlapReport do
   describe "#run" do
     it "runs report and outputs to file" do
       # Setup, put some data in the db
-      cluster_tap_save [ht1, ht2, hol1, hol2, spc1, spc2]
+      cluster_tap_save(ht1, ht2, hol1, hol2, spc1, spc2)
 
       # just one field
       rep_short.run

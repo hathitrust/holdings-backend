@@ -40,11 +40,11 @@ RSpec.describe SharedPrint::Phase3Validator do
     end
     it "rejects a commitment if no ht_items in cluster" do
       ht = build(:ht_item, ocns: [spc.ocn])
-      cluster_tap_save [spc]
+      cluster_tap_save spc
       cluster = Cluster.find_by(ocns: [spc.ocn])
       expect { p3v.require_cluster_ht_items(cluster) }.to raise_error SharedPrint::Phase3Error
       # Add an ht_item to make it work
-      cluster_tap_save [ht]
+      cluster_tap_save ht
       cluster = Cluster.find_by(ocns: [spc.ocn])
       expect { p3v.require_cluster_ht_items(cluster) }.to_not raise_error
     end
@@ -62,12 +62,12 @@ RSpec.describe SharedPrint::Phase3Validator do
       expect { p3v.require_compatible_policies(spc) }.to raise_error SharedPrint::Phase3Error
     end
     it "rejects a commitment if no matching holding in cluster" do
-      cluster_tap_save [spc]
+      cluster_tap_save spc
       cluster = Cluster.find_by(ocns: [spc.ocn])
       expect { p3v.require_matching_org_holding(cluster, spc.organization) }.to raise_error SharedPrint::Phase3Error
       # Add a holding to make it work
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [hol]
+      cluster_tap_save hol
       cluster = Cluster.find_by(ocns: [spc.ocn])
       expect { p3v.require_matching_org_holding(cluster, spc.organization) }.to_not raise_error
     end
@@ -102,7 +102,7 @@ RSpec.describe SharedPrint::Phase3Validator do
     it "validates a commitment that satisfies all the checks" do
       ht = build(:ht_item, ocns: [spc.ocn])
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [ht, hol]
+      cluster_tap_save(ht, hol)
       spc.policies = ["blo"]
       expect(p3v.pass_validation?(spc)).to be true
       expect(p3v.last_error).to be nil
@@ -110,14 +110,14 @@ RSpec.describe SharedPrint::Phase3Validator do
     it "allows DIGITIZEONDEMAND if mixed with required ph3 policy/ies" do
       ht = build(:ht_item, ocns: [spc.ocn])
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [ht, hol]
+      cluster_tap_save(ht, hol)
       spc.policies = ["blo", "digitizeondemand"]
       expect(p3v.pass_validation?(spc)).to be true
     end
     it "does not allow DIGITIZEONDEMAND mixed with NON-REPRO" do
       ht = build(:ht_item, ocns: [spc.ocn])
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [ht, hol]
+      cluster_tap_save(ht, hol)
       spc.policies = ["blo", "non-repro", "digitizeondemand"]
       expect(p3v.pass_validation?(spc)).to be false
       expect(p3v.last_error.message).to match(/mutually exclusive policies/)
@@ -125,7 +125,7 @@ RSpec.describe SharedPrint::Phase3Validator do
     it "reports any raised errors" do
       ht = build(:ht_item, ocns: [spc.ocn])
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [ht, hol]
+      cluster_tap_save(ht, hol)
       spc.policies = [] # this should raise something
       expect(p3v.pass_validation?(spc)).to be false
       expect(p3v.last_error.message).to match(/Required policies mismatch/)
@@ -136,7 +136,7 @@ RSpec.describe SharedPrint::Phase3Validator do
     it "works" do
       ht = build(:ht_item, ocns: [spc.ocn])
       hol = build(:holding, ocn: spc.ocn, organization: spc.organization)
-      cluster_tap_save [ht, hol]
+      cluster_tap_save(ht, hol)
       spc.policies = ["blo"]
       spc.retention_condition = "EXCELLENT"
       expect(p3v.pass_validation?(spc)).to be true
@@ -149,10 +149,10 @@ RSpec.describe SharedPrint::Phase3Validator do
       # Setup, need there to be items and holdings for 2 of the commitments
       # (so that we get a warning from validator about the third)
       [2, 3].each do |ocn|
-        cluster_tap_save [
+        cluster_tap_save(
           build(:ht_item, ocns: [ocn]),
           build(:holding, ocn: ocn, organization: "umich")
-        ]
+        )
       end
       # Check that 2 commitments were loaded
       expect { p3v.run }.to change { cluster_count(:commitments) }.by(2)
@@ -175,7 +175,7 @@ RSpec.describe SharedPrint::Phase3Validator do
       ocn = 3
       htitem = build(:ht_item, ocns: [ocn])
       holding = build(:holding, ocn: ocn, organization: "umich")
-      cluster_tap_save [htitem, holding]
+      cluster_tap_save(htitem, holding)
       spc.organization = "umich"
       spc.ocn = ocn
       spc.policies = ["blo"]
@@ -215,10 +215,10 @@ RSpec.describe SharedPrint::Phase3Validator do
     it "should default to PHASE_3_DATE for phase 3 commitments" do
       # Set up clusters
       [2, 3].each do |ocn|
-        cluster_tap_save [
+        cluster_tap_save(
           build(:ht_item, ocns: [ocn]),
           build(:holding, ocn: ocn, organization: "umich")
-        ]
+        )
       end
       p3v.run
       p3_date = DateTime.parse(SharedPrint::Phases::PHASE_3_DATE)

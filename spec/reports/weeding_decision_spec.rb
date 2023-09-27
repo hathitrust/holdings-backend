@@ -78,7 +78,7 @@ RSpec.describe Reports::WeedingDecision do
         buildables << build(:commitment, ocn: i, organization: org1) if i > 6
         buildables << build(:commitment, ocn: i, organization: org2) if i > 8
       end
-      cluster_tap_save buildables
+      cluster_tap_save(*buildables)
     end
 
     it "provides the data" do
@@ -106,10 +106,10 @@ RSpec.describe Reports::WeedingDecision do
       Cluster.where(ocns: 8).first.ht_items.first.delete
       expect(rpt.body.map(&:ocn)).to eq [10]
       # Adding a closed item won't change anything
-      cluster_tap_save [build(:ht_item, ocns: [8], access: "deny")]
+      cluster_tap_save build(:ht_item, ocns: [8], access: "deny")
       expect(rpt.body.map(&:ocn)).to eq [10]
       # cluster 10 must have 1+ open items before it qualifies
-      cluster_tap_save [build(:ht_item, ocns: [8], access: "allow")]
+      cluster_tap_save build(:ht_item, ocns: [8], access: "allow")
       expect(rpt.body.map(&:ocn)).to eq [8, 10]
     end
     it "skips a cluster that does not have commitments" do
@@ -129,11 +129,11 @@ RSpec.describe Reports::WeedingDecision do
       expect(rpt_ocn(rpt, ocn).open_items).to eq 1
       expect(rpt_ocn(rpt, ocn).closed_items).to eq 0
       # incr open_items, expect 1 open & 1 closed
-      cluster_tap_save [build(:ht_item, ocns: [ocn], access: "allow")]
+      cluster_tap_save build(:ht_item, ocns: [ocn], access: "allow")
       expect(rpt_ocn(rpt, ocn).open_items).to eq 2 # ++
       expect(rpt_ocn(rpt, ocn).closed_items).to eq 0
       # incr closed_items, expect 1 open & 2 closed
-      cluster_tap_save [build(:ht_item, ocns: [ocn], access: "deny")]
+      cluster_tap_save build(:ht_item, ocns: [ocn], access: "deny")
       expect(rpt_ocn(rpt, ocn).open_items).to eq 2
       expect(rpt_ocn(rpt, ocn).closed_items).to eq 1 # ++
     end
@@ -144,12 +144,12 @@ RSpec.describe Reports::WeedingDecision do
       expect(rpt.body.count).to eq 2 # ocns 8 and 10
       # Add another holding for that ocn, and expect local_copies to go up
       # without adding another line to the report
-      cluster_tap_save [build(:holding, ocn: ocn, local_id: "i_#{ocn}", organization: org1)]
+      cluster_tap_save build(:holding, ocn: ocn, local_id: "i_#{ocn}", organization: org1)
       expect(rpt_ocn(rpt, ocn).local_copies).to eq 2 # ++
       expect(rpt.body.count).to eq 2 # no ++
       # Add another holding for that ocn, and expect local_copies to go up
       # without adding another line to the report
-      cluster_tap_save [build(:holding, ocn: ocn, local_id: "i_#{ocn}", organization: org1)]
+      cluster_tap_save build(:holding, ocn: ocn, local_id: "i_#{ocn}", organization: org1)
       expect(rpt_ocn(rpt, ocn).local_copies).to eq 3 # ++
       expect(rpt.body.count).to eq 2 # no ++
     end
@@ -157,10 +157,10 @@ RSpec.describe Reports::WeedingDecision do
       ocn = 8
       expect(rpt_ocn(rpt, ocn).num_orgs_holding).to eq 1
       # Adding a holding by another member should incr
-      cluster_tap_save [build(:holding, ocn: ocn, organization: org2)]
+      cluster_tap_save build(:holding, ocn: ocn, organization: org2)
       expect(rpt_ocn(rpt, ocn).num_orgs_holding).to eq 2 # ++
       # Adding a holding by same member should NOT incr
-      cluster_tap_save [build(:holding, ocn: ocn, organization: org2)]
+      cluster_tap_save build(:holding, ocn: ocn, organization: org2)
       expect(rpt_ocn(rpt, ocn).num_orgs_holding).to eq 2 # no ++
     end
     it "tracks local_commitments" do
@@ -170,12 +170,12 @@ RSpec.describe Reports::WeedingDecision do
       expect(rpt.body.count).to eq 2
       # Add another commitment for that ocn, and expect local_commitments to go up
       # without adding another line to the report
-      cluster_tap_save [build(:commitment, ocn: ocn, organization: org1)]
+      cluster_tap_save build(:commitment, ocn: ocn, organization: org1)
       expect(rpt_ocn(rpt, ocn).local_commitments).to eq 2 # ++
       expect(rpt.body.count).to eq 2 # no ++
       # Add another commitment for that ocn, and expect local_commitments to go up
       # without adding another line to the report
-      cluster_tap_save [build(:commitment, ocn: ocn, organization: org1)]
+      cluster_tap_save build(:commitment, ocn: ocn, organization: org1)
       expect(rpt_ocn(rpt, ocn).local_commitments).to eq 3 # ++
       expect(rpt.body.count).to eq 2 # no ++
     end
@@ -184,10 +184,10 @@ RSpec.describe Reports::WeedingDecision do
       # initial state, commitments_tally = umich:1, smu:1
       expect(rpt_ocn(rpt, ocn).commitments_tally.sort).to eq([[org2, 1], [org1, 1]])
       # add a umich commitment
-      cluster_tap_save [build(:commitment, ocn: ocn, organization: org1)]
+      cluster_tap_save build(:commitment, ocn: ocn, organization: org1)
       expect(rpt_ocn(rpt, ocn).commitments_tally.sort).to eq([[org2, 1], [org1, 2]])
       # add a smu commitment
-      cluster_tap_save [build(:commitment, ocn: ocn, organization: org2)]
+      cluster_tap_save build(:commitment, ocn: ocn, organization: org2)
       expect(rpt_ocn(rpt, ocn).commitments_tally.sort).to eq([[org2, 2], [org1, 2]])
     end
   end
