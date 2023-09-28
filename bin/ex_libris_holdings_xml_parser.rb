@@ -68,6 +68,10 @@ class HTRecord
     @marc_record["ITM"][x]
   end
 
+  def leader
+    @leader ||= @marc_record.leader
+  end
+
   def oclc
     if @marc_record["035"]
       @oclc = @marc_record["035"]["a"]
@@ -85,7 +89,7 @@ class HTRecord
   end
 
   def item_type
-    @item_type ||= map_item_type(itm("m"))
+    @item_type ||= map_item_type(leader[7])
   end
 
   # ExLibris say: ITM|a: volume, ITM|b: issue, ITM|i: year, ITM|j: month
@@ -103,10 +107,12 @@ class HTRecord
   end
 
   def issn
-    if @marc_record.fields("022").any?
-      @marc_record["022"]["a"]
-    else
-      []
+    if item_type == "ser"
+      if @marc_record.fields("022").any?
+        @marc_record["022"]["a"]
+      else
+        []
+      end
     end
   end
 
@@ -125,20 +131,19 @@ class HTRecord
   end
 
   def map_item_type(item_type)
-    # Todo: figure out mapping for item_type.
-    # see https://wiki.harvard.edu/confluence/display/LibraryStaffDoc/Item+Material+Types
     {
-      "ISSUE" => "ser",
-      "DVD"   => "skip",
-      "BOOK"  => "mon",
+      "s" => "ser",
+      "m"   => "mon",
     }[item_type] || "mix"
   end
 
   def map_status(status)
-    {
-      "MISSING" => "LM",
-      "LOST_LOAN"  => "LM",
-    }[status] || "CH"
+    unless item_type == "ser"
+      {
+        "MISSING" => "LM",
+        "LOST_LOAN"  => "LM",
+      }[status] || "CH"
+    end
   end
 end
 
