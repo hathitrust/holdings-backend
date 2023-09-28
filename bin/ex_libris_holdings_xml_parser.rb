@@ -1,11 +1,13 @@
 require "marc"
+require "pry"
 
 # Takes marc-xml files from exlibris and parses them into .tsv files
 # that can be loaded into the HathiTrust print holdings db.
 # Example:
 #   $ bundle exec ruby bin/ex_libris_holdings_xml_parser.rb xlib1.xml xlib2.xml > holdings.tsv
 
-# TODO: get localid from 001 for serials, as per convo w nfulkers jul 31 2023
+# We are expecting each record to have the ControlFields 001 and 008
+# and the DataFields 035 and ITM.
 
 class ExLibrisHoldingsXmlParser
   def initialize
@@ -38,7 +40,6 @@ class ExLibrisHoldingsXmlParser
     files.each do |file|
       MARC::XMLReader.new(file).each do |marc_record|
         @record_count += 1
-        # break if @record_count > 25 # don't leave in
         ht_record = HTRecord.new(marc_record)
         yield ht_record
       end
@@ -63,8 +64,8 @@ class HTRecord
       .join("\t").delete("\n")
   end
 
-  def leader
-    @leader ||= @marc_record.leader
+  def itm(x)
+    @marc_record["ITM"][x]
   end
 
   def oclc
@@ -76,33 +77,31 @@ class HTRecord
   end
 
   def local_id
-    @local_id ||= item_type == "ser" ? @marc_record["001"].value : @marc_record["ITM"]["d"]
+    @local_id ||= item_type == "ser" ? @marc_record["001"].value : itm("d")
   end
 
   def condition
-    @condition ||= @marc_record["ITM"]["c"]
+    @condition ||= itm("c")
   end
 
   def item_type
-    @item_type ||= map_item_type(@marc_record["ITM"]["m"])
+    @item_type ||= map_item_type(itm("m"))
   end
 
-  # Todo: Figure out the structure of enum_chrons.
-  # Erez sez: ITM|a/b (volume/issue); ITM|i/j (year/month)
+  # ExLibris say: ITM|a: volume, ITM|b: issue, ITM|i: year, ITM|j: month
   def enum_chron
     @enum_chron ||= [
-      @marc_record["ITM"]["a"],
-      @marc_record["ITM"]["b"],
-      @marc_record["ITM"]["i"],
-      @marc_record["ITM"]["j"]
+      itm("a"), # volume
+      itm("b"), # issue
+      itm("i"), # year
+      itm("j") ## month
     ].reject{ |x| x.nil? || x.empty? }.join(",")
   end
 
   def status
-    @status ||= map_status(@marc_record["ITM"]["k"])
+    @status ||= map_status(itm("k"))
   end
 
-  # Todo: figure out issn.
   def issn
     if @marc_record.fields("022").any?
       @marc_record["022"]["a"]
@@ -120,7 +119,7 @@ class HTRecord
   private
   # These remaining private methods are essentially mappings
 
-  # Do we not need to map this?
+  # Todo: Do we not need to map this?
   def map_condition
     # BRT if BRITTLE, DAMAGED, DETERIORATING, FRAGILE
   end
@@ -135,7 +134,6 @@ class HTRecord
     }[item_type] || "mix"
   end
 
-  # Todo: figure out mapping for status.
   def map_status(status)
     {
       "MISSING" => "LM",
