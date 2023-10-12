@@ -1,0 +1,213 @@
+[
+    {
+	"ocns": [
+	    67402621
+	],
+	"ht_items": [
+	    {
+		"ocns": [
+		    67402621
+		],
+		"item_id": "mdp.39015068568859",
+		"ht_bib_key": 1507264,
+		"rights": "pd",
+		"bib_fmt": "BK",
+		"enum_chron": "",
+		"content_provider_code": "umich",
+		"n_enum": "",
+		"n_chron": "",
+		"access": "allow",
+		"billing_entity": "umich",
+		"collection_code": "MIU",
+		"n_enum_chron": ""
+	    }
+	],
+	"holdings": [
+	    {
+		"enum_chron": "",
+		"n_enum": "",
+		"n_chron": "",
+		"n_enum_chron": "",
+		"ocn": 67402621,
+		"local_id": "990015072640106381",
+		"organization": "umich",
+		"country_code": "us",
+		"weight": 1.33,
+		"status": "CH",
+		"condition": "",
+		"date_received": "2022-02-07 00:00:00 UTC",
+		"mono_multi_serial": "spm",
+		"issn": "",
+		"gov_doc_flag": true,
+		"uuid": "3fea1bf1-91a2-492d-b131-42e056b8306b"
+	    }
+	],
+	"last_modified": "2023-08-14 09:25:13 UTC",
+	"commitments": [
+	    {
+		"policies": [
+		    "blo"
+		],
+		"organization": "umich",
+		"ocn": 67402621,
+		"local_id": "990015072640106381",
+		"local_item_id": "39015068568859",
+		"oclc_sym": "EYM",
+		"local_shelving_type": "clca",
+		"retention_condition": "ACCEPTABLE",
+		"facsimile": false,
+		"uuid": "ccd2fd58-7fe1-4aac-879e-38145cd3054b",
+		"committed_date": "2023-01-31 00:00:00 UTC"
+	    }
+	]
+    },
+    {
+	"ocns": [
+	    1237445392,
+	    13212412
+	],
+	"ht_items": [
+	    {
+		"ocns": [
+		    13212412
+		],
+		"item_id": "mdp.39015016915723",
+		"ht_bib_key": 1752174,
+		"rights": "ic",
+		"bib_fmt": "BK",
+		"enum_chron": "",
+		"content_provider_code": "umich",
+		"n_enum": "",
+		"n_chron": "",
+		"access": "deny",
+		"billing_entity": "umich",
+		"collection_code": "MIU",
+		"n_enum_chron": ""
+	    }
+	],
+	"holdings": [
+	    {
+		"enum_chron": "",
+		"n_enum": "",
+		"n_chron": "",
+		"n_enum_chron": "",
+		"ocn": 13212412,
+		"local_id": "990017521740106381",
+		"organization": "umich",
+		"country_code": "us",
+		"weight": 1.33,
+		"status": "CH",
+		"condition": "",
+		"date_received": "2022-02-07 00:00:00 UTC",
+		"mono_multi_serial": "spm",
+		"issn": "",
+		"gov_doc_flag": false,
+		"uuid": "e30001cd-856e-412d-9cf5-966e96e776f0"
+	    }
+	],
+	"last_modified": "2023-07-28 00:14:28 UTC",
+	"ocn_resolutions": [
+	    {
+		"deprecated": 1237445392,
+		"resolved": 13212412,
+		"ocns": [
+		    1237445392,
+		    13212412
+		]
+	    }
+	],
+	"commitments": [
+	    {
+		"policies": [
+		    
+		],
+		"uuid": "3443251c-c005-4f28-adf8-23b44da54bf1",
+		"organization": "umich",
+		"ocn": 13212412,
+		"local_id": "001752174",
+		"oclc_sym": "eym",
+		"committed_date": "2017-09-30 04:00:00 UTC",
+		"local_bib_id": "001752174",
+		"local_item_id": "39015016915723",
+		"local_item_location": "buhr",
+		"local_shelving_type": "sfca",
+		"facsimile": false
+	    }
+	]
+    },
+    {
+	"ocns": [
+	    978001669,
+	    13212329
+	],
+	"ht_items": [
+	    {
+		"ocns": [
+		    13212329
+		],
+		"item_id": "mdp.39015022720109",
+		"ht_bib_key": 1752192,
+		"rights": "ic",
+		"bib_fmt": "BK",
+		"enum_chron": "",
+		"content_provider_code": "umich",
+		"n_enum": "",
+		"n_chron": "",
+		"access": "deny",
+		"billing_entity": "umich",
+		"collection_code": "MIU",
+		"n_enum_chron": ""
+	    }
+	],
+	"ocn_resolutions": [
+	    {
+		
+		"deprecated": 978001669,
+		"resolved": 13212329,
+		"ocns": [
+		    978001669,
+		    13212329
+		]
+	    }
+	],
+	"holdings": [
+	    {
+		"enum_chron": "",
+		"n_enum": "",
+		"n_chron": "",
+		"n_enum_chron": "",
+		"ocn": 13212329,
+		"local_id": "990017521920106381",
+		"organization": "umich",
+		"country_code": "us",
+		"weight": 1.33,
+		"status": "CH",
+		"condition": "",
+		"date_received": "2022-02-07 00:00:00 UTC",
+		"mono_multi_serial": "spm",
+		"issn": "",
+		"gov_doc_flag": false,
+		"uuid": "dc88bc1b-64ac-451c-a339-f38ec2c78ffd"
+	    }
+	],
+	"last_modified": "2023-07-28 00:14:28 UTC",
+	"commitments": [
+	    {
+		"policies": [
+		    
+		],
+		"uuid": "c3039c4e-af4a-4500-8d13-c1f1d791e2c2",
+		"organization": "umich",
+		"ocn": 13212329,
+		"local_id": "001752192",
+		"oclc_sym": "eym",
+		"committed_date": "2017-09-30 04:00:00 UTC",
+		"local_bib_id": "001752192",
+		"local_item_id": "39015022720109",
+		"local_item_location": "buhr",
+		"local_shelving_type": "sfca",
+		"facsimile": false
+	    }
+	]
+    }
+]

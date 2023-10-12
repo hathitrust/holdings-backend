@@ -16,47 +16,61 @@ module SharedPrint
     attr_reader :path, :last_error, :log
 
     def initialize(path)
+      # Input comes from a file.
+      # Set up a handle to read records from that file,
+      # and a loader to load those records into the db.
       @path = path
-      @last_error = nil
-      @log = nil
+      @handle = Loader::SharedPrintLoader.filehandle_for(@path)
+      @loader = Loader::SharedPrintLoader.for(@path)
 
-      # Any commitment in Phase 3 should have 1+ of these policies:
-      @phase_3_required_policies = ["blo", "non-circ"]
-      @phase_3_date = DateTime.parse(SharedPrint::Phases::PHASE_3_DATE)
-      # Setup dirs
+      # Setup log file
       if Settings.local_report_path.nil?
         raise "Missing Settings.local_report_path"
       end
       FileUtils.mkdir_p(Settings.local_report_path)
+      base = File.basename(@path)
+      @last_error = nil
+      @log = File.open(File.join(Settings.local_report_path, base) + ".log", "w")
+
+      # Any commitment in Phase 3 should these fields set:
+      @phase_3 = SharedPrint::Phases::PHASE_3
+      @phase_3_required_policies = ["blo", "non-circ"] # at least one of these policies
+      @phase_3_date = DateTime.parse(SharedPrint::Phases::PHASE_3_DATE)
     end
 
     # Check all commitments in file and load the valid ones,
     # log both loaded and non-valid commitments to file.
     def run
-      # Setup log files
-      base = File.basename(@path)
-      @log = File.open(File.join(Settings.local_report_path, base) + ".log", "w")
       @log.puts "Checking if commitments in #{@path} are valid..."
       # Go through input and process
-      loader = Loader::SharedPrintLoader.for(@path)
-      handle = Loader::SharedPrintLoader.filehandle_for(@path)
-      handle.each do |line|
-        # commitment is an unsaved commitment until it has passed
-        # validation and is then saved by load()
-        commitment = loader.item_from_line(line)
-        commitment.committed_date = @phase_3_date
-        if pass_validation? commitment
-          loader.load commitment
-          @log.puts "Loaded #{commitment.inspect}"
-        else
-          @log.puts "Failed to load #{commitment.inspect}"
-        end
-        Thread.pass
-      end
+      load_all
     ensure
       # Close log files
       @log.puts "Done."
       @log.close
+    end
+
+    # Load all commitments given by handle
+    def load_all
+      @handle.each do |line|
+        # commitment is an unsaved commitment until it has passed
+        # validation and is then saved by load()
+        commitment = @loader.item_from_line(line)
+        load_one(commitment)
+        Thread.pass
+      end
+    end
+
+    # Load a single commitment, with the proper phase fields set.
+    def load_one(commitment)
+      commitment.committed_date = @phase_3_date
+      commitment.phase = @phase_3
+      if pass_validation? commitment
+        @loader.load commitment
+        @log.puts "Loaded #{commitment.inspect}"
+      else
+        @log.puts "Failed to load #{commitment.inspect}"
+      end
     end
 
     # Check if a given commitment is valid (for the phase 3 definition of valid).

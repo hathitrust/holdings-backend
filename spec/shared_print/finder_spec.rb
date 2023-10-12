@@ -14,47 +14,50 @@ RSpec.describe SharedPrint::Finder do
   let(:loc2) { "i222" }
   let(:spc2) { build(:commitment, ocn: ocn2, organization: org2, local_id: loc2) }
   let(:ocn999) { 999 }
-  let(:p1) { SharedPrint::Phases::PHASE_1_DATE }
-  let(:p2) { SharedPrint::Phases::PHASE_2_DATE }
-  let(:p3) { SharedPrint::Phases::PHASE_3_DATE }
+
+  let(:p1) { SharedPrint::Phases::PHASE_1 }
+  let(:p2) { SharedPrint::Phases::PHASE_2 }
+  let(:p3) { SharedPrint::Phases::PHASE_3 }
+
+  let(:pd1) { SharedPrint::Phases::PHASE_1_DATE }
+  let(:pd2) { SharedPrint::Phases::PHASE_2_DATE }
+  let(:pd3) { SharedPrint::Phases::PHASE_3_DATE }
 
   before(:each) do
     Cluster.collection.find.delete_many
   end
 
   describe "find by phase(s)" do
-    it "return proper date given phase" do
-      # Using .send() to test, because phase_to_date is private
-      expect(described_class.new(phase: []).send(:phase_to_date)).to eq []
-      expect(described_class.new(phase: [1]).send(:phase_to_date)).to eq [p1]
-      expect(described_class.new(phase: [1, 1, 1]).send(:phase_to_date)).to eq [p1]
-      expect(described_class.new(phase: [3, 2, 1]).send(:phase_to_date)).to eq [p3, p2, p1]
-      expect { described_class.new(phase: [9]) }.to raise_error(
+    it "finder raises error when given an unrecognized phase" do
+      expect { described_class.new(phase: [p1]) }.not_to raise_error
+      expect { described_class.new(phase: [p2]) }.not_to raise_error
+      expect { described_class.new(phase: [p3]) }.not_to raise_error
+      expect { described_class.new(phase: [4]) }.to raise_error(
         ArgumentError,
         /is not a recognized shared print phase/
       )
     end
-    it "adds committed_date to the query" do
+    it "adds phase to the query" do
       # give no phase arg, get no committed_date in query
       f1 = described_class.new(organization: [org1])
-      expect(f1.query.keys.map(&:to_s).sort).to eq ["commitments.0", "commitments.organization"]
-      # give phase arg, get committed_date in query
-      f2 = described_class.new(organization: [org1], phase: [1])
-      expect(f2.query.keys.map(&:to_s).sort).to eq ["commitments.0", "commitments.committed_date", "commitments.organization"]
+      expect(f1.query.keys).not_to include "commitments.phase"
+      # give phase arg, get phase in query
+      f2 = described_class.new(organization: [org1], phase: [p1])
+      expect(f2.query.keys).to include "commitments.phase"
     end
     it "can use phase to fetch commitments" do
       # Make 2 commitments, same org, different phase
-      spc1.committed_date = p1
-      spc2.committed_date = p2
+      spc1.phase = p1
+      spc2.phase = p2
       spc2.organization = org1
       cluster_tap_save(spc1, spc2)
       # Get both using only org:
       expect(described_class.new(organization: [org1]).commitments.count).to eq 2
       # Get only the ones matching phase:
-      expect(described_class.new(organization: [org1], phase: [1]).commitments.to_a).to eq [spc1]
-      expect(described_class.new(organization: [org1], phase: [1, 2]).commitments.to_a).to eq [spc1, spc2]
+      expect(described_class.new(organization: [org1], phase: [p1]).commitments.to_a).to eq [spc1]
+      expect(described_class.new(organization: [org1], phase: [p1, p2]).commitments.to_a).to eq [spc1, spc2]
       # Get nothing if there are no phase 3.
-      expect(described_class.new(organization: [org1], phase: [3]).commitments.to_a).to eq []
+      expect(described_class.new(organization: [org1], phase: [p3]).commitments.to_a).to eq []
     end
   end
 
