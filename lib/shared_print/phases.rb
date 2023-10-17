@@ -2,12 +2,12 @@
 
 module SharedPrint
   class Phases
-    PHASE_0 = 0 # Default, has not associated date
+    PHASE_0 = 0 # Default, has no associated date
     PHASE_1 = 1
     PHASE_2 = 2
     PHASE_3 = 3
-    PHASE_1_DATE = "2017-09-30  00:00:00 UTC"
-    PHASE_2_DATE = "2019-02-28  00:00:00 UTC"
+    PHASE_1_DATE = "2017-09-30 00:00:00 UTC"
+    PHASE_2_DATE = "2019-02-28 00:00:00 UTC"
     PHASE_3_DATE = "2023-01-31 00:00:00 UTC"
 
     # Call .invert on this if you ever need reverse map
