@@ -74,14 +74,14 @@ class HTRecord
 
   def oclc
     if @marc_record["035"]
-      @oclc = @marc_record["035"]["a"]
+      @oclc = @marc_record["035"]["a"].strip
     else
       raise ArgumentError, "Missing oclc"
     end
   end
 
   def local_id
-    @local_id ||= item_type == "ser" ? @marc_record["001"].value : itm("d")
+    @local_id ||= (item_type == "ser" ? @marc_record["001"].value : itm("d")).strip
   end
 
   def condition
@@ -99,7 +99,7 @@ class HTRecord
       itm("b"), # issue
       itm("i"), # year
       itm("j") ## month
-    ].reject{ |x| x.nil? || x.empty? }.join(",")
+    ].reject{ |x| x.nil? || x.empty? }.map(&:strip).join(",")
   end
 
   def status
