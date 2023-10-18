@@ -1,3 +1,4 @@
+require "stackprof"
 require "cluster"
 require "shared_print/finder"
 require "shared_print/phase_updater"
@@ -56,8 +57,33 @@ RSpec.describe SharedPrint::PhaseUpdater do
     cluster_tap_save(*clusterables)
     puts "timer starts... now!"
     bench = Benchmark.measure { updater.run }
-    puts "... and TIME!"
+    puts "... and TIME! (#{bench.total})"
     # Expect to be able to update all clusterables in less than 1s.
-    expect(bench.total).to be_between(0.0, 1.0)
+    expect(bench.total).to be_between(0.0, 0.1)
+  end
+  it "profiles thusly", :slow do
+    # This test is marked as slow (building buncha commitments), and may be skipped.
+    # add "--tag slow" to rspec invocation to include
+    date = "2017-09-30 00:00:00 UTC"
+    phase0 = SharedPrint::Phases::PHASE_0
+    phase1 = SharedPrint::Phases::PHASE_1
+    updater = SharedPrint::PhaseUpdater.new(date, phase1)
+    profile_path = "/tmp/phase_updater_profile.json"
+    build_count = 10
+    clusterables = []
+    # Create commitments with PHASE_1_DATE but PHASE_0
+    1.upto(build_count) do
+      clusterables << build(:commitment, committed_date: date, phase: phase0)
+    end
+    cluster_tap_save(*clusterables)
+    # Run under profiling
+    profile = StackProf.run(raw: true) do
+      updater.run
+    end
+    File.open(profile_path, "w") do |outf|
+      outf.puts(JSON.pretty_generate(profile))
+    end
+    puts "wrote #{profile_path}"
+    expect(File.exist?(profile_path)).to be true
   end
 end

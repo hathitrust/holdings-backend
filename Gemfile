@@ -24,6 +24,7 @@ gem "sidekiq-batch"
 group :development, :test do
   gem "pry"
   gem "pry-byebug"
+  gem "stackprof"
 end
 
 group :test do
