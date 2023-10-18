@@ -39,4 +39,25 @@ RSpec.describe SharedPrint::PhaseUpdater do
     expect(updated_commitments.map(&:phase).uniq).to eq [SharedPrint::Phases::PHASE_1]
     expect(updated_commitments.map(&:committed_date).uniq).to eq [SharedPrint::Phases::PHASE_1_DATE]
   end
+  it "benchmarks thusly", :slow do
+    # This test is marked as slow (building buncha commitments), and may be skipped.
+    # add "--tag slow" to rspec invocation to include
+    require "benchmark"
+    date = "2017-09-30 00:00:00 UTC"
+    phase0 = SharedPrint::Phases::PHASE_0
+    phase1 = SharedPrint::Phases::PHASE_1
+    updater = SharedPrint::PhaseUpdater.new(date, phase1)
+    build_count = 1000
+    clusterables = []
+    # Create commitments with PHASE_1_DATE but PHASE_0
+    1.upto(build_count) do
+      clusterables << build(:commitment, committed_date: date, phase: phase0)
+    end
+    cluster_tap_save(*clusterables)
+    puts "timer starts... now!"
+    bench = Benchmark.measure { updater.run }
+    puts "... and TIME!"
+    # Expect to be able to update all clusterables in less than 1s.
+    expect(bench.total).to be_between(0.0, 1.0)
+  end
 end
