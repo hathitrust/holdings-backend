@@ -120,7 +120,7 @@ module Reports
     def records
       return enum_for(:records) unless block_given?
 
-      Cluster.where(restrictions_as_hash).no_timeout.to_a.each do |clusterable|
+      Cluster.where(restrictions_as_hash).no_timeout.each do |clusterable|
         clusterable.send(@base).each do |embedded_doc|
           # This is almost like a mongo aggregate,
           # where the `Cluster.where(...)`    is the outer `$match`,
@@ -134,7 +134,6 @@ module Reports
 
           if extracted_fields.empty?
             # We may be validating to the point where we can't end up here.
-            # Keeping it during development but TODO remove it.
             raise ArgumentError, "No fields extractable from #{@base} document"
           end
 
