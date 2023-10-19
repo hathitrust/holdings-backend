@@ -179,6 +179,13 @@ module PHCTL
       run_common_job(Reports::SharedPrintNewlyIngested, options)
     end
 
+    desc "shared-print-phase-count (--phase=x)",
+      "Get tally of commitments per organization in the given phase"
+    option :phase, type: :numeric, default: nil
+    def shared_print_phase_count
+      run_common_job(Reports::SharedPrintPhaseCount, options)
+    end
+
     desc "weeding-decision ORGANIZATION", "Generate a report to help ORG decide what to weed"
     def weeding_decision(organization)
       run_common_job(Reports::WeedingDecision, options, organization)
