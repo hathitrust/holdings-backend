@@ -169,6 +169,14 @@ RSpec.describe "phctl integration" do
       rpt_out = File.read(glob)
       expect(rpt_out).to match(/contributor/)
     end
+
+    it "SharedPrintPhaseCount produces output" do
+      cluster_tap_save build(:commitment, phase: 0)
+      phctl(*%w[report shared-print-phase-count --phase 0])
+      glob = Dir.glob("#{ENV["TEST_TMP"]}/local_reports/sp_phase0_count/sp_phase0_count_*").first
+      lines = File.read(glob).split("\n")
+      expect(lines.count).to eq 2 # 1 header, 1 body
+    end
   end
 
   describe "Scrub" do
