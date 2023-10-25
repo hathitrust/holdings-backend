@@ -82,7 +82,8 @@ module SharedPrint
       (@deprecated.nil? || @deprecated == commitment.deprecated?) &&
         empty_or_include?(@organization, commitment.organization) &&
         empty_or_include?(@ocn, commitment.ocn) &&
-        empty_or_include?(@local_id, commitment.local_id)
+        empty_or_include?(@local_id, commitment.local_id) &&
+        empty_or_include?(@phase, commitment.phase)
     end
 
     # A commitment matches e.g. the @ocn acriterion if @ocn == []
