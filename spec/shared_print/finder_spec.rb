@@ -23,6 +23,18 @@ RSpec.describe SharedPrint::Finder do
   let(:pd2) { SharedPrint::Phases::PHASE_2_DATE }
   let(:pd3) { SharedPrint::Phases::PHASE_3_DATE }
 
+  def phase_in_phase_out(input_phases)
+    if input_phases.empty?
+      # Edge case:
+      # SharedPrint::Finder.new(phase: []).commitments
+      # ... actually returns commitments with all phases.
+      input_phases = [1, 2, 3]
+    end
+    finder = described_class.new(phase: input_phases)
+    output_phases = finder.commitments.map(&:phase).uniq.sort
+    expect(output_phases).to eq input_phases
+  end
+
   before(:each) do
     Cluster.collection.find.delete_many
   end
@@ -58,6 +70,31 @@ RSpec.describe SharedPrint::Finder do
       expect(described_class.new(organization: [org1], phase: [p1, p2]).commitments.to_a).to eq [spc1, spc2]
       # Get nothing if there are no phase 3.
       expect(described_class.new(organization: [org1], phase: [p3]).commitments.to_a).to eq []
+    end
+    it "is specific" do
+      # i.e. when you query for phase 3 commitments,
+      # you get only commitments with phase 3
+      cluster_tap_save(
+        build(:commitment, ocn: ocn1, phase: 1),
+        build(:commitment, ocn: ocn1, phase: 2),
+        build(:commitment, ocn: ocn1, phase: 3)
+      )
+      # Look up commitments using a phase array.
+      # Expect the phases of all commitments in the output
+      # to match the phases of the input.
+      test_cases = [
+        [],
+        [1],
+        [2],
+        [3],
+        [1, 2],
+        [2, 3],
+        [1, 3],
+        [1, 2, 3]
+      ]
+      test_cases.each do |input_phases|
+        phase_in_phase_out(input_phases)
+      end
     end
   end
 
