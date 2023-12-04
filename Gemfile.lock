@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/hathitrust/push_metrics.git
-  revision: 3e8755220ba0ca9fac616600ab0a5df608a3790d
-  tag: v0.9.0
+  revision: 90ed5f4ee823c1316e1ce0cd4c0db465a180103a
+  tag: v0.9.1
   specs:
-    push_metrics (0.9.0)
+    push_metrics (0.9.1)
       milemarker (~> 1.0)
       prometheus-client (~> 4.0)
 
@@ -61,7 +61,7 @@ GEM
     parallel (1.22.1)
     parser (3.1.2.1)
       ast (~> 2.4.1)
-    prometheus-client (4.0.0)
+    prometheus-client (4.2.2)
     pry (0.14.1)
       coderay (~> 1.1)
       method_source (~> 1.0)
