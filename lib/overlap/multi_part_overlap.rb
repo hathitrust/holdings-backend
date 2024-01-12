@@ -35,7 +35,7 @@ module Overlap
 
     def matching_holdings
       @matching_holdings ||= @cluster.holdings_by_org[@org]
-                               &.select { |h| h[:n_enum] == @ht_item.n_enum or h[:n_enum] == "" }
+        &.select { |h| h[:n_enum] == @ht_item.n_enum or h[:n_enum].blank? }
       @matching_holdings ||= []
     end
   end
