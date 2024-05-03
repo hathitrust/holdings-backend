@@ -88,7 +88,12 @@ module Clusterable
     # @param other, another holding
     def ==(other)
       self.class == other.class &&
-        (fields.keys - EQUALITY_EXCLUDED_FIELDS).all? { |attr| public_send(attr) == other.public_send(attr) }
+        (fields.keys - EQUALITY_EXCLUDED_FIELDS).all? do |attr| 
+          self_attr = public_send(attr)
+          other_attr = other.public_send(attr)
+
+          (self_attr == other_attr) or (self_attr.blank? and other_attr.blank?)
+        end
     end
 
     # Is true when all fields match except for _id
