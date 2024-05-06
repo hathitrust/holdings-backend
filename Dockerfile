@@ -1,4 +1,4 @@
-FROM ruby:3.1
+FROM ruby:3.3
 ARG UNAME=holdings
 ARG UID=1000
 ARG GID=1000

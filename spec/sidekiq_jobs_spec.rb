@@ -3,11 +3,6 @@
 require "spec_helper"
 require "sidekiq_jobs"
 
-class TestCallback
-  def on_success(status, options)
-    options[:status].ran = true
-  end
-end
 
 class FakeJob
   def initialize(required, optional = "default", kw_required:, kw_optional: "default")
@@ -18,6 +13,7 @@ class FakeJob
   end
 
   def run
+    puts "running FakeJob #{@required}: #{self}"
     {
       required: @required,
       optional: @optional,
@@ -51,24 +47,45 @@ RSpec.describe Jobs::Common do
   end
 
   it "can batch jobs and call callbacks" do
-    callback_status = OpenStruct.new
+    class TestCallback
+      def self.did_run
+        @did_run
+      end
 
-    batch = Sidekiq::Batch.new
-    batch.description = "Test Batching"
-    batch.on(:success, TestCallback, status: callback_status)
-    batch.jobs do
-      5.times do |i|
-        Jobs::Common.perform_async("FakeJob", {"kw_required" => i}, i)
+      def self.set_run(did_run)
+        @did_run = did_run
+      end
+
+      def on_success(status, options)
+        puts "Callback ran: #{status}, #{options}"
+        self.class.set_run(true)
+        Thread.exit
       end
     end
 
-    # wait for jobs to complete
-    batch.status.join
+    Sidekiq::Testing.disable! do
+      TestCallback.set_run(false)
 
-    expect(callback_status.ran).to be true
+      batch = Sidekiq::Batch.new
+      batch.description = "Test Batching"
+      batch.on(:success, TestCallback)
+      batch.jobs do
+        5.times do |i|
+          Jobs::Common.perform_async("FakeJob", {"kw_required" => i}, i)
+        end
+      end
+
+      sidekiq = Thread.new do
+        Sidekiq.configure_embed do |config|
+          config.logger.level = Logger::DEBUG
+          config.queues = %w[critical default low]
+          config.concurrency = 1
+        end.run
+      end
+
+      # wait for jobs to complete and callback to run
+      sidekiq.join
+      expect(TestCallback.did_run).to be true
+    end
   end
-
-  xit "failed job goes to retry queue"
-  xit "repeatedly failed job reports to slack"
-  xit "successful job reports to slack"
 end

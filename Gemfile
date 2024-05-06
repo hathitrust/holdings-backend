@@ -4,27 +4,24 @@ source "https://rubygems.org"
 
 git_source(:github) { |repo_name| "https://github.com/#{repo_name}" }
 
+gem "base64"
 gem "canister"
 gem "dotenv"
 gem "ettin"
 gem "faraday"
 gem "push_metrics", git: "https://github.com/hathitrust/push_metrics.git", tag: "v0.9.1"
 gem "mongo"
-gem "mongoid"
+gem "mongoid", "~> 8.1"
 gem "mysql2"
+gem "pry"
 gem "prometheus-client"
 gem "rgl"
 gem "sequel"
 gem "thor"
 gem "zinzout"
 gem "puma"
-gem "sidekiq", "~> 6.0"
-gem "sidekiq-batch"
-
-group :development, :test do
-  gem "pry"
-  gem "pry-byebug"
-end
+gem "sidekiq"
+gem "sidekiq-batch", git: "https://github.com/breamware/sidekiq-batch"
 
 group :test do
   gem "factory_bot"
@@ -40,4 +37,5 @@ group :development do
   gem "standard"
   gem "ruby-prof"
   gem "yard"
+  gem "debug"
 end
