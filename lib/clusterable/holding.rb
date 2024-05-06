@@ -88,7 +88,7 @@ module Clusterable
     # @param other, another holding
     def ==(other)
       self.class == other.class &&
-        (fields.keys - EQUALITY_EXCLUDED_FIELDS).all? do |attr| 
+        (fields.keys - EQUALITY_EXCLUDED_FIELDS).all? do |attr|
           self_attr = public_send(attr)
           other_attr = other.public_send(attr)
 
@@ -112,7 +112,12 @@ module Clusterable
     # Turn a holding into a hash key for quick lookup
     # in e.g. cluster_holding.find_old_holdings.
     def update_key
-      as_document.slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS)).hash
+      as_document
+        .slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS))
+        # fold blank strings & nil to same update key, as in
+        # equality above
+        .transform_values { |f| f.blank? ? nil : f }
+        .hash
     end
 
     private

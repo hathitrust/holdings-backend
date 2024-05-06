@@ -43,24 +43,28 @@ RSpec.describe Clusterable::Holding do
       expect(h).to eq(h2)
     end
 
-    it "== is true if corresponding fields are nil vs. empty string" do
-      h.issn = nil
-      h.n_enum = nil
-      h.n_chron = nil
-      h.condition = nil
+    context "when one holding has nil attrs and the other has empty string" do
+      before(:each) do
+        [:n_enum=, :n_chron=, :condition=, :issn=].each do |setter|
+          h.public_send(setter, "")
+          h2.public_send(setter, nil)
+        end
+      end
 
-      h2.issn = ""
-      h2.n_enum = ""
-      h2.n_chron = ""
-      h2.condition = ""
-      expect(h).to eq(h2)
+      it "== is true" do
+        expect(h).to eq(h2)
+      end
+
+      it "update_key is the same" do
+        expect(h.update_key).to eq(h2.update_key)
+      end
     end
 
     (described_class.fields.keys - ["date_received", "uuid", "_id"]).each do |attr|
       it "== is false if #{attr} doesn't match" do
-        # ensure attribute in h2 is different from h but 
+        # ensure attribute in h2 is different from h but
         # of the same logical type
-        #
+
         case h[attr]
         when String
           h2[attr] = "#{h[attr]}junk"

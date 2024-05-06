@@ -65,6 +65,22 @@ RSpec.describe Clustering::ClusterHolding do
         expect(cluster.holdings.first.date_received).to eq(h2.date_received)
       end
 
+      it "updates an existing holding when the current holding has empty string attributes and the new has holding nil attributes" do
+        [:n_enum=, :n_chron=, :condition=, :issn=].each do |setter|
+          h.public_send(setter, "")
+          h2.public_send(setter, nil)
+        end
+
+        old_date = h.date_received
+        described_class.new(h).cluster
+        cluster = Cluster.first
+        expect(cluster.holdings.first.date_received).to eq(old_date)
+        described_class.new(h2).cluster
+        cluster = Cluster.first
+        expect(cluster.holdings.first.date_received).not_to eq(old_date)
+        expect(cluster.holdings.first.date_received).to eq(h2.date_received)
+      end
+
       it "updates only one existing holding" do
         described_class.new(h).cluster
         Cluster.first.add_holdings(h.clone)
