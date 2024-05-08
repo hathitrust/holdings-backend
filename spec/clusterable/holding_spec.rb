@@ -18,7 +18,7 @@ RSpec.describe Clusterable::Holding do
     expect(c.holdings.first._parent).to be(c)
   end
 
-  it "normalizees enum_chron" do
+  it "normalizes enum_chron" do
     holding = build(:holding, enum_chron: "v.1 Jul 1999")
     expect(holding.n_enum).to eq("1")
     expect(holding.n_chron).to eq("Jul 1999")
@@ -36,17 +36,46 @@ RSpec.describe Clusterable::Holding do
     it "== is true if all fields match except date_received and uuid" do
       h2.date_received = Date.yesterday
       h2.uuid = SecureRandom.uuid
-      expect(h == h2).to be(true)
+      expect(h).to eq(h2)
     end
 
     it "== is true if all fields match including date_received" do
-      expect(h == h2).to be(true)
+      expect(h).to eq(h2)
+    end
+
+    context "when one holding has nil attrs and the other has empty string" do
+      before(:each) do
+        [:n_enum=, :n_chron=, :condition=, :issn=].each do |setter|
+          h.public_send(setter, "")
+          h2.public_send(setter, nil)
+        end
+      end
+
+      it "== is true" do
+        expect(h).to eq(h2)
+      end
+
+      it "update_key is the same" do
+        expect(h.update_key).to eq(h2.update_key)
+      end
     end
 
     (described_class.fields.keys - ["date_received", "uuid", "_id"]).each do |attr|
       it "== is false if #{attr} doesn't match" do
-        h2[attr] = nil
-        expect(h == h2).to be(false)
+        # ensure attribute in h2 is different from h but
+        # of the same logical type
+
+        case h[attr]
+        when String
+          h2[attr] = "#{h[attr]}junk"
+        when Numeric
+          h2[attr] = h[attr] + 1
+        when true, false, nil
+          h2[attr] = !h[attr]
+        end
+
+        expect(h[attr]).not_to eq(h2[attr])
+        expect(h).not_to eq(h2)
       end
     end
   end
@@ -55,12 +84,12 @@ RSpec.describe Clusterable::Holding do
     let(:h2) { h.clone }
 
     it "same_as is true if all fields match" do
-      expect(h.same_as?(h2)).to be(true)
+      expect(h).to be_same_as(h2)
     end
 
     it "same_as is not true if date_received does not match" do
       h2.date_received = Date.yesterday
-      expect(h.same_as?(h2)).to be(false)
+      expect(h).not_to be_same_as(h2)
     end
   end
 
