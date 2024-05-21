@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "services"
-require "set"
 
 module DataSources
   # List of ocns for clusters too large to be stored with all holdings records

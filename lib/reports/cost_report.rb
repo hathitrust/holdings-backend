@@ -199,7 +199,7 @@ module Reports
 
     [:spm, :ser, :mpm].each do |format|
       # HScore for a particular format
-      define_method "#{format}_total".to_sym do |member|
+      define_method :"#{format}_total" do |member|
         total = 0.0
         freq_table[member.to_sym][format].each do |num_orgs, freq|
           total += freq.to_f / num_orgs
@@ -208,8 +208,8 @@ module Reports
       end
 
       # Costs for a particular format
-      define_method "#{format}_costs".to_sym do |member|
-        public_send("#{format}_total", member) * cost_per_volume
+      define_method :"#{format}_costs" do |member|
+        public_send(:"#{format}_total", member) * cost_per_volume
       end
     end
 

@@ -3,6 +3,21 @@
 require "spec_helper"
 require "sidekiq_jobs"
 
+class TestCallback
+  def self.did_run
+    @did_run
+  end
+
+  def self.set_run(did_run)
+    @did_run = did_run
+  end
+
+  def on_success(status, options)
+    puts "Callback ran: #{status}, #{options}"
+    self.class.set_run(true)
+    Thread.exit
+  end
+end
 
 class FakeJob
   def initialize(required, optional = "default", kw_required:, kw_optional: "default")
@@ -47,22 +62,6 @@ RSpec.describe Jobs::Common do
   end
 
   it "can batch jobs and call callbacks" do
-    class TestCallback
-      def self.did_run
-        @did_run
-      end
-
-      def self.set_run(did_run)
-        @did_run = did_run
-      end
-
-      def on_success(status, options)
-        puts "Callback ran: #{status}, #{options}"
-        self.class.set_run(true)
-        Thread.exit
-      end
-    end
-
     Sidekiq::Testing.disable! do
       TestCallback.set_run(false)
 

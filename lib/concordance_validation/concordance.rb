@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "zlib"
-require "pp"
 
 # Concordance validation.
 # Takes a file with <raw ocn> <tab> <resolved ocn>, checks that its ok.
@@ -111,7 +110,7 @@ module ConcordanceValidation
         resolved.each do |o|
           # it is not terminal so we replace with the ocns it resolves to
           if @raw_to_resolved.key? o
-            resolved.map! { |x| x == o ? @raw_to_resolved[o] : x }.flatten!
+            resolved.map! { |x| (x == o) ? @raw_to_resolved[o] : x }.flatten!
           end
         end
         resolved.uniq!

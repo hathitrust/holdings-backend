@@ -120,7 +120,7 @@ module Scrub
         if tot_lines <= 1
           raise "File #{@path} has no data? Total lines #{tot_lines}."
         end
-        batch_size = tot_lines < 100 ? 100 : tot_lines / 100
+        batch_size = (tot_lines < 100) ? 100 : tot_lines / 100
         Services.scrub_logger.info("File is #{tot_lines} lines long, batch size #{batch_size}")
         @marker = Services.progress_tracker.call(batch_size: batch_size)
       end

@@ -52,7 +52,7 @@ RSpec.describe ClusterValidator do
     # previously-persisted documents
     # https://jira.mongodb.org/browse/MONGOID-5704
     c = Cluster.first
-    doc = c.as_document
+    c.as_document
     expect(c.valid?).to be false
     expect(get_output_lines.count).to eq one_invalid_cluster_line_count
   end

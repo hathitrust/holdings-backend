@@ -58,13 +58,13 @@ module Scrub
       Services.scrub_logger.info(msg)
     end
 
-    def parse(&block)
+    def parse(&)
       unless valid_filename?
         raise Scrub::FileNameError, "Invalid filename #{@filename}"
       end
 
       scrub_stats = Services.scrub_stats
-      each_holding(&block)
+      each_holding(&)
       log("Scrub stats:")
       scrub_stats.keys.sort.each do |ssk|
         log("#{ssk}\t#{scrub_stats[ssk]}")
