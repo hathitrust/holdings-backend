@@ -1,37 +1,56 @@
-version: '3'
+---
+
+x-condition-healthy: &healthy
+  condition: service_healthy
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 5s
+  timeout: 10s
+  start_period: 10s
+  retries: 5
+
+x-holdings-container: &holdings-container-defaults
+  build:
+    context: .
+    target: dev
+  volumes:
+    - .:/usr/src/app
+    - gem_cache:/gems
+  command: bundle exec rspec
+  environment: &holdings-default-environment
+    MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
+    PUSHGATEWAY: http://pushgateway:9091
+    MONGOID_ENV: development
+  depends_on:
+    mariadb: *healthy
+    redis: *healthy
+    mongo_dev: *healthy
 
 services:
 
-  dev:
-    build: .
-    volumes:
-      - .:/usr/src/app
-      - gem_cache:/gems
-    environment:
-      MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
-      PUSHGATEWAY: http://pushgateway:9091
+  test:
+    <<: *holdings-container-defaults
+    command: bundle exec rspec
+    environment: 
+      <<: *holdings-default-environment
+      MONGOID_ENV: test
+    depends_on: 
+      mongo_test: *healthy
+      mariadb: *healthy
+      redis: *healthy
 
-  phctl:
-    build: .
-    volumes:
-      - .:/usr/src/app
-      - gem_cache:/gems
-    environment:
-      MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
-      PUSHGATEWAY: http://pushgateway:9091
+  dev: *holdings-container-defaults
+
+  phctl: 
+    <<: *holdings-container-defaults
     entrypoint: bundle exec ruby bin/phctl.rb
 
   processor:
-    build: .
+    <<: *holdings-container-defaults
     restart: always
     volumes:
-      - .:/usr/src/app
-      - gem_cache:/gems
       - ./example/datasets:/tmp/datasets
     command: bundle exec sidekiq -c 1 -r ./lib/sidekiq_jobs.rb
-    environment:
-      MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
-      PUSHGATEWAY: http://pushgateway:9091
 
   mongo_dev:
     image: mongo:6.0.2
@@ -39,12 +58,16 @@ services:
     volumes:
       - data_db:/data/db
       - ./bin:/tmp/bin
+    healthcheck: &mongo-healthcheck
+      <<: *healthcheck-defaults
+      test: [ "CMD", "mongosh", "--quiet", "--eval", 'db.runCommand("ping").ok']
 
   mongo_test:
     image: mongo:6.0.2
     command: --replSet rs0 --bind_ip localhost,mongo_test
     volumes:
       - ./bin:/tmp/bin
+    healthcheck: *mongo-healthcheck
 
   mariadb:
     image: mariadb
@@ -52,6 +75,9 @@ services:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
     volumes:
       - ./sql:/docker-entrypoint-initdb.d/
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
 
   pushgateway:
     image: prom/pushgateway
@@ -59,16 +85,16 @@ services:
       - --web.enable-admin-api
     ports:
       - 9091:9091
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "pushgateway:9091/-/healthy" ]
 
   sidekiq_web:
-    build: .
+    <<: *holdings-container-defaults
     restart: always
-    volumes:
-      - .:/usr/src/app
-      - gem_cache:/gems
     command: bundle exec puma bin/sidekiq_web.ru
     depends_on:
-      - redis
+      redis: *healthy
     ports:
       - 9292:9292
     environment:
@@ -77,6 +103,9 @@ services:
   redis:
     image: redis
     restart: always
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "redis-cli","ping"]
 
 volumes:
   gem_cache:
