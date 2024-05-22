@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker compose build
+docker compose build "$@"
 docker compose run --rm dev bundle install
 docker compose up -d mongo_test mariadb pushgateway redis
 docker compose run --rm -e MONGOID_ENV=test dev bin/setup/wait-for mongo_test:27017 -- echo "mongo is ready"

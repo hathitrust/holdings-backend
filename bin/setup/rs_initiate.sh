@@ -2,7 +2,7 @@
 
 MONGO_SERVICE="${MONGO_SERVICE:-$1}"
 
-mongosh <<EOT
+mongosh --quiet <<EOT
   rs.initiate(
     {
       _id: "rs0",
