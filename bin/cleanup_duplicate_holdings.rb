@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 
+require 'services'
+require 'cluster'
 
 Services.mongo!
+
+# Iterates through clusters, removing any duplicate holdings and logging its progress.
+#
+# Usage: bundle exec ruby bin/cleanup_duplicate_holdings.
 
 class CleanupDuplicateHoldings
   LOG_INTERVAL = 60
@@ -13,7 +19,6 @@ class CleanupDuplicateHoldings
     @last_log_time = Time.now
     Services.logger.info("Starting cluster deduplication")
   end
-
 
   def run
     Cluster.each do |cluster|
@@ -64,5 +69,5 @@ class CleanupDuplicateHoldings
 end
 
 if __FILE__ == $PROGRAM_NAME
-  CleanupDuplicateHoldings.new(ARGV).run
+  CleanupDuplicateHoldings.new.run
 end
