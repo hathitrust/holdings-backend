@@ -128,7 +128,7 @@ module Reports
           end
 
           # We store gov_doc_flag as a true/false and the report wants 1/0.
-          govdoc_bool_2_int = holding.gov_doc_flag == true ? 1 : 0
+          govdoc_bool_2_int = (holding.gov_doc_flag == true) ? 1 : 0
 
           record = [
             holding.organization,
@@ -209,7 +209,7 @@ module Reports
 
     # The groups that @organization is a member of, if any
     def in_group
-      @in_group ||= (@sp_groups.org_to_groups(@organization) || [])
+      @in_group ||= @sp_groups.org_to_groups(@organization) || []
     end
 
     # The other orgs in the groups that @organization is member of, if any

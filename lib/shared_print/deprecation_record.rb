@@ -44,7 +44,7 @@ module SharedPrint
 
     # The cluster should have commitments.
     def commitments
-      @commitments ||= (cluster&.commitments || [])
+      @commitments ||= cluster&.commitments || []
     end
 
     # Cluster should have commitments by dep.organization.

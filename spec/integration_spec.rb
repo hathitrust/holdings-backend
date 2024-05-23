@@ -182,8 +182,8 @@ RSpec.describe "phctl integration" do
   describe "Scrub" do
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.
-      local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
-      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print\ holdings/#{Time.new.year}/"
+      local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
       logfile = File.join(remote_d, "umich_mon_#{Time.new.strftime("%Y%m%d")}.log")
       FileUtils.mkdir_p(remote_d)
       FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)

@@ -62,7 +62,7 @@ module SharedPrint
           next
         end
         report "updating #{k}=#{v}"
-        commitment.send("#{strip_new_from_symbol(k)}=", v)
+        commitment.send(:"#{strip_new_from_symbol(k)}=", v)
       end
       report "OK."
       commitment.save

@@ -18,14 +18,14 @@ bash bin/setup/setup_dev.sh
 
 ## Running the tests
 
-`docker-compose run --rm dev bundle exec rspec`
+`docker compose run --rm dev bundle exec rspec`
 
 ## Clearing out/resetting the data
 For resetting everything (cleaning up containers & their persistent volumes):
 
 ```bash
 # Clear it out
-docker-compose down # to stop services
+docker compose down # to stop services
 docker volume rm holdings-backend_data_db # to clear out the development database
 docker volume rm holdings-backend_gem_cache # to clear out gems
 
@@ -65,10 +65,10 @@ Files:
 * Can be gzipped or not -- the scripts will figure it out
 
 Script command cheat sheet:
-* `docker-compose run --rm dev bundle exec bin/phctl load ht_items <filepath>`
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb
+* `docker compose run --rm dev bundle exec bin/phctl load ht_items <filepath>`
+* `docker compose run --rm dev bundle exec bin/add_print_holdings.rb
  <filepath>` (full file)
-* `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb -u
+* `docker compose run --rm dev bundle exec bin/add_print_holdings.rb -u
  <filepath>` (update file)
 
 
@@ -102,7 +102,7 @@ for more info if you're interested.
 To load a Hathifile (either a full file or an update) in development:
   * Grab the file from [the Hathifiles webpage](https://www.hathitrust.org/hathifiles)
   or directly from `/htapps/www/sites/www.hathitrust.org/files/hathifiles`
-  * `docker-compose run --rm dev bundle exec bin/phctl.rb load ht_items <filepath>`
+  * `docker compose run --rm dev bundle exec bin/phctl.rb load ht_items <filepath>`
   where the components are exactly as for the OCLC concordance file.
 
 ### Loading (scrubbed) print holdings
@@ -118,7 +118,7 @@ These raw files are "scrubbed" and verified, resulting in scrubbed files.
 To load a scrubbed file in development:
   * Get the file(s) you want from `/htapps/mwarin.babel/phdb_scripts/data/loadfiles/`
   * Add UUIDs for tracking whether the individual line has been processed: `bin ruby/add_uuid.rb infile > outfile`
-  * `docker-compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
+  * `docker compose run --rm dev bundle exec bin/add_print_holdings.rb outfile`
 
 ## K8s Cronjob
 `kubectl create -f cron_job.yaml`

@@ -13,13 +13,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up tests
-        run: ./bin/setup/setup_test.sh
+        run: ./bin/setup/setup_test.sh --quiet
 
       - name: Run standardrb
         run: docker compose run --rm dev bundle exec standardrb
 
       - name: Run tests
-        run: docker compose run --rm -e MONGOID_ENV=test dev bin/setup/wait-for mariadb:3306 pushgateway:9091 -- bundle exec rspec
+        run: docker compose run --rm -e MONGOID_ENV=test dev bin/setup/wait-for mariadb:3306 pushgateway:9091 redis:6379 -- bundle exec rspec
 
       - name: Report to Coveralls
         uses: coverallsapp/github-action@1.1.3

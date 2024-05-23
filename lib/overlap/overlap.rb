@@ -16,7 +16,7 @@ module Overlap
 
     # These methods should return zero in the most basic case
     ["copy", "brt", "wd", "lm", "access"].each do |method|
-      define_method "#{method}_count".to_sym do
+      define_method :"#{method}_count" do
         0
       end
     end

@@ -43,11 +43,17 @@ RSpec.describe ClusterValidator do
   end
   it "DOES count invalid clusters" do
     # Start with loading an invalid cluster, and verify.
-    Loader::ClusterLoader.new.load(invalid_cluster_fixt)
+    l = Loader::ClusterLoader.new
+    l.load(invalid_cluster_fixt)
     # Verify we have one invalid cluster.
     # Verify it does count towards the report.
     expect(Cluster.count).to eq 1
-    expect(Cluster.first.valid?).to be false
+    # need to load the entire cluster to validate subdocuments from
+    # previously-persisted documents
+    # https://jira.mongodb.org/browse/MONGOID-5704
+    c = Cluster.first
+    c.as_document
+    expect(c.valid?).to be false
     expect(get_output_lines.count).to eq one_invalid_cluster_line_count
   end
 end

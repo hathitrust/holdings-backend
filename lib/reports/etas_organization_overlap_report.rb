@@ -26,7 +26,7 @@ module Reports
     end
 
     def open_report(org, date)
-      nonus = Services.ht_organizations[org]&.country_code == "us" ? "" : "_nonus"
+      nonus = (Services.ht_organizations[org]&.country_code == "us") ? "" : "_nonus"
       File.open("#{local_report_path}/etas_overlap_#{org}_#{date}#{nonus}.tsv", "w")
     end
 

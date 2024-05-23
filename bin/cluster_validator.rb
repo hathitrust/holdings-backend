@@ -18,9 +18,13 @@ class ClusterValidator
   def run
     puts "Writing to #{output_path}"
     File.open(output_path, "w") do |outf|
-      # Go through each cluster and check if valid.
+      # need to load the entire cluster to validate subdocuments from
+      # previously-persisted documents
+      # https://jira.mongodb.org/browse/MONGOID-5704
       outf.puts "# These are ocns of invalid clusters:"
       Cluster.each do |c|
+        # force loading all embedded documents for re-validation
+        c.as_document
         unless c.valid?
           outf.puts(c.ocns.first)
         end

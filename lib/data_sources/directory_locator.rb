@@ -51,7 +51,7 @@ module DataSources
 
     # The holdings parent directory for the organization
     def holdings
-      File.join(base, "print\ holdings")
+      File.join(base, "print holdings")
     end
 
     # The current-year holdings directory
@@ -61,7 +61,7 @@ module DataSources
 
     # The shared print directory (not divided into years like holdings are)
     def shared_print
-      File.join(base, "shared\ print")
+      File.join(base, "shared print")
     end
 
     # This is where HT uploads reports and such for the member to access.

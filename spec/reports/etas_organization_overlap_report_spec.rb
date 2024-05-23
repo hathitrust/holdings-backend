@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "pp"
 require "reports/etas_organization_overlap_report"
 
 RSpec.describe Reports::EtasOrganizationOverlapReport do

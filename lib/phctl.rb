@@ -20,7 +20,7 @@ module PHCTL
 
       def run_common_job(klass, options, *args, **kwargs)
         options.delete(:inline)
-        run_job(Jobs::Common, klass.to_s, options, *args, **kwargs)
+        run_job(Jobs::Common, klass.to_s, options.to_hash, *args, **kwargs)
       end
     end
   end
