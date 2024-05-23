@@ -18,7 +18,7 @@ bash bin/setup/setup_dev.sh
 
 ## Running the tests
 
-`docker compose run --rm dev bundle exec rspec`
+`docker compose run --rm test`
 
 ## Clearing out/resetting the data
 For resetting everything (cleaning up containers & their persistent volumes):
