@@ -49,6 +49,8 @@ services:
     <<: *holdings-container-defaults
     restart: always
     volumes:
+      - .:/usr/src/app
+      - gem_cache:/gems
       - ./example/datasets:/tmp/datasets
     command: bundle exec sidekiq -c 1 -r ./lib/sidekiq_jobs.rb
 

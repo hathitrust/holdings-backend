@@ -57,6 +57,11 @@ module PHCTL
     def holdings(inst, date)
       run_job(Jobs::Cleanup::Holdings, inst, date)
     end
+
+    desc "duplicate_holdings", "Cleans duplicate holdings from all clusters"
+    def duplicate_holdings
+      CleanupDuplicateHoldings.queue_jobs
+    end
   end
 
   class Concordance < JobCommand
