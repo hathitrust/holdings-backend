@@ -4,6 +4,7 @@
 require "securerandom"
 require "rack/session"
 require "sidekiq/web"
+require_relative "../config/initializers/sidekiq"
 
 # In a multi-process deployment, all Web UI instances should share
 # this secret key so they can all decode the encrypted browser cookies
