@@ -9,10 +9,11 @@ if ENV["REDIS_MASTER_SET_NAME"] && ENV["REDIS_HEADLESS_SERVICE"]
   Services.register(:redis_config) do
     # https://github.com/mperham/sidekiq/issues/5194
     {
-      host: ENV["REDIS_MASTER_SET_NAME"],
+      name: ENV["REDIS_MASTER_SET_NAME"],
       password: ENV["REDIS_PASSWORD"],
+      sentinel_password: ENV["REDIS_PASSWORD"],
       sentinels: Resolv.getaddresses(ENV["REDIS_HEADLESS_SERVICE"]).map do |address|
-        {host: address, port: 26379, password: ENV["REDIS_PASSWORD"]}
+        {host: address, port: 26379}
       end
     }
   end
