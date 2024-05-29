@@ -20,6 +20,7 @@ gem "sequel"
 gem "thor"
 gem "zinzout"
 gem "puma"
+gem "rack-session"
 gem "sidekiq"
 gem "sidekiq-batch", git: "https://github.com/breamware/sidekiq-batch"
 
