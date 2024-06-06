@@ -39,7 +39,6 @@ module Scrub
     def run
       # First we need to get all the data from @glob into one file.
       # `split --number=l/x` only works on files, not on STDIN.
-      # TODO: we might want another dir for sort -T .
       tmp_file = File.join(@tmp_chunk_dir, "tmp_sorted.txt")
       add_uuid_call = @add_uuid ? "| bundle exec ruby bin/add_uuid.rb" : ""
       # Sort call explained:
@@ -50,7 +49,7 @@ module Scrub
       # -n    = numeric sort so [1, 3, 20] instead of [1, 20, 3]
       # -T ./ = put temporary files in the current directory
       sort_call = "egrep -vh '^OCN' #{@glob} | " \
-                  "sort -t: -k2,2 -s -n -T ./ " \
+                  "sort -t: -k2,2 -s -n" \
                   "#{add_uuid_call} " \
                   "> #{tmp_file}"
       Services.logger.info sort_call
