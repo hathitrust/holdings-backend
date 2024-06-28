@@ -1,5 +1,6 @@
 require "marc"
 require "pry"
+require "date"
 
 # Takes marc-xml files from exlibris and parses them into .tsv files
 # that can be loaded into the HathiTrust print holdings db.
@@ -11,6 +12,7 @@ require "pry"
 
 class ExLibrisHoldingsXmlParser
   def initialize
+    @instid = ARGV.shift
     @files = ARGV
     @record_count = 0
     @errors = {}
@@ -18,10 +20,22 @@ class ExLibrisHoldingsXmlParser
 
   # Takes all files and prints all output records.
   def run
-    puts HTRecord.header_tsv
+
+    date = Date.today.strftime("%Y%m%d")
+    mon = File.open("#{@instid}_mon_full_#{date}.tsv","w")
+    ser = File.open("#{@instid}_ser_full_#{date}.tsv","w")
+
+    mon.puts(%w[oclc local_id status condition enum_chron govdoc].join("\t"))
+    ser.puts(%w[oclc local_id issn govdoc].join("\t"))
 
     main(@files) do |ht_record|
-      puts ht_record.to_tsv
+      case ht_record.item_type
+      when "ser"
+        ser.puts ht_record.to_ser_tsv
+      else
+        # includes "mix"
+        mon.puts ht_record.to_mon_tsv
+      end
     rescue ArgumentError => e
       @errors[e.message.to_s] ||= 0
       @errors[e.message.to_s] += 1
@@ -53,14 +67,19 @@ class HTRecord
     @marc_record = marc_record # ... a Marc::Record!
   end
 
-  # Should use the same order as to_tsv
-  def self.header_tsv
-    %w[item_type oclc local_id status condition enum_chron issn govdoc].join("\t")
-  end
-
   # Should use the same order as HTRecord.header_tsv
   def to_tsv
     [item_type, oclc, local_id, status, condition, enum_chron, issn, govdoc]
+      .join("\t").delete("\n")
+  end
+
+  def to_mon_tsv
+    [oclc, local_id, status, condition, enum_chron, govdoc]
+      .join("\t").delete("\n")
+  end
+
+  def to_ser_tsv
+    [oclc, local_id, issn, govdoc]
       .join("\t").delete("\n")
   end
 
@@ -116,19 +135,13 @@ class HTRecord
     end
   end
 
-  # double triple quadruple check that 17 and 28 are correct and using the right index (0/1)
+  # TODO? double triple quadruple check that 17 and 28 are correct and using the right index (0/1)
   def govdoc
     str_val = @marc_record["008"].to_s
-    @govdoc ||= ([str_val[17], str_val[28]].join == "uf")
+    @govdoc ||= ([str_val[17], str_val[28]].join == "uf") ? '1' : '0'
   end
 
   private
-  # These remaining private methods are essentially mappings
-
-  # Todo: Do we not need to map this?
-  def map_condition
-    # BRT if BRITTLE, DAMAGED, DETERIORATING, FRAGILE
-  end
 
   def map_item_type(item_type)
     {
