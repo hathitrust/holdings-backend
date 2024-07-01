@@ -137,8 +137,24 @@ class HTRecord
 
   # TODO? double triple quadruple check that 17 and 28 are correct and using the right index (0/1)
   def govdoc
-    str_val = @marc_record["008"].to_s
-    @govdoc ||= ([str_val[17], str_val[28]].join == "uf") ? '1' : '0'
+    @govdoc ||= is_us_govdoc? ? '1' : '0'
+  end
+
+  def is_us_govdoc?
+    str_val = @marc_record["008"].value.downcase
+
+    pubplace_008 = str_val[15,3]
+    govpub_008 = str_val[28]
+
+    is_us?(pubplace_008) && govpub_008 == 'f'
+  end
+
+  # via post-zephir processing "clean_pub_place"
+  def is_us?(pub_place)
+    return true if pub_place[2] == 'u'
+    return true if pub_place[0,2] == 'pr'
+    return true if pub_place[0,2] == 'us'
+    return false
   end
 
   private
