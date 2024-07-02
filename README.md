@@ -1,9 +1,15 @@
 # Print Holdings persistent data store
 
-
-
 ![Build Status](https://github.com/hathitrust/holdings-backend/workflows/Docker%20Build/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/hathitrust/holdings-backend/badge.svg?branch=main)](https://coveralls.io/github/hathitrust/holdings-backend-?branch=main)
 
+Gathers print holdings data into OCLC-based clusters and enables reporting.
+Also supports shared print.
+
+## Built With
+- Sidekiq + Redis
+- MongoDB (via `mongoid` gem)
+- MySQL (via `sequel` gem?)
 
 ## Prerequisites / Setup
 
@@ -19,6 +25,11 @@ bash bin/setup/setup_dev.sh
 ## Running the tests
 
 `docker compose run --rm test`
+
+## Documentation
+
+TODO: consider linking to documentation/adr directories
+
 
 ## Clearing out/resetting the data
 For resetting everything (cleaning up containers & their persistent volumes):
