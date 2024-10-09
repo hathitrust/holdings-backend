@@ -1,0 +1,2 @@
+class ClusterHoldingsDeleter
+end
