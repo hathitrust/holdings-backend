@@ -4,12 +4,8 @@ require "spec_helper"
 require "enum_chron"
 
 class DummyRecord
-  include Mongoid::Document
   include EnumChron
-  field :enum_chron
-  field :n_enum
-  field :n_chron
-  field :n_enum_chron
+  attr_accessor :enum_chron, :n_enum, :n_chron, :n_enum_chron
 end
 
 RSpec.describe EnumChron do

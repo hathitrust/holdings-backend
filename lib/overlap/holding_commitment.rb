@@ -3,8 +3,6 @@
 require "cluster"
 require "services"
 
-Services.mongo!
-
 module Overlap
   # Given an ocn, gets:
   # * non-deprecated commitments in the matching cluster

@@ -4,8 +4,6 @@ require "services"
 require "ppnum"
 require "cluster"
 
-Services.mongo!
-
 def renormalize(item)
   item.normalize_enum_chron
   item.save
@@ -13,6 +11,8 @@ end
 
 def records_with_enum_chrons
   return enum_for(:records_with_enum_chrons) unless block_given?
+
+  raise "not implemented"
 
   Cluster.where("$or": [{ "holdings.enum_chron": { "$ne": "" } },
                         { "ht_items.enum_chron": { "$ne": "" } }]).each do |c|

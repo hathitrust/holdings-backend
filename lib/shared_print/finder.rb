@@ -4,8 +4,6 @@ require "cluster"
 require "services"
 require "shared_print/phases"
 
-Services.mongo!
-
 module SharedPrint
   # Pass criteria to new(), and
   # * call clusters()    to yield the matching clusters,

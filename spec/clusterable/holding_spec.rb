@@ -60,7 +60,7 @@ RSpec.describe Clusterable::Holding do
       end
     end
 
-    (described_class.fields.keys - ["date_received", "uuid", "_id"]).each do |attr|
+    (described_class.column_names - ["date_received", "uuid", "_id"]).each do |attr|
       it "== is false if #{attr} doesn't match" do
         # ensure attribute in h2 is different from h but
         # of the same logical type

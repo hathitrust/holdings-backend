@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "mongoid"
+require "active_record"
 require "clusterable/holding"
 require "clusterable/ht_item"
 require "clusterable/commitment"
@@ -14,39 +14,32 @@ require "cluster_error"
 # - holdings
 # - htitems
 # - commitments
-class Cluster
-  include Mongoid::Document
-  store_in collection: "clusters"
+class Cluster < ActiveRecord::Base
+  has_many :ocns, class_name: "Clusterable::OCN"
 
-  # Cluster level stuff:
-  field :ocns
-  field :last_modified, type: DateTime
-  index({ocns: 1}, unique: true, partial_filter_expression: {ocns: {:$gt => 0}})
-  index({last_modified: 1})
+  has_many :holdings, class_name: "Clusterable::Holding", through: :ocns
+  has_many :ocn_resolutions, class_name: "Clusterable::OCNResolution", through: :ocns
+  has_many :commitments, class_name: "Clusterable::Commitment", through: :ocns
+
+  def ht_items 
+    # need: cluster_ocns.id = cluster.id
+    # need: hf.htid = hf_oclc.htid
+    # need: hf_oclc.value = cluster_ocns.value
+    HtItems.joins(hf_ocns: :cluster_ocns).where('cluster_ocns.cluster_id': self.id)
+  end
+
+  # TODO auto-build sql indexes
+  #index({"ht_items.item_id": 1}, unique: true, sparse: true)
+  # index({ocns: 1}, unique: true, partial_filter_expression: {ocns: {:$gt => 0}})
+  # index({last_modified: 1})
+
   scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
 
-  # Holdings level stuff:
-  embeds_many :holdings, class_name: "Clusterable::Holding"
-
-  # HtItems level stuff:
-  embeds_many :ht_items, class_name: "Clusterable::HtItem"
-  index({"ht_items.item_id": 1}, unique: true, sparse: true)
   scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 
-  # OCNResolution level stuff:
-  embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
-  index({"ocn_resolutions.ocns": 1}, unique: true, sparse: true)
   scope :for_resolution, lambda { |resolution|
     where(:ocns.in => [resolution.deprecated, resolution.resolved])
   }
-
-  # Commitments level stuff:
-  embeds_many :commitments, class_name: "Clusterable::Commitment"
-  index({"commitments.phase": 1}, unique: false, sparse: true) # keep
-  index({"commitments.committed_date": 1}, unique: false, sparse: true) # discard once phase is set
-
-  # Hooks:
-  before_save { |c| c.last_modified = Time.now.utc }
 
   validates_each :ocns do |record, attr, value|
     value.each do |ocn|
@@ -157,21 +150,7 @@ class Cluster
   end
 
   def push_to_field(field, items, extra_ops = {})
-    return if items.empty?
-
-    result = collection.update_one(
-      {_id: _id},
-      {"$push" => {field => {"$each" => items.map(&:as_document)}}}.merge(extra_ops),
-      session: Mongoid::Threaded.get_session
-    )
-    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
-
-    items.each do |item|
-      item.parentize(self)
-      item._association = send(field)._association
-      item.cluster = self
-    end
-    reload
+    raise "not supported"
   end
 
   def add_members_from(cluster)

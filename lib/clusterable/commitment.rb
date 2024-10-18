@@ -1,34 +1,33 @@
 # frozen_string_literal: true
 
-require "mongoid"
 require "shared_print/phases"
+require "active_record"
 
 module Clusterable
   # A shared print commitment
-  class Commitment
-    include Mongoid::Document
-    field :uuid, type: String
-    field :organization, type: String
-    field :ocn, type: Integer
-    field :local_id, type: String
-    field :oclc_sym, type: String
-    field :committed_date, type: DateTime
-    field :retention_date, type: DateTime
-    field :local_bib_id, type: String
-    field :local_item_id, type: String
-    field :local_item_location, type: String
-    field :local_shelving_type, type: String
-    field :policies, type: Array, default: []
-    field :retention_condition, type: String
-    field :facsimile, type: Boolean, default: false
-    field :other_program, type: String
-    field :other_retention_date, type: DateTime
-    field :deprecation_status, type: String
-    field :deprecation_date, type: DateTime
-    field :deprecation_replaced_by, type: String
-    field :phase, type: Integer, default: 0
+  class Commitment < ActiveRecord::Base
+#    field :uuid, type: String
+#    field :organization, type: String
+#    field :ocn, type: Integer
+#    field :local_id, type: String
+#    field :oclc_sym, type: String
+#    field :committed_date, type: DateTime
+#    field :retention_date, type: DateTime
+#    field :local_bib_id, type: String
+#    field :local_item_id, type: String
+#    field :local_item_location, type: String
+#    field :local_shelving_type, type: String
+#    field :policies, type: Array, default: []
+#    field :retention_condition, type: String
+#    field :facsimile, type: Boolean, default: false
+#    field :other_program, type: String
+#    field :other_retention_date, type: DateTime
+#    field :deprecation_status, type: String
+#    field :deprecation_date, type: DateTime
+#    field :deprecation_replaced_by, type: String
+#    field :phase, type: Integer, default: 0
 
-    embedded_in :cluster
+    belongs_to :cluster
 
     validates_presence_of :uuid, :organization, :ocn, :local_id, :oclc_sym, :committed_date,
       :facsimile

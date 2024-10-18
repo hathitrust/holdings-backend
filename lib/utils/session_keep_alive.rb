@@ -3,8 +3,6 @@
 require "services"
 require "cluster"
 
-Services.mongo!
-
 module Utils
   # Lets you wrap a session around a potentially long running query,
   # and that session is kept alive by a refresh-loop in a separate thread.

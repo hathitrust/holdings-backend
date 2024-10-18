@@ -1,6 +1,5 @@
 require "cluster"
 require "services"
-Services.mongo!
 
 # Goes through all clusters, checks if they are valid,
 # and prints the first ocn of any invalid cluster to a file.

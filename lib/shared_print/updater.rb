@@ -4,8 +4,6 @@ require "shared_print/finder"
 require "shared_print/update_record"
 require "utils/tsv_reader"
 
-Services.mongo!
-
 module SharedPrint
   # Takes update records, tries to find them and applies updates when successful.
   class Updater

@@ -7,8 +7,6 @@ require "optparse/date"
 require "services"
 require "utils/session_keep_alive"
 
-Services.mongo!
-
 DEFAULT_KEEPALIVE_TIME = 60
 
 # Deletes holdings and any empty clusters that result.

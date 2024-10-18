@@ -1,5 +1,4 @@
 require "services"
-Services.mongo!
 
 # Loads entire clusters, given as JSON files.
 # This is mostly intended for dev/test purposes.

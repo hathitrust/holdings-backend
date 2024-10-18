@@ -5,8 +5,6 @@ require "services"
 require "shared_print/deprecation_record"
 require "shared_print/deprecation_error"
 
-Services.mongo!
-
 module SharedPrint
   # Takes a file of (shared print) deprecation records,
   # and tries to match them to commitments

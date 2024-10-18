@@ -3,7 +3,6 @@
 require "cluster"
 require "services"
 require "shared_print/groups"
-Services.mongo!
 
 module Reports
   # Finds clusters matching the criteria:

@@ -1,36 +1,15 @@
 # frozen_string_literal: true
 
-require "mongoid"
 require "services"
 require "enum_chron"
 require "json"
+require "active_record"
 
 module Clusterable
   # A holding
-  class Holding
-    include Mongoid::Document
+  class Holding < ActiveRecord::Base
     include EnumChron
-    # Changes to the field list must be reflected in `==` and `same_as`
-    field :ocn, type: Integer
-    field :organization, type: String
-    field :local_id, type: String
-    field :enum_chron, type: String, default: ""
-    field :n_enum, type: String, default: ""
-    field :n_chron, type: String, default: ""
-    field :n_enum_chron, type: String, default: ""
-    field :status, type: String
-    field :condition, type: String
-    field :gov_doc_flag, type: Boolean
-    field :mono_multi_serial, type: String
-    field :date_received, type: DateTime
-    field :country_code, type: String
-    field :weight, type: Float
-    field :uuid, type: String
-    field :issn, type: String
-
     EQUALITY_EXCLUDED_FIELDS = ["_id", "uuid", "date_received"].freeze
-
-    embedded_in :cluster
 
     validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
     validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]

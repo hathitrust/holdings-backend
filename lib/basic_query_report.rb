@@ -3,8 +3,6 @@
 require "services"
 require "cluster"
 
-Services.mongo!
-
 # Pass a mongodb query to the appropriate method
 # and the results will be yielded to you
 class BasicQueryReport

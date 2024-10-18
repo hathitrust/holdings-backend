@@ -1,6 +1,5 @@
 require "cluster"
 require "services"
-Services.mongo!
 
 # A report listing organizations (excluding the depositor) who hold newly-ingested items,
 # so that the shared print officer can solicit commitments.

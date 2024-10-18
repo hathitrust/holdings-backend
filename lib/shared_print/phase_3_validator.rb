@@ -5,7 +5,6 @@ require "loader/shared_print_loader"
 require "services"
 require "date"
 require "shared_print/phases"
-Services.mongo!
 
 module SharedPrint
   class Phase3Error < StandardError
