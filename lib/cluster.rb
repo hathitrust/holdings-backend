@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "active_record"
+require "clusterable/ocn"
 require "clusterable/holding"
 require "clusterable/ht_item"
 require "clusterable/commitment"
@@ -16,10 +17,22 @@ require "cluster_error"
 # - commitments
 class Cluster < ActiveRecord::Base
   has_many :ocns, class_name: "Clusterable::OCN"
-
   has_many :holdings, class_name: "Clusterable::Holding", through: :ocns
   has_many :ocn_resolutions, class_name: "Clusterable::OCNResolution", through: :ocns
   has_many :commitments, class_name: "Clusterable::Commitment", through: :ocns
+
+  def initialize(attributes)
+    if(attributes&.get(:ocns))
+      attributes[:ocns] = attributes[:ocns].map do |o|
+        Clusterable::OCN.new(ocn: o)
+      end
+    end
+    super(attributes)
+  end
+
+  def ocns
+    super.map(&:to_i)
+  end
 
   def ht_items 
     # need: cluster_ocns.id = cluster.id
@@ -33,7 +46,7 @@ class Cluster < ActiveRecord::Base
   # index({ocns: 1}, unique: true, partial_filter_expression: {ocns: {:$gt => 0}})
   # index({last_modified: 1})
 
-  scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
+  scope :for_ocns, ->(ocns) { raise "to re-implement" }
 
   scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
 

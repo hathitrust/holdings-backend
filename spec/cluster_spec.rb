@@ -9,8 +9,7 @@ RSpec.describe Cluster do
   let(:ht) { build(:ht_item).to_hash }
 
   before(:each) do
-    described_class.create_indexes
-    described_class.collection.find.delete_many
+    described_class.delete_all
   end
 
   describe "#initialize" do

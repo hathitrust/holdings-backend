@@ -213,6 +213,7 @@ module PHCTL
     # standard:disable Lint/Debugger
     desc "pry", "Opens a pry-shell with environment loaded"
     def pry
+      Services.database!
       require "pry"
       binding.pry
     end
