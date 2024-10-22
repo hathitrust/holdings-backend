@@ -10,6 +10,7 @@ RUN gem install bundler
 
 FROM base AS dev
 RUN apt-get install -yqq --no-install-recommends less entr
+RUN gem install ruby-lsp
 
 FROM base AS prod
 LABEL org.opencontainers.image.source https://github.com/hathitrust/holdings-backend

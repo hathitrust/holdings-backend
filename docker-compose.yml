@@ -20,7 +20,6 @@ x-holdings-container: &holdings-container-defaults
   environment: &holdings-default-environment
     MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
     PUSHGATEWAY: http://pushgateway:9091
-    MONGOID_ENV: development
   depends_on:
     mariadb: *healthy
     redis: *healthy
@@ -30,14 +29,10 @@ services:
   test:
     <<: *holdings-container-defaults
     command: bundle exec rspec
-    environment: 
-      <<: *holdings-default-environment
-      MONGOID_ENV: test
-    depends_on: 
-      mariadb: *healthy
-      redis: *healthy
 
-  dev: *holdings-container-defaults
+  dev:
+    <<: *holdings-container-defaults
+    command: sleep infinity
 
   phctl: 
     <<: *holdings-container-defaults
