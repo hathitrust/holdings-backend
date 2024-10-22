@@ -4,7 +4,6 @@ require "cluster"
 require "clustering/reclusterer"
 require "clustering/cluster_getter"
 require "clustering/ht_item_cluster_getter"
-require "clustering/retryable"
 
 module Clustering
   # Services for batch loading HT items

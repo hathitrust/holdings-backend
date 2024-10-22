@@ -15,9 +15,7 @@ module Clustering
     end
 
     def get
-      Retryable.new.run do
-        try_strategies.tap { |c| yield c if block_given? }
-      end
+      try_strategies.tap { |c| yield c if block_given? }
     end
 
     private
@@ -46,24 +44,24 @@ module Clustering
     end
 
     def merge
-      Retryable.ensure_transaction do
-        @clusters.each do |source|
-          raise ClusterError, "clusters disappeared, try again" if source.nil?
-          next if source._id == @target._id
+      raise "not implemented"
 
-          # Boolean xor. One and only one is "large"
-          if source.large? ^ @target.large?
-            warn("Merging into a large cluster. " \
-                  "OCNs: [#{source.ocns.join(",")}] and [#{@target.ocns.join(",")}]")
-          end
+      @clusters.each do |source|
+        raise ClusterError, "clusters disappeared, try again" if source.nil?
+        next if source._id == @target._id
 
-          source.delete
-          @target.add_members_from(source)
-          @target.add_to_set(ocns: source.ocns)
-          Services.logger.debug "Deleted cluster #{source.inspect} (merged into #{@target.inspect})"
+        # Boolean xor. One and only one is "large"
+        if source.large? ^ @target.large?
+          warn("Merging into a large cluster. " \
+                "OCNs: [#{source.ocns.join(",")}] and [#{@target.ocns.join(",")}]")
         end
-        @target.add_to_set(ocns: @ocns)
+
+        source.delete
+        @target.add_members_from(source)
+        @target.add_to_set(ocns: source.ocns)
+        Services.logger.debug "Deleted cluster #{source.inspect} (merged into #{@target.inspect})"
       end
+      @target.add_to_set(ocns: @ocns)
     end
   end
 end
