@@ -138,7 +138,6 @@ RSpec.xdescribe Clustering::ClusterHolding do
         expect { described_class.new(h2).cluster }.to raise_exception(/same UUID/)
       end
     end
-
   end
 
   describe "#delete" do
