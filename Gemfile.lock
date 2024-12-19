@@ -70,6 +70,10 @@ GEM
     json (2.7.2)
     language_server-protocol (3.17.0.3)
     lint_roller (1.1.0)
+    marc (1.2.0)
+      rexml
+      scrub_rb (>= 1.0.1, < 2)
+      unf
     method_source (1.1.0)
     milemarker (1.0.0)
     minitest (5.23.0)
@@ -154,6 +158,7 @@ GEM
     ruby-prof (1.7.0)
     ruby-progressbar (1.13.0)
     ruby2_keywords (0.0.5)
+    scrub_rb (1.0.1)
     sequel (5.80.0)
       bigdecimal
     sidekiq (7.2.4)
@@ -186,6 +191,7 @@ GEM
     thor (1.3.1)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    unf (0.2.0)
     unicode-display_width (2.5.0)
     uri (0.13.0)
     webmock (3.23.0)
@@ -207,6 +213,7 @@ DEPENDENCIES
   factory_bot
   faker
   faraday
+  marc
   mongo
   mongoid (~> 8.1)
   mysql2
