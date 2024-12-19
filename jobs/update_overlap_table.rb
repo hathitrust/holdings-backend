@@ -9,7 +9,6 @@ require "date"
 require "overlap/overlap_table_update"
 
 def main
-  Services.mongo!
   # Default: Now - 36 hours
   cutoff_date = Date.today - 1.5
 

@@ -3,8 +3,6 @@
 require "services"
 require "cluster"
 
-Services.mongo!
-
 module Utils
   # Lets you wrap a session around a potentially long running query,
   # and that session is kept alive by a refresh-loop in a separate thread.
@@ -22,6 +20,7 @@ module Utils
     attr_reader :seconds, :refresh_count, :refresher_thread
 
     def initialize(seconds = 120)
+      raise "remove me"
       @seconds = seconds # refresh freq, can be a float if you want to go below 1s.
       @refresh_count = 0 # For testing purposes, mostly.
       @refresher_thread = nil # The thread that refreshes the session.

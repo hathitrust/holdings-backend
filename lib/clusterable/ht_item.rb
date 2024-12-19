@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "mongoid"
 require "enum_chron"
 require "services"
 
@@ -17,33 +16,33 @@ module Clusterable
   # - collection_code
   # - billing_entity
   class HtItem
-    include Mongoid::Document
     include EnumChron
-    field :ocns, type: Array, default: []
-    field :item_id, type: String
-    field :ht_bib_key, type: Integer
-    field :rights, type: String
-    field :access, type: String
-    field :bib_fmt, type: String
-    field :enum_chron, type: String, default: ""
-    field :n_enum, type: String, default: ""
-    field :n_chron, type: String, default: ""
-    field :n_enum_chron, type: String, default: ""
-    field :collection_code, type: String
-    field :billing_entity, type: String
+    # field :ocns, type: Array, default: []
+    # field :item_id, type: String
+    # field :ht_bib_key, type: Integer
+    # field :rights, type: String
+    # field :access, type: String
+    # field :bib_fmt, type: String
+    # field :enum_chron, type: String, default: ""
+    # field :n_enum, type: String, default: ""
+    # field :n_chron, type: String, default: ""
+    # field :n_enum_chron, type: String, default: ""
+    # field :collection_code, type: String
+    # field :billing_entity, type: String
 
-    embedded_in :cluster
-    validates :item_id, uniqueness: true
-    validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt, :access
+    # embedded_in :cluster
+    # validates :item_id, uniqueness: true
+    # validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt, :access
 
-    validates_each :ocns do |record, attr, value|
-      value.each do |ocn|
-        record.errors.add attr, "must be an integer" \
-          unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-      end
-    end
+    # validates_each :ocns do |record, attr, value|
+    #   value.each do |ocn|
+    #     record.errors.add attr, "must be an integer" \
+    #       unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
+    #   end
+    # end
 
     def initialize(params = nil)
+      raise "not implemented"
       super
       set_billing_entity if collection_code
     end

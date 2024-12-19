@@ -11,7 +11,6 @@ require "services"
 require "json"
 
 def main
-  Services.mongo!
   @buffer = []
   @warnings = []
 

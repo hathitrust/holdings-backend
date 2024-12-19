@@ -4,8 +4,6 @@ require "cluster"
 require "services"
 require "shared_print/phases"
 
-Services.mongo!
-
 module SharedPrint
   # Pass criteria to new(), and
   # * call clusters()    to yield the matching clusters,
@@ -13,6 +11,7 @@ module SharedPrint
   class Finder
     attr_reader :organization, :ocn, :local_id, :deprecated, :phase, :query
     def initialize(organization: [], ocn: [], local_id: [], deprecated: false, phase: [])
+      raise "not implemented"
       @organization = organization
       @ocn = ocn
       @local_id = local_id

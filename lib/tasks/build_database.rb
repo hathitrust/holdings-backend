@@ -2,6 +2,6 @@
 
 require "services"
 require "cluster"
-Services.mongo!
 
+raise "not implemented"
 Cluster.create_indexes

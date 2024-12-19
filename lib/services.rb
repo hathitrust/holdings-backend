@@ -5,7 +5,6 @@ require "settings"
 require "canister"
 require "file_mutex"
 require "logger"
-require "mongoid"
 require "push_metrics"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
@@ -14,9 +13,6 @@ require "data_sources/large_clusters"
 require "prometheus/client/push"
 
 Services = Canister.new
-Services.register(:mongo!) do
-  Mongoid.load!(File.join(__dir__, "..", "config", "mongoid.yml"), Settings.environment)
-end
 
 Services.register(:holdings_db) { DataSources::HoldingsDB.new }
 Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }

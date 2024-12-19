@@ -5,8 +5,6 @@ require "services"
 require "shared_print/deprecation_record"
 require "shared_print/deprecation_error"
 
-Services.mongo!
-
 module SharedPrint
   # Takes a file of (shared print) deprecation records,
   # and tries to match them to commitments
@@ -16,6 +14,7 @@ module SharedPrint
     attr_reader :err, :report, :report_path
 
     def initialize(verbose: false)
+      raise "not implemented"
       @verbose = verbose
       @header_spec = ["organization", "ocn", "local_id", "deprecation_status"]
       clear_err

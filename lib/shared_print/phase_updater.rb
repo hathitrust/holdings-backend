@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "date"
-require "mongo_updater"
 
 # This is an outer wrapper for a MongoUpdater call.
 # Objective: based on commitments.committed_date, set commitments.phase.
@@ -10,6 +9,7 @@ require "mongo_updater"
 module SharedPrint
   class PhaseUpdater
     def initialize(date, phase)
+      raise "not implemented"
       # Get input
       @date = date
       @phase = phase

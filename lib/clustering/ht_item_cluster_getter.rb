@@ -15,6 +15,7 @@ module Clustering
     end
 
     def get
+      raise "not implemented"
       Retryable.new.run do
         try_strategies.tap { |c| yield c if block_given? }
       end

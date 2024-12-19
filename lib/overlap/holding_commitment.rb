@@ -3,14 +3,13 @@
 require "cluster"
 require "services"
 
-Services.mongo!
-
 module Overlap
   # Given an ocn, gets:
   # * non-deprecated commitments in the matching cluster
   # * holdings eligible for commitments in the matching cluster
   class HoldingCommitment
     def initialize(ocn)
+      raise "not implemented"
       # For holding-commitment overlaps we only care about spm clusters with ht_items
       @cluster = Cluster
         .where(ocns: ocn, "ht_items.0": {"$exists": 1})

@@ -14,7 +14,6 @@ UUID_RX  = /^[0-9a-f\-]+$/.freeze
 # Usage: bundle exec ruby bin/delete_holdings_by_uuid.rb file_with_holdings.tsv
 
 def main
-  Services.mongo!
   org_counts = {}
 
   ARGV.each do |path|

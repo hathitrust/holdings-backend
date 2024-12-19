@@ -3,7 +3,6 @@
 require "cluster"
 require "services"
 require "shared_print/groups"
-Services.mongo!
 
 module Reports
   # Finds clusters matching the criteria:
@@ -33,6 +32,7 @@ module Reports
       organization: nil,
       memoize_orgs: true
     )
+      raise "not implemented"
       if [max_h, max_sp_h, non_sp_h_count].compact.empty?
         raise ArgumentError,
           "max_h, max_sp_h & non_sp_h_count are nil. At least one of them must not be."

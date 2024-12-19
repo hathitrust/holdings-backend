@@ -4,13 +4,12 @@ require "shared_print/finder"
 require "shared_print/update_record"
 require "utils/tsv_reader"
 
-Services.mongo!
-
 module SharedPrint
   # Takes update records, tries to find them and applies updates when successful.
   class Updater
     attr_reader :file, :report_path
     def initialize(file)
+      raise "not implemented"
       @file = file
     end
 

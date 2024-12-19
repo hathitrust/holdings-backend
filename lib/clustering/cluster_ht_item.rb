@@ -4,12 +4,12 @@ require "cluster"
 require "clustering/reclusterer"
 require "clustering/cluster_getter"
 require "clustering/ht_item_cluster_getter"
-require "clustering/retryable"
 
 module Clustering
   # Services for batch loading HT items
   class ClusterHtItem
     def initialize(*ht_items)
+      raise "not implemented"
       @ht_items = ht_items.flatten
       @ocns = @ht_items.first.ocns
       @any_updated = false
@@ -35,6 +35,7 @@ module Clustering
 
     # Removes an HTItem
     def delete
+      raise "not implemented"
       raise ArgumentError, "Can only delete one HTItem at a time" unless ht_items.length == 1
 
       ht_item = ht_items.first

@@ -15,6 +15,7 @@ module Reports
   class Dynamic
     attr_reader :base, :decorations, :restrictions
     def initialize(base: "", decorations: [], restrictions: [], log_toggle: 0)
+      raise "not implemented"
       @base = validate_clusterable(base)
       @decorations = add_decorations(decorations)
       @restrictions = add_restrictions(restrictions)

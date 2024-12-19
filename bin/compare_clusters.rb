@@ -4,8 +4,6 @@
 require "compare_cluster"
 
 def main
-  Services.mongo!
-
   ARGF.each_line do |line|
     CompareCluster.new(line.strip).compare
   end

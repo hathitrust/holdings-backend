@@ -1,6 +1,5 @@
 require "cluster"
 require "services"
-Services.mongo!
 
 # A report listing organizations (excluding the depositor) who hold newly-ingested items,
 # so that the shared print officer can solicit commitments.
@@ -18,6 +17,7 @@ module Reports
   class SharedPrintNewlyIngested
     attr_reader :start_date, :ht_item_ids_file
     def initialize(start_date: "2022-10-01", ht_item_ids_file: nil)
+      raise "not implemented"
       @start_date = start_date
       @ht_item_ids_file = ht_item_ids_file
       validate!

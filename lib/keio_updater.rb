@@ -1,10 +1,9 @@
 require "cluster"
 require "services"
 
-Services.mongo!
-
 class KeioUpdater
   def initialize(limit = nil)
+    raise "not implemented"
     @limit = limit
   end
 

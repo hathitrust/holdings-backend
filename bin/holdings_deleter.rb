@@ -7,8 +7,6 @@ require "optparse/date"
 require "services"
 require "utils/session_keep_alive"
 
-Services.mongo!
-
 DEFAULT_KEEPALIVE_TIME = 60
 
 # Deletes holdings and any empty clusters that result.
@@ -23,6 +21,7 @@ class HoldingsDeleter
   attr_reader :matching_criteria
 
   def initialize(args)
+    raise "not implemented"
     @logger = Services.logger
     @matching_criteria = {} # These all go into the query.
     @control_flags     = {} # These control program flow.

@@ -23,6 +23,7 @@ module Clustering
     end
 
     def delete
+      raise "not implemented"
       raise ArgumentError, "Can only delete one resolution at a time" unless @resolutions.count == 1
 
       resolution = @resolutions.first

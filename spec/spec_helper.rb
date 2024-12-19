@@ -2,7 +2,7 @@
 
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
-ENV["MONGOID_ENV"] = "test"
+ENV["DATABASE_ENV"] = "test"
 
 require "factory_bot"
 require "simplecov"
@@ -28,8 +28,6 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
 ])
 Sidekiq.strict_args!
 Sidekiq::Testing.inline!
-
-Services.mongo!
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"

@@ -7,8 +7,6 @@ require "services"
 # ...
 # bundle exec ruby bin/update_item_type.rb f
 
-Services.mongo!
-
 # Divide the collection by the last char in the Cluster._id
 id_last_char = ARGV.shift
 unless (("a".."f").to_a + ("0".."9").to_a).include?(id_last_char)

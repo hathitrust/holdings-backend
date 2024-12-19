@@ -2,7 +2,6 @@ require "cluster"
 require "data_sources/large_clusters"
 require "json"
 require "services"
-Services.mongo!
 
 input_ocns = ARGV.any? ? ARGV : DataSources::LargeClusters.new.ocns
 

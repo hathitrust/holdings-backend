@@ -43,6 +43,7 @@ module Clustering
     end
 
     def delete
+      raise "not implemented"
       raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1
 
       holding = @holdings.first
@@ -57,6 +58,7 @@ module Clustering
     end
 
     def self.delete_old_holdings(org, date)
+      raise "not implemented"
       Cluster.where(
         "holdings.organization": org,
         "holdings.date_received": {"$lt": date}
