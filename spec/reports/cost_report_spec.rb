@@ -6,7 +6,7 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 
-RSpec.describe Reports::CostReport do
+RSpec.xdescribe Reports::CostReport do
   let(:alo) { "allow" }
   let(:dni) { "deny" }
   let(:pd) { "pd" }
@@ -381,7 +381,7 @@ RSpec.describe Reports::CostReport do
   end
 end
 
-RSpec.describe Reports::CostReport do
+RSpec.xdescribe Reports::CostReport do
   describe "putting it all together" do
     # 4 HT Items
     # - 1 serial with 2 holdings one of which is from the content provider

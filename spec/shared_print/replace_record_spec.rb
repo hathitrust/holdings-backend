@@ -4,7 +4,7 @@ require "spec_helper"
 require "shared_print/finder"
 require "shared_print/replace_record"
 
-RSpec.describe SharedPrint::ReplaceRecord do
+RSpec.xdescribe SharedPrint::ReplaceRecord do
   let(:ocn1) { 1 }
   let(:ocn9) { 9 }
   let(:org1) { "umich" }

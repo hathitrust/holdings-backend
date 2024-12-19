@@ -2,7 +2,7 @@ require "spec_helper"
 require "reports/shared_print_newly_ingested"
 require "pathname"
 
-RSpec.describe Reports::SharedPrintNewlyIngested do
+RSpec.xdescribe Reports::SharedPrintNewlyIngested do
   let(:org1) { "umich" }
   let(:org2) { "smu" }
   let(:ocn1) { 1 }

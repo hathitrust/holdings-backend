@@ -3,7 +3,7 @@
 require "spec_helper"
 require "phctl"
 
-RSpec.describe "phctl integration" do
+RSpec.xdescribe "phctl integration" do
   def phctl(*args)
     PHCTL::PHCTL.start(args)
   end

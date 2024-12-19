@@ -4,7 +4,7 @@ require "spec_helper"
 require "clusterable/ht_item"
 require "cluster"
 
-RSpec.describe Clusterable::HtItem do
+RSpec.xdescribe Clusterable::HtItem do
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }

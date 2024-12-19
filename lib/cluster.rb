@@ -179,10 +179,6 @@ class Cluster
     end
   end
 
-  def large?
-    (Services.large_clusters.ocns & ocns).any?
-  end
-
   def empty?
     ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
   end

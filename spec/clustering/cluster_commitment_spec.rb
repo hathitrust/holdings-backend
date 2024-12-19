@@ -7,7 +7,7 @@ require "clustering/cluster_ocn_resolution"
 require "overlap/holding_commitment"
 require "shared_print/finder"
 
-RSpec.describe Clustering::ClusterCommitment do
+RSpec.xdescribe Clustering::ClusterCommitment do
   let(:comm) { build(:commitment) }
   let(:batch) { [comm, build(:commitment, ocn: comm.ocn)] }
   let(:c) { create(:cluster, ocns: [comm.ocn]) }

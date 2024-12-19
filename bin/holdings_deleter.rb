@@ -5,7 +5,6 @@ require "date"
 require "optparse"
 require "optparse/date"
 require "services"
-require "utils/session_keep_alive"
 
 DEFAULT_KEEPALIVE_TIME = 60
 
@@ -45,6 +44,7 @@ class HoldingsDeleter
   end
 
   def run
+    raise "not implemented"
     if @control_flags[:noop]
       @logger.info "noop!" if @control_flags[:verbose]
       return nil

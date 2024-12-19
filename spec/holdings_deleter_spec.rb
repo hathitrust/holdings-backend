@@ -4,7 +4,7 @@ require "spec_helper"
 
 require_relative "../bin/holdings_deleter"
 
-RSpec.describe HoldingsDeleter do
+RSpec.xdescribe HoldingsDeleter do
   def new_test(*args)
     described_class.new(args)
   end

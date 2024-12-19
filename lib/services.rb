@@ -9,7 +9,6 @@ require "push_metrics"
 require "data_sources/holdings_db"
 require "data_sources/ht_collections"
 require "data_sources/ht_organizations"
-require "data_sources/large_clusters"
 require "prometheus/client/push"
 
 Services = Canister.new
@@ -29,7 +28,6 @@ end
 
 Services.register(:scrub_stats) { {} }
 
-Services.register(:large_clusters) { DataSources::LargeClusters.new }
 Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }
 
 Services.register(:prometheus_registry) { Prometheus::Client.registry }

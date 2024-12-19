@@ -32,8 +32,6 @@ module Clustering
           old_holdings = find_old_holdings(c, holding)
           if old_holdings.any?
             old_holdings.each { |old| update_holding(old, holding) }
-          elsif duplicate_large_cluster_holding? c, holding, to_add
-            next
           else
             to_add << holding
           end
@@ -92,12 +90,6 @@ module Clustering
           end
         ]
       end
-    end
-
-    def duplicate_large_cluster_holding?(cluster, holding, to_add)
-      cluster.large? &&
-        (cluster.holdings.to_a.find { |h| h.organization == holding.organization } ||
-         to_add.find { |h| h.organization == holding.organization })
     end
 
     # Check and see if any items across existing/new holdings share a UUID but no other attributes.

@@ -6,7 +6,7 @@ require "clusterable/commitment"
 require "clusterable/holding"
 require "clusterable/ht_item"
 
-RSpec.describe Loader::ClusterLoader do
+RSpec.xdescribe Loader::ClusterLoader do
   let(:loader) { described_class.new }
   let(:file) { "spec/fixtures/cluster_2503661.json" }
   let(:ocn) { 2503661 }

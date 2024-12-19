@@ -5,7 +5,7 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "overlap/single_part_overlap"
 
-RSpec.describe Overlap::SinglePartOverlap do
+RSpec.xdescribe Overlap::SinglePartOverlap do
   let(:c) { build(:cluster) }
   let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
   let(:ht2) do

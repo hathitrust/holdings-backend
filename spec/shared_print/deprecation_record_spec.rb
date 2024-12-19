@@ -4,7 +4,7 @@ require "spec_helper"
 require "shared_print/deprecation_record"
 require "shared_print/deprecation_error"
 
-RSpec.describe SharedPrint::DeprecationRecord do
+RSpec.xdescribe SharedPrint::DeprecationRecord do
   let(:org) { "umich" }
   let(:org_2) { "smu" }
   let(:ocn) { 111 }

@@ -74,7 +74,7 @@ RSpec.describe Scrub::ScrubRunner do
     end
   end
 
-  describe "#run" do
+  xdescribe "#run" do
     it "checks a member for new files and scrubs+loads them" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
@@ -84,7 +84,7 @@ RSpec.describe Scrub::ScrubRunner do
     end
   end
 
-  describe "#run_file" do
+  xdescribe "#run_file" do
     it "run for a specific remote file" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!

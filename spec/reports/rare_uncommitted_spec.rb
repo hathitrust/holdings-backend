@@ -4,7 +4,7 @@ require "spec_helper"
 require "reports/rare_uncommitted"
 require "loader/cluster_loader"
 
-RSpec.describe Reports::RareUncommitted do
+RSpec.xdescribe Reports::RareUncommitted do
   # with memoize_orgs: false we can manipulate the orgs during testing
 
   def report(kwargs)

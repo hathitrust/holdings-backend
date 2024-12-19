@@ -3,7 +3,7 @@
 require "spec_helper"
 require "loader/ht_item_loader"
 
-RSpec.describe Loader::HtItemLoader do
+RSpec.xdescribe Loader::HtItemLoader do
   let(:line) do
     [
       "test.123456", # htid

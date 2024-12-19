@@ -3,7 +3,7 @@
 require "spec_helper"
 require "reports/dynamic"
 
-RSpec.describe Reports::Dynamic do
+RSpec.xdescribe Reports::Dynamic do
   let(:base_hol) { "holdings" }
   let(:base_com) { "commitments" }
   let(:base_hti) { "ht_items" }

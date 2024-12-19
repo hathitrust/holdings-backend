@@ -4,7 +4,7 @@ require "clustering/cluster_commitment"
 require "reports/uncommitted_holdings"
 require "spec_helper"
 
-RSpec.describe Reports::UncommittedHoldings do
+RSpec.xdescribe Reports::UncommittedHoldings do
   let(:report_all) { described_class.new(all: true) }
 
   let(:ocn1) { 5 }

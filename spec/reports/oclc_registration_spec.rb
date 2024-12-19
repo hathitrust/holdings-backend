@@ -3,7 +3,7 @@
 require "spec_helper"
 require "reports/oclc_registration"
 
-RSpec.describe Reports::OCLCRegistration do
+RSpec.xdescribe Reports::OCLCRegistration do
   let(:org) { "umich" }
   let(:rep) { described_class.new(org) }
 

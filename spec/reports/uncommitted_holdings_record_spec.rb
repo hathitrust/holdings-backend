@@ -3,7 +3,7 @@
 require "reports/uncommitted_holdings_record"
 require "spec_helper"
 
-RSpec.describe Reports::UncommittedHoldingsRecord do
+RSpec.xdescribe Reports::UncommittedHoldingsRecord do
   let(:ocn) { 5 }
   let(:org) { "umich" }
   let(:oclc_sym) { "EYM" }

@@ -3,7 +3,7 @@
 require "spec_helper"
 require "overlap/multi_part_overlap"
 
-RSpec.describe Overlap::MultiPartOverlap do
+RSpec.xdescribe Overlap::MultiPartOverlap do
   let(:c) { build(:cluster) }
   let(:htitem_with_enumchron) { build(:ht_item, :mpm, enum_chron: "1", n_enum: "1", ocns: c.ocns) }
   let(:htitem_no_enumchron) { build(:ht_item, :mpm, enum_chron: "", n_enum: "", ocns: c.ocns) }

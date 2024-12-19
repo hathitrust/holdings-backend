@@ -37,4 +37,6 @@ group :development do
   gem "ruby-prof"
   gem "yard"
   gem "debug"
+  gem "ruby-lsp"
+  gem "ruby-lsp-rspec"
 end

@@ -37,7 +37,9 @@ services:
       mariadb: *healthy
       redis: *healthy
 
-  dev: *holdings-container-defaults
+  dev:
+    <<: *holdings-container-defaults
+    command: sleep infinity
 
   phctl: 
     <<: *holdings-container-defaults

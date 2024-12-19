@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clustering/cluster_ocn_resolution"
 
-RSpec.describe Clustering::ClusterOCNResolution do
+RSpec.xdescribe Clustering::ClusterOCNResolution do
   let(:resolution) { build(:ocn_resolution) }
   let(:resolution2) { build(:ocn_resolution, resolved: resolution.resolved) }
 

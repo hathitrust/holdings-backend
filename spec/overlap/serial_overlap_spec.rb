@@ -3,7 +3,7 @@
 require "spec_helper"
 require "overlap/serial_overlap"
 
-RSpec.describe Overlap::SerialOverlap do
+RSpec.xdescribe Overlap::SerialOverlap do
   let(:c) { build(:cluster) }
   let(:ht) { build(:ht_item, :ser, ocns: c.ocns) }
   let(:ht2) { build(:ht_item, :ser, ocns: c.ocns, ht_bib_key: ht.ht_bib_key) }

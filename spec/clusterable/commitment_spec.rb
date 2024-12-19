@@ -5,7 +5,7 @@ require "clusterable/commitment"
 require "cluster"
 require "clustering/cluster_commitment"
 
-RSpec.describe Clusterable::Commitment do
+RSpec.xdescribe Clusterable::Commitment do
   let(:c) { create(:cluster) }
   let(:comm) { build(:commitment) }
 

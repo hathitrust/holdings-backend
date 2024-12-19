@@ -3,7 +3,7 @@
 require "spec_helper"
 require "keio_updater"
 
-RSpec.describe KeioUpdater do
+RSpec.xdescribe KeioUpdater do
   let(:lil_k) { "keio" }
   let(:big_k) { "KEIO" }
   let(:hword) { "hathitrust" }

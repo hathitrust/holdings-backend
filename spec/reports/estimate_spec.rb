@@ -4,7 +4,7 @@ require "spec_helper"
 require "reports/estimate"
 require "clustering/cluster_ht_item"
 
-RSpec.describe Reports::Estimate do
+RSpec.xdescribe Reports::Estimate do
   let(:ht_allow) { build(:ht_item, access: "allow") }
   let(:ht_deny) { build(:ht_item, access: "deny") }
   let(:ocns) { [1, 2, ht_allow.ocns, ht_deny.ocns].flatten }

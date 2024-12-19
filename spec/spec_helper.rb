@@ -10,7 +10,6 @@ require "simplecov-lcov"
 require "webmock/rspec"
 require "fixtures/organizations"
 require "fixtures/collections"
-require "fixtures/large_clusters"
 require "pry"
 require "settings"
 require "services"
@@ -68,7 +67,6 @@ RSpec.configure do |config|
     Services.register(:holdings_db) { nil }
     Services.register(:ht_organizations) { mock_organizations }
     Services.register(:ht_collections) { mock_collections }
-    Services.register(:large_clusters) { mock_large_clusters }
     Services.register(:logger) do
       Logger.new("test.log").tap { |l| l.level = Logger::DEBUG }
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }

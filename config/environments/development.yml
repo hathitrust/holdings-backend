@@ -1,0 +1,7 @@
+rclone_config_path: /usr/src/app/config/rclone.conf.test
+local_member_data: /tmp/local_member_data
+remote_member_data: /tmp/remote_member_data
+scrub_chunk_count: 1
+scrub_line_count_diff_max: 10
+scrub_base_path: /tmp/scrub_base_path
+logger_path: /tmp/logger_path

@@ -3,7 +3,6 @@
 require "services"
 require "date"
 require "cluster_update"
-require "utils/session_keep_alive"
 
 module Overlap
   # An update of the table used for ETAS: holdings_htitem_htmember
@@ -22,6 +21,7 @@ module Overlap
     end
 
     def run
+      raise "not implemented"
       cutoff_str = cutoff_date.strftime("%Y-%m-%d %H:%M:%S")
       Services.logger.info "Upserting clusters last_modified after\
       #{cutoff_str} to holdings_htitem_htmember"

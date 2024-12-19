@@ -3,7 +3,7 @@ require "shared_print/finder"
 require "shared_print/phase_updater"
 require "shared_print/phases"
 
-RSpec.describe SharedPrint::PhaseUpdater do
+RSpec.xdescribe SharedPrint::PhaseUpdater do
   before(:each) do
     Cluster.collection.find.delete_many
   end

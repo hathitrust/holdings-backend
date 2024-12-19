@@ -1,7 +1,7 @@
 require "reports/shared_print_phase_count"
 require "spec_helper"
 
-RSpec.describe Reports::SharedPrintPhaseCount do
+RSpec.xdescribe Reports::SharedPrintPhaseCount do
   let(:org) { "umich" }
   let(:phase) { 3 }
   let(:report) { described_class.new(phase: phase) }

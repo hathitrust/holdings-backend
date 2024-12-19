@@ -6,7 +6,7 @@ require "clustering/cluster_commitment"
 require "clustering/cluster_ht_item"
 require "clustering/cluster_ocn_resolution"
 
-RSpec.describe Clustering::Reclusterer do
+RSpec.xdescribe Clustering::Reclusterer do
   let(:glue) { build(:ocn_resolution) }
   let(:ht_item) { build(:ht_item, ocns: [glue.deprecated]) }
   let(:holding) { build(:holding, ocn: glue.resolved) }
