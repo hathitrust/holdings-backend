@@ -11,6 +11,6 @@ jobs:
       - uses: hathitrust/github_actions/tag-release@v1
         with:
           registry_token: ${{ github.token }}
-          existing_tag: ghcr.io/hathitrust/holdings-client-mariadb:${{ github.sha }}
-          image: ghcr.io/hathitrust/holdings-client-mariadb
+          existing_tag: ghcr.io/hathitrust/holdings-mariadb:${{ github.sha }}
+          image: ghcr.io/hathitrust/holdings-mariadb
           new_tag: ${{ github.event.release.tag_name }}
