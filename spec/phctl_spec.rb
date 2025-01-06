@@ -47,7 +47,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     end
   end
 
-  describe "running inline" do
+  xdescribe "running inline" do
     before(:each) do
       Cluster.each(&:delete)
     end

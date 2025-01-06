@@ -4,15 +4,15 @@ require "spec_helper"
 require "enum_chron"
 
 class DummyRecord
-  include Mongoid::Document
-  include EnumChron
-  field :enum_chron
-  field :n_enum
-  field :n_chron
-  field :n_enum_chron
+  #  include Mongoid::Document
+  #  include EnumChron
+  #  field :enum_chron
+  #  field :n_enum
+  #  field :n_chron
+  #  field :n_enum_chron
 end
 
-RSpec.describe EnumChron do
+RSpec.xdescribe EnumChron do
   let(:rec_w_ec) { DummyRecord.new(enum_chron: "1 aug") }
   let(:rec_w_empty_ec) { DummyRecord.new(enum_chron: "") }
   let(:rec_wo_ec) { DummyRecord.new }

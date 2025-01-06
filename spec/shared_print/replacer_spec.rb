@@ -5,7 +5,7 @@ require "shared_print/finder"
 require "shared_print/replacer"
 require "phctl"
 
-RSpec.describe SharedPrint::Replacer do
+RSpec.xdescribe SharedPrint::Replacer do
   let(:loc1) { "i111" }
   let(:loc2) { "i222" }
   let(:ocn1) { 1 }

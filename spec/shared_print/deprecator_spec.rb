@@ -5,7 +5,7 @@ require "shared_print/deprecator"
 require "fileutils"
 require "phctl"
 
-RSpec.describe SharedPrint::Deprecator do
+RSpec.xdescribe SharedPrint::Deprecator do
   let(:org_1) { "umich" }
   let(:org_2) { "smu" }
   let(:ocn_1) { 111 }

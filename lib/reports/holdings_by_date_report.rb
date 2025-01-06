@@ -1,6 +1,5 @@
 require "basic_query_report"
 require "services"
-Services.mongo!
 
 # When HT staff wants to know which members haven't submitted holdings
 # (that were subsequently successfully loaded) in a while. Breaks holdings
@@ -15,6 +14,7 @@ module Reports
   class HoldingsByDateReport
     # For each group (holding org+fmt), get the max date_received
     def query
+      raise "not implemented"
       [
         {"$match": {"holdings.0": {"$exists": 1}}},
         {"$project": {holdings: 1}},

@@ -1,5 +1,4 @@
 require "services"
-Services.mongo!
 
 # Loads entire clusters, given as JSON files.
 # This is mostly intended for dev/test purposes.
@@ -38,6 +37,7 @@ module Loader
     end
 
     def load_hash(hash)
+      raise "not implemented"
       @attempted_docs += 1
       # Clean input of $oid's, because they don't insert well.
       hash.delete("_id")

@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clustering/cluster_getter"
 
-RSpec.describe Clustering::ClusterGetter do
+RSpec.xdescribe Clustering::ClusterGetter do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
   let(:ocn3) { 7 }

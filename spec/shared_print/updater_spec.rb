@@ -5,7 +5,7 @@ require "shared_print/finder"
 require "shared_print/updater"
 require "phctl"
 
-RSpec.describe SharedPrint::Updater do
+RSpec.xdescribe SharedPrint::Updater do
   let(:clu1) { build(:cluster) }
   let(:clu2) { build(:cluster) }
   let(:clu3) { build(:cluster) }

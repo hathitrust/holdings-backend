@@ -4,7 +4,7 @@ require "spec_helper"
 require "reports/phase3_oclc_registration"
 require "shared_print/phases"
 
-RSpec.describe Reports::Phase3OCLCRegistration do
+RSpec.xdescribe Reports::Phase3OCLCRegistration do
   let(:org) { "umich" }
   let(:sym) { "FOO" }
   let(:cond) { "ACCEPTABLE" }

@@ -5,7 +5,6 @@ require "loader/shared_print_loader"
 require "services"
 require "date"
 require "shared_print/phases"
-Services.mongo!
 
 module SharedPrint
   class Phase3Error < StandardError
@@ -16,6 +15,7 @@ module SharedPrint
     attr_reader :path, :last_error, :log
 
     def initialize(path)
+      raise "not implemented"
       # Input comes from a file.
       # Set up a handle to read records from that file,
       # and a loader to load those records into the db.

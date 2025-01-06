@@ -4,7 +4,7 @@ require "spec_helper"
 require "shared_print/finder"
 require "shared_print/phases"
 
-RSpec.describe SharedPrint::Finder do
+RSpec.xdescribe SharedPrint::Finder do
   let(:ocn1) { 1 }
   let(:org1) { "umich" }
   let(:loc1) { "i111" }

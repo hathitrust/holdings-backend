@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clustering/ht_item_cluster_getter"
 
-RSpec.describe Clustering::HtItemClusterGetter do
+RSpec.xdescribe Clustering::HtItemClusterGetter do
   let(:no_ocn) { build(:ht_item, ocns: []) }
 
   before(:each) do

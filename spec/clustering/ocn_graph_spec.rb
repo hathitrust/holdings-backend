@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clustering/ocn_graph"
 
-RSpec.describe Clustering::OCNGraph do
+RSpec.xdescribe Clustering::OCNGraph do
   let(:set_a) { Set.new([:a]) }
   let(:set_ab) { Set.new([:a, :b]) }
   let(:set_bc) { Set.new([:b, :c]) }

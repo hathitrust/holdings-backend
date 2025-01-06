@@ -4,7 +4,6 @@ require "services"
 require "cluster"
 require "overlap/cluster_overlap"
 require "overlap/etas_overlap"
-require "utils/session_keep_alive"
 
 module Reports
   # Generates overlap reports for 1 or all organizations
@@ -39,6 +38,7 @@ module Reports
     end
 
     def clusters_with_holdings
+      raise "not implemented"
       Utils::SessionKeepAlive.new(120).run do
         if organization.nil?
           Cluster.batch_size(Settings.etas_overlap_batch_size)

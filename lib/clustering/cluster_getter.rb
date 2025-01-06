@@ -15,6 +15,7 @@ module Clustering
     end
 
     def get
+      raise "not implemented"
       Retryable.new.run do
         try_strategies.tap { |c| yield c if block_given? }
       end
@@ -46,6 +47,7 @@ module Clustering
     end
 
     def merge
+      raise "not implemented"
       Retryable.ensure_transaction do
         @clusters.each do |source|
           raise ClusterError, "clusters disappeared, try again" if source.nil?

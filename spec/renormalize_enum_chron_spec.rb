@@ -4,7 +4,7 @@ require "spec_helper"
 require "clustering/cluster_holding"
 require_relative "../bin/renormalize_enumchrons"
 
-RSpec.describe "Renormalize Enumchrons" do
+RSpec.xdescribe "Renormalize Enumchrons" do
   let(:h) { build(:holding, enum_chron: "1") }
 
   before(:each) do

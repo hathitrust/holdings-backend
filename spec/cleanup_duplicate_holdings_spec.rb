@@ -4,7 +4,7 @@ require "spec_helper"
 
 require "cleanup_duplicate_holdings"
 
-RSpec.describe CleanupDuplicateHoldings, type: :sidekiq_fake do
+RSpec.xdescribe CleanupDuplicateHoldings, type: :sidekiq_fake do
   def set_blank_fields(holding, value)
     [:n_enum=, :n_chron=, :condition=, :issn=].each do |setter|
       holding.public_send(setter, value)

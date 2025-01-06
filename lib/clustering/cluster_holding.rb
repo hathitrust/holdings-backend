@@ -32,8 +32,6 @@ module Clustering
           old_holdings = find_old_holdings(c, holding)
           if old_holdings.any?
             old_holdings.each { |old| update_holding(old, holding) }
-          elsif duplicate_large_cluster_holding? c, holding, to_add
-            next
           else
             to_add << holding
           end
@@ -43,6 +41,7 @@ module Clustering
     end
 
     def delete
+      raise "not implemented"
       raise ArgumentError, "Can only delete one holding at a time" unless @holdings.length == 1
 
       holding = @holdings.first
@@ -57,6 +56,7 @@ module Clustering
     end
 
     def self.delete_old_holdings(org, date)
+      raise "not implemented"
       Cluster.where(
         "holdings.organization": org,
         "holdings.date_received": {"$lt": date}
@@ -90,12 +90,6 @@ module Clustering
           end
         ]
       end
-    end
-
-    def duplicate_large_cluster_holding?(cluster, holding, to_add)
-      cluster.large? &&
-        (cluster.holdings.to_a.find { |h| h.organization == holding.organization } ||
-         to_add.find { |h| h.organization == holding.organization })
     end
 
     # Check and see if any items across existing/new holdings share a UUID but no other attributes.

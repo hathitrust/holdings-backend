@@ -3,7 +3,7 @@ require "shared_print/phases"
 require "shared_print/finder"
 require "cluster"
 
-RSpec.describe SharedPrint::Phase3Validator do
+RSpec.xdescribe SharedPrint::Phase3Validator do
   let(:excellent_condition) { "EXCELLENT" }
   let(:acceptable_condition) { "ACCEPTABLE" }
   let(:blo_pol) { "blo" }

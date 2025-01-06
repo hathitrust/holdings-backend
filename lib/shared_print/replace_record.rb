@@ -4,6 +4,7 @@ module SharedPrint
   class ReplaceRecord
     attr_reader :existing, :replacement
     def initialize(existing: nil, replacement: nil)
+      raise "not implemented"
       @existing = existing
       @replacement = replacement
       validate

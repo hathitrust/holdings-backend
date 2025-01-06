@@ -19,6 +19,7 @@ module Clustering
     end
 
     def recluster
+      raise "not implemented"
       return @cluster.delete if @cluster.empty?
 
       # Ensure @cluster.ocns reflects the OCNS of its components

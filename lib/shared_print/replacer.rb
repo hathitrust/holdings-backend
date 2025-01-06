@@ -3,8 +3,6 @@ require "shared_print/replace_record"
 require "clusterable/commitment"
 require "utils/tsv_reader"
 
-Services.mongo!
-
 module SharedPrint
   # Members can send files of replace_records, which each identify an existing
   # shared print commitment and something to replace it with.
@@ -16,6 +14,7 @@ module SharedPrint
   class Replacer
     attr_reader :report_path
     def initialize(path)
+      raise "not implemented"
       @path = path
     end
 

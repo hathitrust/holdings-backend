@@ -2,6 +2,6 @@
 
 require "ettin"
 
-environment = ENV["MONGOID_ENV"] || "development"
+environment = ENV["DATABASE_ENV"] || "development"
 Settings = Ettin.for(Ettin.settings_files("config", environment))
 Settings.environment = environment

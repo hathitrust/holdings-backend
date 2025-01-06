@@ -2,7 +2,7 @@
 
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
-ENV["MONGOID_ENV"] = "test"
+ENV["DATABASE_ENV"] = "test"
 
 require "factory_bot"
 require "simplecov"
@@ -10,7 +10,6 @@ require "simplecov-lcov"
 require "webmock/rspec"
 require "fixtures/organizations"
 require "fixtures/collections"
-require "fixtures/large_clusters"
 require "pry"
 require "settings"
 require "services"
@@ -28,8 +27,6 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
 ])
 Sidekiq.strict_args!
 Sidekiq::Testing.inline!
-
-Services.mongo!
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".rspec_status"
@@ -70,7 +67,6 @@ RSpec.configure do |config|
     Services.register(:holdings_db) { nil }
     Services.register(:ht_organizations) { mock_organizations }
     Services.register(:ht_collections) { mock_collections }
-    Services.register(:large_clusters) { mock_large_clusters }
     Services.register(:logger) do
       Logger.new("test.log").tap { |l| l.level = Logger::DEBUG }
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }

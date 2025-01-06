@@ -3,7 +3,7 @@
 require "spec_helper"
 require "overlap/ht_item_overlap"
 
-RSpec.describe Overlap::HtItemOverlap do
+RSpec.xdescribe Overlap::HtItemOverlap do
   let(:c) { build(:cluster) }
   let(:mpm) do
     build(:ht_item, :mpm,

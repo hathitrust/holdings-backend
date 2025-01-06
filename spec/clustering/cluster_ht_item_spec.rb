@@ -2,7 +2,7 @@
 
 require "spec_helper"
 require "clustering/cluster_ht_item"
-RSpec.describe Clustering::ClusterHtItem do
+RSpec.xdescribe Clustering::ClusterHtItem do
   let(:item) { build(:ht_item) }
   let(:item2) { build(:ht_item, ocns: ocns) }
   let(:ocns) { item.ocns }

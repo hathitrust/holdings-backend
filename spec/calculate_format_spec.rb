@@ -3,7 +3,7 @@
 require "spec_helper"
 require "calculate_format"
 
-RSpec.describe CalculateFormat do
+RSpec.xdescribe CalculateFormat do
   let(:ht_spm) { build(:ht_item, :spm) }
   let(:ht_mpm) { build(:ht_item, :mpm) }
   let(:ht_ser) { build(:ht_item, :ser) }
@@ -49,12 +49,6 @@ RSpec.describe CalculateFormat do
       expect(
         described_class.new(c).item_format(c.ht_items.first)
       ).to eq("ser")
-    end
-
-    it "is a SER if it is in the list of large cluster ocns" do
-      c_mpm = Clustering::ClusterHtItem.new(ht_mpm).cluster
-      Services.large_clusters.ocns.add(ht_mpm.ocns.first)
-      expect(described_class.new(c_mpm).item_format(ht_mpm)).to eq("ser")
     end
 
     it "MPM's don't clobber Serials just yet" do

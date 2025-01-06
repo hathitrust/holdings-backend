@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "mongoid"
 require "services"
 require "enum_chron"
 require "json"
@@ -8,32 +7,31 @@ require "json"
 module Clusterable
   # A holding
   class Holding
-    include Mongoid::Document
     include EnumChron
     # Changes to the field list must be reflected in `==` and `same_as`
-    field :ocn, type: Integer
-    field :organization, type: String
-    field :local_id, type: String
-    field :enum_chron, type: String, default: ""
-    field :n_enum, type: String, default: ""
-    field :n_chron, type: String, default: ""
-    field :n_enum_chron, type: String, default: ""
-    field :status, type: String
-    field :condition, type: String
-    field :gov_doc_flag, type: Boolean
-    field :mono_multi_serial, type: String
-    field :date_received, type: DateTime
-    field :country_code, type: String
-    field :weight, type: Float
-    field :uuid, type: String
-    field :issn, type: String
+    # field :ocn, type: Integer
+    # field :organization, type: String
+    # field :local_id, type: String
+    # field :enum_chron, type: String, default: ""
+    # field :n_enum, type: String, default: ""
+    # field :n_chron, type: String, default: ""
+    # field :n_enum_chron, type: String, default: ""
+    # field :status, type: String
+    # field :condition, type: String
+    # field :gov_doc_flag, type: Boolean
+    # field :mono_multi_serial, type: String
+    # field :date_received, type: DateTime
+    # field :country_code, type: String
+    # field :weight, type: Float
+    # field :uuid, type: String
+    # field :issn, type: String
 
-    EQUALITY_EXCLUDED_FIELDS = ["_id", "uuid", "date_received"].freeze
+    # EQUALITY_EXCLUDED_FIELDS = ["_id", "uuid", "date_received"].freeze
 
-    embedded_in :cluster
+    # embedded_in :cluster
 
-    validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
-    validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
+    # validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
+    # validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
 
     def initialize(params = nil)
       params&.transform_keys!(&:to_sym)
@@ -112,6 +110,7 @@ module Clusterable
     # Turn a holding into a hash key for quick lookup
     # in e.g. cluster_holding.find_old_holdings.
     def update_key
+      raise "not implemented"
       as_document
         .slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS))
         # fold blank strings & nil to same update key, as in

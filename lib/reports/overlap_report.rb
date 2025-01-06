@@ -1,8 +1,6 @@
 require "cluster"
 require "services"
 
-Services.mongo!
-
 module Reports
   class OverlapReport
     # Runs an overlap report based on all the holdings of an organization

@@ -10,10 +10,9 @@
 * [Docker](https://docs.docker.com/install/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
 
-Run the following script to build and start the Docker containers:
-
 ```bash
-bash bin/setup/setup_dev.sh
+docker compose build
+docker compose run dev bundle install
 ```
 
 ## Running the tests
@@ -39,7 +38,6 @@ This will generate a synthetic OCLC concordance, HT items, and holdings for a
 single institution, and load it into mongo:
 
 ```bash
-bash bin/setup/setup_dev.sh
 bash bin/load_test_data.sh
 ```
 

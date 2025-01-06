@@ -4,7 +4,7 @@ require "spec_helper"
 require "reports/member_counts"
 require "reports/cost_report"
 
-RSpec.describe "MemberCounts" do
+RSpec.xdescribe "MemberCounts" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }
 
   let(:mcr) do

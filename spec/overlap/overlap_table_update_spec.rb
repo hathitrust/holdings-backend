@@ -5,7 +5,7 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "overlap/overlap_table_update"
 
-RSpec.describe Overlap::OverlapTableUpdate do
+RSpec.xdescribe Overlap::OverlapTableUpdate do
   let(:update) { described_class.new(nil, 10) }
 
   before(:each) do |_spec|

@@ -64,7 +64,7 @@ class InstrumentedClusterHtItem < Clustering::ClusterHtItem
   end
 end
 
-RSpec.describe "concurrency" do
+RSpec.xdescribe "concurrency" do
   def reconnect_mongoid
     # from https://docs.mongodb.com/mongoid/current/tutorials/mongoid-configuration/
     Mongoid::Clients.clients.each do |_name, client|

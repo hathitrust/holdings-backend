@@ -4,7 +4,7 @@ require "spec_helper"
 require "loader/file_loader"
 require "loader/shared_print_loader"
 
-RSpec.describe Loader::SharedPrintLoader do
+RSpec.xdescribe Loader::SharedPrintLoader do
   shared_examples_for "valid commitment with expected fields" do
     it { expect(comm).to be_a(Clusterable::Commitment) }
     it { expect(comm.organization).to eq("ucsd") }

@@ -2,7 +2,6 @@
 
 require "cluster"
 require "services"
-Services.mongo!
 
 # This is a Shared Print report from the point of view of a SP member
 # who wants to know which titles in their collection seem "safe" to weed.
@@ -12,6 +11,7 @@ Services.mongo!
 module Reports
   class WeedingDecision
     def initialize(organization)
+      raise "not implemented"
       @organization = organization
     end
 
