@@ -3,17 +3,15 @@
 require "spec_helper"
 require "cluster"
 
-RSpec.xdescribe Cluster do
+RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
   let(:ht) { build(:ht_item).to_hash }
 
-  before(:each) do
-    described_class.create_indexes
-    described_class.collection.find.delete_many
-  end
-
   describe "#initialize" do
+    let(:cluster_ocns_table) { Services.holdings_db[:cluster_ocns] }
+    before(:each) { cluster_ocns_table.truncate }
+
     it "creates a new cluster" do
       expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
     end
@@ -26,11 +24,19 @@ RSpec.xdescribe Cluster do
       expect(described_class.new(ocns: [ocn1]).ocns.first.class).to eq(Integer)
     end
 
-    it "validates the ocns field is numeric" do
+    it "can retrieve a cluster's ocns given its id" do
+      # one cluster with ocns 1,2,3
+      cluster_ocns_table.import([:cluster_id, :ocn], [[1, 1], [1, 2], [1, 3]])
+
+      c = Cluster.find(id: 1)
+      expect(c.ocns).to contain_exactly(1, 2, 3)
+    end
+
+    xit "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
 
-    it "validates that it has all HT Item ocns" do
+    xit "validates that it has all HT Item ocns" do
       c = described_class.new(ocns: [ocn1])
       c.save
       c.ht_items.create(ht)
@@ -39,7 +45,7 @@ RSpec.xdescribe Cluster do
       expect(c.errors.messages[:ocns]).to include("must contain all ocns")
     end
 
-    it "prevents duplicate HT Items" do
+    xit "prevents duplicate HT Items" do
       c = described_class.new(ocns: [ocn1])
       c.save
       c.ht_items.create(ht)
@@ -50,7 +56,7 @@ RSpec.xdescribe Cluster do
     end
   end
 
-  describe "#format" do
+  xdescribe "#format" do
     let(:c1) { create(:cluster) }
 
     it "has a format" do
@@ -59,7 +65,7 @@ RSpec.xdescribe Cluster do
     end
   end
 
-  describe "#last_modified" do
+  xdescribe "#last_modified" do
     let(:c1) { build(:cluster) }
 
     it "doesn't have last_modified if unsaved" do
@@ -81,7 +87,7 @@ RSpec.xdescribe Cluster do
     end
   end
 
-  describe "#save" do
+  xdescribe "#save" do
     let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
     let(:c2) { build(:cluster, ocns: [ocn2]) }
 
@@ -98,7 +104,7 @@ RSpec.xdescribe Cluster do
     end
   end
 
-  describe "Precomputed fields" do
+  xdescribe "Precomputed fields" do
     let(:h1) { build(:holding, ocn: ocn1, enum_chron: "1") }
     let(:h2) { build(:holding, ocn: ocn1, enum_chron: "2", organization: h1.organization) }
     let(:ht1) { build(:ht_item, ocns: [ocn1], enum_chron: "3", billing_entity: h1.organization) }

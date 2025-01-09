@@ -14,55 +14,36 @@ require "cluster_error"
 # - htitems
 # - commitments
 class Cluster
-  # store_in collection: "clusters"
+  attr_reader :ocns
 
-  # # Cluster level stuff:
-  # field :ocns
-  # field :last_modified, type: DateTime
-  # index({ocns: 1}, unique: true, partial_filter_expression: {ocns: {:$gt => 0}})
-  # index({last_modified: 1})
-  # scope :for_ocns, ->(ocns) { where(:ocns.in => ocns) }
+  def self.db
+    Services.holdings_db
+  end
 
-  # # Holdings level stuff:
-  # embeds_many :holdings, class_name: "Clusterable::Holding"
+  def initialize(ocns: [])
+    @ocns = ocns
+  end
 
-  # # HtItems level stuff:
-  # embeds_many :ht_items, class_name: "Clusterable::HtItem"
-  # index({"ht_items.item_id": 1}, unique: true, sparse: true)
-  # scope :with_ht_item, ->(ht_item) { where("ht_items.item_id": ht_item.item_id) }
+  def self.find(id:)
+    ocns = db[:cluster_ocns].select(:ocn).where(cluster_id: id).map(:ocn)
+    new(ocns: ocns)
+  end
 
-  # # OCNResolution level stuff:
-  # embeds_many :ocn_resolutions, class_name: "Clusterable::OCNResolution"
-  # index({"ocn_resolutions.ocns": 1}, unique: true, sparse: true)
-  # scope :for_resolution, lambda { |resolution|
-  #   where(:ocns.in => [resolution.deprecated, resolution.resolved])
-  # }
+  def ocn_resolutions
+    []
+  end
 
-  # # Commitments level stuff:
-  # embeds_many :commitments, class_name: "Clusterable::Commitment"
-  # index({"commitments.phase": 1}, unique: false, sparse: true) # keep
-  # index({"commitments.committed_date": 1}, unique: false, sparse: true) # discard once phase is set
+  def ht_items
+    []
+  end
 
-  # # Hooks:
-  # before_save { |c| c.last_modified = Time.now.utc }
+  def commitments
+    []
+  end
 
-  # validates_each :ocns do |record, attr, value|
-  #   value.each do |ocn|
-  #     record.errors.add attr, "must be an integer" \
-  #       unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-  #   end
-  #   # ocns are a superset of ht_items.ocns
-  #   record.errors.add attr, "must contain all ocns" \
-  #     if (record.ht_items.collect(&:ocns).flatten +
-  #         record.ocn_resolutions.collect(&:ocns).flatten - value).any?
-  # end
-
-  # # returns the first matching ht item by item id in this cluster, if any
-  # #
-  # # @param the item id to find
-  # def ht_item(item_id)
-  #   ht_items.to_a.find { |h| h.item_id == item_id }
-  # end
+  def holdings
+    []
+  end
 
   UPDATE_LAST_MODIFIED = {"$currentDate" => {last_modified: true}}.freeze
   def add_holdings(*items)
