@@ -4,56 +4,47 @@ require "enum_chron"
 require "services"
 
 module Clusterable
-  # An HT Item
-  # - ocns
-  # - item_id
-  # - ht_bib_key
-  # - rights
-  # - bib_fmt
-  # - enum_chron
-  # - n_enum
-  # - n_chron
-  # - collection_code
-  # - billing_entity
   class HtItem
     include EnumChron
-    # field :ocns, type: Array, default: []
-    # field :item_id, type: String
-    # field :ht_bib_key, type: Integer
-    # field :rights, type: String
-    # field :access, type: String
-    # field :bib_fmt, type: String
-    # field :enum_chron, type: String, default: ""
-    # field :n_enum, type: String, default: ""
-    # field :n_chron, type: String, default: ""
-    # field :n_enum_chron, type: String, default: ""
-    # field :collection_code, type: String
-    # field :billing_entity, type: String
 
-    # embedded_in :cluster
-    # validates :item_id, uniqueness: true
-    # validates_presence_of :item_id, :ht_bib_key, :rights, :bib_fmt, :access
+    ACCESSOR_ATTRS = [:ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt, :n_enum, :n_chron, :n_enum_chron, :billing_entity, :enum_chron]
+    READER_ATTRS = [:collection_code]
 
-    # validates_each :ocns do |record, attr, value|
-    #   value.each do |ocn|
-    #     record.errors.add attr, "must be an integer" \
-    #       unless (ocn.to_i if /\A[+-]?\d+\Z/.match?(ocn.to_s))
-    #   end
-    # end
+    ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
 
-    def initialize(params = nil)
-      raise "not implemented"
-      super
-      set_billing_entity if collection_code
+    ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
+    READER_ATTRS.each { |attr| attr_reader attr }
+
+    def self.find(item_id:)
+      row = Services.hathifiles_table.where(htid: item_id).first!
+
+      params = {
+        item_id: row[:htid],
+        ht_bib_key: row[:bib_num],
+        rights: row[:rights_code],
+        access: row[:access] ? "allow" : "deny",
+        bib_fmt: row[:bib_fmt],
+        enum_chron: row[:description],
+        collection_code: row[:collection_code],
+        ocns: row[:oclc].split(",").map { |ocn| ocn.to_i }
+      }
+
+      new(params)
+    end
+
+    def initialize(params = {})
+      ALL_ATTRS.each do |attr|
+        send(attr.to_s + "=", params[attr]) if params[attr]
+      end
     end
 
     def collection_code=(collection_code)
-      super
+      @collection_code = collection_code
       set_billing_entity
     end
 
     def to_hash
-      attributes.with_indifferent_access.except(:_id)
+      ALL_ATTRS.map { |a| [a, send(a)] }.to_h
     end
 
     def batch_with?(other)

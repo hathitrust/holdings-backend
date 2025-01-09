@@ -14,7 +14,6 @@ module DataSources
   # holdings and institutions
   class HoldingsDB < SimpleDelegator
     attr_reader :rawdb
-    attr_accessor :connection_string
 
     def initialize
       @rawdb = self.class.connection

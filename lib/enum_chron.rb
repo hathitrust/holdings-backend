@@ -8,7 +8,6 @@ module EnumChron
   def initialize(params = nil)
     params ||= {}
     params[:enum_chron] ||= ""
-    super
   end
 
   def enum_chron=(enum_chron)
