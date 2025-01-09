@@ -12,8 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up tests
-        run: ./bin/setup/setup_test.sh --quiet
+      - name: Build images for testing
+        run: docker compose build
+
+      - name: Install dependencies
+        run: docker compose run --rm test bundle install
 
       - name: Run standardrb
         run: docker compose run --rm test bundle exec standardrb
