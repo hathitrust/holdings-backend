@@ -6,6 +6,22 @@ GIT
       sidekiq (>= 7, < 8)
 
 GIT
+  remote: https://github.com/hathitrust/hathifiles_database.git
+  revision: 254667029a039557748431a547333eaa315d1f7b
+  branch: main
+  specs:
+    hathifiles_database (0.4.1)
+      date_named_file
+      dotenv
+      ettin
+      hanami-cli
+      library_stdnums
+      mysql2
+      sequel
+      sqlite3
+      tty-prompt
+
+GIT
   remote: https://github.com/hathitrust/push_metrics.git
   revision: 90ed5f4ee823c1316e1ce0cd4c0db465a180103a
   tag: v0.9.1
@@ -39,6 +55,7 @@ GEM
     crack (1.0.0)
       bigdecimal
       rexml
+    date_named_file (0.1.1)
     debug (1.9.2)
       irb (~> 1.10)
       reline (>= 0.3.8)
@@ -47,6 +64,9 @@ GEM
     docile (1.4.0)
     dotenv (3.1.2)
     drb (2.2.1)
+    dry-cli (1.2.0)
+    dry-files (1.1.0)
+    dry-inflector (1.2.0)
     ettin (1.3.0)
       deep_merge
     factory_bot (6.4.6)
@@ -57,6 +77,13 @@ GEM
       faraday-net_http (>= 2.0, < 3.2)
     faraday-net_http (3.1.0)
       net-http
+    hanami-cli (2.2.1)
+      bundler (~> 2.1)
+      dry-cli (~> 1.0, >= 1.1.0)
+      dry-files (~> 1.0, >= 1.0.2, < 2)
+      dry-inflector (~> 1.0, < 2)
+      rake (~> 13.0)
+      zeitwerk (~> 2.6)
     hashdiff (1.1.0)
     i18n (1.14.5)
       concurrent-ruby (~> 1.0)
@@ -66,6 +93,7 @@ GEM
       reline (>= 0.4.2)
     json (2.7.2)
     language_server-protocol (3.17.0.3)
+    library_stdnums (1.6.0)
     lint_roller (1.1.0)
     logger (1.6.4)
     method_source (1.1.0)
@@ -81,6 +109,8 @@ GEM
     parser (3.3.1.0)
       ast (~> 2.4.1)
       racc
+    pastel (0.8.0)
+      tty-color (~> 0.5)
     prism (1.2.0)
     prometheus-client (4.2.2)
     pry (0.14.2)
@@ -96,6 +126,7 @@ GEM
     rack-session (2.0.0)
       rack (>= 3.0.0)
     rainbow (3.1.1)
+    rake (13.2.1)
     rbs (3.7.0)
       logger
     rdoc (6.6.3.1)
@@ -169,6 +200,7 @@ GEM
     simplecov-lcov (0.8.0)
     simplecov_json_formatter (0.1.4)
     sorbet-runtime (0.5.11704)
+    sqlite3 (2.5.0-x86_64-linux-gnu)
     standard (1.36.0)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.0)
@@ -185,6 +217,16 @@ GEM
     stringio (3.1.0)
     strscan (3.1.0)
     thor (1.3.1)
+    tty-color (0.6.0)
+    tty-cursor (0.7.1)
+    tty-prompt (0.23.1)
+      pastel (~> 0.8)
+      tty-reader (~> 0.8)
+    tty-reader (0.9.0)
+      tty-cursor (~> 0.7)
+      tty-screen (~> 0.8)
+      wisper (~> 2.0)
+    tty-screen (0.8.2)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     unicode-display_width (2.5.0)
@@ -193,7 +235,9 @@ GEM
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
+    wisper (2.0.1)
     yard (0.9.36)
+    zeitwerk (2.7.1)
     zinzout (0.1.1)
 
 PLATFORMS
@@ -208,6 +252,7 @@ DEPENDENCIES
   factory_bot
   faker
   faraday
+  hathifiles_database!
   mysql2
   prometheus-client
   pry

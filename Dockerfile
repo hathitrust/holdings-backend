@@ -9,7 +9,7 @@ ENV RUBYLIB /usr/src/app/lib
 RUN gem install bundler
 
 FROM base AS dev
-RUN apt-get install -yqq --no-install-recommends less entr
+RUN apt-get install -yqq --no-install-recommends less entr mariadb-client
 
 FROM base AS prod
 LABEL org.opencontainers.image.source https://github.com/hathitrust/holdings-backend

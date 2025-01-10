@@ -62,9 +62,7 @@ RSpec.configure do |config|
   end
 
   config.before(:all) do
-    # Ensure we don't try to use DB for tests by default and that we have
     # mock HT member data to use in tests
-    Services.register(:holdings_db) { nil }
     Services.register(:ht_organizations) { mock_organizations }
     Services.register(:ht_collections) { mock_collections }
     Services.register(:logger) do

@@ -3,8 +3,18 @@
 require "spec_helper"
 require "clusterable/ht_item"
 require "cluster"
+require "hathifiles_database"
 
-RSpec.xdescribe Clusterable::HtItem do
+RSpec.describe Clusterable::HtItem do
+  before(:all) do
+    hf_db = HathifilesDatabase.new(Services.holdings_db.uri)
+    hf_db.recreate_tables!
+  end
+
+  before(:each) do
+    Services.hathifiles_table.truncate
+  end
+
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
@@ -12,25 +22,36 @@ RSpec.xdescribe Clusterable::HtItem do
   let(:htitem_hash) { htitem.to_hash }
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
 
-  before(:each) do
-    described_class.collection.find.delete_many
-    Cluster.collection.find.delete_many
+  def insert_htitem(htitem)
+    new_htitem_attrs = {
+      htid: htitem.item_id,
+      bib_num: htitem.ht_bib_key,
+      rights_code: htitem.rights,
+      access: htitem.access == "allow",
+      bib_fmt: htitem.bib_fmt,
+      description: htitem.enum_chron,
+      collection_code: htitem.collection_code,
+      oclc: htitem.ocns.join(",")
+    }
+
+    Services.hathifiles_table.insert(new_htitem_attrs)
   end
 
   it "can be created" do
     expect(described_class.new(htitem_hash)).to be_a(described_class)
   end
 
-  it "has no parent when built on its own" do
-    expect(build(:ht_item)._parent).to be_nil
+  it "can retrieve from the database" do
+    insert_htitem(htitem)
+
+    expect(described_class.find(item_id: htitem.item_id).to_hash).to eq(htitem_hash)
   end
 
-  it "has a parent when created via a cluster" do
-    c.ht_items.create(htitem_hash)
-    expect(c.ht_items.first._parent).to be(c)
+  it "does something if htitem isn't found" do
+    expect { described_class.find(item_id: "test.nonexistent") }.to raise_exception(Sequel::NoMatchingRow)
   end
 
-  it "prevents duplicates from being created" do
+  xit "prevents duplicates from being created" do
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone
     c.ht_items.create(cloned)
@@ -38,42 +59,42 @@ RSpec.xdescribe Clusterable::HtItem do
       raise_error(Mongoid::Errors::Validations, /Validation of Cluster failed./)
   end
 
-  it "provides its parent cluster with its ocns" do
+  xit "provides its parent cluster with its ocns" do
     ht_multi_ocns = htitem_hash.clone
     ht_multi_ocns[:ocns] << rand(1_000_000).to_i
     c.ht_items.create(ht_multi_ocns)
     expect(c.ocns.count).to eq(2)
   end
 
-  it "can have an empty ocns field" do
+  xit "can have an empty ocns field" do
     expect(build(:ht_item, ocns: []).valid?).to be true
   end
 
-  it "normalizes enum_chron" do
+  xit "normalizes enum_chron" do
     htitem = build(:ht_item, enum_chron: "v.1 Jul 1999")
     expect(htitem.enum_chron).to eq("v.1 Jul 1999")
     expect(htitem.n_enum).to eq("1")
     expect(htitem.n_chron).to eq("Jul 1999")
   end
 
-  it "gives empty string if given an empty enum_chron" do
+  xit "gives empty string if given an empty enum_chron" do
     htitem = build(:ht_item, enum_chron: "")
     expect(htitem.enum_chron).to eq("")
     expect(htitem.n_enum).to eq("")
     expect(htitem.n_chron).to eq("")
   end
 
-  it "has an access of deny or allow" do
+  xit "has an access of deny or allow" do
     expect(build(:ht_item).access).to be_in(["allow", "deny"])
   end
 
-  describe "#billing_entity" do
+  xdescribe "#billing_entity" do
     it "is automatically set when collection_code is set" do
       expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
     end
   end
 
-  describe "#to_hash" do
+  xdescribe "#to_hash" do
     it "contains billing_entity" do
       expect(htitem_hash[:billing_entity]).not_to be nil
     end
@@ -83,7 +104,7 @@ RSpec.xdescribe Clusterable::HtItem do
     end
   end
 
-  describe "#batch_with?" do
+  xdescribe "#batch_with?" do
     let(:single_ocn1) { build(:ht_item, ocns: [123]) }
     let(:single_ocn2) { build(:ht_item, ocns: [123]) }
     let(:single_ocn3) { build(:ht_item, ocns: [456]) }
