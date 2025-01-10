@@ -3,39 +3,15 @@
 require "spec_helper"
 require "clusterable/ht_item"
 require "cluster"
-require "hathifiles_database"
 
 RSpec.describe Clusterable::HtItem do
-  before(:all) do
-    hf_db = HathifilesDatabase.new(Services.holdings_db.uri)
-    hf_db.recreate_tables!
-  end
-
-  before(:each) do
-    Services.hathifiles_table.truncate
-  end
-
+  include_context "with hathifiles table"
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
   let(:htitem) { build(:ht_item) }
   let(:htitem_hash) { htitem.to_hash }
   let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
-
-  def insert_htitem(htitem)
-    new_htitem_attrs = {
-      htid: htitem.item_id,
-      bib_num: htitem.ht_bib_key,
-      rights_code: htitem.rights,
-      access: htitem.access == "allow",
-      bib_fmt: htitem.bib_fmt,
-      description: htitem.enum_chron,
-      collection_code: htitem.collection_code,
-      oclc: htitem.ocns.join(",")
-    }
-
-    Services.hathifiles_table.insert(new_htitem_attrs)
-  end
 
   it "can be created" do
     expect(described_class.new(htitem_hash)).to be_a(described_class)

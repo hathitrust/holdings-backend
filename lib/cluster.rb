@@ -31,8 +31,10 @@ class Cluster
   end
 
   def self.for_ocns(ocns)
-    db[:cluster_ocns].select(:cluster_id).distinct.where(ocn: ocns).map do |row|
-      find(id: row[:cluster_id])
+    return to_enum(__method__, ocns) unless block_given?
+
+    db[:cluster_ocns].select(:cluster_id).distinct.where(ocn: ocns).each do |row|
+      yield find(id: row[:cluster_id])
     end
   end
 
@@ -41,7 +43,7 @@ class Cluster
   end
 
   def ht_items
-    []
+    Clusterable::HtItem.with_ocns(ocns)
   end
 
   def commitments

@@ -26,10 +26,28 @@ module Clusterable
     ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
     READER_ATTRS.each { |attr| attr_reader attr }
 
-    def self.find(item_id:)
-      row = Services.hathifiles_table.where(htid: item_id).first!
+    def self.db
+      Services.hathifiles_table
+    end
 
-      params = {
+    def self.with_ocns(ocns)
+      return to_enum(__method__, ocns) unless block_given?
+
+      db.select { hf.* }
+        .natural_join(:hf_oclc)
+        .where(value: ocns)
+        .group_by(:htid)
+        .each do |row|
+        yield from_row(row)
+      end
+    end
+
+    def self.find(item_id:)
+      from_row(db.where(htid: item_id).first!)
+    end
+
+    def self.from_row(row)
+      new({
         item_id: row[:htid],
         ht_bib_key: row[:bib_num],
         rights: row[:rights_code],
@@ -38,9 +56,7 @@ module Clusterable
         enum_chron: row[:description],
         collection_code: row[:collection_code],
         ocns: row[:oclc].split(",").map { |ocn| ocn.to_i }
-      }
-
-      new(params)
+      })
     end
 
     def initialize(params = {})
