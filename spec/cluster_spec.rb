@@ -9,8 +9,7 @@ RSpec.describe Cluster do
   let(:ht) { build(:ht_item).to_hash }
 
   describe "#initialize" do
-    let(:cluster_ocns_table) { Services.holdings_db[:cluster_ocns] }
-    before(:each) { cluster_ocns_table.truncate }
+    include_context "with cluster ocns table"
 
     it "creates a new cluster" do
       expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
@@ -25,11 +24,72 @@ RSpec.describe Cluster do
     end
 
     it "can retrieve a cluster's ocns given its id" do
-      # one cluster with ocns 1,2,3
-      cluster_ocns_table.import([:cluster_id, :ocn], [[1, 1], [1, 2], [1, 3]])
+      import_cluster_ocns(
+        1 => [1001, 1002, 1003]
+      )
 
       c = Cluster.find(id: 1)
-      expect(c.ocns).to contain_exactly(1, 2, 3)
+      expect(c.ocns).to contain_exactly(1001, 1002, 1003)
+    end
+
+    describe "#for_ocns" do
+      it "returns Clusters" do
+        import_cluster_ocns(
+          1 => [1001],
+          2 => [1002]
+        )
+
+        clusters = Cluster.for_ocns([1001, 1002])
+        expect(clusters).to all(be_a(Cluster))
+      end
+
+      it "given one OCN, returns an existing cluster" do
+        import_cluster_ocns(
+          1 => [1001]
+        )
+
+        c = Cluster.for_ocns([1001]).first
+        expect(c.id).to eq(1)
+      end
+
+      it "given multiple OCNs matching a single cluster, returns it" do
+        import_cluster_ocns(
+          1 => [1001, 1002, 1003]
+        )
+
+        c = Cluster.for_ocns([1001, 1002]).first
+        expect(c.id).to eq(1)
+      end
+
+      it "given multiple OCNs matching different clusters, returns them" do
+        import_cluster_ocns(
+          1 => [1001],
+          2 => [1002]
+        )
+
+        clusters = Cluster.for_ocns([1001, 1002])
+        expect(clusters.map(&:id)).to contain_exactly(1, 2)
+      end
+
+      it "given multiple OCNs where not all OCNs match a cluster, returns the matching clusters" do
+        import_cluster_ocns(
+          1 => [1001],
+          2 => [1002]
+        )
+
+        clusters = Cluster.for_ocns([1001, 1003])
+        expect(clusters.map(&:id)).to contain_exactly(1)
+      end
+
+      it "given OCNs where no OCN matches a cluster, returns an empty array" do
+        import_cluster_ocns(
+          1 => [1001],
+          2 => [1002]
+        )
+
+        clusters = Cluster.for_ocns([9000, 9001])
+        expect(clusters).to eq([])
+      end
     end
 
     xit "validates the ocns field is numeric" do

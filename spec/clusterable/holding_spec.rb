@@ -23,6 +23,22 @@ RSpec.describe Clusterable::Holding do
     expect(holding.n_enum_chron).to eq("")
   end
 
+  describe "#cluster" do
+    include_context "with cluster ocns table"
+
+    it "can get the cluster with the holding ocn" do
+      import_cluster_ocns({1 => [1001, 1002]})
+
+      holding = build(:holding, ocn: 1001)
+      expect(holding.cluster.ocns).to include(1001)
+    end
+
+    it "returns nil if there is no cluster with that ocn" do
+      holding = build(:holding, ocn: 9999)
+      expect(holding.cluster).to be(nil)
+    end
+  end
+
   describe "#==" do
     it "== is true if all fields match except date_received and uuid" do
       h2.date_received = Date.today - 1

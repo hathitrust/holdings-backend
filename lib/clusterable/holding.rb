@@ -56,7 +56,7 @@ module Clusterable
     # field :issn, type: String
 
     def cluster
-      Cluster.for_ocns([ocn])
+      Cluster.for_ocns([ocn]).first
     end
 
     # validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received

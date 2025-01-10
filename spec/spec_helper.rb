@@ -16,6 +16,7 @@ require "services"
 require "sidekiq/batch"
 require "rspec-sidekiq"
 require "fileutils"
+require_relative "support/cluster_ocn_table"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true

@@ -14,19 +14,26 @@ require "cluster_error"
 # - htitems
 # - commitments
 class Cluster
-  attr_reader :ocns
+  attr_reader :ocns, :id
 
   def self.db
     Services.holdings_db
   end
 
-  def initialize(ocns: [])
+  def initialize(id: nil, ocns: [])
+    @id = id
     @ocns = ocns
   end
 
   def self.find(id:)
     ocns = db[:cluster_ocns].select(:ocn).where(cluster_id: id).map(:ocn)
-    new(ocns: ocns)
+    new(id: id, ocns: ocns)
+  end
+
+  def self.for_ocns(ocns)
+    db[:cluster_ocns].select(:cluster_id).distinct.where(ocn: ocns).map do |row|
+      find(id: row[:cluster_id])
+    end
   end
 
   def ocn_resolutions
