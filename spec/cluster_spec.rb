@@ -129,8 +129,8 @@ RSpec.describe Cluster do
 
           cluster_items = Cluster.find(id: 1).ht_items
           expect(cluster_items.to_a.length).to eq(2)
-          expect(cluster_items).to include { |i| i.item_id == htitem1.item_id }
-          expect(cluster_items).to include { |i| i.item_id == htitem2.item_id }
+          expect(cluster_items.find { |i| i.item_id == htitem1.item_id }).not_to be(nil)
+          expect(cluster_items.find { |i| i.item_id == htitem2.item_id }).not_to be(nil)
         end
 
         it "returns ht items where all ocns match" do
