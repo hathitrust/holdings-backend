@@ -8,7 +8,36 @@ module Clusterable
   # A holding
   class Holding
     include EnumChron
+
+    ACCESSOR_ATTRS =
+      [
+        :ocn,
+        :local_id,
+        :enum_chron,
+        :n_enum,
+        :n_chron,
+        :n_enum_chron,
+        :status,
+        :condition,
+        :gov_doc_flag,
+        :mono_multi_serial,
+        :date_received,
+        :country_code,
+        :weight,
+        :uuid,
+        :issn
+      ]
+    READER_ATTRS = [:organization]
+    ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
+
+    EQUALITY_EXCLUDED_ATTRS = [:uuid, :date_received]
+    EQUALITY_ATTRS = (ALL_ATTRS - EQUALITY_EXCLUDED_ATTRS)
+
+    ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
+    READER_ATTRS.each { |attr| attr_reader attr }
+
     # Changes to the field list must be reflected in `==` and `same_as`
+    # XXX: save for now for when we create the table schema
     # field :ocn, type: Integer
     # field :organization, type: String
     # field :local_id, type: String
@@ -26,21 +55,23 @@ module Clusterable
     # field :uuid, type: String
     # field :issn, type: String
 
-    # EQUALITY_EXCLUDED_FIELDS = ["_id", "uuid", "date_received"].freeze
-
-    # embedded_in :cluster
+    def cluster
+      Cluster.for_ocns([ocn]).first
+    end
 
     # validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
     # validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
 
-    def initialize(params = nil)
+    def initialize(params = {})
       params&.transform_keys!(&:to_sym)
-      super
+      ALL_ATTRS.each do |attr|
+        send(attr.to_s + "=", params[attr]) if params[attr]
+      end
       set_organization_data if organization
     end
 
     def organization=(organization)
-      super
+      @organization = organization
       set_organization_data
     end
 
@@ -86,11 +117,11 @@ module Clusterable
     # @param other, another holding
     def ==(other)
       self.class == other.class &&
-        (fields.keys - EQUALITY_EXCLUDED_FIELDS).all? do |attr|
+        EQUALITY_ATTRS.all? do |attr|
           self_attr = public_send(attr)
           other_attr = other.public_send(attr)
 
-          (self_attr == other_attr) or (self_attr.blank? and other_attr.blank?)
+          (self_attr == other_attr) or (blank?(self_attr) and blank?(other_attr))
         end
     end
 
@@ -107,15 +138,18 @@ module Clusterable
       ocn == other.ocn
     end
 
+    def to_hash
+      ALL_ATTRS.map { |a| [a, send(a)] }.to_h
+    end
+
     # Turn a holding into a hash key for quick lookup
     # in e.g. cluster_holding.find_old_holdings.
     def update_key
-      raise "not implemented"
-      as_document
-        .slice(*(fields.keys - EQUALITY_EXCLUDED_FIELDS))
+      to_hash
+        .slice(*EQUALITY_ATTRS)
         # fold blank strings & nil to same update key, as in
         # equality above
-        .transform_values { |f| f.blank? ? nil : f }
+        .transform_values { |f| blank?(f) ? nil : f }
         .hash
     end
 
@@ -124,6 +158,10 @@ module Clusterable
     def set_organization_data
       self.country_code = Services.ht_organizations[organization].country_code
       self.weight = Services.ht_organizations[organization].weight
+    end
+
+    def blank?(value)
+      value == "" || value.nil?
     end
   end
 end

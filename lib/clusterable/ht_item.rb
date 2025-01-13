@@ -7,9 +7,20 @@ module Clusterable
   class HtItem
     include EnumChron
 
-    ACCESSOR_ATTRS = [:ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt, :n_enum, :n_chron, :n_enum_chron, :billing_entity, :enum_chron]
+    ACCESSOR_ATTRS = [
+      :ocns,
+      :item_id,
+      :ht_bib_key,
+      :rights,
+      :access,
+      :bib_fmt,
+      :n_enum,
+      :n_chron,
+      :n_enum_chron,
+      :billing_entity,
+      :enum_chron
+    ]
     READER_ATTRS = [:collection_code]
-
     ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
 
     ACCESSOR_ATTRS.each { |attr| attr_accessor attr }

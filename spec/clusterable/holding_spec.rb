@@ -4,37 +4,44 @@ require "spec_helper"
 require "clusterable/holding"
 require "cluster"
 
-RSpec.xdescribe Clusterable::Holding do
-  let(:c) { create(:cluster) }
-  let(:h) { build(:holding, :all_fields) }
+RSpec.describe Clusterable::Holding do
+  let(:holdings_org) { "umich" }
+  let(:h) { build(:holding, :all_fields, organization: holdings_org) }
   let(:h2) { h.clone }
 
-  it "does not have a parent" do
-    expect(build(:holding)._parent).to be_nil
-  end
-
-  it "has a parent" do
-    c.holdings << build(:holding)
-    expect(c.holdings.first._parent).to be(c)
-  end
-
-  it "normalizes enum_chron" do
+  xit "normalizes enum_chron" do
     holding = build(:holding, enum_chron: "v.1 Jul 1999")
     expect(holding.n_enum).to eq("1")
     expect(holding.n_chron).to eq("Jul 1999")
     expect(holding.n_enum_chron).to eq("1\tJul 1999")
   end
 
-  it "does nothing if given an empty enum_chron" do
+  xit "does nothing if given an empty enum_chron" do
     holding = build(:holding, enum_chron: "")
     expect(holding.n_enum).to eq("")
     expect(holding.n_chron).to eq("")
     expect(holding.n_enum_chron).to eq("")
   end
 
+  describe "#cluster" do
+    include_context "with cluster ocns table"
+
+    it "can get the cluster with the holding ocn" do
+      import_cluster_ocns({1 => [1001, 1002]})
+
+      holding = build(:holding, ocn: 1001)
+      expect(holding.cluster.ocns).to include(1001)
+    end
+
+    it "returns nil if there is no cluster with that ocn" do
+      holding = build(:holding, ocn: 9999)
+      expect(holding.cluster).to be(nil)
+    end
+  end
+
   describe "#==" do
     it "== is true if all fields match except date_received and uuid" do
-      h2.date_received = Date.yesterday
+      h2.date_received = Date.today - 1
       h2.uuid = SecureRandom.uuid
       expect(h).to eq(h2)
     end
@@ -60,25 +67,27 @@ RSpec.xdescribe Clusterable::Holding do
       end
     end
 
-    # can't just skip -- fields is not defined
-    #    (described_class.fields.keys - ["date_received", "uuid", "_id"]).each do |attr|
-    #      it "== is false if #{attr} doesn't match" do
-    #        # ensure attribute in h2 is different from h but
-    #        # of the same logical type
-    #
-    #        case h[attr]
-    #        when String
-    #          h2[attr] = "#{h[attr]}junk"
-    #        when Numeric
-    #          h2[attr] = h[attr] + 1
-    #        when true, false, nil
-    #          h2[attr] = !h[attr]
-    #        end
-    #
-    #        expect(h[attr]).not_to eq(h2[attr])
-    #        expect(h).not_to eq(h2)
-    #      end
-    #     end
+    described_class::EQUALITY_ATTRS.each do |attr|
+      it "== is false if #{attr} doesn't match" do
+        # ensure attribute in h2 is different from h but
+        # of the same logical type
+
+        case h.send(attr)
+        when holdings_org
+          # need to have an actual organization
+          h2.send(attr.to_s + "=", "upenn")
+        when String
+          h2.send(attr.to_s + "=", "#{h.send(attr)}junk")
+        when Numeric
+          h2.send(attr.to_s + "=", h.send(attr) + 1)
+        when true, false, nil
+          h2.send(attr.to_s + "=", !h.send(attr))
+        end
+
+        expect(h.send(attr)).not_to eq(h2.send(attr))
+        expect(h).not_to eq(h2)
+      end
+    end
   end
 
   describe "#same_as?" do
@@ -89,7 +98,7 @@ RSpec.xdescribe Clusterable::Holding do
     end
 
     it "same_as is not true if date_received does not match" do
-      h2.date_received = Date.yesterday
+      h2.date_received = Date.today - 1
       expect(h).not_to be_same_as(h2)
     end
   end
