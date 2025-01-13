@@ -32,119 +32,6 @@ RSpec.describe Cluster do
       expect(c.ocns).to contain_exactly(1001, 1002, 1003)
     end
 
-    # TODO: fix nesting
-    describe "#for_ocns" do
-      it "returns Clusters" do
-        import_cluster_ocns(
-          1 => [1001],
-          2 => [1002]
-        )
-
-        clusters = Cluster.for_ocns([1001, 1002])
-        expect(clusters).to all(be_a(Cluster))
-      end
-
-      it "given one OCN, returns an existing cluster" do
-        import_cluster_ocns(
-          1 => [1001]
-        )
-
-        c = Cluster.for_ocns([1001]).first
-        expect(c.id).to eq(1)
-      end
-
-      it "given multiple OCNs matching a single cluster, returns it" do
-        import_cluster_ocns(
-          1 => [1001, 1002, 1003]
-        )
-
-        c = Cluster.for_ocns([1001, 1002]).first
-        expect(c.id).to eq(1)
-      end
-
-      it "given multiple OCNs matching different clusters, returns them" do
-        import_cluster_ocns(
-          1 => [1001],
-          2 => [1002]
-        )
-
-        clusters = Cluster.for_ocns([1001, 1002])
-        expect(clusters.map(&:id)).to contain_exactly(1, 2)
-      end
-
-      it "given multiple OCNs where not all OCNs match a cluster, returns the matching clusters" do
-        import_cluster_ocns(
-          1 => [1001],
-          2 => [1002]
-        )
-
-        clusters = Cluster.for_ocns([1001, 1003])
-        expect(clusters.map(&:id)).to contain_exactly(1)
-      end
-
-      it "given OCNs where no OCN matches a cluster, returns an empty array" do
-        import_cluster_ocns(
-          1 => [1001],
-          2 => [1002]
-        )
-
-        clusters = Cluster.for_ocns([9000, 9001])
-        expect(clusters.any?).to be(false)
-      end
-    end
-
-    describe "#ht_items" do
-      include_context "with hathifiles table"
-
-      it "in a cluster with one ocn, returns matching htitem" do
-        import_cluster_ocns(
-          1 => [1001]
-        )
-
-        htitem = build(:ht_item, ocns: [1001])
-        insert_htitem(htitem)
-
-        cluster_items = Cluster.find(id: 1).ht_items
-        expect(cluster_items.to_a.length).to eq(1)
-        expect(cluster_items.first.item_id).to eq(htitem.item_id)
-      end
-
-      context "with a cluster with multiple ocns" do
-        before(:each) { import_cluster_ocns({1 => [1001, 1002]}) }
-
-        it "returns ht items where some ocns match" do
-          htitem = build(:ht_item, ocns: [1001])
-          insert_htitem(htitem)
-
-          cluster_items = Cluster.find(id: 1).ht_items
-          expect(cluster_items.to_a.length).to eq(1)
-          expect(cluster_items.first.item_id).to eq(htitem.item_id)
-        end
-
-        it "returns multiple ht items with different ocns" do
-          htitem1 = build(:ht_item, ocns: [1001])
-          insert_htitem(htitem1)
-
-          htitem2 = build(:ht_item, ocns: [1002])
-          insert_htitem(htitem2)
-
-          cluster_items = Cluster.find(id: 1).ht_items
-          expect(cluster_items.to_a.length).to eq(2)
-          expect(cluster_items.find { |i| i.item_id == htitem1.item_id }).not_to be(nil)
-          expect(cluster_items.find { |i| i.item_id == htitem2.item_id }).not_to be(nil)
-        end
-
-        it "returns ht items where all ocns match" do
-          htitem = build(:ht_item, ocns: [1001, 1002])
-          insert_htitem(htitem)
-
-          cluster_items = Cluster.find(id: 1).ht_items
-          expect(cluster_items.to_a.length).to eq(1)
-          expect(cluster_items.first.item_id).to eq(htitem.item_id)
-        end
-      end
-    end
-
     xit "validates the ocns field is numeric" do
       expect(described_class.new(ocns: ["a"])).not_to be_valid
     end
@@ -166,6 +53,151 @@ RSpec.describe Cluster do
       c2.save
       expect { c2.ht_items.create(ht) }.to \
         raise_error(Mongo::Error::OperationFailure, /ht_items.item_id_1 dup/)
+    end
+  end
+
+  describe "#for_ocns" do
+    it "returns Clusters" do
+      import_cluster_ocns(
+        1 => [1001],
+        2 => [1002]
+      )
+
+      clusters = Cluster.for_ocns([1001, 1002])
+      expect(clusters).to all(be_a(Cluster))
+    end
+
+    it "given one OCN, returns an existing cluster" do
+      import_cluster_ocns(
+        1 => [1001]
+      )
+
+      c = Cluster.for_ocns([1001]).first
+      expect(c.id).to eq(1)
+    end
+
+    it "given multiple OCNs matching a single cluster, returns it" do
+      import_cluster_ocns(
+        1 => [1001, 1002, 1003]
+      )
+
+      c = Cluster.for_ocns([1001, 1002]).first
+      expect(c.id).to eq(1)
+    end
+
+    it "given multiple OCNs matching different clusters, returns them" do
+      import_cluster_ocns(
+        1 => [1001],
+        2 => [1002]
+      )
+
+      clusters = Cluster.for_ocns([1001, 1002])
+      expect(clusters.map(&:id)).to contain_exactly(1, 2)
+    end
+
+    it "given multiple OCNs where not all OCNs match a cluster, returns the matching clusters" do
+      import_cluster_ocns(
+        1 => [1001],
+        2 => [1002]
+      )
+
+      clusters = Cluster.for_ocns([1001, 1003])
+      expect(clusters.map(&:id)).to contain_exactly(1)
+    end
+
+    it "given OCNs where no OCN matches a cluster, returns an empty array" do
+      import_cluster_ocns(
+        1 => [1001],
+        2 => [1002]
+      )
+
+      clusters = Cluster.for_ocns([9000, 9001])
+      expect(clusters.any?).to be(false)
+    end
+  end
+
+  describe "#ht_items" do
+    include_context "with hathifiles table"
+
+    it "in a cluster with one ocn, returns matching htitem" do
+      import_cluster_ocns(
+        1 => [1001]
+      )
+
+      htitem = build(:ht_item, ocns: [1001])
+      insert_htitem(htitem)
+
+      cluster_items = Cluster.find(id: 1).ht_items
+      expect(cluster_items.to_a.length).to eq(1)
+      expect(cluster_items.first.item_id).to eq(htitem.item_id)
+    end
+
+    context "with a cluster with multiple ocns" do
+      before(:each) { import_cluster_ocns({1 => [1001, 1002]}) }
+
+      it "returns ht items where some ocns match" do
+        htitem = build(:ht_item, ocns: [1001])
+        insert_htitem(htitem)
+
+        cluster_items = Cluster.find(id: 1).ht_items
+        expect(cluster_items.to_a.length).to eq(1)
+        expect(cluster_items.first.item_id).to eq(htitem.item_id)
+      end
+
+      it "returns multiple ht items with different ocns" do
+        htitem1 = build(:ht_item, ocns: [1001])
+        insert_htitem(htitem1)
+
+        htitem2 = build(:ht_item, ocns: [1002])
+        insert_htitem(htitem2)
+
+        cluster_items = Cluster.find(id: 1).ht_items
+        expect(cluster_items.to_a.length).to eq(2)
+        expect(cluster_items.find { |i| i.item_id == htitem1.item_id }).not_to be(nil)
+        expect(cluster_items.find { |i| i.item_id == htitem2.item_id }).not_to be(nil)
+      end
+
+      it "returns ht items where all ocns match" do
+        htitem = build(:ht_item, ocns: [1001, 1002])
+        insert_htitem(htitem)
+
+        cluster_items = Cluster.find(id: 1).ht_items
+        expect(cluster_items.to_a.length).to eq(1)
+        expect(cluster_items.first.item_id).to eq(htitem.item_id)
+      end
+    end
+  end
+
+  describe "#holdings" do
+    include_context "with holdings table"
+
+    it "can find a holding in a cluster" do
+      import_cluster_ocns(
+        1 => [1001]
+      )
+
+      holding = build(:holding, ocn: 1001)
+      insert_holding(holding)
+
+      cluster_holdings = Cluster.find(id: 1).holdings
+      expect(cluster_holdings.to_a.length).to eq(1)
+      expect(cluster_holdings.first.local_id).to eq(holding.local_id)
+    end
+
+    it "can find multiple holdings in a cluster with multiple ocns" do
+      import_cluster_ocns(
+        1 => [1001, 1002]
+      )
+
+      holdings = [
+        build(:holding, ocn: 1001),
+        build(:holding, ocn: 1002)
+      ]
+      holdings.each { |holding| insert_holding(holding) }
+
+      cluster_holdings = Cluster.find(id: 1).holdings
+      expect(cluster_holdings.to_a.length).to eq(2)
+      expect(cluster_holdings.map(&:local_id)).to contain_exactly(*holdings.map(&:local_id))
     end
   end
 
@@ -313,22 +345,6 @@ RSpec.describe Cluster do
         expect(c.holdings.size).to eq(0)
         expect(c.copy_counts["umich"]).to eq(0)
       end
-    end
-  end
-
-  describe "#holdings" do
-    include_context "with holdings table"
-    it "can find a holding in a cluster" do
-      import_cluster_ocns(
-        1 => [1001]
-      )
-
-      holding = build(:holding, ocn: 1001)
-      insert_holding(holding)
-
-      cluster_holdings = Cluster.find(id: 1).holdings
-      expect(cluster_holdings.to_a.length).to eq(1)
-      expect(cluster_holdings.first.local_id).to eq(holding.local_id)
     end
   end
 end
