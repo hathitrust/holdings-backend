@@ -88,7 +88,59 @@ RSpec.describe Cluster do
         )
 
         clusters = Cluster.for_ocns([9000, 9001])
-        expect(clusters).to eq([])
+        expect(clusters.any?).to be(false)
+      end
+    end
+
+    describe "#ht_items" do
+      include_context "with hathifiles table"
+
+      it "in a cluster with one ocn, returns matching htitem" do
+        import_cluster_ocns(
+          1 => [1001]
+        )
+
+        htitem = build(:ht_item, ocns: [1001])
+        insert_htitem(htitem)
+
+        cluster_items = Cluster.find(id: 1).ht_items
+        expect(cluster_items.to_a.length).to eq(1)
+        expect(cluster_items.first.item_id).to eq(htitem.item_id)
+      end
+
+      context "with a cluster with multiple ocns" do
+        before(:each) { import_cluster_ocns({1 => [1001, 1002]}) }
+
+        it "returns ht items where some ocns match" do
+          htitem = build(:ht_item, ocns: [1001])
+          insert_htitem(htitem)
+
+          cluster_items = Cluster.find(id: 1).ht_items
+          expect(cluster_items.to_a.length).to eq(1)
+          expect(cluster_items.first.item_id).to eq(htitem.item_id)
+        end
+
+        it "returns multiple ht items with different ocns" do
+          htitem1 = build(:ht_item, ocns: [1001])
+          insert_htitem(htitem1)
+
+          htitem2 = build(:ht_item, ocns: [1002])
+          insert_htitem(htitem2)
+
+          cluster_items = Cluster.find(id: 1).ht_items
+          expect(cluster_items.to_a.length).to eq(2)
+          expect(cluster_items).to include { |i| i.item_id == htitem1.item_id }
+          expect(cluster_items).to include { |i| i.item_id == htitem2.item_id }
+        end
+
+        it "returns ht items where all ocns match" do
+          htitem = build(:ht_item, ocns: [1001, 1002])
+          insert_htitem(htitem)
+
+          cluster_items = Cluster.find(id: 1).ht_items
+          expect(cluster_items.to_a.length).to eq(1)
+          expect(cluster_items.first.item_id).to eq(htitem.item_id)
+        end
       end
     end
 
