@@ -236,7 +236,7 @@ module Reports
   # inherit from QueryElement, and Restriction adds some stuff.
   class Decoration < QueryElement
     def initialize(on: nil, key: nil)
-      super(on: on, key: key)
+      super
     end
   end
 

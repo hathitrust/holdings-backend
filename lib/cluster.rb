@@ -33,7 +33,12 @@ class Cluster
   def self.for_ocns(ocns)
     return to_enum(__method__, ocns) unless block_given?
 
-    db[:cluster_ocns].select(:cluster_id).distinct.where(ocn: ocns).each do |row|
+    dataset = db[:cluster_ocns]
+      .select(:cluster_id)
+      .distinct
+      .where(ocn: ocns)
+
+    dataset.each do |row|
       yield find(id: row[:cluster_id])
     end
   end

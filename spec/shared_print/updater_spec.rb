@@ -56,7 +56,7 @@ RSpec.xdescribe SharedPrint::Updater do
   let(:upd4) { {ocn: ocn1, organization: org1, local_id: loc1, policies: "blo"} }
   let(:upd5) { {ocn: ocn1, organization: org1, local_id: loc1, policies: "digitizeondemand, non-repro"} }
 
-  let(:updater) { described_class.new("/dev/null") }
+  let(:updater) { described_class.new(File::NULL) }
 
   before(:each) do
     Cluster.collection.find.delete_many

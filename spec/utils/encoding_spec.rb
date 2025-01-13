@@ -62,20 +62,20 @@ RSpec.describe Utils::Encoding do
   end
   describe "#capture_outs" do
     it "captures the different outputs separately" do
-      outs = described_class.new("/dev/null").capture_outs("echo 'foo'")
+      outs = described_class.new(File::NULL).capture_outs("echo 'foo'")
       expect(outs[:stat]).to eq 0
       expect(outs[:stderr]).to eq ""
       expect(outs[:stdout]).to eq "foo"
     end
     it "captures stderr if there is any" do
-      outs = described_class.new("/dev/null").capture_outs("echo 'foo' 1>&2")
+      outs = described_class.new(File::NULL).capture_outs("echo 'foo' 1>&2")
       expect(outs[:stat]).to eq 0
       expect(outs[:stderr]).to eq "foo"
       expect(outs[:stdout]).to eq ""
     end
     it "captures exit status" do
       # But it multiplies exit status by 256?
-      outs = described_class.new("/dev/null").capture_outs("exit 1")
+      outs = described_class.new(File::NULL).capture_outs("exit 1")
       expect(outs[:stat]).to eq 256
       expect(outs[:stderr]).to eq ""
       expect(outs[:stdout]).to eq ""
