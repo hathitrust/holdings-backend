@@ -18,6 +18,7 @@ require "rspec-sidekiq"
 require "fileutils"
 require_relative "support/cluster_ocn_table"
 require_relative "support/hathifiles_table"
+require_relative "support/holdings_table"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true

@@ -17,6 +17,7 @@ Services.register(:holdings_db) { DataSources::HoldingsDB.new }
 Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
 Services.register(:hathifiles_table) { Services.holdings_db[:hf] }
 Services.register(:hathifiles_ocn_table) { Services.holdings_db[:hf_oclc] }
+Services.register(:holdings_table) { Services.holdings_db[:holdings] }
 Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
 Services.register(:ht_collections) { DataSources::HTCollections.new }
 Services.register(:logger) do

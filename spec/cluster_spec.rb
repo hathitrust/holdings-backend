@@ -8,9 +8,9 @@ RSpec.describe Cluster do
   let(:ocn2) { 6 }
   let(:ht) { build(:ht_item).to_hash }
 
-  describe "#initialize" do
-    include_context "with cluster ocns table"
+  include_context "with cluster ocns table"
 
+  describe "#initialize" do
     it "creates a new cluster" do
       expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
     end
@@ -32,6 +32,7 @@ RSpec.describe Cluster do
       expect(c.ocns).to contain_exactly(1001, 1002, 1003)
     end
 
+    # TODO: fix nesting
     describe "#for_ocns" do
       it "returns Clusters" do
         import_cluster_ocns(
@@ -312,6 +313,22 @@ RSpec.describe Cluster do
         expect(c.holdings.size).to eq(0)
         expect(c.copy_counts["umich"]).to eq(0)
       end
+    end
+  end
+
+  describe "#holdings" do
+    include_context "with holdings table"
+    it "can find a holding in a cluster" do
+      import_cluster_ocns(
+        1 => [1001]
+      )
+
+      holding = build(:holding, ocn: 1001)
+      insert_holding(holding)
+
+      cluster_holdings = Cluster.find(id: 1).holdings
+      expect(cluster_holdings.to_a.length).to eq(1)
+      expect(cluster_holdings.first.local_id).to eq(holding.local_id)
     end
   end
 end

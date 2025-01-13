@@ -13,6 +13,7 @@ module Clusterable
       [
         :ocn,
         :local_id,
+        :organization,
         :enum_chron,
         :n_enum,
         :n_chron,
@@ -22,12 +23,11 @@ module Clusterable
         :gov_doc_flag,
         :mono_multi_serial,
         :date_received,
-        :country_code,
-        :weight,
         :uuid,
         :issn
       ]
-    READER_ATTRS = [:organization]
+
+    READER_ATTRS = []
     ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
 
     EQUALITY_EXCLUDED_ATTRS = [:uuid, :date_received]
@@ -35,25 +35,6 @@ module Clusterable
 
     ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
     READER_ATTRS.each { |attr| attr_reader attr }
-
-    # Changes to the field list must be reflected in `==` and `same_as`
-    # XXX: save for now for when we create the table schema
-    # field :ocn, type: Integer
-    # field :organization, type: String
-    # field :local_id, type: String
-    # field :enum_chron, type: String, default: ""
-    # field :n_enum, type: String, default: ""
-    # field :n_chron, type: String, default: ""
-    # field :n_enum_chron, type: String, default: ""
-    # field :status, type: String
-    # field :condition, type: String
-    # field :gov_doc_flag, type: Boolean
-    # field :mono_multi_serial, type: String
-    # field :date_received, type: DateTime
-    # field :country_code, type: String
-    # field :weight, type: Float
-    # field :uuid, type: String
-    # field :issn, type: String
 
     def cluster
       Cluster.for_ocns([ocn]).first
@@ -67,12 +48,6 @@ module Clusterable
       ALL_ATTRS.each do |attr|
         send(attr.to_s + "=", params[attr]) if params[attr]
       end
-      set_organization_data if organization
-    end
-
-    def organization=(organization)
-      @organization = organization
-      set_organization_data
     end
 
     def brt_lm_access?
@@ -109,6 +84,24 @@ module Clusterable
     def self.new_from_scrubbed_file_line(line)
       rec = JSON.parse(line)
       new(rec)
+    end
+
+    def self.db
+      Services.holdings_table
+    end
+
+    def self.with_ocns(ocns)
+      return to_enum(__method__, ocns) unless block_given?
+
+      dataset = db.where(ocn: ocns)
+
+      dataset.each do |row|
+        yield from_row(row)
+      end
+    end
+
+    def self.from_row(row)
+      new(row)
     end
 
     # Is false when any field other than _id, date_received or uuid is not the
@@ -153,12 +146,15 @@ module Clusterable
         .hash
     end
 
-    private
-
-    def set_organization_data
-      self.country_code = Services.ht_organizations[organization].country_code
-      self.weight = Services.ht_organizations[organization].weight
+    def country_code
+      Services.ht_organizations[organization].country_code
     end
+
+    def weight
+      Services.ht_organizations[organization].weight
+    end
+
+    private
 
     def blank?(value)
       value == "" || value.nil?
