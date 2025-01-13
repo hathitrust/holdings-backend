@@ -24,7 +24,6 @@ class OCNConcordanceDiffs
   def load(batch_size: 250_000,
     loader: Loader::FileLoader.new(batch_loader: Loader::OCNResolutionLoader.new,
       batch_size: batch_size))
-
     logger.info("Started loading #{delete_filename}")
     loader.load_deletes(delete_filename)
     logger.info("Started loading #{add_filename}")

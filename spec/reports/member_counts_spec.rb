@@ -8,7 +8,7 @@ RSpec.xdescribe "MemberCounts" do
   let(:mokk_members) { ["umich", "utexas", "smu"] }
 
   let(:mcr) do
-    Reports::MemberCounts.new("/dev/null", "#{ENV["TEST_TMP"]}/member_counts_reports", mokk_members)
+    Reports::MemberCounts.new(File::NULL, "#{ENV["TEST_TMP"]}/member_counts_reports", mokk_members)
   end
 
   let(:rows) { mcr.rows }
