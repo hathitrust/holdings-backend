@@ -5,7 +5,11 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "overlap/single_part_overlap"
 
-RSpec.xdescribe Overlap::SinglePartOverlap do
+RSpec.describe Overlap::SinglePartOverlap do
+  include_context "with cluster ocns table"
+  include_context "with hathifiles table"
+  include_context "with holdings table"
+
   let(:c) { build(:cluster) }
   let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
   let(:ht2) do
@@ -23,13 +27,15 @@ RSpec.xdescribe Overlap::SinglePartOverlap do
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    Cluster.each(&:delete)
-    c.save
-    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
-    c.reload
+    import_cluster_ocns(
+      1 => c.ocns
+    )
+
+    insert_htitem(ht)
+
+    [h, h2, h3].each do |holding|
+      insert_holding(holding)
+    end
   end
 
   describe "#copy_count" do
@@ -39,8 +45,7 @@ RSpec.xdescribe Overlap::SinglePartOverlap do
     end
 
     it "returns 1 if only billing_entity matches" do
-      ht.update_attributes(billing_entity: "different_org")
-      c.reload
+      ht.billing_entity = "different_org"
       expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
     end
 

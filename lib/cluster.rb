@@ -14,7 +14,8 @@ require "cluster_error"
 # - htitems
 # - commitments
 class Cluster
-  attr_reader :ocns, :id
+  attr_reader :id
+  attr_accessor :ocns
 
   def self.db
     Services.holdings_db
@@ -56,7 +57,7 @@ class Cluster
   end
 
   def holdings
-    []
+    Clusterable::Holding.with_ocns(ocns)
   end
 
   UPDATE_LAST_MODIFIED = {"$currentDate" => {last_modified: true}}.freeze

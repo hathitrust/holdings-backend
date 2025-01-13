@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS `holdings_loaded_files` (
   `type` varchar(32) NOT NULL,
   PRIMARY KEY (`filename`),
   KEY (`type`,`source`,`produced`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
