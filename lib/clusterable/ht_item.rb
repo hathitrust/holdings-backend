@@ -33,11 +33,12 @@ module Clusterable
     def self.with_ocns(ocns)
       return to_enum(__method__, ocns) unless block_given?
 
-      db.select { hf.* }
+      dataset = db.select { hf.* }
         .natural_join(:hf_oclc)
         .where(value: ocns)
         .group_by(:htid)
-        .each do |row|
+
+      dataset.each do |row|
         yield from_row(row)
       end
     end
