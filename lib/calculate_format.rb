@@ -12,7 +12,7 @@ class CalculateFormat
   #
   # @param ht_item, the HT item to calculate the format on.
   def item_format(ht_item)
-    if ht_item.bib_fmt == "SE" || @cluster.large?
+    if ht_item.bib_fmt == "SE"
       "ser"
     elsif cluster_has_item_with_enum_and_same_ht_bib_key? ht_item
       "mpm"
@@ -42,7 +42,7 @@ class CalculateFormat
 
   def cluster_has_item_with_enum_and_same_ht_bib_key?(ht_item)
     @cluster.ht_items.any? do |ht|
-      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum.empty?
+      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum&.empty?
     end
   end
 end
