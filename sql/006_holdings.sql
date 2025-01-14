@@ -1,6 +1,7 @@
 use `ht_repository`;
 
-CREATE TABLE IF NOT EXISTS `holdings` (
+DROP TABLE IF EXISTS `holdings`;
+CREATE TABLE `holdings` (
   `ocn`          int(11) NOT NULL,
   `organization` varchar(64) NOT NULL,
   `local_id`     varchar(255) NOT NULL,

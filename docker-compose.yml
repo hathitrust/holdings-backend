@@ -18,7 +18,14 @@ x-holdings-container: &holdings-container-defaults
     - gem_cache:/gems
   command: bundle exec rspec
   environment: &holdings-default-environment
-    MYSQL_CONNECTION_STRING: "mysql2://ht_repository:ht_repository@mariadb/ht_repository"
+    MARIADB_HOLDINGS_RW_HOST: mariadb
+    MARIADB_HOLDINGS_RW_USERNAME: ht_repository
+    MARIADB_HOLDINGS_RW_PASSWORD: ht_repository
+    MARIADB_HOLDINGS_RW_DATABASE: ht_repository
+    MARIADB_HATHIFILES_RW_HOST: mariadb
+    MARIADB_HATHIFILES_RW_USERNAME: ht_repository
+    MARIADB_HATHIFILES_RW_PASSWORD: ht_repository
+    MARIADB_HATHIFILES_RW_DATABASE: ht_repository
     PUSHGATEWAY: http://pushgateway:9091
     DATABASE_ENV: development
   depends_on:
