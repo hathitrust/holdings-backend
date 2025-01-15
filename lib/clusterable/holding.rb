@@ -86,14 +86,14 @@ module Clusterable
       new(rec)
     end
 
-    def self.db
+    def self.table
       Services.holdings_table
     end
 
     def self.with_ocns(ocns)
       return to_enum(__method__, ocns) unless block_given?
 
-      dataset = db.where(ocn: ocns)
+      dataset = table.where(ocn: ocns.to_a)
 
       dataset.each do |row|
         yield from_row(row)

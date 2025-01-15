@@ -26,14 +26,14 @@ module Clusterable
     ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
     READER_ATTRS.each { |attr| attr_reader attr }
 
-    def self.db
+    def self.table
       Services.hathifiles_table
     end
 
     def self.with_ocns(ocns)
       return to_enum(__method__, ocns) unless block_given?
 
-      dataset = db.select { hf.* }
+      dataset = table.select { hf.* }
         .natural_join(:hf_oclc)
         .where(value: ocns.map(&:to_s))
         .group_by(:htid)
@@ -44,7 +44,20 @@ module Clusterable
     end
 
     def self.find(item_id:)
-      from_row(db.where(htid: item_id).first!)
+      from_row(table.where(htid: item_id).first!)
+    end
+
+    # Returns the htitem if it is in the listed cluster, otherwise nil.
+    def self.find_in_cluster(item_id:, ocns:)
+      row = table.select { hf.* }
+        .natural_join(:hf_oclc)
+        .where(value: ocns.map(&:to_s), htid: item_id)
+        .group_by(:htid)
+        .first
+
+      if row
+        from_row(row)
+      end
     end
 
     def self.from_row(row)
@@ -64,6 +77,11 @@ module Clusterable
       ALL_ATTRS.each do |attr|
         send(attr.to_s + "=", params[attr]) if params[attr]
       end
+    end
+
+    def cluster
+      # TODO: raise if there's more than one (i.e. needs merge?)
+      Cluster.for_ocns(ocns).first
     end
 
     def collection_code=(collection_code)

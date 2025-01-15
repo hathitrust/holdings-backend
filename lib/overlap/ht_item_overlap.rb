@@ -10,7 +10,7 @@ module Overlap
 
     def initialize(ht_item)
       @ht_item = ht_item
-      @cluster = Cluster.for_ocns(ht_item.ocns).first
+      @cluster = ht_item.cluster
       @matching_orgs = organizations_with_holdings
       @matching_members = members_with_holdings
     end

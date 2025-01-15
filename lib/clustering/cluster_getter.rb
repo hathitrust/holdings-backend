@@ -3,11 +3,17 @@
 require "cluster"
 
 module Clustering
-  # This class provides a Cluster that contains the OCNs you want. There are
-  # effectively three strategies:
+  # This class provides a Cluster that contains all the given OCNs. Thus,
+  # a call to ClusterGetter.get(@ocns) effectively says: these OCNs belong
+  # together in a cluster.
   #
-  # - Fetch an existing cluster that has the OCNs you want
-  # - Merge multiple clusters together to get a single one with the OCNs you want
+  # TODO: consider renaming to ClusterOCNs.cluster(@ocns)?
+  #
+  # If some cluster exists that has at least some of the requested OCNs:
+  # - Add any other OCNs not in any cluster yet to that cluster
+  # - Merge other clusters containing some of these OCNs with that cluster
+  #
+  # Otherwise:
   # - Make a new cluster with the OCNs
   class ClusterGetter
     def initialize(ocns)
@@ -15,38 +21,41 @@ module Clustering
     end
 
     def get
-      raise "not implemented"
-      Retryable.new.run do
-        try_strategies.tap { |c| yield c if block_given? }
-      end
+      find_or_create.tap { |c| yield c if block_given? }
     end
 
     private
 
-    def try_strategies
-      find_or_merge || Cluster.create(ocns: @ocns)
-    end
-
-    # @return A single cluster that contains all the members & OCNs of the
-    # original clusters, or nil if there is no appropriate cluster.
-    def find_or_merge
+    # @return A single cluster that contains all the requested OCNs,
+    # or nil if no OCNs were provided.
+    #
+    # Finds an existing cluster with some of the OCNs, then adds the other OCNs
+    # to it, or creates a new cluster if none of the OCNs are in any existing
+    # cluster.
+    def find_or_create
       return unless @ocns.any?
 
-      # The clusters we find might change if the transaction gets aborted, but
-      # we also don't need to start a transaction unless we find there are
-      # multiple clusters that have to be merged. So, we retry the entire
-      # operation, but don't start a transaction until we know we actually need
-      # to merge clusters.
+      clusters = Cluster.for_ocns(@ocns).to_a
 
-      @clusters = Cluster.for_ocns(@ocns)
-      @target = @clusters.shift
-
-      return @target if @target.nil? || @clusters.empty?
-
-      merge
+      if clusters.none?
+        Cluster.create(ocns: @ocns) if clusters.none?
+      else
+        clusters.first.tap do |target_cluster|
+          add_additional_ocns(target_cluster, clusters)
+          merge(target_cluster, clusters) if clusters.count > 1
+        end
+      end
     end
 
-    def merge
+    def add_additional_ocns(target_cluster, clusters)
+      attested_ocns = clusters.collect(&:ocns).reduce(&:merge)
+      additional_ocns = @ocns.to_set - attested_ocns
+
+      target_cluster.add_ocns(additional_ocns)
+    end
+
+    # Merges OCNs for all the given clusters into the target cluster.
+    def merge(target_cluster, clusters)
       raise "not implemented"
       Retryable.ensure_transaction do
         @clusters.each do |source|

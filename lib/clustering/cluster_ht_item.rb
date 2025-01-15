@@ -9,7 +9,6 @@ module Clustering
   # Services for batch loading HT items
   class ClusterHtItem
     def initialize(*ht_items)
-      raise "not implemented"
       @ht_items = ht_items.flatten
       @ocns = @ht_items.first.ocns
       @any_updated = false

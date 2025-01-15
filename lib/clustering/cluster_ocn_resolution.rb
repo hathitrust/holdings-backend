@@ -16,9 +16,10 @@ module Clustering
       end
     end
 
+    # TODO make sure this whole thing is in the scope of a transaction incl ClusterGetter.
     def cluster(getter: ClusterGetter.new(@ocns))
       getter.get do |cluster|
-        add_resolutions(cluster)
+        @resolutions.map(&:save)
       end
     end
 
@@ -38,13 +39,6 @@ module Clustering
           Reclusterer.new(c, resolution.ocns).recluster
         end
       end
-    end
-
-    private
-
-    def add_resolutions(cluster)
-      to_add = @resolutions.reject { |r| cluster.ocn_resolutions.include? r }
-      cluster.add_ocn_resolutions(to_add)
     end
   end
 end

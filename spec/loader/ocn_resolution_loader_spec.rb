@@ -3,7 +3,7 @@
 require "spec_helper"
 require "loader/ocn_resolution_loader"
 
-RSpec.xdescribe Loader::OCNResolutionLoader do
+RSpec.describe Loader::OCNResolutionLoader do
   let(:line) do
     [
       "123", # deprecated
@@ -20,7 +20,8 @@ RSpec.xdescribe Loader::OCNResolutionLoader do
   end
 
   describe "#load" do
-    before(:each) { Cluster.each(&:delete) }
+    include_context "with cluster ocns table"
+    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
 
     it "persists a batch of OCNResolutions" do
       resolution1 = build(:ocn_resolution)

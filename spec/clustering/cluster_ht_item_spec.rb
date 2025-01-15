@@ -2,18 +2,17 @@
 
 require "spec_helper"
 require "clustering/cluster_ht_item"
-RSpec.xdescribe Clustering::ClusterHtItem do
+RSpec.describe Clustering::ClusterHtItem do
   let(:item) { build(:ht_item) }
   let(:item2) { build(:ht_item, ocns: ocns) }
   let(:ocns) { item.ocns }
   let(:batch) { [item, item2] }
-  let(:empty_cluster) { create(:cluster, ocns: ocns) }
+  let(:empty_cluster) { build(:cluster, ocns: ocns) }
   let(:cluster_with_item) { create(:cluster, ocns: ocns, ht_items: [item]) }
   let(:no_ocn) { build(:ht_item, ocns: []) }
 
-  before(:each) do
-    Cluster.each(&:delete)
-  end
+  include_context "with cluster ocns table"
+  include_context "with hathifiles table"
 
   describe "#initialize" do
     it "accepts a single HTItem" do
@@ -55,11 +54,14 @@ RSpec.xdescribe Clustering::ClusterHtItem do
 
   describe "#cluster" do
     it "adds multiple htitems to the cluster" do
+      # these will already be in the hf table
+      batch.each { |htitem| insert_htitem(htitem) }
+
       cluster = described_class.new(batch).cluster
       expect(cluster.ht_items.to_a.size).to eq(2)
     end
 
-    it "first looks in the cluster it has for the htitem to update" do
+    xit "first looks in the cluster it has for the htitem to update" do
       # ocn hasn't changed, so htitem should be in the initial cluster we got and
       # we shouldn't have to go fish
       cluster_with_item.save
@@ -70,14 +72,17 @@ RSpec.xdescribe Clustering::ClusterHtItem do
     end
 
     it "adds an HT Item to an existing cluster" do
+      # this will already be in the hf table
+      insert_htitem(item)
+
       empty_cluster.save
       cluster = described_class.new(item).cluster
-      expect(cluster.ht_items.first._parent.id).to eq(empty_cluster.id)
+      expect(cluster.ht_items.first.cluster.id).to eq(empty_cluster.id)
       expect(cluster.ht_items.to_a.size).to eq(1)
       expect(Cluster.count).to eq(1)
     end
 
-    it "updates the last_modified_date when adding an htitem" do
+    xit "updates the last_modified_date when adding an htitem" do
       empty_cluster.save
       orig_last_modified = empty_cluster.last_modified
       cluster = described_class.new(item).cluster
@@ -87,13 +92,16 @@ RSpec.xdescribe Clustering::ClusterHtItem do
 
     it "creates a new cluster if no match is found" do
       new_item = build(:ht_item)
+      # this will already be in the hf table
+      insert_htitem(new_item)
+
       empty_cluster.save
       new_cluster = described_class.new(new_item).cluster
       expect(new_cluster.id).not_to eq(empty_cluster.id)
       expect(Cluster.count).to eq(2)
     end
 
-    it "merges two or more clusters" do
+    xit "merges two or more clusters" do
       # first cluster with ht's ocns
       c = described_class.new(item).cluster
       # a second cluster with different ocns
@@ -106,25 +114,27 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       expect(cluster.ht_items.to_a.size).to eq(3)
     end
 
-    it "cluster has its embed's ocns" do
+    xit "cluster has its item's ocns" do
       empty_cluster.save
       item.ocns << rand(1_000_000)
+      # this will already be in the hf table
+      insert_htitem(item)
       cluster = described_class.new(item).cluster
       expect(cluster.ocns).to eq(item.ocns)
     end
 
-    it "creates a new cluster for an OCNless Item" do
+    xit "creates a new cluster for an OCNless Item" do
       cluster = described_class.new(no_ocn).cluster
       expect(cluster.ht_items.to_a.first.item_id).to eq(no_ocn.item_id)
     end
 
-    it "cluster without OCN contains OCNless Item" do
+    xit "cluster without OCN contains OCNless Item" do
       cluster = described_class.new(no_ocn).cluster
       expect(cluster.ht_items.to_a.first).to eq(no_ocn)
       expect(Cluster.each.to_a.first.ht_items.to_a.first).to eq(no_ocn)
     end
 
-    it "creates a new cluster for multiple OCNless Items" do
+    xit "creates a new cluster for multiple OCNless Items" do
       no_ocn2 = build(:ht_item, ocns: [])
       cluster = described_class.new(no_ocn).cluster
       cluster2 = described_class.new(no_ocn2).cluster
@@ -132,7 +142,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       expect(Cluster.count).to eq(2)
     end
 
-    context "with HT2 as an update to HT" do
+    xcontext "with HT2 as an update to HT" do
       let(:update_item) { build(:ht_item, item_id: item.item_id) }
 
       it "removes the old cluster" do
@@ -145,7 +155,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       end
     end
 
-    context "with HT2 with the same OCNS as HT" do
+    xcontext "with HT2 with the same OCNS as HT" do
       let(:update_item) { build(:ht_item, item_id: item.item_id, ocns: item.ocns) }
 
       it "only updates the HT Item" do
@@ -174,7 +184,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       end
     end
 
-    context "without concordance rules" do
+    xcontext "without concordance rules" do
       it "reclusters when an HTItem in the cluster loses an OCN" do
         item2.ocns << 1
         described_class.new(item).cluster
@@ -187,7 +197,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       end
     end
 
-    context "with concordance rules" do
+    xcontext "with concordance rules" do
       it "can add an HTItem" do
         resolution = build(:ocn_resolution)
         htitem = build(:ht_item, ocns: [resolution.deprecated])
@@ -197,7 +207,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       end
 
       # No longer necessary. Reclusterer will determine if it actually needs to be reclustered.
-      xit "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
+      it "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
         resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         old_cluster = create(:cluster, ocns: [1, 2, 3],
@@ -279,7 +289,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
       end
     end
 
-    context "when HTItem is moving clusters" do
+    xcontext "when HTItem is moving clusters" do
       it "deletes the old cluster for an OCN-less HTItem that gains an OCN" do
         ocnless_cluster = described_class.new(no_ocn).cluster
         ocnless_cluster.save
@@ -350,7 +360,7 @@ RSpec.xdescribe Clustering::ClusterHtItem do
     end
   end
 
-  describe "#delete" do
+  xdescribe "#delete" do
     let(:item2) { build(:ht_item, ocns: item.ocns) }
 
     before(:each) do

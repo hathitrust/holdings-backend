@@ -7,3 +7,5 @@ CREATE TABLE `cluster_ocns` (
   PRIMARY KEY (ocn),
   INDEX (cluster_id)
 ) ENGINE=InnoDB;
+
+CREATE SEQUENCE IF NOT EXISTS `cluster_ids`;
