@@ -51,6 +51,8 @@ module DataSources
         .transform_values { |h| DataSources::HTCollection.new(**h) }
     end
 
+    # TODO - should reload periodically -- when a new job starts, at least.
+    # Re-checking the database on a miss might also be sufficient.
     def [](collection)
       if @collections.key?(collection)
         @collections[collection]

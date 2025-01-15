@@ -13,7 +13,7 @@ CREATE TABLE `holdings` (
   `condition`    enum('BRT', '') NULL,
   `gov_doc_flag` tinyint(1) DEFAULT '0' NOT NULL,
   `mono_multi_serial` enum('mix', 'mon', 'spm', 'mpm', 'ser') NOT NULL,
-  `date_received` datetime NOT NULL,
+  `date_received` date NOT NULL,
   `uuid`         char(36) NOT NULL,
   `issn`         varchar(255) NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
