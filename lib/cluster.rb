@@ -87,7 +87,7 @@ class Cluster
   end
 
   def item_enums
-    @item_enums ||= ht_items.pluck(:n_enum).uniq
+    @item_enums ||= ht_items.collect(&:n_enum).uniq
   end
 
   # Maps enums to list of orgs that have a holding with that enum
