@@ -1,6 +1,7 @@
 USE `ht_repository`;
 
-CREATE TABLE IF NOT EXISTS `holdings_loaded_files` (
+DROP TABLE IF EXISTS `holdings_loaded_files`;
+CREATE TABLE `holdings_loaded_files` (
   `filename` varchar(255) NOT NULL,
   `produced` date NOT NULL,
   `loaded` datetime NOT NULL,

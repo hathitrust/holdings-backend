@@ -35,7 +35,7 @@ module Clusterable
 
       dataset = db.select { hf.* }
         .natural_join(:hf_oclc)
-        .where(value: ocns)
+        .where(value: ocns.map(&:to_s))
         .group_by(:htid)
 
       dataset.each do |row|

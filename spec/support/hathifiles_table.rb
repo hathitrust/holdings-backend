@@ -3,7 +3,7 @@ require "services"
 
 RSpec.shared_context "with hathifiles table" do
   before(:all) do
-    hf_db = HathifilesDatabase.new(Services.holdings_db.uri)
+    hf_db = HathifilesDatabase.new
     hf_db.recreate_tables!
   end
 

@@ -1,6 +1,7 @@
 USE `ht_repository`;
 
-CREATE TABLE IF NOT EXISTS `holdings_htitem_htmember` (
+DROP TABLE IF EXISTS `holdings_htitem_htmember`;
+CREATE TABLE `holdings_htitem_htmember` (
   `lock_id` varchar(300) NOT NULL,
   `cluster_id` varchar(25) NOT NULL,
   `volume_id` varchar(50) NOT NULL,
