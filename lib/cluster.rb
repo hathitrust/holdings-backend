@@ -95,7 +95,7 @@ class Cluster
   end
 
   def ht_item(item_id)
-    Clusterable::HtItem.find_in_cluster(item_id: item_id, ocns: ocns)
+    Clusterable::HtItem.find(item_id: item_id, ocns: ocns)
   end
 
   def commitments

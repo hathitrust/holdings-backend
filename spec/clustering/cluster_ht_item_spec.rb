@@ -3,9 +3,10 @@
 require "spec_helper"
 require "clustering/cluster_ht_item"
 RSpec.describe Clustering::ClusterHtItem do
-  let(:item) { build(:ht_item) }
+  let(:item) { build(:ht_item, ocns: ocns) }
   let(:item2) { build(:ht_item, ocns: ocns) }
-  let(:ocns) { item.ocns }
+  let(:ocn) { rand(1..1_000_000) }
+  let(:ocns) { [ocn] }
   let(:batch) { [item, item2] }
   let(:empty_cluster) { build(:cluster, ocns: ocns) }
   let(:cluster_with_item) { create(:cluster, ocns: ocns, ht_items: [item]) }
@@ -114,13 +115,17 @@ RSpec.describe Clustering::ClusterHtItem do
       expect(cluster.ht_items.to_a.size).to eq(3)
     end
 
-    xit "cluster has its item's ocns" do
+    it "new OCN on item is added to cluster" do
+      # cluster with one OCN
       empty_cluster.save
-      item.ocns << rand(1_000_000)
-      # this will already be in the hf table
+
+      # add an item with that OCN and a second OCN
+      item.ocns << ocn + 1
       insert_htitem(item)
       cluster = described_class.new(item).cluster
-      expect(cluster.ocns).to eq(item.ocns)
+
+      # cluster should have all item OCNs
+      expect(cluster.ocns.to_a).to eq(item.ocns.to_a)
     end
 
     xit "creates a new cluster for an OCNless Item" do

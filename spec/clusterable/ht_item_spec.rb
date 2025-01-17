@@ -60,27 +60,56 @@ RSpec.describe Clusterable::HtItem do
     expect(htitem.n_chron).to eq("")
   end
 
-  xit "has an access of deny or allow" do
-    expect(build(:ht_item).access).to be_in(["allow", "deny"])
+  it "has an access of deny or allow" do
+    expect(build(:ht_item).access).to eq("allow").or eq("deny")
   end
 
-  xdescribe "#billing_entity" do
+  describe "#billing_entity" do
     it "is automatically set when collection_code is set" do
       expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
     end
   end
 
-  xdescribe "#to_hash" do
-    it "contains billing_entity" do
-      expect(htitem_hash[:billing_entity]).not_to be nil
+  describe "#cluster" do
+    include_context "with cluster ocns table"
+
+    it "returns a cluster with all its ocns" do
+      create(:cluster, ocns: [1, 2])
+      h = build(:ht_item, ocns: [1, 2])
+
+      expect(h.cluster.ocns).to contain_exactly(1, 2)
     end
 
-    it "does not contain _id" do
-      expect(htitem_hash.key?(:_id)).to be false
+    it "returns a cluster with some of its ocns (if there is only one)" do
+      create(:cluster, ocns: [1])
+      h = build(:ht_item, ocns: [1, 2])
+
+      expect(h.cluster.ocns).to contain_exactly(1)
+    end
+
+    it "returns nil if there is no cluster" do
+      create(:cluster, ocns: [3, 4])
+      h = build(:ht_item, ocns: [1, 2])
+
+      expect(h.cluster).to be(nil)
+    end
+
+    it "raises an exception if there are multiple clusters with its ocns" do
+      create(:cluster, ocns: [1, 2])
+      create(:cluster, ocns: [3, 4])
+      h = build(:ht_item, ocns: [1, 3])
+
+      expect { h.cluster }.to raise_exception(/multiple clusters/)
     end
   end
 
-  xdescribe "#batch_with?" do
+  describe "#to_hash" do
+    it "contains billing_entity" do
+      expect(htitem_hash[:billing_entity]).not_to be nil
+    end
+  end
+
+  describe "#batch_with?" do
     let(:single_ocn1) { build(:ht_item, ocns: [123]) }
     let(:single_ocn2) { build(:ht_item, ocns: [123]) }
     let(:single_ocn3) { build(:ht_item, ocns: [456]) }
