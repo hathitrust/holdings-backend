@@ -62,7 +62,7 @@ services:
     command: bundle exec sidekiq -c 1 -r ./lib/sidekiq_jobs.rb
 
   mariadb:
-    image: mariadb
+    image: mariadb:10.5
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: 1
     volumes:

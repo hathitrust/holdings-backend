@@ -115,9 +115,19 @@ class Cluster
     push_to_field(:ht_items, items.flatten, UPDATE_LAST_MODIFIED)
   end
 
+  # Add a Set of new OCLC numbers to this cluster.
+  #
+  # Raises a duplicate key error if these OCLC numbers are already in some other
+  # cluster.
   def add_ocns(ocns)
+    new_ocns = ocns - @ocns
+    raise "cluster must be saved first" unless @id
+    db.transaction do
+      data = ocns.map { |ocn| [@id, ocn] }
+      table.import([:cluster_id, :ocn], data)
+      db.after_commit { @ocns.merge(new_ocns) }
+    end
     @ocns.merge(ocns)
-    save
   end
 
   def add_commitments(*items)
@@ -238,13 +248,17 @@ class Cluster
       holdings.pluck(:ocn) + commitments.pluck(:ocn)
   end
 
+  # Get an id if we don't already have one, then persist
+  # this as the cluster for each of our OCNs.
+  #
+  # Raises an error if we already have an ID, or a duplicate key
+  # exception if any of the OCNs is already in some other cluster.
   def save
-    # Get an id if we don't already have one, then persist
-    # this as the cluster for each of our OCNs.
     db.transaction do
-      @id ||= db.fetch("select next value for cluster_ids").get
+      raise "Can't yet update an existing cluster" if @id
+      @id = db.fetch("select next value for cluster_ids").get
       data = ocns.map { |ocn| [@id, ocn] }
-      table.on_duplicate_key_update.import([:cluster_id, :ocn], data)
+      table.import([:cluster_id, :ocn], data)
     end
 
     self

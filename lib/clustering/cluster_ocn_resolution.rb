@@ -16,8 +16,9 @@ module Clustering
       end
     end
 
-    # TODO make sure this whole thing is in the scope of a transaction incl ClusterGetter.
     def cluster(getter: ClusterGetter.new(@ocns))
+      # The "getter.get" is in the scope of a transaction, so this will all be
+      # in the scope of that same transaction
       getter.get do |cluster|
         @resolutions.map(&:save)
       end

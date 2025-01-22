@@ -20,25 +20,39 @@ module Clustering
       @ocns = ocns
     end
 
-    def get
-      find_or_create.tap { |c| yield c if block_given? }
-    end
-
-    private
-
     # @return A single cluster that contains all the requested OCNs,
     # or nil if no OCNs were provided.
     #
     # Finds an existing cluster with some of the OCNs, then adds the other OCNs
     # to it, or creates a new cluster if none of the OCNs are in any existing
     # cluster.
+    #
+    # If the cluster for these OCNs was modified by another process while our
+    # transaction is in process (raising a duplicate key error), retries the
+    # entire operation, possibly using another strategy.
+    #
+    # ClusterGetter.new(ocns).get ensures that ocns are all in the *same
+    # cluster*, but can't guarantee that that cluster isn't modified elsewhere.
+    # Take care if using the returned cluster ID or OCNs.
+    def get
+      Services[:holdings_db].transaction(**transaction_opts) do
+        find_or_create.tap { |c| yield c if block_given? }
+      end
+    end
+
+    private
+
+    def transaction_opts
+      {retry_on: [Sequel::UniqueConstraintViolation]}
+    end
+
     def find_or_create
       return unless @ocns.any?
 
-      clusters = Cluster.for_ocns(@ocns).to_a
+      clusters = find
 
       if clusters.none?
-        Cluster.create(ocns: @ocns) if clusters.none?
+        create
       else
         clusters.first.tap do |target_cluster|
           add_additional_ocns(target_cluster, clusters)
@@ -47,8 +61,18 @@ module Clustering
       end
     end
 
+    def find
+      Cluster.for_ocns(@ocns).to_a
+    end
+
+    def create
+      Cluster.create(ocns: @ocns)
+    end
+
     def add_additional_ocns(target_cluster, clusters)
+      # OCNs (from the ones we want) that are in any cluster
       attested_ocns = clusters.collect(&:ocns).reduce(&:merge)
+      # OCNs that are not in any cluster
       additional_ocns = @ocns.to_set - attested_ocns
 
       target_cluster.add_ocns(additional_ocns)
@@ -56,7 +80,7 @@ module Clustering
 
     # Merges OCNs for all the given clusters into the target cluster.
     def merge(target_cluster, clusters)
-      raise "not implemented"
+      raise "merge: not implemented"
       Retryable.ensure_transaction do
         @clusters.each do |source|
           raise ClusterError, "clusters disappeared, try again" if source.nil?
