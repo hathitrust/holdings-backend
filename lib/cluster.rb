@@ -28,6 +28,53 @@ class Cluster
     db[:cluster_ocns]
   end
 
+  def self.cluster_ocns!(ocns)
+    db.transaction(**transaction_opts) do
+      find_or_create(ocns).tap { |c| yield c if block_given? }
+    end
+  end
+
+  class << self
+    private
+
+    def transaction_opts
+      {retry_on: [Sequel::UniqueConstraintViolation]}
+    end
+
+    # separately defined as a method so we can instrument it
+    # in concurrency testing
+    def array_for_ocns(ocns)
+      for_ocns(ocns).to_a
+    end
+
+    def find_or_create(ocns)
+      return unless ocns.any?
+
+      clusters = array_for_ocns(ocns)
+
+      if clusters.none?
+        create(ocns: ocns)
+      else
+        clusters.first.tap do |target_cluster|
+          update_cluster_ocns(ocns, target_cluster, clusters)
+        end
+      end
+    end
+
+    # Sets the OCNs in target_cluster to all the OCNs present in all found
+    # clusters (i.e. merges clusters) and adds any additional OCNs from @ocns
+    # not found in any cluster.
+    def update_cluster_ocns(ocns, target_cluster, clusters)
+      # OCNs (from the ones we want) that are in any cluster
+      attested_ocns = clusters.collect(&:ocns).reduce(Set.new, &:merge)
+      # OCNs that are not in any cluster
+      additional_ocns = ocns.to_set - attested_ocns
+
+      target_cluster.add_ocns(additional_ocns)
+      target_cluster.update_ocns(attested_ocns)
+    end
+  end
+
   # Creates a new cluster with the given OCNs, using the next value from the
   # cluster_ids sequence as the next primary key.
   #

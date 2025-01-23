@@ -3,6 +3,88 @@
 require "spec_helper"
 require "cluster"
 
+class Synchronizer
+  attr_reader :logger
+
+  def initialize(logger: Services.logger)
+    # useful for debugging these tests..
+    #  def initialize(logger: Logger.new($stdout, level: Logger::DEBUG))
+    @statuses = Set.new
+    @mutex = Mutex.new
+    @logger = logger
+  end
+
+  def write_status(id, action)
+    @logger.debug "#{Thread.current} adding status #{id}:#{action}"
+    @mutex.synchronize do
+      @statuses.add([id, action].join(":"))
+    end
+  end
+
+  def wait_for(action)
+    @logger.debug "#{Thread.current} waiting on #{action}"
+
+    sleep(0.05) until @statuses.include?(action)
+  end
+end
+
+class ClusterInstrumentation
+  attr_reader :id, :syncer
+  attr_accessor :retry_count, :retry_err
+
+  def initialize(id:, synchronizer:, wait_for:)
+    @id = id
+    @syncer = synchronizer
+    @wait_for = wait_for
+  end
+
+  def wait_for(method)
+    @syncer.wait_for(@wait_for[method]) if @wait_for[method]
+  end
+
+  def write_status(method)
+    @syncer.write_status(@id, method)
+  end
+end
+
+# Uses the synchronizer to record the given ID and the method run
+# for find, create, add_additional_ocns, and merge.
+#
+# Use the "wait_for" array to instruct this instance to wait
+# for another instance to run the given method before proceeding, for example:
+#
+# wait_for: { create: "thread1:array_for_ocns" }
+#
+# means that this instance should wait for the instance with id thread1 to
+# complete the 'find' operation' before this instance does the 'create'
+# operation.
+
+class InstrumentedCluster < Cluster
+  class << self
+    private
+
+    def instrumentation
+      Thread.current[:instrumentation]
+    end
+
+    [:array_for_ocns, :create, :update_cluster_ocns].each do |method|
+      define_method(method) do |*args, **kwargs|
+        instrumentation.wait_for(method)
+        super(*args, **kwargs).tap do
+          instrumentation.write_status(method)
+        end
+      end
+    end
+
+    def transaction_opts
+      super.merge(before_retry: ->(num_retries, e) {
+        instrumentation.retry_count = num_retries
+        instrumentation.retry_err = e
+      })
+    end
+  end
+end
+
 RSpec.describe Cluster do
   let(:ocn1) { 5 }
   let(:ocn2) { 6 }
@@ -232,20 +314,20 @@ RSpec.describe Cluster do
     end
   end
 
-  xdescribe "#save" do
+  describe "#save" do
     let(:c1) { build(:cluster, ocns: [ocn1, ocn2]) }
     let(:c2) { build(:cluster, ocns: [ocn2]) }
 
     it "can't save them both" do
       c1.save
       expect { c2.save }.to \
-        raise_error(Mongo::Error::OperationFailure, /duplicate key error/)
+        raise_error(Sequel::UniqueConstraintViolation, /Duplicate entry/)
     end
 
     it "saves to the database" do
       c1.save
       expect(described_class.count).to eq(1)
-      expect(described_class.where(ocns: ocn1).count).to eq(1)
+      expect(described_class.for_ocns([ocn1]).count).to eq(1)
     end
   end
 
@@ -345,6 +427,286 @@ RSpec.describe Cluster do
         expect(c.holdings.size).to eq(0)
         expect(c.copy_counts["umich"]).to eq(0)
       end
+    end
+  end
+
+  context "with multiple Clusters doing things in parallel" do
+    # useful to have when debugging these specs..
+    # let(:syncer) { Synchronizer.new(logger: Logger.new($stdout, level: Logger::DEBUG)) }
+    let(:syncer) { Synchronizer.new }
+
+    # We use threading, the Synchronizer, and the InstrumentedCluster to control
+    # the sequence of when various things happen across two different transactions
+    # to provoke different errors.
+    #
+    # Each thread has a separate copy of the Cluster class, because we're
+    # relying on various class-level methods here. We could consider extracting
+    # some of this out to a class if we knew what to call it (not
+    # ClusterGetter..)
+    #
+    # Sequel is thread-safe by default, so it will use its connection pool to allocate
+    # a new connection to each thread.
+
+    # case 1:
+    # no clusters exist
+    # thread1: [1,2]; thread2: [2]
+    # thread1 find, thread2 find -- both get nothing
+    # thread1 create - creates [1,2]
+    # thread2 create:
+    #  * attempts to create [2]
+    #  * should get a duplicate key error, retry & get the same cluster as thread1
+    it "when two transactions create a cluster with the same OCN with retry enabled, gets the same cluster" do
+      instrumentation1 = ClusterInstrumentation.new(id: "thread1",
+        synchronizer: syncer,
+        wait_for: {create: "thread2:array_for_ocns"})
+
+      instrumentation2 = ClusterInstrumentation.new(id: "thread2",
+        synchronizer: syncer,
+        wait_for: {create: "thread1:create"})
+
+      cluster1 = nil
+      cluster2 = nil
+
+      thread1 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation1
+        cluster1 = InstrumentedCluster.cluster_ocns!([1, 2])
+      end
+
+      thread2 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation2
+        cluster2 = InstrumentedCluster.cluster_ocns!([2])
+      end
+
+      [thread1, thread2].each { |t| t.join }
+      expect(cluster1.id).to eq(cluster2.id)
+      expect(cluster1.ocns).to eq(cluster2.ocns)
+      expect(instrumentation2.retry_count).to be > 0
+      expect(instrumentation2.retry_err).to be_a(Sequel::UniqueConstraintViolation)
+    end
+
+    # case 2:
+    # cluster [1] exists
+    # thread1: [1,2]; thread2: [2]
+    # thread1 find -- gets [1]
+    # thread2 find -- gets nothing
+    # thread1 add_additional_ocns - makes [1,2]
+    # thread2 create - gets duplicate key error, should retry & find [1,2]
+    it "when one transaction creates a cluster with an OCN and another adds that same OCN to a cluster, both get the same cluster" do
+      create(:cluster, ocns: [1])
+
+      instrumentation1 = ClusterInstrumentation.new(
+        id: "thread1", synchronizer: syncer,
+        wait_for: {add_additional_ocns: "thread2:array_for_ocns"}
+      )
+
+      instrumentation2 = ClusterInstrumentation.new(
+        id: "thread2", synchronizer: syncer,
+        wait_for: {create: "thread1:update_cluster_ocns"}
+      )
+
+      cluster1 = nil
+      cluster2 = nil
+
+      thread1 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation1
+        cluster1 = InstrumentedCluster.cluster_ocns!([1, 2])
+      end
+
+      thread2 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation2
+        cluster2 = InstrumentedCluster.cluster_ocns!([2])
+      end
+
+      [thread1, thread2].each { |t| t.join }
+      expect(cluster1.id).to eq(cluster2.id)
+      expect(cluster1.ocns).to eq(cluster2.ocns)
+      expect(instrumentation2.retry_count).to be > 0
+      expect(instrumentation2.retry_err).to be_a(Sequel::UniqueConstraintViolation)
+    end
+
+    # case 3:
+    # cluster [1] exists
+    # thread1: [1,2]; thread2: [2]
+    # thread1 find -- gets [1]
+    # thread2 find -- gets nothing
+    # thread2 create - makes [2]
+    # thread1 add_ocns - gets duplicate key error, should retry & merge
+    # thread2 has an outdated cluster id & list of OCNs... but that's probably OK (see below)
+    it "when one transaction tries to create a cluster with two OCNs and another tries to make a cluster with one of those OCNs, retries and merges" do
+      create(:cluster, ocns: [1])
+      cluster1 = nil
+      cluster2 = nil
+
+      instrumentation1 = ClusterInstrumentation.new(
+        id: "thread1", synchronizer: syncer,
+        wait_for: {update_cluster_ocns: "thread2:create"}
+      )
+
+      instrumentation2 = ClusterInstrumentation.new(
+        id: "thread2", synchronizer: syncer,
+        wait_for: {create: "thread1:array_for_ocns"}
+      )
+
+      thread1 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation1
+        cluster1 = InstrumentedCluster.cluster_ocns!([1, 2])
+      end
+
+      thread2 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation2
+        cluster2 = InstrumentedCluster.cluster_ocns!([2])
+      end
+
+      [thread1, thread2].each { |t| t.join }
+
+      expect(Cluster.first.ocns).to contain_exactly(1, 2)
+      expect(Cluster.count).to eq(1)
+      expect(instrumentation1.retry_count).to be > 0
+      expect(instrumentation1.retry_err).to be_a(Sequel::UniqueConstraintViolation)
+    end
+
+    # case 4:
+    # no cluster exists
+    # thread1: [1]; thread2: [1,2]
+    # thread1 find -- gets nothing
+    # thread2 find -- gets nothing
+    # thread1 create - makes [1]
+    # thread2 create - gets duplicate key error, should retry & do add_additional_ocns
+    # in this case thread1 has a cluster with outdated ocns (but correct cluster ID)... but that's probably OK (see below)
+    it "when one transaction creates a cluster with one OCN and another tries to create a cluster with that OCNs and another one, retries and adds the second OCN to the first cluster" do
+      cluster1 = nil
+      cluster2 = nil
+
+      instrumentation1 = ClusterInstrumentation.new(
+        id: "thread1", synchronizer: syncer,
+        wait_for: {create: "thread2:array_for_ocns"}
+      )
+
+      instrumentation2 = ClusterInstrumentation.new(
+        id: "thread2", synchronizer: syncer,
+        wait_for: {create: "thread1:create"}
+      )
+
+      thread1 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation1
+        cluster1 = InstrumentedCluster.cluster_ocns!([1])
+      end
+
+      thread2 = Thread.new do
+        Thread.current[:instrumentation] = instrumentation2
+        cluster2 = InstrumentedCluster.cluster_ocns!([1, 2])
+      end
+
+      [thread1, thread2].each { |t| t.join }
+
+      expect(Cluster.first.ocns).to contain_exactly(1, 2)
+      expect(Cluster.count).to eq(1)
+
+      expect(cluster1.id).to eq(cluster2.id)
+      expect(instrumentation2.retry_count).to be > 0
+      expect(instrumentation2.retry_err).to be_a(Sequel::UniqueConstraintViolation)
+    end
+
+    # Case 3 and 4 demonstrate that we shouldn't use the returned cluster ID or
+    # list of OCNs from Cluster to *do* anything. The purpose of
+    # Cluster is really just to make it so that the given OCNs are in the
+    # *same cluster*. We should never call Cluster.get in a situation
+    # where we're only *reading* data as Cluster.get will *modify* the
+    # OCN clustering table. This is an argument for e.g. Cluster.cluster_ocns!
+    # as the interface name.
+    #
+    # When we're only *reading* data it's certainly possible the clustering
+    # will be modified as we do that, which could result in inconsistency
+    # within a report -- but that shouldn't cause incorrectly *written* data.
+    # If we care about that we could do the entire report inside a transaction
+    # isolated with REPEATABLE READ (or dump the table inside the scope of this
+    # kind of transaction, and then read it into memory, so we get a consistent
+    # view of it), or something else to ensure a consistent view of the
+    # clustering.
+    #
+    # When we *write* data, we should make sure we aren't using the returned ID
+    # from Cluster.get to do anything (again a reason for renaming this)
+    # -- this is probably mainly a concern with the "production holdings table"
+    # if we need to materialize that rather than having it as a view.
+
+    # When we re-implement delete/recluster, we also need to consider the cases of
+    # reclusters and merges happening simultaneously -- for example, if we have
+    # an HT item update that causes a recluster, and simultaneously an OCN
+    # resolution update the restores the 'glue' - we would want ultimately the
+    # cluster to be merged.
+
+    # Likewise, if one transaction adds something that would cause a merge, and
+    # another transaction does a recluster, we would want the merged thing to
+    # still be there in the end and the cluster to stay together.
+  end
+
+  context "when merging two clusters" do
+    # TODO combine these all into with all holdings tables
+    include_context "with holdings table"
+    include_context "with hathifiles table"
+    include_context "with cluster ocns table"
+    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
+
+    let(:merged_cluster) { Cluster.cluster_ocns!([5, 6]) }
+
+    it "combines ocns sets" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+
+      expect(merged_cluster.ocns).to contain_exactly(5, 6)
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6)
+    end
+
+    it "gets holdings from merged OCNs" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      insert_holding(build(:holding, ocn: 5))
+      insert_holding(build(:holding, ocn: 6))
+
+      expect(merged_cluster.holdings.count).to eq(2)
+    end
+
+    it "gets OCN resolution rules for merged OCNs" do
+      create(:cluster, ocns: [5, 7])
+      create(:cluster, ocns: [6, 8])
+      create(:ocn_resolution, resolved: 5, deprecated: 7)
+      create(:ocn_resolution, resolved: 6, deprecated: 8)
+
+      expect(merged_cluster.ocn_resolutions.count).to eq(2)
+    end
+
+    it "adds OCNs that were in neither cluster" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+
+      expect(Cluster.cluster_ocns!([5, 6, 7]).ocns)
+        .to contain_exactly(5, 6, 7)
+
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6, 7)
+    end
+
+    it "combines ht_items" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      insert_htitem(build(:ht_item, ocns: [5]))
+      insert_htitem(build(:ht_item, ocns: [6]))
+
+      expect(merged_cluster.ht_items.count).to eq(2)
+    end
+  end
+
+  context "when merging >2 clusters" do
+    it "combines multiple clusters" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      create(:cluster, ocns: [7])
+
+      expect(Cluster.count).to eq(3)
+      expect(Cluster.cluster_ocns!([5, 6, 7]).ocns).to contain_exactly(5, 6, 7)
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6, 7)
     end
   end
 end

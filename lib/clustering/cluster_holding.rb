@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "cluster"
-require "clustering/cluster_getter"
 
 module Clustering
   # Services for clustering Print Holdings records
@@ -21,8 +20,8 @@ module Clustering
     end
 
     # Updates a matching holding or adds it
-    def cluster(getter: ClusterGetter.new([@ocn]))
-      getter.get do |c|
+    def cluster
+      Cluster.cluster_ocns!([@ocn]).get do |c|
         to_add = []
 
         common_uuids = check_for_duplicate_uuids!(c.holdings.to_a, @holdings)
