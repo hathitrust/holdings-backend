@@ -46,7 +46,7 @@ class InstrumentedClusterGetter < Clustering::ClusterGetter
     @wait_for = wait_for
   end
 
-  [:find, :create, :add_additional_ocns, :merge].each do |method|
+  [:find, :create, :update_cluster_ocns].each do |method|
     define_method(method) do |*args|
       @syncer.wait_for(@wait_for[method]) if @wait_for[method]
       super(*args).tap do
@@ -64,10 +64,6 @@ class InstrumentedClusterGetter < Clustering::ClusterGetter
 end
 
 RSpec.describe Clustering::ClusterGetter do
-  let(:ocn1) { 5 }
-  let(:ocn2) { 6 }
-  let(:ocn3) { 7 }
-  let(:ocn4) { 8 }
   let(:ht) { build(:ht_item).to_hash }
 
   include_context "with cluster ocns table"
@@ -143,7 +139,7 @@ RSpec.describe Clustering::ClusterGetter do
       thread2 = Thread.new do
         getter2 = InstrumentedClusterGetter.new([2],
           id: "thread2", synchronizer: syncer,
-          wait_for: {create: "thread1:add_additional_ocns"})
+          wait_for: {create: "thread1:update_cluster_ocns"})
         cluster2 = getter2.get
       end
 
@@ -160,7 +156,7 @@ RSpec.describe Clustering::ClusterGetter do
     # thread1 find -- gets [1]
     # thread2 find -- gets nothing
     # thread2 create - makes [2]
-    # thread1 add_additional_ocns - gets duplicate key error, should retry & merge
+    # thread1 add_ocns - gets duplicate key error, should retry & merge
     # thread2 has an outdated cluster id & list of OCNs... but that's probably OK (see below)
     it "when one transaction tries to create a cluster with two OCNs and another tries to make a cluster with one of those OCNs, retries and merges" do
       create(:cluster, ocns: [1])
@@ -170,12 +166,10 @@ RSpec.describe Clustering::ClusterGetter do
       getter2 = nil
 
       thread1 = Thread.new do
-        expect {
-          getter1 = InstrumentedClusterGetter.new([1, 2],
-            id: "thread1", synchronizer: syncer,
-            wait_for: {add_additional_ocns: "thread2:create"})
-          cluster1 = getter1.get
-        }.to raise_exception(/merge: not implemented/)
+        getter1 = InstrumentedClusterGetter.new([1, 2],
+          id: "thread1", synchronizer: syncer,
+          wait_for: {update_cluster_ocns: "thread2:create"})
+        cluster1 = getter1.get
       end
 
       thread2 = Thread.new do
@@ -188,10 +182,10 @@ RSpec.describe Clustering::ClusterGetter do
       [thread1, thread2].each { |t| t.join }
 
       # TODO once merge is implemented -- table should have one cluster with OCNs [1,2]
-      # expect(Cluster.first.ocns).to contain_exactly(1,2)
-      # expect(Cluster.count).to eq(1)
-      # expect(getter1.retry_count).to be > 0
-      # expect(getter1.retry_err).to be_a(Sequel::UniqueConstraintViolation)
+      expect(Cluster.first.ocns).to contain_exactly(1, 2)
+      expect(Cluster.count).to eq(1)
+      expect(getter1.retry_count).to be > 0
+      expect(getter1.retry_err).to be_a(Sequel::UniqueConstraintViolation)
     end
 
     # case 4:
@@ -265,68 +259,73 @@ RSpec.describe Clustering::ClusterGetter do
     # still be there in the end and the cluster to stay together.
   end
 
-  xcontext "when merging two clusters" do
-    let(:c1) { create(:cluster, ocns: [ocn1]) }
-    let(:c2) { create(:cluster, ocns: [ocn2]) }
-    let(:htitem1) { build(:ht_item, ocns: [ocn1]).to_hash }
-    let(:htitem2) { build(:ht_item, ocns: [ocn2]).to_hash }
-    let(:holding1) { build(:holding, ocn: ocn1).attributes }
-    let(:holding2) { build(:holding, ocn: ocn2).attributes }
-    let(:ocn_resolution1) { build(:ocn_resolution, resolved: ocn1, deprecated: ocn3).attributes }
-    let(:ocn_resolution2) { build(:ocn_resolution, resolved: ocn2, deprecated: ocn4).attributes }
+  context "when merging two clusters" do
+    # TODO combine these all into with all holdings tables
+    include_context "with holdings table"
+    include_context "with hathifiles table"
+    include_context "with cluster ocns table"
+    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
 
-    let(:merged_cluster) { described_class.new([ocn1, ocn2]).get }
+    let(:merged_cluster) { described_class.new([5, 6]).get }
 
     it "combines ocns sets" do
-      c1
-      c2
-      expect(merged_cluster.ocns).to contain_exactly(ocn1, ocn2)
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+
+      expect(merged_cluster.ocns).to contain_exactly(5, 6)
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6)
     end
 
-    it "combines holdings" do
-      c1.holdings.create(holding1)
-      c2.holdings.create(holding2)
+    it "gets holdings from merged OCNs" do
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      insert_holding(build(:holding, ocn: 5))
+      insert_holding(build(:holding, ocn: 6))
+
       expect(merged_cluster.holdings.count).to eq(2)
     end
 
-    it "combines OCN resolution rules" do
-      c1.ocns = [ocn1, ocn3]
-      c1.ocn_resolutions.create(ocn_resolution1)
-      c1.save
-
-      c2.ocns = [ocn2, ocn4]
-      c2.ocn_resolutions.create(ocn_resolution2)
-      c2.save
+    it "gets OCN resolution rules for merged OCNs" do
+      create(:cluster, ocns: [5, 7])
+      create(:cluster, ocns: [6, 8])
+      create(:ocn_resolution, resolved: 5, deprecated: 7)
+      create(:ocn_resolution, resolved: 6, deprecated: 8)
 
       expect(merged_cluster.ocn_resolutions.count).to eq(2)
     end
 
     it "adds OCNs that were in neither cluster" do
-      c1
-      c2
-      expect(described_class.new([ocn1, ocn2, ocn3]).get.ocns)
-        .to contain_exactly(ocn1, ocn2, ocn3)
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+
+      expect(described_class.new([5, 6, 7]).get.ocns)
+        .to contain_exactly(5, 6, 7)
+
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6, 7)
     end
 
     it "combines ht_items" do
-      c1.ht_items.create(htitem1)
-      c2.ht_items.create(htitem2)
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      insert_htitem(build(:ht_item, ocns: [5]))
+      insert_htitem(build(:ht_item, ocns: [6]))
+
       expect(merged_cluster.ht_items.count).to eq(2)
     end
   end
 
-  xcontext "when merging >2 clusters" do
-    let(:c1) { create(:cluster, ocns: [ocn1]) }
-    let(:c2) { create(:cluster, ocns: [ocn2]) }
-    let(:c3) { create(:cluster, ocns: [ocn3]) }
-
+  context "when merging >2 clusters" do
     it "combines multiple clusters" do
-      c1
-      c2
-      c3
+      create(:cluster, ocns: [5])
+      create(:cluster, ocns: [6])
+      create(:cluster, ocns: [7])
+
       expect(Cluster.count).to eq(3)
-      expect(described_class.new([ocn1, ocn2, ocn3]).get.ocns).to eq([ocn1, ocn2, ocn3])
+      expect(described_class.new([5, 6, 7]).get.ocns).to contain_exactly(5, 6, 7)
       expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns).to contain_exactly(5, 6, 7)
     end
   end
 end

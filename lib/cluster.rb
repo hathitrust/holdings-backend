@@ -127,7 +127,20 @@ class Cluster
       table.import([:cluster_id, :ocn], data)
       db.after_commit { @ocns.merge(new_ocns) }
     end
-    @ocns.merge(ocns)
+  end
+
+  # Moves OCLC numbers from other clusters into this one.
+  def update_ocns(ocns)
+    new_ocns = ocns - @ocns
+    return if new_ocns.empty?
+    raise "cluster must be saved first" unless @id
+    db.transaction do
+      updated_rows = table.where(ocn: new_ocns.to_a).update(cluster_id: @id)
+      if updated_rows != new_ocns.count
+        raise "didn't update as many rows (#{updated_rows}) as expected (#{new_ocns.count})"
+      end
+      db.after_commit { @ocns.merge(new_ocns) }
+    end
   end
 
   def add_commitments(*items)
@@ -237,12 +250,6 @@ class Cluster
     ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
   end
 
-  def update_ocns
-    raise "not implemented"
-    self.ocns = [ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns)].flatten.uniq
-    save
-  end
-
   def clusterable_ocn_tuples
     @clusterable_ocn_tuples ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
       holdings.pluck(:ocn) + commitments.pluck(:ocn)
@@ -255,7 +262,7 @@ class Cluster
   # exception if any of the OCNs is already in some other cluster.
   def save
     db.transaction do
-      raise "Can't yet update an existing cluster" if @id
+      raise "Call #add_ocns or #update_ocns to update an existing cluster" if @id
       @id = db.fetch("select next value for cluster_ids").get
       data = ocns.map { |ocn| [@id, ocn] }
       table.import([:cluster_id, :ocn], data)

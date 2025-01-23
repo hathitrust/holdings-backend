@@ -69,5 +69,7 @@ module Clusterable
       # no-op.
       table.replace([:oclc, :canonical], [deprecated, resolved])
     end
+
+    alias_method :save!, :save
   end
 end

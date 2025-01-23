@@ -7,7 +7,7 @@ module Clustering
   # a call to ClusterGetter.get(@ocns) effectively says: these OCNs belong
   # together in a cluster.
   #
-  # TODO: consider renaming to ClusterOCNs.cluster(@ocns)?
+  # TODO: move to Cluster.cluster_ocns!
   #
   # If some cluster exists that has at least some of the requested OCNs:
   # - Add any other OCNs not in any cluster yet to that cluster
@@ -55,8 +55,7 @@ module Clustering
         create
       else
         clusters.first.tap do |target_cluster|
-          add_additional_ocns(target_cluster, clusters)
-          merge(target_cluster, clusters) if clusters.count > 1
+          update_cluster_ocns(target_cluster, clusters)
         end
       end
     end
@@ -69,36 +68,17 @@ module Clustering
       Cluster.create(ocns: @ocns)
     end
 
-    def add_additional_ocns(target_cluster, clusters)
+    # Sets the OCNs in target_cluster to all the OCNs present in all found
+    # clusters (i.e. merges clusters) and adds any additional OCNs from @ocns
+    # not found in any cluster.
+    def update_cluster_ocns(target_cluster, clusters)
       # OCNs (from the ones we want) that are in any cluster
-      attested_ocns = clusters.collect(&:ocns).reduce(&:merge)
+      attested_ocns = clusters.collect(&:ocns).reduce(Set.new, &:merge)
       # OCNs that are not in any cluster
       additional_ocns = @ocns.to_set - attested_ocns
 
       target_cluster.add_ocns(additional_ocns)
-    end
-
-    # Merges OCNs for all the given clusters into the target cluster.
-    def merge(target_cluster, clusters)
-      raise "merge: not implemented"
-      Retryable.ensure_transaction do
-        @clusters.each do |source|
-          raise ClusterError, "clusters disappeared, try again" if source.nil?
-          next if source._id == @target._id
-
-          # Boolean xor. One and only one is "large"
-          if source.large? ^ @target.large?
-            warn("Merging into a large cluster. " \
-                  "OCNs: [#{source.ocns.join(",")}] and [#{@target.ocns.join(",")}]")
-          end
-
-          source.delete
-          @target.add_members_from(source)
-          @target.add_to_set(ocns: source.ocns)
-          Services.logger.debug "Deleted cluster #{source.inspect} (merged into #{@target.inspect})"
-        end
-        @target.add_to_set(ocns: @ocns)
-      end
+      target_cluster.update_ocns(attested_ocns)
     end
   end
 end
