@@ -14,27 +14,49 @@ require "cluster_error"
 # - htitems
 # - commitments
 class Cluster
-  attr_reader :id
-  attr_accessor :ocns
+  attr_reader :id, :ocns
+
+  # make these available as instance methods
+  extend Forwardable
+  def_delegators self, :db, :table
 
   def self.db
     Services.holdings_db
   end
 
-  def initialize(id: nil, ocns: [])
-    @id = id
-    @ocns = ocns
+  def self.table
+    db[:cluster_ocns]
+  end
+
+  # Creates a new cluster with the given OCNs, using the next value from the
+  # cluster_ids sequence as the next primary key.
+  #
+  # We do not yet have a
+  # cluster-specific table with a primary key; otherwise we'd do an insert
+  # there. We may find we want that if we want to track cluster-specific info
+  # such as modification date.
+  def self.create(ocns: [])
+    new(ocns: ocns).save
+  end
+
+  def self.first
+    first_cluster_id = table.select(:cluster_id).first[:cluster_id]
+    find(id: first_cluster_id)
+  end
+
+  def self.count
+    table.distinct(:cluster_id).count
   end
 
   def self.find(id:)
-    ocns = db[:cluster_ocns].select(:ocn).where(cluster_id: id).map(:ocn)
+    ocns = table.select(:ocn).where(cluster_id: id).map(:ocn)
     new(id: id, ocns: ocns)
   end
 
   def self.for_ocns(ocns)
     return to_enum(__method__, ocns) unless block_given?
 
-    dataset = db[:cluster_ocns]
+    dataset = table
       .select(:cluster_id)
       .distinct
       .where(ocn: ocns)
@@ -44,12 +66,36 @@ class Cluster
     end
   end
 
+  def self.each
+    return to_enum(__method__) unless block_given?
+    # TODO -- if we have a cluster table w/ last modified date and a primary
+    # key, iterate over that instead
+    dataset = table.select(:cluster_id).distinct
+
+    dataset.each do |row|
+      yield(find(id: row[:id]))
+    end
+  end
+
+  def initialize(id: nil, ocns: [])
+    @id = id
+    @ocns = ocns.to_set
+  end
+
+  def ocns=(ocns)
+    @ocns = ocns.to_set
+  end
+
   def ocn_resolutions
-    []
+    Clusterable::OCNResolution.with_ocns(ocns)
   end
 
   def ht_items
     Clusterable::HtItem.with_ocns(ocns)
+  end
+
+  def ht_item(item_id)
+    Clusterable::HtItem.find(item_id: item_id, ocns: ocns)
   end
 
   def commitments
@@ -69,8 +115,19 @@ class Cluster
     push_to_field(:ht_items, items.flatten, UPDATE_LAST_MODIFIED)
   end
 
-  def add_ocn_resolutions(*items)
-    push_to_field(:ocn_resolutions, items.flatten, UPDATE_LAST_MODIFIED)
+  # Add a Set of new OCLC numbers to this cluster.
+  #
+  # Raises a duplicate key error if these OCLC numbers are already in some other
+  # cluster.
+  def add_ocns(ocns)
+    new_ocns = ocns - @ocns
+    raise "cluster must be saved first" unless @id
+    db.transaction do
+      data = ocns.map { |ocn| [@id, ocn] }
+      table.import([:cluster_id, :ocn], data)
+      db.after_commit { @ocns.merge(new_ocns) }
+    end
+    @ocns.merge(ocns)
   end
 
   def add_commitments(*items)
@@ -170,6 +227,7 @@ class Cluster
   end
 
   def add_members_from(cluster)
+    raise "not implemented"
     relations.values.map(&:name).each do |relation|
       push_to_field(relation, cluster.send(relation).map(&:dup))
     end
@@ -180,6 +238,7 @@ class Cluster
   end
 
   def update_ocns
+    raise "not implemented"
     self.ocns = [ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns)].flatten.uniq
     save
   end
@@ -188,4 +247,22 @@ class Cluster
     @clusterable_ocn_tuples ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
       holdings.pluck(:ocn) + commitments.pluck(:ocn)
   end
+
+  # Get an id if we don't already have one, then persist
+  # this as the cluster for each of our OCNs.
+  #
+  # Raises an error if we already have an ID, or a duplicate key
+  # exception if any of the OCNs is already in some other cluster.
+  def save
+    db.transaction do
+      raise "Can't yet update an existing cluster" if @id
+      @id = db.fetch("select next value for cluster_ids").get
+      data = ocns.map { |ocn| [@id, ocn] }
+      table.import([:cluster_id, :ocn], data)
+    end
+
+    self
+  end
+
+  alias_method :save!, :save
 end

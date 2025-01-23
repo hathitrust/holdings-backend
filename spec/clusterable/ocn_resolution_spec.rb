@@ -3,7 +3,7 @@
 require "spec_helper"
 require "clusterable/ocn_resolution"
 
-RSpec.xdescribe Clusterable::OCNResolution do
+RSpec.describe Clusterable::OCNResolution do
   let(:deprecated) { double(:deprecated) }
   let(:resolved) { double(:resolved) }
   let(:another_ocn) { double(:another) }

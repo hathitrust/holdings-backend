@@ -144,7 +144,7 @@ RSpec.xdescribe SharedPrint::Updater do
       resolution = build(:ocn_resolution, deprecated: ocn1, resolved: ocn2)
       cluster = build(:cluster, ocns: [ocn1, ocn2])
       cluster.save
-      cluster.add_ocn_resolutions(resolution)
+      cluster.add_ocn_resolutions([resolution])
       expect(cluster.ocns).to eq [ocn1, ocn2]
 
       # add an spc that has ocn1 (and a matching ht_item)

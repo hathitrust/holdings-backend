@@ -3,16 +3,15 @@
 require "spec_helper"
 require "clustering/cluster_ocn_resolution"
 
-RSpec.xdescribe Clustering::ClusterOCNResolution do
+RSpec.describe Clustering::ClusterOCNResolution do
   let(:resolution) { build(:ocn_resolution) }
   let(:resolution2) { build(:ocn_resolution, resolved: resolution.resolved) }
 
-  let(:c) { create(:cluster, ocns: resolution.ocns) }
+  let(:c) { build(:cluster, ocns: resolution.ocns) }
 
   describe "#cluster" do
-    before(:each) do
-      Cluster.each(&:delete)
-    end
+    include_context "with cluster ocns table"
+    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
 
     it "can add a batch" do
       cluster = described_class.new(resolution, resolution2).cluster
@@ -36,14 +35,18 @@ RSpec.xdescribe Clustering::ClusterOCNResolution do
     end
 
     it "adds an OCN Resolution to an existing cluster" do
+      # Persists a cluster with the resolution rule's OCNs, but without the
+      # resolution rule
       c.save
+
       cluster = described_class.new(resolution).cluster
-      expect(cluster.ocn_resolutions.first._parent.id).to eq(c.id)
+
+      expect(cluster.ocn_resolutions.first.cluster.id).to eq(c.id)
       expect(cluster.ocn_resolutions.to_a.size).to eq(1)
       expect(Cluster.count).to eq(1)
     end
 
-    it "updates modified date when adding OCN Resolution" do
+    xit "updates modified date when adding OCN Resolution" do
       c.save
       orig_last_modified = c.last_modified
       cluster = described_class.new(resolution).cluster
@@ -58,34 +61,36 @@ RSpec.xdescribe Clustering::ClusterOCNResolution do
     end
 
     it "adds a resolution with matching OCN to an existing cluster" do
-      described_class.new(resolution).cluster.save
-      cluster = described_class.new(resolution2).cluster
-      cluster.save
-      expect(cluster.ocn_resolutions.to_a.size).to eq(2)
-      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
+      described_class.new(resolution).cluster
+      described_class.new(resolution2).cluster
+
+      expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocn_resolutions.to_a.size).to eq(2)
+      expect(Cluster.first.ocns).to contain_exactly(resolution.deprecated,
         resolution2.deprecated,
         resolution.resolved)
-      expect(Cluster.each.to_a.size).to eq(1)
     end
 
-    it "merges two or more clusters" do
+    xit "merges two or more clusters" do
       # first cluster with resolution's ocns
       create(:cluster, ocns: [resolution.deprecated])
       # a second cluster with different ocns
       create(:cluster, ocns: [resolution.resolved])
-      cluster = described_class.new(resolution).cluster
+      described_class.new(resolution).cluster
+
       expect(Cluster.each.to_a.size).to eq(1)
+      cluster = Cluster.first
       expect(cluster.ocn_resolutions.to_a.size).to eq(1)
       expect(cluster.ocns.size).to eq(2)
     end
 
-    it "cluster has its embed's ocns" do
+    it "cluster has its resolutions ocns" do
       cluster = described_class.new(resolution).cluster
-      expect(cluster.ocns).to eq(resolution.ocns)
+      expect(cluster.ocns.to_a).to eq(resolution.ocns.to_a)
     end
   end
 
-  describe "#delete" do
+  xdescribe "#delete" do
     before(:each) do
       Cluster.each(&:delete)
       c.save

@@ -15,8 +15,8 @@ RSpec.describe Cluster do
       expect(described_class.new(ocns: [ocn1]).class).to eq(described_class)
     end
 
-    it "has an ocns field that is Array" do
-      expect(described_class.new(ocns: [ocn1]).ocns.class).to eq(Array)
+    it "has an ocns field that is Set" do
+      expect(described_class.new(ocns: [ocn1]).ocns.class).to eq(Set)
     end
 
     it "has an ocns field with members that are Integers" do

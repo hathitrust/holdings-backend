@@ -3,7 +3,7 @@
 require "spec_helper"
 require "loader/ht_item_loader"
 
-RSpec.xdescribe Loader::HtItemLoader do
+RSpec.describe Loader::HtItemLoader do
   let(:line) do
     [
       "test.123456", # htid
@@ -50,15 +50,24 @@ RSpec.xdescribe Loader::HtItemLoader do
   end
 
   describe "#load" do
-    before(:each) { Cluster.each(&:delete) }
+    include_context "with cluster ocns table"
+    include_context "with hathifiles table"
 
-    it "persists a batch of HTItems" do
+    it "creates clusters as htitems are loaded" do
       item1 = build(:ht_item)
       item2 = build(:ht_item, ocns: item1.ocns)
+
+      # these will already be in the hf table through other processes; our
+      # loading just updates the cluster -> ocn mapping
+      insert_htitem(item1)
+      insert_htitem(item2)
+
+      expect(Cluster.count).to eq(0)
 
       described_class.new.load([item1, item2])
 
       expect(Cluster.count).to eq(1)
+      expect(Cluster.first.ocns.to_a).to eq(item1.ocns.to_a)
       expect(Cluster.first.ht_items.count).to eq(2)
     end
   end

@@ -5,9 +5,9 @@ require "faker"
 
 FactoryBot.define do
   factory :ht_item, class: "Clusterable::HtItem" do
-    ocns { [rand(1_000_000)] }
-    item_id { "test." + rand(1_000_000).to_s }
-    ht_bib_key { rand(1_000_000) }
+    ocns { [rand(1..1_000_000)] }
+    item_id { "test." + rand(1..1_000_000).to_s }
+    ht_bib_key { rand(1..1_000_000) }
     rights { ["pd", "ic", "icus", "cc", "pdus"].sample }
     access { ["allow", "deny"].sample }
     bib_fmt { ["BK", "CF", "MP", "MU", "MX", "SE", "VM"].sample }
