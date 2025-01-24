@@ -14,7 +14,7 @@ class CalculateFormat
   def item_format(ht_item)
     if ht_item.bib_fmt == "SE"
       "ser"
-    elsif cluster_has_item_with_enum_and_same_ht_bib_key? ht_item
+    elsif record_has_any_enum? ht_item
       "mpm"
     else
       "spm"
@@ -40,7 +40,11 @@ class CalculateFormat
     @cluster.ht_items.any? { |ht| item_format(ht) == format }
   end
 
-  def cluster_has_item_with_enum_and_same_ht_bib_key?(ht_item)
+  def record_has_any_enum?(ht_item)
+    # TODO: FIX with n_enum
+    # Query if catalog record has any n_enum
+    return false
+
     @cluster.ht_items.any? do |ht|
       ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum&.empty?
     end

@@ -141,33 +141,24 @@ module Reports
       dump_file.close
     end
 
-    # Broken out of compile_frequency_table for testability and
-    # to have a counterpart to num_pd_volumes
-    def ic_volumes
-      return enum_for(:ic_volumes) unless block_given?
-      matching_clusters.each do |c|
-        c.ht_items.each do |ht_item|
-          # Only for IC volumes.
-          next if ht_item.access == "allow" || ht_item.rights == "icus"
-          yield ht_item
-        end
-        Thread.pass
-      end
-    end
-
     def compile_frequency_table
       @marker = Services.progress_tracker.call(batch_size: maxlines)
       logger.info("Begin compiling hscore frequency table.")
-      ic_volumes do |ht_item|
+      #require "debug"
+      #binding.break
+      Clusterable::HtItem.ic_volumes do |ht_item|
         marker.incr
         add_ht_item_to_freq_table(ht_item)
         marker.on_batch { |m| logger.info m.batch_line }
       end
     end
 
+    # TODO: break FrequencyTable out to its own class
     def add_ht_item_to_freq_table(ht_item)
-      item_format = CalculateFormat.new(ht_item._parent).item_format(ht_item).to_sym
+      item_format = CalculateFormat.new(ht_item.cluster).item_format(ht_item).to_sym
       item_overlap = Overlap::HtItemOverlap.new(ht_item)
+      #require "debug"
+      #binding.break
       item_overlap.matching_members.each do |org|
         @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
       end

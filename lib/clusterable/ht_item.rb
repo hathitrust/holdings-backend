@@ -3,6 +3,7 @@
 require "clusterable/base"
 require "services"
 require "enum_chron"
+require "ocnless_cluster"
 
 module Clusterable
   class HtItem < Clusterable::Base
@@ -22,6 +23,22 @@ module Clusterable
         return to_enum(__method__, ocns) unless block_given?
 
         ocns_dataset(ocns).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def ic_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.where(Sequel.or(access: "deny", rights_code: "icus")).each do |row|
+          yield from_row(row)
+        end
+      end
+      
+      def with_bib_key(bib_key)
+        return to_enum(__method__, bib_key) unless block_given?
+
+        table.where(bib_num: bib_key).each do |row|
           yield from_row(row)
         end
       end
@@ -67,6 +84,9 @@ module Clusterable
     end
 
     def cluster
+      if ocns.none?
+        return OCNLessCluster.new(bib_key: ht_bib_key)
+      end
       clusters = Cluster.for_ocns(ocns)
       if clusters.count > 1
         raise "ocns #{ocns} for item #{item_id} match multiple clusters"
