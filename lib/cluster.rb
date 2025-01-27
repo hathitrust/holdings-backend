@@ -48,7 +48,7 @@ class Cluster
     end
 
     def find_or_create(ocns)
-      return unless ocns.any?
+      return if ocns.empty?
 
       clusters = array_for_ocns(ocns)
 
