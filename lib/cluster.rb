@@ -120,7 +120,7 @@ class Cluster
     dataset = table.select(:cluster_id).distinct
 
     dataset.each do |row|
-      yield(find(id: row[:id]))
+      yield(find(id: row[:cluster_id]))
     end
   end
 

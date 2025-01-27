@@ -22,12 +22,11 @@ module Clusterable
         :condition,
         :gov_doc_flag,
         :mono_multi_serial,
-        :date_received,
         :uuid,
         :issn
       ]
 
-    READER_ATTRS = []
+    READER_ATTRS = [:date_received]
     ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
 
     EQUALITY_EXCLUDED_ATTRS = [:uuid, :date_received]
@@ -46,7 +45,7 @@ module Clusterable
     def initialize(params = {})
       params&.transform_keys!(&:to_sym)
       ALL_ATTRS.each do |attr|
-        send(attr.to_s + "=", params[attr]) if params[attr]
+        send(attr.to_s + "=", params[attr]) if params.has_key?(attr)
       end
     end
 
@@ -125,6 +124,16 @@ module Clusterable
       (self == other) &&
         (date_received == other.date_received) &&
         (uuid == other.uuid)
+    end
+
+    def date_received=(date)
+      if date.respond_to?(:to_date)
+        @date_received = date.to_date
+      elsif date.respond_to?(:to_s)
+        @date_received = Date.parse(date)
+      else
+        raise ArgumentError "Can't convert #{date} to date or parse as date"
+      end
     end
 
     def batch_with?(other)

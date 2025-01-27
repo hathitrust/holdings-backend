@@ -3,17 +3,17 @@
 require "spec_helper"
 require "phctl"
 
-RSpec.xdescribe "phctl integration" do
+RSpec.describe "phctl integration" do
   def phctl(*args)
     PHCTL::PHCTL.start(args)
   end
 
-  before(:each) do
-    Cluster.each(&:delete)
-  end
+  include_context "with cluster ocns table"
+  include_context "with hathifiles table"
+  include_context "with holdings table"
 
   describe "load" do
-    describe "commitments" do
+    xdescribe "commitments" do
       it "loads json file" do
         expect { phctl("load", "commitments", fixture("sp_commitment.ndj")) }
           .to change { cluster_count(:commitments) }.by(1)
@@ -37,12 +37,12 @@ RSpec.xdescribe "phctl integration" do
       end
     end
 
-    it "HtItems loads hathifiles" do
+    it "HtItems creates clusters with ocns in hathifile" do
       expect { phctl("load", "ht_items", fixture("hathifile_sample.txt")) }
-        .to change { cluster_count(:ht_items) }.by(5)
+        .to change { Cluster.count }.by(5)
     end
 
-    it "Concordance loads concordance diffs" do
+    xit "Concordance loads concordance diffs" do
       Settings.concordance_path = fixture("concordance")
       expect { phctl(*%w[load concordance 2022-08-01]) }
         .to change { cluster_count(:ocn_resolutions) }.by(5)
@@ -53,13 +53,13 @@ RSpec.xdescribe "phctl integration" do
         .to change { cluster_count(:holdings) }.by(10)
     end
 
-    it "ClusterFile loads json clusters" do
+    xit "ClusterFile loads json clusters" do
       expect { phctl("load", "cluster_file", fixture("cluster_2503661.json")) }
         .to change { Cluster.count }.by(1)
     end
   end
 
-  describe "Cleanup" do
+  xdescribe "Cleanup" do
     it "Holdings removes old holdings" do
       phctl("load", "holdings", fixture("umich_fake_testdata.ndj"))
       expect { phctl(*%w[cleanup holdings umich 2022-01-01]) }
@@ -103,7 +103,7 @@ RSpec.xdescribe "phctl integration" do
 
   # SharedPrintOps - integration tests are in the respective SharedPrint class
 
-  describe "Report" do
+  xdescribe "Report" do
     before(:each) do
       phctl("load", "cluster_file", fixture("cluster_2503661.json"))
     end

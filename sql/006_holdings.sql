@@ -11,7 +11,7 @@ CREATE TABLE `holdings` (
   `n_enum_chron` varchar(255) NULL,
   `status`       enum('CH', 'LM', 'WD') NULL,
   `condition`    enum('BRT', '') NULL,
-  `gov_doc_flag` tinyint(1) DEFAULT '0' NOT NULL,
+  `gov_doc_flag` tinyint(1),
   `mono_multi_serial` enum('mix', 'mon', 'spm', 'mpm', 'ser') NOT NULL,
   `date_received` date NOT NULL,
   `uuid`         char(36) NOT NULL,
