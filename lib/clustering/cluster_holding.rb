@@ -21,9 +21,10 @@ module Clustering
 
     # Updates a matching holding or adds it
     def cluster
-      Cluster.cluster_ocns!([@ocn]).get do |c|
+      Cluster.cluster_ocns!([@ocn]) do |c|
         to_add = []
 
+        # TODO reimplement when updating holdings
         common_uuids = check_for_duplicate_uuids!(c.holdings.to_a, @holdings)
         @holdings.each do |holding|
           next if common_uuids.include? holding.uuid
@@ -35,7 +36,7 @@ module Clustering
             to_add << holding
           end
         end
-        c.add_holdings(to_add)
+        to_add.map(&:save)
       end
     end
 
@@ -75,20 +76,15 @@ module Clustering
     end
 
     def find_old_holdings(cluster, holding)
-      if cluster.large?
-        cluster.holdings.to_a.select do |h|
-          h.organization == holding.organization && h.date_received != holding.date_received
+      # TODO reimplement this for mariadb when implementing updating holdings
+      # Build a fast lookup for holdings
+      # {update_key1: h1, update_key2: h2, ...}
+      @cluster_holdings_lookup ||= cluster.holdings.group_by(&:update_key)
+      [
+        @cluster_holdings_lookup[holding.update_key]&.find do |h|
+          h.date_received != holding.date_received
         end
-      else
-        # Build a fast lookup for holdings
-        # {update_key1: h1, update_key2: h2, ...}
-        @cluster_holdings_lookup ||= cluster.holdings.group_by(&:update_key)
-        [
-          @cluster_holdings_lookup[holding.update_key]&.find do |h|
-            h.date_received != holding.date_received
-          end
-        ]
-      end
+      ]
     end
 
     # Check and see if any items across existing/new holdings share a UUID but no other attributes.

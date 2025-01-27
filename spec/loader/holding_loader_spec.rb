@@ -3,7 +3,9 @@
 require "spec_helper"
 require "loader/holding_loader"
 
-RSpec.xdescribe Loader::HoldingLoader do
+RSpec.describe Loader::HoldingLoader do
+  include_context "with holdings table"
+
   let(:uuid) { SecureRandom.uuid }
   let(:line) do
     [
@@ -33,6 +35,9 @@ RSpec.xdescribe Loader::HoldingLoader do
   end
 
   describe "#load" do
+    include_context "with cluster ocns table"
+    include_context "with holdings table"
+
     before(:each) { Cluster.each(&:delete) }
 
     it "persists a batch of holdings" do

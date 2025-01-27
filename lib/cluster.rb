@@ -153,15 +153,6 @@ class Cluster
     Clusterable::Holding.with_ocns(ocns)
   end
 
-  UPDATE_LAST_MODIFIED = {"$currentDate" => {last_modified: true}}.freeze
-  def add_holdings(*items)
-    push_to_field(:holdings, items.flatten, UPDATE_LAST_MODIFIED)
-  end
-
-  def add_ht_items(*items)
-    push_to_field(:ht_items, items.flatten, UPDATE_LAST_MODIFIED)
-  end
-
   # Add a Set of new OCLC numbers to this cluster.
   #
   # Raises a duplicate key error if these OCLC numbers are already in some other

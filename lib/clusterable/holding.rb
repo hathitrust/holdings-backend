@@ -154,6 +154,12 @@ module Clusterable
       Services.ht_organizations[organization].weight
     end
 
+    def save
+      self.class.table.insert(to_hash)
+    end
+
+    alias_method :save!, :save
+
     private
 
     def blank?(value)
