@@ -14,7 +14,7 @@ require "cluster_error"
 # - htitems
 # - commitments
 class OCNLessCluster
-  attr_reader :id, :ocns
+  attr_reader :id
 
   # make these available as instance methods
   #extend Forwardable
@@ -79,6 +79,10 @@ class OCNLessCluster
 
   def initialize(bib_key:)
     @bib_key = bib_key
+  end
+
+  def ocns
+    @ocns ||= Set.new
   end
 
   # def ocns=(ocns)
