@@ -5,7 +5,8 @@ require "clusterable/ht_item"
 require "cluster"
 
 RSpec.describe Clusterable::HtItem do
-  include_context "with hathifiles table"
+  include_context "with tables for holdings"
+
   let(:ocn_rand) { rand(1_000_000).to_i }
   let(:item_id_rand) { rand(1_000_000).to_s }
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
@@ -71,8 +72,6 @@ RSpec.describe Clusterable::HtItem do
   end
 
   describe "#cluster" do
-    include_context "with cluster ocns table"
-
     it "returns a cluster with all its ocns" do
       create(:cluster, ocns: [1, 2])
       h = build(:ht_item, ocns: [1, 2])

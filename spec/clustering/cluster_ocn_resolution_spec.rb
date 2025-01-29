@@ -10,8 +10,7 @@ RSpec.describe Clustering::ClusterOCNResolution do
   let(:c) { build(:cluster, ocns: resolution.ocns) }
 
   describe "#cluster" do
-    include_context "with cluster ocns table"
-    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
+    include_context "with tables for holdings"
 
     it "can add a batch" do
       cluster = described_class.new(resolution, resolution2).cluster

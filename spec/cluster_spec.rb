@@ -90,7 +90,24 @@ RSpec.describe Cluster do
   let(:ocn2) { 6 }
   let(:ht) { build(:ht_item).to_hash }
 
-  include_context "with cluster ocns table"
+  include_context "with tables for holdings"
+
+  # import a data structure like
+  # {
+  #   cluster_id1 => [ ocn1, ocn2, ocn3 ],
+  #   cluster_id2 => [ ocn4, ocn5 ]
+  #   ...
+  # }
+  def import_cluster_ocns(cluster_ocns)
+    data = []
+    cluster_ocns.each do |cluster_id, ocns|
+      ocns.each do |ocn|
+        data << [cluster_id, ocn]
+      end
+    end
+
+    db[:cluster_ocns].import([:cluster_id, :ocn], data)
+  end
 
   describe "#initialize" do
     it "creates a new cluster" do
@@ -199,8 +216,6 @@ RSpec.describe Cluster do
   end
 
   describe "#ht_items" do
-    include_context "with hathifiles table"
-
     it "in a cluster with one ocn, returns matching htitem" do
       import_cluster_ocns(
         1 => [1001]
@@ -251,15 +266,12 @@ RSpec.describe Cluster do
   end
 
   describe "#holdings" do
-    include_context "with holdings table"
-
     it "can find a holding in a cluster" do
       import_cluster_ocns(
         1 => [1001]
       )
 
-      holding = build(:holding, ocn: 1001)
-      insert_holding(holding)
+      holding = create(:holding, ocn: 1001)
 
       cluster_holdings = Cluster.find(id: 1).holdings
       expect(cluster_holdings.to_a.length).to eq(1)
@@ -272,10 +284,9 @@ RSpec.describe Cluster do
       )
 
       holdings = [
-        build(:holding, ocn: 1001),
-        build(:holding, ocn: 1002)
+        create(:holding, ocn: 1001),
+        create(:holding, ocn: 1002)
       ]
-      holdings.each { |holding| insert_holding(holding) }
 
       cluster_holdings = Cluster.find(id: 1).holdings
       expect(cluster_holdings.to_a.length).to eq(2)
@@ -641,12 +652,6 @@ RSpec.describe Cluster do
   end
 
   context "when merging two clusters" do
-    # TODO combine these all into with all holdings tables
-    include_context "with holdings table"
-    include_context "with hathifiles table"
-    include_context "with cluster ocns table"
-    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
-
     let(:merged_cluster) { Cluster.cluster_ocns!([5, 6]) }
 
     it "combines ocns sets" do
@@ -661,8 +666,8 @@ RSpec.describe Cluster do
     it "gets holdings from merged OCNs" do
       create(:cluster, ocns: [5])
       create(:cluster, ocns: [6])
-      insert_holding(build(:holding, ocn: 5))
-      insert_holding(build(:holding, ocn: 6))
+      create(:holding, ocn: 5)
+      create(:holding, ocn: 6)
 
       expect(merged_cluster.holdings.count).to eq(2)
     end

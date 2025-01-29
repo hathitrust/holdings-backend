@@ -4,8 +4,7 @@ require "spec_helper"
 require "clustering/cluster_holding"
 
 RSpec.describe Clustering::ClusterHolding do
-  include_context "with cluster ocns table"
-  include_context "with holdings table"
+  include_context "with tables for holdings"
 
   let(:h) { build(:holding) }
   let(:batch) { [h, build(:holding, ocn: h.ocn)] }

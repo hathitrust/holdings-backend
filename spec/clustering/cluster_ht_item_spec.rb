@@ -12,8 +12,7 @@ RSpec.describe Clustering::ClusterHtItem do
   let(:cluster_with_item) { create(:cluster, ocns: ocns, ht_items: [item]) }
   let(:no_ocn) { build(:ht_item, ocns: []) }
 
-  include_context "with cluster ocns table"
-  include_context "with hathifiles table"
+  include_context "with tables for holdings"
 
   describe "#initialize" do
     it "accepts a single HTItem" do

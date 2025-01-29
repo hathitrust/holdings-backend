@@ -106,7 +106,7 @@ class Cluster
     dataset = table
       .select(:cluster_id)
       .distinct
-      .where(ocn: ocns)
+      .where(ocn: ocns.to_a)
 
     dataset.each do |row|
       yield find(id: row[:cluster_id])
