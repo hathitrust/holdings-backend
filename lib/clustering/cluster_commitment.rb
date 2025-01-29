@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "cluster"
-require "clustering/cluster_getter"
 
 module Clustering
   # Services for batch loading Commitments
@@ -24,8 +23,8 @@ module Clustering
       end
     end
 
-    def cluster(getter: ClusterGetter.new([@ocn]))
-      getter.get do |c|
+    def cluster
+      Cluster.cluster_ocns!([@ocn]).get do |c|
         to_add = []
 
         cluster_uuids = uuids_in_cluster(c)

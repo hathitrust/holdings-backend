@@ -2,7 +2,6 @@
 
 require "cluster"
 require "clustering/reclusterer"
-require "clustering/cluster_getter"
 
 module Clustering
   # Services for clustering OCN Resolutions
@@ -16,10 +15,10 @@ module Clustering
       end
     end
 
-    def cluster(getter: ClusterGetter.new(@ocns))
-      # The "getter.get" is in the scope of a transaction, so this will all be
-      # in the scope of that same transaction
-      getter.get do |cluster|
+    def cluster
+      # Cluster.cluster_ocns! is in the scope of a transaction, so this will
+      # all be in the scope of that same transaction
+      Cluster.cluster_ocns!(@ocns) do |cluster|
         @resolutions.map(&:save)
       end
     end
