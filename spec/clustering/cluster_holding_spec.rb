@@ -3,10 +3,13 @@
 require "spec_helper"
 require "clustering/cluster_holding"
 
-RSpec.xdescribe Clustering::ClusterHolding do
+RSpec.describe Clustering::ClusterHolding do
+  include_context "with cluster ocns table"
+  include_context "with holdings table"
+
   let(:h) { build(:holding) }
   let(:batch) { [h, build(:holding, ocn: h.ocn)] }
-  let(:c) { create(:cluster, ocns: [h.ocn]) }
+  let(:c) { build(:cluster, ocns: [h.ocn]) }
 
   def new_submission(holding, date: Date.today)
     holding.dup.tap do |new_holding|
@@ -17,19 +20,18 @@ RSpec.xdescribe Clustering::ClusterHolding do
 
   describe "#cluster" do
     before(:each) do
-      Cluster.each(&:delete)
       c.save
     end
 
     context "when adding a new holding" do
       it "adds a holding to an existing cluster" do
         cluster = described_class.new(h).cluster
-        expect(cluster.holdings.first._parent.id).to eq(c.id)
+        expect(cluster.holdings.first.cluster.id).to eq(c.id)
         expect(cluster.holdings.count).to eq(1)
         expect(Cluster.count).to eq(1)
       end
 
-      it "updates cluster last modified date" do
+      xit "updates cluster last modified date" do
         orig_last_modified = c.last_modified
         cluster = described_class.new(h).cluster
         expect(cluster.last_modified).to be > orig_last_modified
@@ -48,7 +50,7 @@ RSpec.xdescribe Clustering::ClusterHolding do
       end
     end
 
-    context "when updating an existing holding" do
+    xcontext "when updating an existing holding" do
       let(:h) { build(:holding, date_received: Date.yesterday) }
       let(:batch) { [h, build(:holding, ocn: h.ocn, date_received: Date.yesterday)] }
       let(:batch2) { batch.map { |h| new_submission(h) } }
@@ -140,11 +142,7 @@ RSpec.xdescribe Clustering::ClusterHolding do
     end
   end
 
-  describe "#delete" do
-    before(:each) do
-      Cluster.each(&:delete)
-    end
-
+  xdescribe "#delete" do
     it "deletes the parent cluster if it has nothing else" do
       cluster = described_class.new(h).cluster
       expect(Cluster.count).to eq(1)
@@ -175,7 +173,7 @@ RSpec.xdescribe Clustering::ClusterHolding do
     end
   end
 
-  describe "#delete_old_holdings" do
+  xdescribe "#delete_old_holdings" do
     let(:past_date) { DateTime.parse("2019-10-24") }
     let(:current_date) { DateTime.parse("2020-03-25") }
     let(:old1) do
@@ -187,10 +185,6 @@ RSpec.xdescribe Clustering::ClusterHolding do
     let(:new1) { old1.clone }
     let(:new2) { old1.clone }
     let(:c) { described_class.new(old1).cluster }
-
-    before(:each) do
-      Cluster.each(&:delete)
-    end
 
     it "deletes old when cluster has new and updated " do
       c.save

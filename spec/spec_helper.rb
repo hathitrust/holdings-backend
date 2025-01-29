@@ -134,7 +134,7 @@ def fixture(filename)
 end
 
 def cluster_count(field)
-  Cluster.all.map { |c| c.public_send(field).count }.reduce(0, :+)
+  Cluster.each.map { |c| c.public_send(field).count }.reduce(0, :+)
 end
 
 def Settings.reload!
