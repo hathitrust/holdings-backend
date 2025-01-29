@@ -4,10 +4,9 @@ require "spec_helper"
 require "reports/cost_report"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
-require "data_sources/ht_organizations"
+#require "data_sources/ht_organizations"
 
 RSpec.describe Reports::CostReport do
-  #let(:alo) { "allow" }
   let(:cr) { described_class.new(cost: 10) }
 
   include_context "with cluster ocns table"
@@ -19,15 +18,13 @@ RSpec.describe Reports::CostReport do
         ocns: [1],
         access: "allow",
         rights: "pd",
-        #enum_chron: "1",
-        #n_enum: "1",
-       collection_code: "PU"
+        collection_code: "PU"
       )
-      #Clustering::ClusterHtItem.new(pd_item).cluster.tap(&:save)
       Cluster.create(ocns: [1])
       insert_htitem pd_item
       expect(cr.freq_table[:upenn][:spm]).to eq({})
     end
+
     it "counts OCN-less items" do
       item = build(
         :ht_item,
@@ -35,17 +32,9 @@ RSpec.describe Reports::CostReport do
         ocns: [],
         access: "deny",
         rights: "ic",
-        #enum_chron: "1",
-        #n_enum: "1",
         collection_code: "PU"
-        
       )
-      #Clustering::ClusterHtItem.new(item).cluster.tap(&:save)
-      #Cluster.create(ocns: ["1"])
       insert_htitem item
-      require "pry"
-      #binding.pry
-      
       expect(cr.freq_table[:upenn][:spm]).to eq({1 => 1})
     end
   end
