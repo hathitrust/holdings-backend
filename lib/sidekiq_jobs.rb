@@ -1,6 +1,5 @@
 require "services"
 require "sidekiq"
-require "cleanup_duplicate_holdings"
 require "concordance_processing"
 require "loader/cluster_loader"
 require "loader/file_loader"
