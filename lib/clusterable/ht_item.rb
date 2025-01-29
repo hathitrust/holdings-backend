@@ -34,7 +34,7 @@ module Clusterable
           yield from_row(row)
         end
       end
-      
+
       def with_bib_key(bib_key)
         return to_enum(__method__, bib_key) unless block_given?
 

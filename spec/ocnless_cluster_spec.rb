@@ -62,9 +62,7 @@ RSpec.describe OCNLessCluster do
         :ht_item,
         ocns: [],
         ht_bib_key: bib_key1,
-        #enum_chron: "v.3",
-        #FIXME: Auto-normalization is disabled? Re-enable when possible
-        n_enum: "3",
+        enum_chron: "v.3",
         collection_code: "PU"
       )
     }
@@ -80,6 +78,7 @@ RSpec.describe OCNLessCluster do
     end
 
     describe "#item_enums" do
+      # FIXME: Auto-normalization is disabled? Re-enable when possible
       xit "collects all item enums in the cluster" do
         expect(c1.item_enums).to eq(["3"])
       end

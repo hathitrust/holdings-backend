@@ -4,7 +4,6 @@ require "spec_helper"
 require "reports/cost_report"
 require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
-#require "data_sources/ht_organizations"
 
 RSpec.describe Reports::CostReport do
   let(:cr) { described_class.new(cost: 10) }

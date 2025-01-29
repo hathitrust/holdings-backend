@@ -144,8 +144,6 @@ module Reports
     def compile_frequency_table
       @marker = Services.progress_tracker.call(batch_size: maxlines)
       logger.info("Begin compiling hscore frequency table.")
-      #require "debug"
-      #binding.break
       Clusterable::HtItem.ic_volumes do |ht_item|
         marker.incr
         add_ht_item_to_freq_table(ht_item)
@@ -157,8 +155,6 @@ module Reports
     def add_ht_item_to_freq_table(ht_item)
       item_format = CalculateFormat.new(ht_item.cluster).item_format(ht_item).to_sym
       item_overlap = Overlap::HtItemOverlap.new(ht_item)
-      #require "debug"
-      #binding.break
       item_overlap.matching_members.each do |org|
         @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
       end

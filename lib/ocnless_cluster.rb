@@ -80,10 +80,4 @@ class OCNLessCluster
   def holdings_by_org
     {}
   end
-
-  # TODO: remove and see if anything breaks
-  #def empty?
-  #  raise "Unimplemented"
-  #  ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
-  #end
 end
