@@ -1,30 +1,17 @@
 # frozen_string_literal: true
 
-require "enum_chron"
+require "clusterable/base"
 require "services"
+require "enum_chron"
 
 module Clusterable
-  class HtItem
+  class HtItem < Clusterable::Base
     include EnumChron
 
-    ACCESSOR_ATTRS = [
-      :ocns,
-      :item_id,
-      :ht_bib_key,
-      :rights,
-      :access,
-      :bib_fmt,
-      :n_enum,
-      :n_chron,
-      :n_enum_chron,
-      :billing_entity,
-      :enum_chron
-    ]
-    READER_ATTRS = [:collection_code]
-    ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
+    attr_accessor :ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt,
+      :n_enum, :n_chron, :n_enum_chron, :billing_entity
 
-    ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
-    READER_ATTRS.each { |attr| attr_reader attr }
+    attr_reader :collection_code, :enum_chron
 
     class << self
       def table
@@ -79,12 +66,6 @@ module Clusterable
       end
     end
 
-    def initialize(params = {})
-      ALL_ATTRS.each do |attr|
-        send(attr.to_s + "=", params[attr]) if params[attr]
-      end
-    end
-
     def cluster
       clusters = Cluster.for_ocns(ocns)
       if clusters.count > 1
@@ -97,10 +78,6 @@ module Clusterable
     def collection_code=(collection_code)
       @collection_code = collection_code
       set_billing_entity
-    end
-
-    def to_hash
-      ALL_ATTRS.map { |a| [a, send(a)] }.to_h
     end
 
     def batch_with?(other)

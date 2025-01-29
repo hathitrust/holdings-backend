@@ -47,14 +47,14 @@ RSpec.describe Clusterable::HtItem do
     expect(build(:ht_item, ocns: []).valid?).to be true
   end
 
-  xit "normalizes enum_chron" do
+  it "normalizes enum_chron" do
     htitem = build(:ht_item, enum_chron: "v.1 Jul 1999")
     expect(htitem.enum_chron).to eq("v.1 Jul 1999")
     expect(htitem.n_enum).to eq("1")
     expect(htitem.n_chron).to eq("Jul 1999")
   end
 
-  xit "gives empty string if given an empty enum_chron" do
+  it "gives empty string if given an empty enum_chron" do
     htitem = build(:ht_item, enum_chron: "")
     expect(htitem.enum_chron).to eq("")
     expect(htitem.n_enum).to eq("")
