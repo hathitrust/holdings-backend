@@ -9,14 +9,14 @@ RSpec.describe Clusterable::Holding do
   let(:h) { build(:holding, :all_fields, organization: holdings_org) }
   let(:h2) { h.clone }
 
-  xit "normalizes enum_chron" do
+  it "normalizes enum_chron" do
     holding = build(:holding, enum_chron: "v.1 Jul 1999")
     expect(holding.n_enum).to eq("1")
     expect(holding.n_chron).to eq("Jul 1999")
     expect(holding.n_enum_chron).to eq("1\tJul 1999")
   end
 
-  xit "does nothing if given an empty enum_chron" do
+  it "does nothing if given an empty enum_chron" do
     holding = build(:holding, enum_chron: "")
     expect(holding.n_enum).to eq("")
     expect(holding.n_chron).to eq("")
@@ -67,7 +67,7 @@ RSpec.describe Clusterable::Holding do
       end
     end
 
-    described_class::EQUALITY_ATTRS.each do |attr|
+    described_class.equality_attrs.each do |attr|
       it "== is false if #{attr} doesn't match" do
         # ensure attribute in h2 is different from h but
         # of the same logical type

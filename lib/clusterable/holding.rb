@@ -1,39 +1,22 @@
 # frozen_string_literal: true
 
 require "services"
-require "enum_chron"
+require "clusterable/base"
 require "json"
+require "enum_chron"
 
 module Clusterable
   # A holding
-  class Holding
+  class Holding < Clusterable::Base
     include EnumChron
 
-    ACCESSOR_ATTRS =
-      [
-        :ocn,
-        :local_id,
-        :organization,
-        :enum_chron,
-        :n_enum,
-        :n_chron,
-        :n_enum_chron,
-        :status,
-        :condition,
-        :gov_doc_flag,
-        :mono_multi_serial,
-        :uuid,
-        :issn
-      ]
+    attr_accessor :ocn, :local_id, :organization, :n_enum, :n_chron,
+      :n_enum_chron, :status, :condition, :gov_doc_flag, :mono_multi_serial,
+      :uuid, :issn
 
-    READER_ATTRS = [:date_received]
-    ALL_ATTRS = ACCESSOR_ATTRS + READER_ATTRS
+    equality_excluded_attr :uuid, :date_received
 
-    EQUALITY_EXCLUDED_ATTRS = [:uuid, :date_received]
-    EQUALITY_ATTRS = (ALL_ATTRS - EQUALITY_EXCLUDED_ATTRS)
-
-    ACCESSOR_ATTRS.each { |attr| attr_accessor attr }
-    READER_ATTRS.each { |attr| attr_reader attr }
+    attr_reader :date_received, :enum_chron
 
     def cluster
       Cluster.for_ocns([ocn]).first
@@ -41,13 +24,6 @@ module Clusterable
 
     # validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received
     # validates_inclusion_of :mono_multi_serial, in: ["mix", "mon", "spm", "mpm", "ser"]
-
-    def initialize(params = {})
-      params&.transform_keys!(&:to_sym)
-      ALL_ATTRS.each do |attr|
-        send(attr.to_s + "=", params[attr]) if params.has_key?(attr)
-      end
-    end
 
     def brt_lm_access?
       condition == "BRT" || status == "LM"
@@ -103,29 +79,6 @@ module Clusterable
       new(row)
     end
 
-    # Is false when any field other than _id, date_received or uuid is not the
-    # same
-    #
-    # @param other, another holding
-    def ==(other)
-      self.class == other.class &&
-        EQUALITY_ATTRS.all? do |attr|
-          self_attr = public_send(attr)
-          other_attr = other.public_send(attr)
-
-          (self_attr == other_attr) or (blank?(self_attr) and blank?(other_attr))
-        end
-    end
-
-    # Is true when all fields match except for _id
-    #
-    # @param other, another holding
-    def same_as?(other)
-      (self == other) &&
-        (date_received == other.date_received) &&
-        (uuid == other.uuid)
-    end
-
     def date_received=(date)
       if date.respond_to?(:to_date)
         @date_received = date.to_date
@@ -138,21 +91,6 @@ module Clusterable
 
     def batch_with?(other)
       ocn == other.ocn
-    end
-
-    def to_hash
-      ALL_ATTRS.map { |a| [a, send(a)] }.to_h
-    end
-
-    # Turn a holding into a hash key for quick lookup
-    # in e.g. cluster_holding.find_old_holdings.
-    def update_key
-      to_hash
-        .slice(*EQUALITY_ATTRS)
-        # fold blank strings & nil to same update key, as in
-        # equality above
-        .transform_values { |f| blank?(f) ? nil : f }
-        .hash
     end
 
     def country_code
@@ -168,11 +106,5 @@ module Clusterable
     end
 
     alias_method :save!, :save
-
-    private
-
-    def blank?(value)
-      value == "" || value.nil?
-    end
   end
 end

@@ -1,21 +1,17 @@
 # frozen_string_literal: true
 
 require "spec_helper"
+require "clusterable/base"
 require "enum_chron"
 
-class DummyRecord
-  #  include Mongoid::Document
-  #  include EnumChron
-  #  field :enum_chron
-  #  field :n_enum
-  #  field :n_chron
-  #  field :n_enum_chron
+class FakeRecord < Clusterable::Base
+  include EnumChron
 end
 
-RSpec.xdescribe EnumChron do
-  let(:rec_w_ec) { DummyRecord.new(enum_chron: "1 aug") }
-  let(:rec_w_empty_ec) { DummyRecord.new(enum_chron: "") }
-  let(:rec_wo_ec) { DummyRecord.new }
+RSpec.describe EnumChron do
+  let(:rec_w_ec) { FakeRecord.new(enum_chron: "1 aug") }
+  let(:rec_w_empty_ec) { FakeRecord.new(enum_chron: "") }
+  let(:rec_wo_ec) { FakeRecord.new }
 
   it "uses EnumChronParser to set n_chron, n_enum, and n_enum_chron" do
     expect(rec_w_ec.n_enum).to eq("1")
@@ -24,7 +20,7 @@ RSpec.xdescribe EnumChron do
   end
 
   it "replaces tabs in enum and chron so we can use it as delimiter" do
-    rec_w_ec = DummyRecord.new(enum_chron: "vol\t1\tAug\t5")
+    rec_w_ec = FakeRecord.new(enum_chron: "vol\t1\tAug\t5")
     expect(rec_w_ec.n_enum_chron).to eq("vol:1\tAug 5")
   end
 

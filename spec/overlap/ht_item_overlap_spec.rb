@@ -124,7 +124,7 @@ RSpec.describe Overlap::HtItemOverlap do
         ocns: c.ocns,
         enum_chron: "1",
         n_enum: "1",
-        billing_entity: "ualberta")
+        collection_code: "PU")
     end
     let(:mpm_holding1) do
       build(:holding,
@@ -148,19 +148,18 @@ RSpec.describe Overlap::HtItemOverlap do
         n_enum: "2")
     end
 
-    # skipping mpm tests until ht_item enumchrons are working
-    xdescribe "#organizations_with_holdings" do
+    describe "#organizations_with_holdings" do
       before(:each) do
         c.save
         insert_htitem(mpm)
         [mpm_holding1, mpm_holding2, mpm_non_match_holding].each do |holding|
-          insert_holding(holding)
+          holding.save
         end
       end
 
       it "returns all organizations that overlap with an item" do
         overlap = described_class.new(c.ht_items.first)
-        # billing_entity: ualberta, holdings: smu, umich, non_matching: stanford
+        # billing_entity: upenn, holdings: smu, umich, non_matching: stanford
         expect(overlap.organizations_with_holdings.count).to eq(4)
       end
 
@@ -174,17 +173,23 @@ RSpec.describe Overlap::HtItemOverlap do
           ocns: c.ocns,
           enum_chron: "2",
           n_enum: "2",
-          billing_entity: "ualberta")
-        Clustering::ClusterHtItem.new(mpm2).cluster.tap(&:save)
-        c.reload
-        overlap = described_class.new(c.ht_items.where(n_enum: "2").first)
+          collection_code: "PU")
+        Clustering::ClusterHtItem.new(mpm2).cluster
+        overlap = described_class.new(mpm2)
         expect(overlap.ht_item.n_enum).to eq("2")
         expect(overlap.organizations_with_holdings).not_to include("umich")
       end
 
       it "only returns unique organizations" do
-        Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
-        c.reload
+        holding = build(
+          :holding,
+          ocn: c.ocns.first,
+          organization: "umich",
+          enum_chron: "1",
+          n_enum: "1"
+        )
+
+        Clustering::ClusterHolding.new(holding).cluster
         expect(CalculateFormat.new(c).cluster_format).to eq("mpm")
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.organizations_with_holdings.count).to eq(4)
@@ -193,37 +198,34 @@ RSpec.describe Overlap::HtItemOverlap do
       it "matches if holding enum is ''" do
         empty_holding = build(:holding,
           ocn: c.ocns.first,
-          organization: "upenn",
+          organization: "umich",
           enum_chron: "",
           n_enum: "")
-        Clustering::ClusterHolding.new(empty_holding).cluster.tap(&:save)
-        c.reload
+        Clustering::ClusterHolding.new(empty_holding).cluster
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings).to include("upenn")
+        expect(overlap.organizations_with_holdings).to include("umich")
       end
 
       it "matches if holding enum is '', but chron exists" do
         almost_empty_holding = build(:holding,
           ocn: c.ocns.first,
-          organization: "upenn",
+          organization: "umich",
           enum_chron: "Aug",
           n_enum: "",
           n_chron: "Aug")
-        Clustering::ClusterHolding.new(almost_empty_holding).cluster.tap(&:save)
-        c.reload
+        Clustering::ClusterHolding.new(almost_empty_holding).cluster
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings).to include("upenn")
+        expect(overlap.organizations_with_holdings).to include("umich")
       end
 
       it "does not match if ht item enum is ''" do
         empty_mpm = build(:ht_item, :mpm,
           ocns: c.ocns,
-          billing_entity: "ualberta",
+          collection_code: "PU",
           enum_chron: "",
           n_enum: "")
-        Clustering::ClusterHtItem.new(empty_mpm).cluster.tap(&:save)
-        c.reload
-        overlap = described_class.new(c.ht_items.where(enum_chron: "").first)
+        Clustering::ClusterHtItem.new(empty_mpm).cluster
+        overlap = described_class.new(empty_mpm)
         expect(overlap.organizations_with_holdings).to eq([mpm_non_match_holding.organization,
           empty_mpm.billing_entity])
       end
@@ -252,9 +254,7 @@ RSpec.describe Overlap::HtItemOverlap do
         expect(overlap.h_share(spm_holding3.organization)).to eq(1.0 / 4)
       end
 
-      # skipping keio & ucm tests for now
-      # TODO: enable them when ht_item enumchrons are working
-      xdescribe "#h_share: special rules for hathitrust, keio & ucm" do
+      describe "#h_share: special rules for hathitrust, keio & ucm" do
         let(:keio_item) do
           build(
             :ht_item,
@@ -283,21 +283,17 @@ RSpec.describe Overlap::HtItemOverlap do
           )
         end
         it "assigns an h_share to hathitrust for KEIO items" do
-          Clustering::ClusterHtItem.new(keio_item).cluster.tap(&:save)
-          c.reload
-          overlap = described_class.new(c.ht_items.last)
-          expect(c.ht_items.last.billing_entity).to eq("hathitrust")
-          expect(overlap.h_share("hathitrust")).to eq(1.0 / 4)
-          expect(overlap.h_share("umich")).to eq(1.0 / 4)
+          Clustering::ClusterHtItem.new(keio_item).cluster
+          overlap = described_class.new(keio_item)
+          expect(keio_item.billing_entity).to eq("hathitrust")
+          expect(overlap.h_share("hathitrust")).to eq(1.0)
         end
 
         it "assigns an h_share to UCM as it would anyone else" do
-          Clustering::ClusterHtItem.new(ucm_item).cluster.tap(&:save)
-          c.reload
-          overlap = described_class.new(c.ht_items.last)
-          expect(c.ht_items.last.billing_entity).to eq("ucm")
-          expect(overlap.h_share("ucm")).to eq(1.0 / 4)
-          expect(overlap.h_share("umich")).to eq(1.0 / 4)
+          Clustering::ClusterHtItem.new(ucm_item).cluster
+          overlap = described_class.new(ucm_item)
+          expect(ucm_item.billing_entity).to eq("ucm")
+          expect(overlap.h_share("ucm")).to eq(1.0)
         end
       end
     end

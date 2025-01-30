@@ -2,7 +2,7 @@
 
 module Clusterable
   # A mapping from a deprecated OCN to a resolved OCN
-  class OCNResolution
+  class OCNResolution < Clusterable::Base
     attr_accessor :deprecated, :resolved
     #    include Mongoid::Document
     #
@@ -41,15 +41,6 @@ module Clusterable
 
     def table
       self.class.table
-    end
-
-    def initialize(deprecated: nil, resolved: nil)
-      @deprecated = deprecated
-      @resolved = resolved
-    end
-
-    def ==(other)
-      self.class == other.class && deprecated == other.deprecated && resolved == other.resolved
     end
 
     def ocns

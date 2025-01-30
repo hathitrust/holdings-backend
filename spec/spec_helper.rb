@@ -30,6 +30,8 @@ Sidekiq.strict_args!
 Sidekiq::Testing.inline!
 
 RSpec.configure do |config|
+  config.exclude_pattern = "disabled/**/*_spec.rb"
+
   config.example_status_persistence_file_path = ".rspec_status"
 
   config.expect_with :rspec do |expectations|

@@ -7,6 +7,8 @@ require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 
 RSpec.xdescribe Reports::CostReport do
+  include_context "with tables for holdings"
+
   let(:alo) { "allow" }
   let(:dni) { "deny" }
   let(:pd) { "pd" }
@@ -23,13 +25,14 @@ RSpec.xdescribe Reports::CostReport do
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    Cluster.each(&:delete)
     c.save
     c2.save
-    Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
-    Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
+    insert_htitem(spm)
+    insert_htitem(mpm)
+    Clustering::ClusterHtItem.new(spm).cluster
+    Clustering::ClusterHtItem.new(mpm).cluster
+    Clustering::ClusterHolding.new(holding).cluster
+    Clustering::ClusterHolding.new(holding2).cluster
   end
 
   describe "#num_volumes" do
@@ -41,21 +44,21 @@ RSpec.xdescribe Reports::CostReport do
   describe "making sure that access and rights come out the way they go in" do
     it "pd == allow" do
       cluster_tap_save build(:ht_item, access: alo, rights: pd, ocns: [111])
-      cluster = Cluster.find_by(ocns: 111)
+      cluster = Cluster.with_ocns([111]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq pd
       expect(cluster.ht_items.first.access).to eq alo
     end
     it "icus == allow" do
       cluster_tap_save build(:ht_item, access: alo, rights: icus, ocns: [222])
-      cluster = Cluster.find_by(ocns: 222)
+      cluster = Cluster.with_ocns([222]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq icus
       expect(cluster.ht_items.first.access).to eq alo
     end
     it "ic == deny" do
       cluster_tap_save build(:ht_item, access: dni, rights: ic, ocns: [333])
-      cluster = Cluster.find_by(ocns: 333)
+      cluster = Cluster.with_ocns([333]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq ic
       expect(cluster.ht_items.first.access).to eq dni
