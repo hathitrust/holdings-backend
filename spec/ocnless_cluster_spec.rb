@@ -61,7 +61,7 @@ RSpec.describe OCNLessCluster do
     end
   end
 
-  # Not clear yet how to set up the scaffolding to test the methods we want to keep
+  # Note: may need to revisit some of these for production overlap table
   describe "Precomputed fields" do
     before(:each) do
       insert_htitem ht1
