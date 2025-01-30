@@ -8,29 +8,29 @@ RSpec.describe Overlap::MultiPartOverlap do
 
   let(:c) { build(:cluster) }
   let(:htitem_with_enumchron) do
-    build(:ht_item, 
-          :mpm, 
-          enum_chron: "1", 
-          n_enum: "1", 
-          ocns: c.ocns, 
-          collection_code: 'PU')
+    build(:ht_item,
+      :mpm,
+      enum_chron: "1",
+      n_enum: "1",
+      ocns: c.ocns,
+      collection_code: "PU")
   end
 
   let(:htitem_no_enumchron) do
     build(:ht_item,
-          :mpm,
-          enum_chron: "",
-          n_enum: "",
-          ocns: c.ocns,
-          collection_code: 'PU')
+      :mpm,
+      enum_chron: "",
+      n_enum: "",
+      ocns: c.ocns,
+      collection_code: "PU")
   end
 
   let(:holding_with_enumchron) do
     build(:holding,
-          ocn: c.ocns.first,
-          organization: 'umich',
-          enum_chron: "1",
-          n_enum: "1")
+      ocn: c.ocns.first,
+      organization: "umich",
+      enum_chron: "1",
+      n_enum: "1")
   end
 
   let(:holding_lost_missing) do
