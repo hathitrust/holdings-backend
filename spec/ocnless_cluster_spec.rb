@@ -7,9 +7,26 @@ require "clustering/cluster_ht_item"
 RSpec.describe OCNLessCluster do
   let(:bib_key1) { 1 }
   let(:c1) { described_class.new(bib_key: bib_key1) }
-  let(:ht) { build(:ht_item).to_hash }
+  let(:ht1) {
+    build(
+      :ht_item,
+      ocns: [],
+      ht_bib_key: bib_key1,
+      enum_chron: "v.2",
+      collection_code: "PU"
+    )
+  }
+  let(:ht2) {
+    build(
+      :ht_item,
+      ocns: [],
+      ht_bib_key: bib_key1,
+      enum_chron: "v.3",
+      collection_code: "PU"
+    )
+  }
 
-  include_context "with cluster ocns table"
+  include_context "with tables for holdings"
 
   describe "#initialize" do
     it "creates a new cluster" do
@@ -23,21 +40,11 @@ RSpec.describe OCNLessCluster do
   end
 
   describe "#ht_items" do
-    include_context "with hathifiles table"
-
     it "in a cluster with one bib_key, returns matching htitem" do
-      htitem = build(
-        :ht_item,
-        ocns: [],
-        ht_bib_key: bib_key1,
-        access: "allow",
-        rights: "pd",
-        collection_code: "PU"
-      )
-      insert_htitem(htitem)
+      insert_htitem(ht1)
       cluster_items = c1.ht_items
       expect(cluster_items.to_a.length).to eq(1)
-      expect(cluster_items.first.item_id).to eq(htitem.item_id)
+      expect(cluster_items.first.item_id).to eq(ht1.item_id)
     end
   end
 
@@ -56,19 +63,9 @@ RSpec.describe OCNLessCluster do
 
   # Not clear yet how to set up the scaffolding to test the methods we want to keep
   describe "Precomputed fields" do
-    include_context "with hathifiles table"
-    let(:ht1) {
-      build(
-        :ht_item,
-        ocns: [],
-        ht_bib_key: bib_key1,
-        enum_chron: "v.3",
-        collection_code: "PU"
-      )
-    }
-
     before(:each) do
       insert_htitem ht1
+      insert_htitem ht2
     end
 
     describe "#organizations_in_cluster" do
@@ -78,16 +75,15 @@ RSpec.describe OCNLessCluster do
     end
 
     describe "#item_enums" do
-      # FIXME: Auto-normalization is disabled? Re-enable when possible
-      xit "collects all item enums in the cluster" do
-        expect(c1.item_enums).to eq(["3"])
+      it "collects all item enums in the cluster" do
+        expect(c1.item_enums).to eq(["2", "3"])
       end
     end
 
     describe "#org_enums" do
-      it "maps orgs to their enums" do
+      it "returns empty Array no matter the org" do
         expect(c1.org_enums["umich"]).to eq([])
-        expect(c1.org_enums["smu"]).to eq([])
+        expect(c1.org_enums["upenn"]).to eq([])
         expect(c1.org_enums["an impossible key"]).to eq([])
       end
     end
@@ -109,7 +105,7 @@ RSpec.describe OCNLessCluster do
       describe "##{method}" do
         it "returns 0 no matter the org" do
           expect(c1.send(method)["umich"]).to eq(0)
-          expect(c1.send(method)["smu"]).to eq(0)
+          expect(c1.send(method)["upenn"]).to eq(0)
           expect(c1.send(method)["an impossible key"]).to eq(0)
         end
       end
