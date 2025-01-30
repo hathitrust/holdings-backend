@@ -24,10 +24,10 @@ RSpec.describe Clusterable::Holding do
   end
 
   describe "#cluster" do
-    include_context "with cluster ocns table"
+    include_context "with tables for holdings"
 
     it "can get the cluster with the holding ocn" do
-      import_cluster_ocns({1 => [1001, 1002]})
+      create(:cluster, ocns: [1001, 1002])
 
       holding = build(:holding, ocn: 1001)
       expect(holding.cluster.ocns).to include(1001)

@@ -20,8 +20,7 @@ RSpec.describe Loader::OCNResolutionLoader do
   end
 
   describe "#load" do
-    include_context "with cluster ocns table"
-    before(:each) { Services.holdings_db[:oclc_concordance].truncate }
+    include_context "with tables for holdings"
 
     it "persists a batch of OCNResolutions" do
       resolution1 = build(:ocn_resolution)

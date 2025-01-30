@@ -50,8 +50,7 @@ RSpec.describe Loader::HtItemLoader do
   end
 
   describe "#load" do
-    include_context "with cluster ocns table"
-    include_context "with hathifiles table"
+    include_context "with tables for holdings"
 
     it "creates clusters as htitems are loaded" do
       item1 = build(:ht_item)

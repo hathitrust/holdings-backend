@@ -4,9 +4,7 @@ require "spec_helper"
 require "overlap/ht_item_overlap"
 
 RSpec.describe Overlap::HtItemOverlap do
-  include_context "with cluster ocns table"
-  include_context "with hathifiles table"
-  include_context "with holdings table"
+  include_context "with tables for holdings"
 
   let(:c) { build(:cluster) }
 
@@ -49,9 +47,9 @@ RSpec.describe Overlap::HtItemOverlap do
   # we end up inserting the same kinds of things...
   # this adds the given item and holdings to cluster c
   def cluster_item_holdings(item:, holdings:)
-    import_cluster_ocns(1 => c.ocns)
+    c.save
     insert_htitem(item)
-    holdings.each { |holding| insert_holding(holding) }
+    holdings.each { |holding| holding.save }
   end
 
   context "with an spm cluster and spm holdings" do
@@ -73,13 +71,11 @@ RSpec.describe Overlap::HtItemOverlap do
         expect(c.holdings.count).to eq(3)
         expect(overlap.organizations_with_holdings.count).to eq(4)
         # add 1 more holding to a member that already holds
-        insert_holding(
-          build(
-            :holding,
-            mono_multi_serial: "spm",
-            ocn: c.ocns.first,
-            organization: "smu"
-          )
+        create(
+          :holding,
+          mono_multi_serial: "spm",
+          ocn: c.ocns.first,
+          organization: "smu"
         )
         # Number of holdings goes up, overlap.organizations_with_holdings.count does not
         expect(c.holdings.count).to eq(4)
@@ -155,9 +151,7 @@ RSpec.describe Overlap::HtItemOverlap do
     # skipping mpm tests until ht_item enumchrons are working
     xdescribe "#organizations_with_holdings" do
       before(:each) do
-        import_cluster_ocns(
-          1 => c.ocns
-        )
+        c.save
         insert_htitem(mpm)
         [mpm_holding1, mpm_holding2, mpm_non_match_holding].each do |holding|
           insert_holding(holding)

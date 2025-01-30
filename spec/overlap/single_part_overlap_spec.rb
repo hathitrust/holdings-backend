@@ -6,9 +6,7 @@ require "clustering/cluster_ht_item"
 require "overlap/single_part_overlap"
 
 RSpec.describe Overlap::SinglePartOverlap do
-  include_context "with cluster ocns table"
-  include_context "with hathifiles table"
-  include_context "with holdings table"
+  include_context "with tables for holdings"
 
   let(:c) { build(:cluster) }
   let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
@@ -27,15 +25,11 @@ RSpec.describe Overlap::SinglePartOverlap do
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    import_cluster_ocns(
-      1 => c.ocns
-    )
+    c.save
 
     insert_htitem(ht)
 
-    [h, h2, h3].each do |holding|
-      insert_holding(holding)
-    end
+    [h, h2, h3].each { |holding| holding.save }
   end
 
   describe "#copy_count" do

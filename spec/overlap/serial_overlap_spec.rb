@@ -3,10 +3,16 @@
 require "spec_helper"
 require "overlap/serial_overlap"
 
-RSpec.xdescribe Overlap::SerialOverlap do
+RSpec.describe Overlap::SerialOverlap do
+  include_context "with tables for holdings"
+
   let(:c) { build(:cluster) }
-  let(:ht) { build(:ht_item, :ser, ocns: c.ocns) }
-  let(:ht2) { build(:ht_item, :ser, ocns: c.ocns, ht_bib_key: ht.ht_bib_key) }
+
+  # items from upenn
+  let(:ht) { build(:ht_item, :ser, ocns: c.ocns, collection_code: "PU") }
+  let(:ht2) { build(:ht_item, :ser, ocns: c.ocns, ht_bib_key: ht.ht_bib_key, collection_code: "PU") }
+
+  # michigan holdings
   let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "lm") }
   let(:h2) do
     build(:holding,
@@ -18,14 +24,10 @@ RSpec.xdescribe Overlap::SerialOverlap do
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    Cluster.each(&:delete)
     c.save
-    Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
-    Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
-    c.reload
+
+    [ht, ht2].each { |htitem| insert_htitem(htitem) }
+    [h, h2, h3].each { |holding| holding.save }
   end
 
   describe "#copy_count" do
@@ -33,14 +35,12 @@ RSpec.xdescribe Overlap::SerialOverlap do
       expect(CalculateFormat.new(c).cluster_format).to eq("ser")
     end
 
-    it "returns 1 if there is any match" do
-      expect(described_class.new(c, h.organization, ht).copy_count).to eq(1)
+    it "returns 1 if there is any holding match" do
+      expect(described_class.new(c, "umich", ht).copy_count).to eq(1)
     end
 
     it "returns 1 if billing_entity matches" do
-      ht.update_attributes(billing_entity: "different_org")
-      c.reload
-      expect(described_class.new(c, "different_org", ht).copy_count).to eq(1)
+      expect(described_class.new(c, "upenn", ht).copy_count).to eq(1)
     end
   end
 end

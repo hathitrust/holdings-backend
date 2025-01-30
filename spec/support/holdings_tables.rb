@@ -1,14 +1,19 @@
 require "hathifiles_database"
 require "services"
 
-RSpec.shared_context "with hathifiles table" do
+RSpec.shared_context "with tables for holdings" do
+  let(:db) { Services.holdings_db }
+
   before(:all) do
     hf_db = HathifilesDatabase.new
     hf_db.recreate_tables!
   end
 
   before(:each) do
+    db[:oclc_concordance].truncate
+    db[:cluster_ocns].truncate
     Services.hathifiles_table.truncate
+    Services.holdings_table.truncate
   end
 
   # e.g. insert_htitem(build(:ht_item))
