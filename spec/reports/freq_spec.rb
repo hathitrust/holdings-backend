@@ -8,8 +8,8 @@ require "clustering/cluster_ht_item"
 RSpec.describe Reports::CostReport do
   let(:cr) { described_class.new(cost: 10) }
 
-  include_context "with cluster ocns table"
-  include_context "with hathifiles table"
+  include_context "with tables for holdings"
+
   describe "#compile_frequency_table" do
     it "ignores PD items" do
       pd_item = build(
