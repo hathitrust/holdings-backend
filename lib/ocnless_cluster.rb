@@ -21,7 +21,7 @@ class OCNLessCluster
   end
 
   def ocns
-    @ocns ||= Set.new
+    @ocns ||= Set.new.freeze
   end
 
   def ht_items
