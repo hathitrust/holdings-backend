@@ -41,12 +41,8 @@ class CalculateFormat
   end
 
   def record_has_any_enum?(ht_item)
-    # TODO: FIX with n_enum
-    # Query if catalog record has any n_enum
-    return false
-
     @cluster.ht_items.any? do |ht|
-      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum&.empty?
+      ht.ht_bib_key == ht_item.ht_bib_key && !(ht.n_enum || "").empty?
     end
   end
 end
