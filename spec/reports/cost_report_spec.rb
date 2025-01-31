@@ -429,14 +429,65 @@ RSpec.describe Reports::CostReport do
         "utexas	0.0	0.3333333333333333	0.5	0.375	3.0	0.0	1.2083333333333333"
       ].join("\n"))
     end
+  end
+end
 
-    it "has a setting for where to dump freq files" do
-      expect(Settings.cost_report_freq_path.length).to be > 5
+# Temporarily broken out from "putting it all together" section above.
+RSpec.describe Reports::CostReport do
+  describe "frequency table stuff" do
+    include_context "with tables for holdings"
+
+    let(:cr) { Reports::CostReport.new(cost: 5) }
+    let(:ht1) {
+      build(
+        :ht_item,
+        :spm,
+        ocns: [5],
+        access: "deny",
+        rights: "ic",
+        collection_code: "MIU"
+      )
+    }
+
+    before(:each) do
+      Cluster.each(&:delete)
+      Cluster.create(ocns: ht1.ocns)
+      insert_htitem ht1
     end
 
-    it "dumps frequency table upon request" do
-      cr.dump_freq_table("freq.txt")
-      expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
+    describe "#dump_freq_table" do
+      it "dumps frequency table" do
+        cr.dump_freq_table("freq.txt")
+        expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
+      end
+    end
+
+    describe "#freq_table" do
+      it "ignores PD items" do
+        pd_item = build(
+          :ht_item,
+          ocns: [1],
+          access: "allow",
+          rights: "pd",
+          collection_code: "PU"
+        )
+        Cluster.create(ocns: [1])
+        insert_htitem pd_item
+        expect(cr.freq_table[organization: :upenn, format: :spm]).to eq({})
+      end
+
+      it "counts OCN-less items" do
+        item = build(
+          :ht_item,
+          :spm,
+          ocns: [],
+          access: "deny",
+          rights: "ic",
+          collection_code: "PU"
+        )
+        insert_htitem item
+        expect(cr.freq_table[organization: :upenn, format: :spm]).to eq({1 => 1})
+      end
     end
   end
 end
