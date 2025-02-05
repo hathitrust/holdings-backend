@@ -42,7 +42,7 @@ class CalculateFormat
 
   def record_has_any_enum?(ht_item)
     @cluster.ht_items.any? do |ht|
-      ht.ht_bib_key == ht_item.ht_bib_key && !(ht.n_enum || "").empty?
+      ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum&.empty?
     end
   end
 end

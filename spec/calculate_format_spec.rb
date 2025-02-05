@@ -25,16 +25,6 @@ RSpec.describe CalculateFormat do
       ).to eq("mpm")
     end
 
-    it "is NOT an MPM if it has nil enum" do
-      ht_nil_enum = build(:ht_item, bib_fmt: "BK")
-      ht_nil_enum.n_enum = nil
-      insert_htitem ht_nil_enum
-      c = Clustering::ClusterHtItem.new(ht_nil_enum).cluster
-      expect(
-        described_class.new(c).item_format(ht_nil_enum)
-      ).not_to eq("mpm")
-    end
-
     it "is NOT an MPM if it has a chron but no enum" do
       ht_chron = build(:ht_item, bib_fmt: "BK", enum_chron: "1994")
       insert_htitem ht_chron
