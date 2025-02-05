@@ -42,6 +42,11 @@ class CalculateFormat
 
   def record_has_any_enum?(ht_item)
     @cluster.ht_items.any? do |ht|
+      # TODO: reconsider what happens if n_enum is nil
+      # irb(main):002> !""&.empty?
+      # => false
+      # irb(main):003> !nil&.empty?
+      # => true
       ht.ht_bib_key == ht_item.ht_bib_key && !ht.n_enum&.empty?
     end
   end
