@@ -9,6 +9,8 @@ module Clusterable
   class HtItem < Clusterable::Base
     include EnumChron
 
+    IC_RIGHTS_CODES = %w(ic op und).freeze
+
     attr_accessor :ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt,
       :n_enum, :n_chron, :n_enum_chron, :billing_entity
 
@@ -30,7 +32,23 @@ module Clusterable
       def ic_volumes
         return to_enum(__method__) unless block_given?
 
-        table.where(Sequel.or(access: "deny", rights_code: "icus")).each do |row|
+        table.where(rights_code: IC_RIGHTS_CODES).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def pd_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.exclude(rights_code: IC_RIGHTS_CODES).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def all_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.each do |row|
           yield from_row(row)
         end
       end

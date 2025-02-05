@@ -73,6 +73,8 @@ module Reports
     end
 
     def num_volumes
+      return Clusterable::HtItem.all_volumes.count
+
       @num_volumes ||= Cluster.collection.aggregate(
         [
           {"$match": {"ht_items.0": {"$exists": 1}}},
@@ -82,6 +84,8 @@ module Reports
     end
 
     def num_pd_volumes
+      return Clusterable::HtItem.pd_volumes.count
+
       @num_pd_volumes ||= Cluster.collection.aggregate(
         [
           {"$match": {"ht_items.0": {"$exists": 1}}},
