@@ -2,6 +2,7 @@
 
 require "factory_bot"
 require "faker"
+require "hathifiles_database"
 require_relative "../spec/fixtures/organizations"
 require_relative "../spec/fixtures/collections"
 
@@ -41,7 +42,7 @@ def generate_holdings(count = 50000, inst = "umich", date = Date.parse("2020-01-
         mono_multi_serial: "mon",
         ocn: rand(MAX_OCN),
         date_received: date)
-      out.puts(holding.as_document.except("_id").to_json)
+      out.puts(holding.to_hash.to_json)
     end
   end
 end
@@ -64,7 +65,7 @@ def htitem_fields(max_ocn: MAX_OCN)
     Faker::Book.title,
     "#{Faker::Book.publisher}, [#{random_year}]", # imprint
     "bib", # rights_reason_code,
-    Faker::Time.between(from: "2008-01-01", to: Date.today).strftime("%F %T"), # rights_timestamp
+    Faker::Time.between(from: Date.parse("2008-01-01"), to: Date.today).strftime("%F %T"), # rights_timestamp
     ["1", "0"].sample, # us_gov_doc_flag,
     random_year,
     ["", "xxu", "miu", "fr", "mx", "xx"].sample, # pub place - https://www.loc.gov/marc/countries/countries_code.html
@@ -88,6 +89,15 @@ def generate_htitems(count = 20000)
       out.puts(htitem_fields(max_ocn: MAX_OCN).join("\t"))
     end
   end
+
+  load_hathifiles_database(outfile)
+end
+
+def load_hathifiles_database(file)
+  puts "Loading hathifiles database from #{file}"
+  hf_db = HathifilesDatabase.new
+  hf_db.recreate_tables!
+  hf_db.update_from_file(file)
 end
 
 def generate_ocn_resolutions(max_ocn = MAX_OCN, percent_deprecated = 0.10)

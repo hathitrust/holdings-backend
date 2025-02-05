@@ -1,5 +1,3 @@
-USE `ht_repository`;
-
 INSERT INTO `ht_billing_members` VALUES 
 ('allegheny',NULL,0.67,'AVL',NULL,'us',1),
 ('amherst',NULL,0.67,'AMH',NULL,'us',1),
