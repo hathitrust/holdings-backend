@@ -9,7 +9,7 @@ module Clusterable
   class HtItem < Clusterable::Base
     include EnumChron
 
-    IC_RIGHTS_CODES = %w(ic op und).freeze
+    IC_RIGHTS_CODES = %w[ic op und].freeze
 
     attr_accessor :ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt,
       :n_enum, :n_chron, :n_enum_chron, :billing_entity

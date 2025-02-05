@@ -30,14 +30,14 @@ RSpec.describe Clusterable::HtItem do
 
   describe ".ic_volumes" do
     it "counts ic items" do
-      %w(ic op und).each do |code|
+      %w[ic op und].each do |code|
         insert_htitem build(:ht_item, access: "deny", rights: code)
       end
       expect(described_class.ic_volumes.count).to eq(3)
     end
 
     it "ignores pd items" do
-      %w(pd pdus cc-zero).each do |code|
+      %w[pd pdus cc-zero].each do |code|
         insert_htitem build(:ht_item, access: "allow", rights: code)
       end
       expect(described_class.ic_volumes.count).to eq(0)
@@ -46,14 +46,14 @@ RSpec.describe Clusterable::HtItem do
 
   describe ".pd_volumes" do
     it "counts pd items" do
-      %w(pd pdus cc-zero).each do |code|
+      %w[pd pdus cc-zero].each do |code|
         insert_htitem build(:ht_item, access: "allow", rights: code)
       end
       expect(described_class.pd_volumes.count).to eq(3)
     end
 
     it "ignores ic items" do
-      %w(ic op und).each do |code|
+      %w[ic op und].each do |code|
         insert_htitem build(:ht_item, access: "deny", rights: code)
       end
       expect(described_class.pd_volumes.count).to eq(0)
@@ -62,10 +62,10 @@ RSpec.describe Clusterable::HtItem do
 
   describe ".all_volumes" do
     it "counts all volumes" do
-      %w(pd pdus cc-zero).each do |code|
+      %w[pd pdus cc-zero].each do |code|
         insert_htitem build(:ht_item, access: "allow", rights: code)
       end
-      %w(ic op und).each do |code|
+      %w[ic op und].each do |code|
         insert_htitem build(:ht_item, access: "deny", rights: code)
       end
       expect(described_class.all_volumes.count).to eq(6)
