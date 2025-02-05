@@ -6,7 +6,6 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 
-
 RSpec.describe Reports::CostReport do
   include_context "with tables for holdings"
 
@@ -66,8 +65,8 @@ RSpec.describe Reports::CostReport do
   describe "#num_pd_volumes" do
     it "counts the number of pd volumes" do
       add_cluster_htitem(
-         build(:ht_item, access: allow, rights: pd, ocns: ht_allow.ocns),
-         ht_allow
+        build(:ht_item, access: allow, rights: pd, ocns: ht_allow.ocns),
+        ht_allow
       )
       expect(cr.num_pd_volumes).to eq(2)
     end
@@ -113,7 +112,7 @@ RSpec.describe Reports::CostReport do
       # see weights from spec/fixtures/organizations.rb
       # mock_members umich and utexas have weights 1 and 3 respectively
       add_cluster_htitem(spm, mpm, ht_allow)
-      
+
       # 1 pd volume, 3 total volumes, target cost $10, total weight 8
       # pd cost is 3.33, pd cost per weight is ~0.42
       #
@@ -155,7 +154,7 @@ RSpec.describe Reports::CostReport do
           weight: 1.0, status: false)
       )
       build(:holding,
-            ocn: spm.ocns.first,
+        ocn: spm.ocns.first,
         organization: "non_member")
     end
 
@@ -278,7 +277,7 @@ RSpec.describe Reports::CostReport do
         mpm_holding = spm_holding.clone
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
-        Clustering::ClusterHolding.new(spm_holding,mpm_holding).cluster
+        Clustering::ClusterHolding.new(spm_holding, mpm_holding).cluster
         cr.compile_frequency_table
         expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
       end
@@ -288,8 +287,8 @@ RSpec.describe Reports::CostReport do
         ht_copy.collection_code = "MIU"
         add_cluster_htitem(spm, ht_copy)
         cr.compile_frequency_table
-        expected_freq = {:upenn => {spm: {1 => 1}},
-                         :umich => {spm: {1 => 1}}}
+        expected_freq = {upenn: {spm: {1 => 1}},
+                         umich: {spm: {1 => 1}}}
         expect(cr.freq_table).to eq(expected_freq)
       end
     end

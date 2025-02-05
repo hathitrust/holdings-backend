@@ -22,6 +22,6 @@ def mock_collections
       billing_entity: "ualberta"),
     "NYP" => DataSources::HTCollection.new(collection: "NYP", content_provider_cluster: "nypl",
       responsible_entity: "nypl", original_from_inst_id: "nypl",
-      billing_entity: "nypl"),
+      billing_entity: "nypl")
   )
 end

@@ -79,7 +79,7 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
-    # mock HT member data to use in tests. Tests may change this data, so 
+    # mock HT member data to use in tests. Tests may change this data, so
     # reset it for each test.
     Services.register(:ht_organizations) { mock_organizations }
     Services.register(:ht_collections) { mock_collections }
