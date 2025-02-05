@@ -71,9 +71,6 @@ RSpec.configure do |config|
   end
 
   config.before(:all) do
-    # mock HT member data to use in tests
-    Services.register(:ht_organizations) { mock_organizations }
-    Services.register(:ht_collections) { mock_collections }
     Services.register(:logger) do
       Logger.new("test.log").tap { |l| l.level = Logger::DEBUG }
       # Logger.new(STDERR).tap {|l| l.level = Logger::DEBUG }
@@ -82,6 +79,11 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
+    # mock HT member data to use in tests. Tests may change this data, so 
+    # reset it for each test.
+    Services.register(:ht_organizations) { mock_organizations }
+    Services.register(:ht_collections) { mock_collections }
+
     # stub external APIs
     Services.register(:pushgateway) { instance_double(Prometheus::Client::Push, add: true) }
     Services.register(:slack) { instance_double(Utils::SlackWriter, write: true) }
@@ -114,24 +116,6 @@ RSpec.configure do |config|
       example.run
       ENV.delete("TEST_TMP")
     end
-  end
-end
-
-# Clusters and saves each element in an array of clusterables
-# DRY for the many times the tests need to do something like:
-# Clustering::ClusterXYZ.new(xyz).cluster.tap(&:save)
-def cluster_tap_save(*clusterables)
-  clusterables.each do |clusterable|
-    case clusterable
-    when Clusterable::Holding
-      Clustering::ClusterHolding
-    when Clusterable::HtItem
-      Clustering::ClusterHtItem
-    when Clusterable::Commitment
-      Clustering::ClusterCommitment
-    when Clusterable::OCNResolution
-      Clustering::ClusterOCNResolution
-    end.new(clusterable).cluster.tap(&:save)
   end
 end
 

@@ -16,6 +16,12 @@ def mock_collections
       billing_entity: "hathitrust"),
     "UCM" => DataSources::HTCollection.new(collection: "UCM", content_provider_cluster: "ucm",
       responsible_entity: "ucm", original_from_inst_id: "ucm",
-      billing_entity: "ucm")
+      billing_entity: "ucm"),
+    "AEU" => DataSources::HTCollection.new(collection: "AEU", content_provider_cluster: "ualberta",
+      responsible_entity: "ualberta", original_from_inst_id: "ualberta",
+      billing_entity: "ualberta"),
+    "NYP" => DataSources::HTCollection.new(collection: "NYP", content_provider_cluster: "nypl",
+      responsible_entity: "nypl", original_from_inst_id: "nypl",
+      billing_entity: "nypl"),
   )
 end

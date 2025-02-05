@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# You are strongly discouraged from adding to this -- if you do, various
+# precomputed expectations about weights and cost reports will no longer be
+# true.
+
 def mock_organizations
   mock = lambda do |inst, country, weight, sym, status = true|
     DataSources::HTOrganization.new(
