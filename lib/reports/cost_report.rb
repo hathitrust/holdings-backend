@@ -73,45 +73,11 @@ module Reports
     end
 
     def num_volumes
-      return Clusterable::HtItem.all_volumes.count
-
-      @num_volumes ||= Cluster.collection.aggregate(
-        [
-          {"$match": {"ht_items.0": {"$exists": 1}}},
-          {"$group": {_id: nil, items_count: {"$sum": {"$size": "$ht_items"}}}}
-        ]
-      ).first[:items_count]
+      Clusterable::HtItem.count
     end
 
     def num_pd_volumes
-      return Clusterable::HtItem.pd_volumes.count
-
-      @num_pd_volumes ||= Cluster.collection.aggregate(
-        [
-          {"$match": {"ht_items.0": {"$exists": 1}}},
-          {
-            "$group": {
-              _id: nil,
-              items_count: {
-                "$sum": {
-                  "$size": {
-                    "$filter": {
-                      input: "$ht_items",
-                      as: "item",
-                      cond: {
-                        "$or": [
-                          {"$eq": ["$$item.access", "allow"]},
-                          {"$eq": ["$$item.rights", "icus"]}
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      ).first[:items_count]
+      Clusterable::HtItem.pd_count
     end
 
     def cost_per_volume
@@ -161,26 +127,6 @@ module Reports
       item_overlap = Overlap::HtItemOverlap.new(ht_item)
       item_overlap.matching_members.each do |org|
         @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
-      end
-    end
-
-    def matching_clusters
-      # We don't apply the icus rule here, since we're getting clusters not items.
-      # Any items gotten from these clusters need to be checked for icus though.
-      if @organization.nil?
-        Cluster.where(
-          "ht_items.0": {"$exists": 1},
-          "ht_items.access": "deny"
-        ).no_timeout
-      else
-        Cluster.where(
-          "ht_items.0": {"$exists": 1},
-          "ht_items.access": "deny",
-          "$or": [
-            {"holdings.organization": @organization},
-            {"ht_items.billing_entity": @organization}
-          ]
-        ).no_timeout
       end
     end
 
