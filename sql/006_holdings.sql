@@ -15,5 +15,7 @@ CREATE TABLE `holdings` (
   `mono_multi_serial` enum('mix', 'mon', 'spm', 'mpm', 'ser') NOT NULL,
   `date_received` date NOT NULL,
   `uuid`         char(36) NOT NULL,
-  `issn`         varchar(255) NULL
+  `issn`         varchar(255) NULL,
+  KEY (`ocn`),
+  KEY (`organization`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
