@@ -1,9 +1,15 @@
 # frozen_string_literal: true
 
+# set up the test database -- needs to be here before we
+# load any other requirements because we may try to connect
+# during file load
+
+# protect against wiping out the dev database by accident
+raise("DATABASE_ENV must be test!") unless ENV["DATABASE_ENV"] == "test"
+system("#{__dir__}/../bin/reset_database.sh --force")
+
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
-ENV["DATABASE_ENV"] = "test"
-
 require "factory_bot"
 require "simplecov"
 require "simplecov-lcov"

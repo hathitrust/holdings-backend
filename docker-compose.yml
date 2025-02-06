@@ -19,13 +19,13 @@ x-holdings-container: &holdings-container-defaults
   command: bundle exec rspec
   environment: &holdings-default-environment
     MARIADB_HOLDINGS_RW_HOST: mariadb
-    MARIADB_HOLDINGS_RW_USERNAME: ht_repository
-    MARIADB_HOLDINGS_RW_PASSWORD: ht_repository
-    MARIADB_HOLDINGS_RW_DATABASE: ht_repository
+    MARIADB_HOLDINGS_RW_USERNAME: root
+    MARIADB_HOLDINGS_RW_PASSWORD: holdings
+    MARIADB_HOLDINGS_RW_DATABASE: holdings_dev
     MARIADB_HATHIFILES_RW_HOST: mariadb
-    MARIADB_HATHIFILES_RW_USERNAME: ht_repository
-    MARIADB_HATHIFILES_RW_PASSWORD: ht_repository
-    MARIADB_HATHIFILES_RW_DATABASE: ht_repository
+    MARIADB_HATHIFILES_RW_USERNAME: root
+    MARIADB_HATHIFILES_RW_PASSWORD: holdings
+    MARIADB_HATHIFILES_RW_DATABASE: holdings_dev
     PUSHGATEWAY: http://pushgateway:9091
     DATABASE_ENV: development
   depends_on:
@@ -40,6 +40,8 @@ services:
     environment: 
       <<: *holdings-default-environment
       DATABASE_ENV: test
+      MARIADB_HATHIFILES_RW_DATABASE: holdings_test
+      MARIADB_HOLDINGS_RW_DATABASE: holdings_test
     depends_on: 
       mariadb: *healthy
       redis: *healthy
@@ -64,9 +66,7 @@ services:
   mariadb:
     image: mariadb:10.5
     environment:
-      MYSQL_RANDOM_ROOT_PASSWORD: 1
-    volumes:
-      - ./sql:/docker-entrypoint-initdb.d/
+      MARIADB_ROOT_PASSWORD: holdings
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
