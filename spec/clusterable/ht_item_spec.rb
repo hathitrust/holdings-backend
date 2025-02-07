@@ -28,6 +28,50 @@ RSpec.describe Clusterable::HtItem do
     expect { described_class.find(item_id: "test.nonexistent") }.to raise_exception(Sequel::NoMatchingRow)
   end
 
+  describe ".ic_volumes" do
+    it "counts ic items" do
+      %w[ic op und].each do |code|
+        insert_htitem build(:ht_item, access: "deny", rights: code)
+      end
+      expect(described_class.ic_volumes.count).to eq(3)
+    end
+
+    it "ignores pd items" do
+      %w[pd pdus cc-zero].each do |code|
+        insert_htitem build(:ht_item, access: "allow", rights: code)
+      end
+      expect(described_class.ic_volumes.count).to eq(0)
+    end
+  end
+
+  describe ".pd_volumes" do
+    it "counts pd items" do
+      %w[pd pdus cc-zero].each do |code|
+        insert_htitem build(:ht_item, access: "allow", rights: code)
+      end
+      expect(described_class.pd_volumes.count).to eq(3)
+    end
+
+    it "ignores ic items" do
+      %w[ic op und].each do |code|
+        insert_htitem build(:ht_item, access: "deny", rights: code)
+      end
+      expect(described_class.pd_volumes.count).to eq(0)
+    end
+  end
+
+  describe ".all_volumes" do
+    it "counts all volumes" do
+      %w[pd pdus cc-zero].each do |code|
+        insert_htitem build(:ht_item, access: "allow", rights: code)
+      end
+      %w[ic op und].each do |code|
+        insert_htitem build(:ht_item, access: "deny", rights: code)
+      end
+      expect(described_class.all_volumes.count).to eq(6)
+    end
+  end
+
   xit "prevents duplicates from being created" do
     c.ht_items.create(htitem_hash)
     cloned = htitem_hash.clone

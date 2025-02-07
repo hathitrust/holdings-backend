@@ -3,10 +3,13 @@
 require "clusterable/base"
 require "services"
 require "enum_chron"
+require "ocnless_cluster"
 
 module Clusterable
   class HtItem < Clusterable::Base
     include EnumChron
+
+    IC_RIGHTS_CODES = %w[ic op und].freeze
 
     attr_accessor :ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt,
       :n_enum, :n_chron, :n_enum_chron, :billing_entity
@@ -22,6 +25,38 @@ module Clusterable
         return to_enum(__method__, ocns) unless block_given?
 
         ocns_dataset(ocns).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def ic_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.where(rights_code: IC_RIGHTS_CODES).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def pd_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.exclude(rights_code: IC_RIGHTS_CODES).each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def all_volumes
+        return to_enum(__method__) unless block_given?
+
+        table.each do |row|
+          yield from_row(row)
+        end
+      end
+
+      def with_bib_key(bib_key)
+        return to_enum(__method__, bib_key) unless block_given?
+
+        table.where(bib_num: bib_key).each do |row|
           yield from_row(row)
         end
       end
@@ -67,6 +102,9 @@ module Clusterable
     end
 
     def cluster
+      if ocns.none?
+        return OCNLessCluster.new(bib_key: ht_bib_key)
+      end
       clusters = Cluster.for_ocns(ocns)
       if clusters.count > 1
         raise "ocns #{ocns} for item #{item_id} match multiple clusters"
