@@ -34,6 +34,24 @@ RSpec.describe CalculateFormat do
       ).to eq("spm")
     end
 
+    it "is NOT an MPM with null n_enum" do
+      htitem = double(:htitem, ht_bib_key: "12345", bib_fmt: "BK", n_enum: nil)
+      cluster = double(:cluster, ht_items: [htitem])
+
+      expect(
+        described_class.new(cluster).item_format(htitem)
+      ).to eq("spm")
+    end
+
+    it "is NOT an MPM with empty string n_enum" do
+      htitem = double(:htitem, ht_bib_key: "12345", bib_fmt: "BK", n_enum: "")
+      cluster = double(:cluster, ht_items: [htitem])
+
+      expect(
+        described_class.new(cluster).item_format(htitem)
+      ).to eq("spm")
+    end
+
     it "is a MPM if another ht item on this record has enum" do
       ht_spm.ht_bib_key = ht_mpm.ht_bib_key
       ht_spm.ocns = ht_mpm.ocns
