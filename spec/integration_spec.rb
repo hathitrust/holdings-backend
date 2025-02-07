@@ -40,7 +40,7 @@ RSpec.describe "phctl integration" do
         .to change { Cluster.count }.by(5)
     end
 
-    xit "Concordance loads concordance diffs" do
+    it "Concordance loads concordance diffs" do
       Settings.concordance_path = fixture("concordance")
       expect { phctl(*%w[load concordance 2022-08-01]) }
         .to change { cluster_count(:ocn_resolutions) }.by(5)
