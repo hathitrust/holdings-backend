@@ -79,6 +79,12 @@ module Clusterable
       new(row)
     end
 
+    def self.batch_add(batch)
+      columns = table.columns
+      rows = batch.map { |h| columns.map { |c| h.public_send(c) } }
+      table.import(columns, rows)
+    end
+
     def date_received=(date)
       if date.respond_to?(:to_date)
         @date_received = date.to_date

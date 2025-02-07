@@ -26,7 +26,8 @@ module Loader
     end
 
     def load(batch)
-      Clustering::ClusterHolding.new(batch).cluster
+      Clusterable::Holding.batch_add(batch)
+      # Clustering::ClusterHolding.new(batch).cluster
     end
   end
 
