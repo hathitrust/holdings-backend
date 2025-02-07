@@ -7,11 +7,12 @@ require "ppnum"
 module Loader
   # Loads file of records that have been sorted by OCN
   class FileLoader
-    def initialize(batch_loader:, batch_size: 10_000)
+    def initialize(batch_loader:, batch_size: 10_000, load_batch_size: 100)
       @logger = Services.logger
       @marker = Services.progress_tracker.call(batch_size: batch_size)
       @batch_size = batch_size
       @batch_loader = batch_loader
+      @load_batch_size = load_batch_size
     end
 
     # Skip the first line of a file if it matches the given regexp
@@ -37,13 +38,13 @@ module Loader
     def load(filename, filehandle: Zinzout.zin(filename), skip_header_match: nil)
       logger.info "Loading #{filename}, batches of #{ppnum @batch_size}"
 
-      skip_matching_header(filehandle.enum_for(:each), skip_header_match).lazy
+      batch_loader.batches_for(
+        skip_matching_header(filehandle.enum_for(:each), skip_header_match).lazy
         .map { |line| log_and_parse(line) }
-        .chunk_while { |item1, item2| item1.batch_with?(item2) }
-        .each do |batch|
-          batch_loader.load(batch)
-          Thread.pass
-        end
+      ).each do |batch|
+        batch_loader.load(batch)
+        Thread.pass
+      end
 
       logger.info marker.final_line
       marker.count

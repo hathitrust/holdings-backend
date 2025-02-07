@@ -16,13 +16,18 @@ module Loader
       end
     end
 
-    def initialize
+    def initialize(load_batch_size: 100)
       @organization = nil
       @current_date = nil
+      @load_batch_size = load_batch_size
     end
 
     def item_from_line(_line)
       raise "override me"
+    end
+
+    def batches_for(enumerable)
+      enumerable.each_slice(@load_batch_size)
     end
 
     def load(batch)

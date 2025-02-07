@@ -24,5 +24,9 @@ module Loader
     def load(batch)
       Clustering::ClusterHtItem.new(batch).cluster
     end
+
+    def batches_for(enumerable)
+      enumerable.chunk_while { |item1, item2| item1.batch_with?(item2) }
+    end
   end
 end
