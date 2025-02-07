@@ -37,24 +37,8 @@ module Clusterable
         end
       end
 
-      def pd_volumes
-        return to_enum(__method__) unless block_given?
-
-        table.exclude(rights_code: IC_RIGHTS_CODES).each do |row|
-          yield from_row(row)
-        end
-      end
-
       def pd_count
         table.exclude(rights_code: IC_RIGHTS_CODES).count
-      end
-
-      def all
-        return to_enum(__method__) unless block_given?
-
-        table.each do |row|
-          yield from_row(row)
-        end
       end
 
       def count
