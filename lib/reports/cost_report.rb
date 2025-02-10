@@ -35,8 +35,8 @@ module Reports
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"
-        fh.puts "Num volumes: #{num_volumes}"
-        fh.puts "Num pd volumes: #{num_pd_volumes}"
+        fh.puts "Num volumes: #{Clusterable::HtItem.count}"
+        fh.puts "Num pd volumes: #{Clusterable::HtItem.pd_count}"
         fh.puts "Cost per volume: #{cost_per_volume}"
         fh.puts "Total weight: #{total_weight}"
         fh.puts "PD Cost: #{pd_cost}"
@@ -72,16 +72,8 @@ module Reports
         Services.ht_organizations.organizations.select { |_id, member| member.status }
     end
 
-    def num_volumes
-      Clusterable::HtItem.count
-    end
-
-    def num_pd_volumes
-      Clusterable::HtItem.pd_count
-    end
-
     def cost_per_volume
-      target_cost / num_volumes.to_f
+      target_cost / Clusterable::HtItem.count.to_f
     end
 
     def total_weight
@@ -89,7 +81,7 @@ module Reports
     end
 
     def pd_cost
-      cost_per_volume * num_pd_volumes
+      cost_per_volume * Clusterable::HtItem.pd_count
     end
 
     def pd_cost_for_member(member)

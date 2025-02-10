@@ -5,7 +5,7 @@
 # during file load
 
 # protect against wiping out the dev database by accident
-raise("DATABASE_ENV must be test!") unless ENV["DATABASE_ENV"] == "test"
+raise("DATABASE_ENV must be 'test' -- are you running in the wrong container? (try: docker compose run test)") unless ENV["DATABASE_ENV"] == "test"
 system("#{__dir__}/../bin/reset_database.sh --force")
 
 # Note: We don't require our entire project here. This allows us to
@@ -23,6 +23,7 @@ require "sidekiq/batch"
 require "rspec-sidekiq"
 require "fileutils"
 require_relative "support/holdings_tables"
+require_relative "support/cluster_fixture_data"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true
@@ -115,6 +116,28 @@ RSpec.configure do |config|
       FileUtils.touch(Settings.rclone_config_path)
       example.run
       ENV.delete("TEST_TMP")
+    end
+  end
+end
+
+# Persists each element in an array of clusterables, building
+# clusters when needed.
+#
+# DRY for the many times the tests need to do something like:
+# Clustering::ClusterXYZ.new(xyz).cluster
+def load_test_data(*clusterables)
+  clusterables.each do |clusterable|
+    case clusterable
+    when Clusterable::HtItem
+      insert_htitem(clusterable)
+      Clustering::ClusterHtItem.new(clusterable).cluster
+    when Clusterable::OCNResolution
+      Clustering::ClusterOCNResolution.new(clusterable).cluster
+    when Clusterable::Holding
+      # no need to do ClusterHolding at the current time
+      clusterable.save
+    else
+      raise "Can't persist #{clusterable}"
     end
   end
 end
