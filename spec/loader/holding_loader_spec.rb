@@ -35,16 +35,13 @@ RSpec.describe Loader::HoldingLoader do
   end
 
   describe "#load" do
-    before(:each) { Cluster.each(&:delete) }
-
     it "persists a batch of holdings" do
       holding1 = build(:holding)
       holding2 = build(:holding, ocn: holding1.ocn)
 
       described_class.new.load([holding1, holding2])
 
-      expect(Cluster.count).to eq(1)
-      expect(Cluster.first.holdings.count).to eq(2)
+      expect(Clusterable::Holding.table.count).to eq(2)
     end
   end
 end

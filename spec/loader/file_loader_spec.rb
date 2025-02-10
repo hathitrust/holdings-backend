@@ -35,6 +35,10 @@ class FakeBatchLoader
     deleted << item
   end
 
+  def batches_for(enumerable)
+    enumerable.chunk_while { |item1, item2| item1.batch_with?(item2) }
+  end
+
   attr_reader :loaded, :deleted
 end
 
