@@ -35,8 +35,8 @@ module Reports
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"
-        fh.puts "Num volumes: #{num_volumes}"
-        fh.puts "Num pd volumes: #{num_pd_volumes}"
+        fh.puts "Num volumes: #{Clusterable::HtItem.count}"
+        fh.puts "Num pd volumes: #{Clusterable::HtItem.pd_count}"
         fh.puts "Cost per volume: #{cost_per_volume}"
         fh.puts "Total weight: #{total_weight}"
         fh.puts "PD Cost: #{pd_cost}"
@@ -72,50 +72,8 @@ module Reports
         Services.ht_organizations.organizations.select { |_id, member| member.status }
     end
 
-    def num_volumes
-      return Clusterable::HtItem.all_volumes.count
-
-      @num_volumes ||= Cluster.collection.aggregate(
-        [
-          {"$match": {"ht_items.0": {"$exists": 1}}},
-          {"$group": {_id: nil, items_count: {"$sum": {"$size": "$ht_items"}}}}
-        ]
-      ).first[:items_count]
-    end
-
-    def num_pd_volumes
-      return Clusterable::HtItem.pd_volumes.count
-
-      @num_pd_volumes ||= Cluster.collection.aggregate(
-        [
-          {"$match": {"ht_items.0": {"$exists": 1}}},
-          {
-            "$group": {
-              _id: nil,
-              items_count: {
-                "$sum": {
-                  "$size": {
-                    "$filter": {
-                      input: "$ht_items",
-                      as: "item",
-                      cond: {
-                        "$or": [
-                          {"$eq": ["$$item.access", "allow"]},
-                          {"$eq": ["$$item.rights", "icus"]}
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      ).first[:items_count]
-    end
-
     def cost_per_volume
-      target_cost / num_volumes.to_f
+      target_cost / Clusterable::HtItem.count.to_f
     end
 
     def total_weight
@@ -123,7 +81,7 @@ module Reports
     end
 
     def pd_cost
-      cost_per_volume * num_pd_volumes
+      cost_per_volume * Clusterable::HtItem.pd_count
     end
 
     def pd_cost_for_member(member)
@@ -161,26 +119,6 @@ module Reports
       item_overlap = Overlap::HtItemOverlap.new(ht_item)
       item_overlap.matching_members.each do |org|
         @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
-      end
-    end
-
-    def matching_clusters
-      # We don't apply the icus rule here, since we're getting clusters not items.
-      # Any items gotten from these clusters need to be checked for icus though.
-      if @organization.nil?
-        Cluster.where(
-          "ht_items.0": {"$exists": 1},
-          "ht_items.access": "deny"
-        ).no_timeout
-      else
-        Cluster.where(
-          "ht_items.0": {"$exists": 1},
-          "ht_items.access": "deny",
-          "$or": [
-            {"holdings.organization": @organization},
-            {"ht_items.billing_entity": @organization}
-          ]
-        ).no_timeout
       end
     end
 

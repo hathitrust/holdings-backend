@@ -6,11 +6,11 @@ require "clustering/cluster_holding"
 require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 
-RSpec.xdescribe Reports::CostReport do
+RSpec.describe Reports::CostReport do
   include_context "with tables for holdings"
 
-  let(:alo) { "allow" }
-  let(:dni) { "deny" }
+  let(:allow) { "allow" }
+  let(:deny) { "deny" }
   let(:pd) { "pd" }
   let(:ic) { "ic" }
   let(:icus) { "icus" }
@@ -18,94 +18,75 @@ RSpec.xdescribe Reports::CostReport do
   let(:cr) { described_class.new(cost: 10) }
   let(:c) { build(:cluster) }
   let(:c2) { build(:cluster) }
-  let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: dni, rights: ic, billing_entity: "smu") }
-  let(:mpm) { build(:ht_item, :mpm, billing_entity: "stanford", access: dni, rights: ic) }
-  let(:ht_allow) { build(:ht_item, access: alo, rights: pd) }
+  let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: deny, rights: ic, collection_code: "PU") }
+  let(:mpm) { build(:ht_item, :mpm, collection_code: "AEU", access: deny, rights: ic) }
+  let(:ht_allow) { build(:ht_item, access: allow, rights: pd) }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
-  let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "smu") }
-
-  before(:each) do
-    c.save
-    c2.save
-    insert_htitem(spm)
-    insert_htitem(mpm)
-    Clustering::ClusterHtItem.new(spm).cluster
-    Clustering::ClusterHtItem.new(mpm).cluster
-    Clustering::ClusterHolding.new(holding).cluster
-    Clustering::ClusterHolding.new(holding2).cluster
-  end
-
-  describe "#num_volumes" do
-    it "counts the number of volumes" do
-      expect(cr.num_volumes).to eq(2)
-    end
-  end
+  let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "upenn") }
 
   describe "making sure that access and rights come out the way they go in" do
     it "pd == allow" do
-      cluster_tap_save build(:ht_item, access: alo, rights: pd, ocns: [111])
-      cluster = Cluster.with_ocns([111]).first
+      load_test_data(build(:ht_item, access: allow, rights: pd, ocns: [111]))
+      cluster = Cluster.for_ocns([111]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq pd
-      expect(cluster.ht_items.first.access).to eq alo
+      expect(cluster.ht_items.first.access).to eq allow
     end
     it "icus == allow" do
-      cluster_tap_save build(:ht_item, access: alo, rights: icus, ocns: [222])
-      cluster = Cluster.with_ocns([222]).first
+      load_test_data(build(:ht_item, access: allow, rights: icus, ocns: [222]))
+      cluster = Cluster.for_ocns([222]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq icus
-      expect(cluster.ht_items.first.access).to eq alo
+      expect(cluster.ht_items.first.access).to eq allow
     end
     it "ic == deny" do
-      cluster_tap_save build(:ht_item, access: dni, rights: ic, ocns: [333])
-      cluster = Cluster.with_ocns([333]).first
+      load_test_data(build(:ht_item, access: deny, rights: ic, ocns: [333]))
+      cluster = Cluster.for_ocns([333]).first
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq ic
-      expect(cluster.ht_items.first.access).to eq dni
-    end
-  end
-
-  describe "#num_pd_volumes" do
-    it "counts the number of pd volumes" do
-      cluster_tap_save ht_allow, build(:ht_item, access: alo, rights: pd, ocns: ht_allow.ocns)
-      expect(cr.num_pd_volumes).to eq(2)
-    end
-    it "counts icus towards pd regardless of access" do
-      # Put 10 icus items in...
-      1.upto(10) do
-        cluster_tap_save build(:ht_item, rights: icus)
-      end
-      # Expect all 10 when you call num_pd_volumes
-      expect(cr.num_pd_volumes).to eq(10)
-      # Expect none when you call ic_volumes
-      expect(cr.ic_volumes.count { |v| v.rights == icus }).to eq(0)
+      expect(cluster.ht_items.first.access).to eq deny
     end
   end
 
   describe "#cost_per_volume" do
     it "calculates cost per volume" do
-      expect(cr.cost_per_volume).to eq(cr.target_cost / cr.num_volumes)
+      # 3 volumes, target cost $10
+      load_test_data(spm, mpm, ht_allow)
+      expect(cr.cost_per_volume).to be_within(0.01).of(3.33)
     end
   end
 
   describe "#total_weight" do
     it "compiles the total weights of all members" do
-      # mock_members
+      # sum of weights from spec/fixtures/organizations.rb
       expect(cr.total_weight).to eq(8.0)
     end
   end
 
   describe "#pd_cost" do
     it "calculates base pd cost" do
-      expect(cr.pd_cost).to eq(cr.num_pd_volumes * cr.cost_per_volume)
+      # 3 volumes, 1 public domain, target cost $10
+      load_test_data(spm, mpm, ht_allow)
+      expect(cr.pd_cost).to be_within(0.01).of(3.33)
     end
   end
 
   describe "#pd_cost_for_member" do
     it "calculates pd cost for a member weight" do
+      # 3 volumes, 1 public domain, target cost $10
+      #
+      # see weights from spec/fixtures/organizations.rb
       # mock_members umich and utexas have weights 1 and 3 respectively
-      expect(cr.pd_cost_for_member(:umich)).to eq(cr.pd_cost / 8.0 * 1.0)
-      expect(cr.pd_cost_for_member(:utexas)).to eq(cr.pd_cost / 8.0 * 3.0)
+      load_test_data(spm, mpm, ht_allow)
+
+      # 1 pd volume, 3 total volumes, target cost $10, total weight 8
+      # pd cost is 3.33, pd cost per weight is ~0.42
+      #
+      expect(cr.pd_cost_for_member(:umich)).to be_within(0.01).of(0.42)
+
+      # 1 pd volume, 3 total volumes, target cost $10, total weight 8
+      # pd cost is 3.33, pd cost per weight is ~0.42
+      expect(cr.pd_cost_for_member(:utexas)).to be_within(0.01).of(1.25)
     end
   end
 
@@ -113,40 +94,22 @@ RSpec.xdescribe Reports::CostReport do
     it "ignores PD items" do
       pd_item = build(
         :ht_item,
-        access: alo,
+        access: allow,
         rights: pd,
         enum_chron: "1",
         n_enum: "1",
-        billing_entity: "upenn"
+        collection_code: "PU"
       )
-      Clustering::ClusterHtItem.new(pd_item).cluster.tap(&:save)
+      load_test_data(pd_item)
       expect(cr.freq_table[:upenn][:mpm]).to eq({})
     end
   end
 
   describe "#add_ht_item_to_freq_table" do
     it "adds an ht_item to the freq_table for all matching orgs" do
+      load_test_data(mpm)
       cr.add_ht_item_to_freq_table(mpm)
-      expect(cr.freq_table).to eq(stanford: {mpm: {1 => 1}})
-    end
-  end
-
-  describe "#matching_clusters" do
-    it "finds all clusters with an HTItem" do
-      expect(described_class.new.matching_clusters.each.to_a.size).to eq(2)
-    end
-
-    it "finds clusters with a matching HTItem : holding" do
-      expect(described_class.new(organization: "umich").matching_clusters.each.to_a.size).to eq(1)
-    end
-
-    it "finds a cluster if it only has an HTItem" do
-      expect(described_class.new(organization: "stanford").matching_clusters.each.to_a.size).to eq(1)
-    end
-
-    it "does not find clusters with only access == allow" do
-      Clustering::ClusterHtItem.new(build(:ht_item, access: alo, rights: pd)).cluster.tap(&:save)
-      expect(described_class.new.matching_clusters.each.to_a.size).to eq(2)
+      expect(cr.freq_table).to eq(ualberta: {mpm: {1 => 1}})
     end
   end
 
@@ -157,23 +120,24 @@ RSpec.xdescribe Reports::CostReport do
           weight: 1.0, status: false)
       )
       build(:holding,
-        ocn: Cluster.first.ocns.first,
+        ocn: spm.ocns.first,
         organization: "non_member")
     end
 
-    it "does not include non-member holdings" do
-      Clustering::ClusterHolding.new(non_member_holding).cluster.tap(&:save)
-      cr.matching_clusters.each do |c|
-        c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-      end
+    it "includes only member holdings" do
+      load_test_data(spm, holding, holding2, non_member_holding)
+      cr.compile_frequency_table
       expect(cr.freq_table[:umich][:spm]).to eq({2 => 1})
+      expect(cr.freq_table[:upenn][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:non_member]).to eq({})
     end
   end
 
   describe "HScores and Costs" do
     before(:each) do
-      Cluster.each(&:delete)
+      # add 3 items & 2 holdings
+      load_test_data(spm, mpm, ht_allow, holding, holding2)
+
       cr.freq_table[:umich][:spm][1] = 5
       cr.freq_table[:umich][:spm][2] = 3
       cr.freq_table[:umich][:mpm][3] = 1
@@ -236,7 +200,6 @@ RSpec.xdescribe Reports::CostReport do
     let(:cr) { described_class.new }
 
     before(:each) do
-      Cluster.each(&:delete)
       Services.ht_organizations.add_temp(
         DataSources::HTOrganization.new(inst_id: "different_cpc", country_code: "xx", weight: 1.0)
       )
@@ -247,8 +210,8 @@ RSpec.xdescribe Reports::CostReport do
         build(
           :ht_item, :spm,
           ocns: spm.ocns,
-          billing_entity: spm.billing_entity,
-          access: dni,
+          collection_code: spm.collection_code,
+          access: deny,
           rights: ic
         )
       end
@@ -260,46 +223,34 @@ RSpec.xdescribe Reports::CostReport do
       end
 
       it "handles multiple HT copies of the same spm" do
-        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
-        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(spm, ht_copy)
+
+        cr.compile_frequency_table
         expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "handles multiple copies of the same spm and holdings" do
-        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
-        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
-        Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(spm, ht_copy, spm_holding)
+        cr.compile_frequency_table
         expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "multiple holdings lead to one hshare" do
-        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
         mpm_holding = spm_holding.clone
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
-        cluster = Clustering::ClusterHolding.new(spm_holding).cluster.tap(&:save)
-        cluster.add_holdings(mpm_holding).tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(spm, spm_holding, mpm_holding)
+        cr.compile_frequency_table
         expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
-        Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
-        ht_copy.billing_entity = "different_cpc"
-        Clustering::ClusterHtItem.new(ht_copy).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
-        expected_freq = {spm.billing_entity.to_sym => {spm: {1 => 1}},
-                         :different_cpc => {spm: {1 => 1}}}
+        # two ht items, one upenn, one michigan
+        ht_copy.collection_code = "MIU"
+        load_test_data(spm, ht_copy)
+        cr.compile_frequency_table
+        expected_freq = {upenn: {spm: {1 => 1}},
+                         umich: {spm: {1 => 1}}}
         expect(cr.freq_table).to eq(expected_freq)
       end
     end
@@ -308,11 +259,8 @@ RSpec.xdescribe Reports::CostReport do
       let(:mpm_wo_ec) { build(:holding, ocn: mpm.ocns.first, organization: "umich") }
 
       it "assigns mpm shares to empty enum chron holdings" do
-        Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
-        Clustering::ClusterHolding.new(mpm_wo_ec).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(mpm, mpm_wo_ec)
+        cr.compile_frequency_table
         expect(cr.freq_table[mpm_wo_ec.organization.to_sym]).to eq(mpm: {2 => 1})
       end
     end
@@ -327,18 +275,15 @@ RSpec.xdescribe Reports::CostReport do
       end
 
       it "gives mpm shares when enum_chron does not match anything" do
-        Clustering::ClusterHtItem.new(mpm).cluster.tap(&:save)
-        Clustering::ClusterHolding.new(mpm_wrong_ec).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(mpm, mpm_wrong_ec)
+        cr.compile_frequency_table
         expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: {2 => 1})
       end
     end
 
     describe "Serials" do
       let(:ht_serial) do
-        build(:ht_item, :ser, access: dni, rights: ic)
+        build(:ht_item, :ser, access: deny, rights: ic)
       end
       let(:ht_serial2) do
         build(
@@ -346,7 +291,7 @@ RSpec.xdescribe Reports::CostReport do
           ht_bib_key: ht_serial.ht_bib_key,
           ocns: ht_serial.ocns,
           billing_entity: "not_ht_serial.billing_entity",
-          access: dni,
+          access: deny,
           rights: ic
         )
       end
@@ -370,21 +315,15 @@ RSpec.xdescribe Reports::CostReport do
       end
 
       it "assigns all serials to the member and ht_item billing entities affect hshare" do
-        Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
-        Clustering::ClusterHtItem.new(ht_serial2).cluster.tap(&:save)
-        Clustering::ClusterHolding.new(holding_serial).cluster.tap(&:save)
-        cr.matching_clusters.each do |c|
-          c.ht_items.each { |ht_item| cr.add_ht_item_to_freq_table(ht_item) }
-        end
+        load_test_data(ht_serial, ht_serial2, holding_serial)
+        cr.compile_frequency_table
         # ht_serial.billing_entity + holding_serial.org and
         # ht_serial2.billing_entity + holding_serial.org
         expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: {2 => 2})
       end
     end
   end
-end
 
-RSpec.xdescribe Reports::CostReport do
   describe "putting it all together" do
     # 4 HT Items
     # - 1 serial with 2 holdings one of which is from the content provider
@@ -392,8 +331,8 @@ RSpec.xdescribe Reports::CostReport do
     # - 2 mpm with the same ocns with 1 holding
     # - 1 spm with access = allow
     let(:cr) { Reports::CostReport.new(cost: 5) }
-    let(:alo) { "allow" }
-    let(:dni) { "deny" }
+    let(:allow) { "allow" }
+    let(:deny) { "deny" }
     let(:pd) { "pd" }
     let(:ic) { "ic" }
     let(:icus) { "icus" }
@@ -402,7 +341,7 @@ RSpec.xdescribe Reports::CostReport do
       build(
         :ht_item, :ser,
         collection_code: "MIU",
-        access: dni,
+        access: deny,
         rights: ic
       )
     end
@@ -410,7 +349,7 @@ RSpec.xdescribe Reports::CostReport do
       build(
         :ht_item, :spm,
         collection_code: "MIU",
-        access: dni,
+        access: deny,
         rights: ic
       )
     end
@@ -420,7 +359,7 @@ RSpec.xdescribe Reports::CostReport do
         enum_chron: "1",
         n_enum: "1",
         collection_code: "MIU",
-        access: dni,
+        access: deny,
         rights: ic
       )
     end
@@ -431,7 +370,7 @@ RSpec.xdescribe Reports::CostReport do
         ht_bib_key: ht_mpm1.ht_bib_key,
         enum_chron: "",
         collection_code: "PU",
-        access: dni,
+        access: deny,
         rights: ic
       )
     end
@@ -439,7 +378,7 @@ RSpec.xdescribe Reports::CostReport do
       build(
         :ht_item, :spm,
         collection_code: "MIU",
-        access: alo,
+        access: allow,
         rights: pd
       )
     end
@@ -457,18 +396,10 @@ RSpec.xdescribe Reports::CostReport do
     end
 
     before(:each) do
-      Cluster.each(&:delete)
       Services.register(:ht_organzations) { mock_organizations }
-      Clustering::ClusterHtItem.new(ht_serial).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht_spm).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht_mpm1).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht_mpm2).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht_spm_pd).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(holding_serial1).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(holding_serial2).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(holding_mpm).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(texas_mpm).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(umich_mpm).cluster.tap(&:save)
+      load_test_data(ht_serial, ht_spm, ht_mpm1, ht_mpm2, ht_spm_pd,
+        holding_serial1, holding_serial2,
+        holding_mpm, texas_mpm, umich_mpm)
     end
 
     it "computes the correct hscores" do

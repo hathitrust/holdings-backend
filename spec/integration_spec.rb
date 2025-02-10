@@ -101,10 +101,8 @@ RSpec.describe "phctl integration" do
 
   # SharedPrintOps - integration tests are in the respective SharedPrint class
 
-  xdescribe "Report" do
-    before(:each) do
-      phctl("load", "cluster_file", fixture("cluster_2503661.json"))
-    end
+  describe "Report" do
+    include_context "with complete data for one cluster"
 
     it "CostReport produces output" do
       phctl(*%w[report costreport])
@@ -113,67 +111,69 @@ RSpec.describe "phctl integration" do
         .to match(/Target cost: 9999/)
     end
 
-    it "Estimate produces output" do
+    xit "Estimate produces output" do
       phctl("report", "estimate", fixture("ocn_list.txt"))
 
       expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/estimates/ocn_list-estimate-*.txt").first))
         .to match(/Total Estimated IC Cost/)
     end
 
-    it "MemberCount produces output" do
+    xit "MemberCount produces output" do
       output_path = "#{ENV["TEST_TMP"]}/member_count_output"
 
       phctl("report", "member-counts", fixture("freq.txt"), output_path)
       expect(File.size("#{output_path}/member_counts_#{Date.today}.tsv")).to be > 0
     end
 
-    it "EtasOverlap produces output" do
+    xit "EtasOverlap produces output" do
       phctl(*%w[report etas-overlap umich])
 
       expect(File.size("#{ENV["TEST_TMP"]}/etas_overlap_report_remote/umich-hathitrust-member-data/analysis/etas_overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end
 
-    it "EligibleCommitments produces output" do
-      phctl(*%w[report eligible-commitments 1])
+    xcontext "shared print reports" do
+      it "EligibleCommitments produces output" do
+        phctl(*%w[report eligible-commitments 1])
 
-      expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/eligible_commitments_*").first))
-        .to match(/^organization/)
-    end
+        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/eligible_commitments_*").first))
+          .to match(/^organization/)
+      end
 
-    it "UncommittedHoldings produces output" do
-      phctl(*%w[report uncommitted-holdings --organization umich])
+      it "UncommittedHoldings produces output" do
+        phctl(*%w[report uncommitted-holdings --organization umich])
 
-      expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/uncommitted_holdings_umich_*").first))
-        .to match(/^organization/)
-    end
+        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/uncommitted_holdings_umich_*").first))
+          .to match(/^organization/)
+      end
 
-    it "RareUncommittedCounts produces output" do
-      phctl(*%w[report rare-uncommitted-counts --max-h 1])
+      it "RareUncommittedCounts produces output" do
+        phctl(*%w[report rare-uncommitted-counts --max-h 1])
 
-      expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/rare_uncommitted_counts_*").first))
-        .to match(/^number of holding libraries/)
-    end
+        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/rare_uncommitted_counts_*").first))
+          .to match(/^number of holding libraries/)
+      end
 
-    it "OCLCRegistration produces output" do
-      phctl(*%w[report oclc-registration umich])
-      expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/oclc_registration_umich_*").first))
-        .to match(/^local_oclc/)
-    end
+      it "OCLCRegistration produces output" do
+        phctl(*%w[report oclc-registration umich])
+        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/oclc_registration_umich_*").first))
+          .to match(/^local_oclc/)
+      end
 
-    it "SharedPrintNewlyIngested produces output" do
-      phctl(*%w[report shared-print-newly-ingested --start_date=2021-01-01 --ht_item_ids_file=spec/fixtures/shared_print_newly_ingested_ht_items.tsv --inline])
-      snir = "sp_newly_ingested_report"
-      glob = Dir.glob("#{ENV["TEST_TMP"]}/#{snir}/#{snir}_*").first
-      rpt_out = File.read(glob)
-      expect(rpt_out).to match(/contributor/)
-    end
+      it "SharedPrintNewlyIngested produces output" do
+        phctl(*%w[report shared-print-newly-ingested --start_date=2021-01-01 --ht_item_ids_file=spec/fixtures/shared_print_newly_ingested_ht_items.tsv --inline])
+        snir = "sp_newly_ingested_report"
+        glob = Dir.glob("#{ENV["TEST_TMP"]}/#{snir}/#{snir}_*").first
+        rpt_out = File.read(glob)
+        expect(rpt_out).to match(/contributor/)
+      end
 
-    it "SharedPrintPhaseCount produces output" do
-      cluster_tap_save build(:commitment, phase: 0)
-      phctl(*%w[report shared-print-phase-count --phase 0])
-      glob = Dir.glob("#{ENV["TEST_TMP"]}/local_reports/sp_phase0_count/sp_phase0_count_*").first
-      lines = File.read(glob).split("\n")
-      expect(lines.count).to eq 2 # 1 header, 1 body
+      it "SharedPrintPhaseCount produces output" do
+        cluster_tap_save build(:commitment, phase: 0)
+        phctl(*%w[report shared-print-phase-count --phase 0])
+        glob = Dir.glob("#{ENV["TEST_TMP"]}/local_reports/sp_phase0_count/sp_phase0_count_*").first
+        lines = File.read(glob).split("\n")
+        expect(lines.count).to eq 2 # 1 header, 1 body
+      end
     end
   end
 
