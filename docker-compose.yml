@@ -70,6 +70,8 @@ services:
     healthcheck:
       <<: *healthcheck-defaults
       test: [ "CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized" ]
+    volumes:
+      - data_db:/var/lib/mysql
 
   pushgateway:
     image: prom/pushgateway
