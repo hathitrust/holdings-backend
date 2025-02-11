@@ -16,9 +16,13 @@ class FrequencyTable
     @table.keys.sort
   end
 
-  # Return {count1 => freq1, count2 => freq2, ...} for a given org and format
-  def [](organization:, format:)
-    @table[organization][format]
+  def [](organization)
+    @table[organization.to_sym]
+  end
+
+  # For testing. I don't know if this is useful in the long run.
+  def to_h
+    @table.clone.freeze
   end
 
   def add_ht_item(ht_item)

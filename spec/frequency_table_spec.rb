@@ -57,20 +57,20 @@ RSpec.describe FrequencyTable do
     it "returns empty Array for unknown organization" do
       ft.add_ht_item ht1
       ft.add_ht_item ht2
-      expect(ft[organization: "no such organization", format: :spm]).to eq({})
+      expect(ft["no such organization"][:spm]).to eq({})
     end
 
     it "returns empty Array for unknown format" do
       ft.add_ht_item ht1
       ft.add_ht_item ht2
-      expect(ft[organization: :umich, format: :no_such_format]).to eq({})
+      expect(ft[:umich][:no_such_format]).to eq({})
     end
 
     it "returns an Array of statistics when available" do
       ft.add_ht_item ht1
       ft.add_ht_item ht2
-      expect(ft[organization: :umich, format: :spm]).to eq({1 => 1})
-      expect(ft[organization: :upenn, format: :spm]).to eq({1 => 1})
+      expect(ft[:umich][:spm]).to eq({1 => 1})
+      expect(ft[:upenn][:spm]).to eq({1 => 1})
     end
   end
 
