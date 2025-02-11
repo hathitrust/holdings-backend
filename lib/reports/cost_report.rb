@@ -96,18 +96,6 @@ module Reports
       end
     end
 
-    def compile_frequency_table
-      @marker = Services.progress_tracker.call(batch_size: maxlines)
-      FrequencyTable.new.tap do |ft|
-        logger.info("Begin compiling hscore frequency table.")
-        Clusterable::HtItem.ic_volumes do |ht_item|
-          marker.incr
-          ft.add_ht_item ht_item
-          marker.on_batch { |m| logger.info m.batch_line }
-        end
-      end
-    end
-
     def total_hscore(member)
       spm_total(member) + mpm_total(member) + ser_total(member)
     end
@@ -141,6 +129,18 @@ module Reports
     end
 
     private
+
+    def compile_frequency_table
+      @marker = Services.progress_tracker.call(batch_size: maxlines)
+      FrequencyTable.new.tap do |ft|
+        logger.info("Begin compiling hscore frequency table.")
+        Clusterable::HtItem.ic_volumes do |ht_item|
+          marker.incr
+          ft.add_ht_item ht_item
+          marker.on_batch { |m| logger.info m.batch_line }
+        end
+      end
+    end
 
     def report_file
       year = Time.now.year.to_s

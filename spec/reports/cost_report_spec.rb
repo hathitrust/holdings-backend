@@ -139,7 +139,6 @@ RSpec.describe Reports::CostReport do
 
     it "includes only member holdings" do
       load_test_data(spm, holding, holding2, non_member_holding)
-      cr.compile_frequency_table
       expect(cr.freq_table[:umich][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:upenn][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:non_member]).to eq({})
@@ -237,14 +236,11 @@ RSpec.describe Reports::CostReport do
 
       it "handles multiple HT copies of the same spm" do
         load_test_data(spm, ht_copy)
-
-        cr.compile_frequency_table
         expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "handles multiple copies of the same spm and holdings" do
         load_test_data(spm, ht_copy, spm_holding)
-        cr.compile_frequency_table
         expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
@@ -253,7 +249,6 @@ RSpec.describe Reports::CostReport do
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
         load_test_data(spm, spm_holding, mpm_holding)
-        cr.compile_frequency_table
         expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
       end
 
@@ -261,7 +256,6 @@ RSpec.describe Reports::CostReport do
         # two ht items, one upenn, one michigan
         ht_copy.collection_code = "MIU"
         load_test_data(spm, ht_copy)
-        cr.compile_frequency_table
         expected_freq = {upenn: {spm: {1 => 1}},
                          umich: {spm: {1 => 1}}}
         expect(cr.freq_table.to_h).to eq(expected_freq)
@@ -273,7 +267,6 @@ RSpec.describe Reports::CostReport do
 
       it "assigns mpm shares to empty enum chron holdings" do
         load_test_data(mpm, mpm_wo_ec)
-        cr.compile_frequency_table
         expect(cr.freq_table[mpm_wo_ec.organization]).to eq(mpm: {2 => 1})
       end
     end
@@ -289,7 +282,6 @@ RSpec.describe Reports::CostReport do
 
       it "gives mpm shares when enum_chron does not match anything" do
         load_test_data(mpm, mpm_wrong_ec)
-        cr.compile_frequency_table
         expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: {2 => 1})
       end
     end
@@ -329,7 +321,6 @@ RSpec.describe Reports::CostReport do
 
       it "assigns all serials to the member and ht_item billing entities affect hshare" do
         load_test_data(ht_serial, ht_serial2, holding_serial)
-        cr.compile_frequency_table
         # ht_serial.billing_entity + holding_serial.org and
         # ht_serial2.billing_entity + holding_serial.org
         expect(cr.freq_table[holding_serial.organization]).to eq(ser: {2 => 2})
