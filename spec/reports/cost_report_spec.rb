@@ -282,7 +282,7 @@ RSpec.describe Reports::CostReport do
 
       it "gives mpm shares when enum_chron does not match anything" do
         load_test_data(mpm, mpm_wrong_ec)
-        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: {2 => 1})
+        expect(cr.freq_table[mpm_wrong_ec.organization]).to eq(mpm: {2 => 1})
       end
     end
 
