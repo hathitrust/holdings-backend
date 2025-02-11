@@ -43,3 +43,4 @@ jobs:
                 push_latest: ${{ inputs.push_latest}}
                 registry_token: ${{ github.token }}
                 rebuild: ${{ inputs.rebuild }}
+                platforms: ${{ inputs.platforms }}

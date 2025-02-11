@@ -24,5 +24,6 @@ RUN mkdir -p /gems && chown $UID:$GID /gems
 USER $UNAME
 
 COPY --chown=$UID:$GID Gemfile* /usr/src/app/
+RUN bundle config set without "development test"
 RUN bundle install
 COPY --chown=$UID:$GID . /usr/src/app
