@@ -38,7 +38,7 @@ module Jobs
   class Common
     include Sidekiq::Job
     def perform(klass, options = {}, *)
-      Object.const_get(klass).new(*, **options.symbolize_keys).run
+      Object.const_get(klass).new(*, **options.transform_keys { |k| k.to_sym }).run
     end
   end
 

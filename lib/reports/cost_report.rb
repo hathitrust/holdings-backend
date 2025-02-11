@@ -52,13 +52,13 @@ module Reports
       logger.info marker.final_line
     end
 
-    def initialize(organization: nil, cost: Settings.target_cost, lines: 50_000, logger: Services.logger, precomputed_frequency_table: nil)
-      cost ||= Settings.target_cost
+    def initialize(organization: nil, target_cost: Settings.target_cost, lines: 5000, logger: Services.logger, precomputed_frequency_table: nil)
+      target_cost ||= Settings.target_cost
 
-      raise "Target cost not set" if cost.nil?
+      raise "Target cost not set" if target_cost.nil?
 
       @organization = organization
-      @target_cost = Float(cost)
+      @target_cost = target_cost.to_f
       @maxlines = lines
       @logger = logger
 
