@@ -75,15 +75,15 @@ module Reports
     end
 
     def cost_per_volume
-      target_cost / Clusterable::HtItem.count.to_f
+      @cost_per_volume ||= target_cost / Clusterable::HtItem.count.to_f
     end
 
     def total_weight
-      active_members.map { |_id, member| member.weight }.sum
+      @total_weight ||= active_members.map { |_id, member| member.weight }.sum
     end
 
     def pd_cost
-      cost_per_volume * Clusterable::HtItem.pd_count
+      @pd_cost ||= cost_per_volume * Clusterable::HtItem.pd_count
     end
 
     def pd_cost_for_member(member)
