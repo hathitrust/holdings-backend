@@ -33,6 +33,7 @@ module Reports
 
     def run(output_filename = report_file)
       logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum maxlines}"
+      logger.info "Writing to #{output_filename}"
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"

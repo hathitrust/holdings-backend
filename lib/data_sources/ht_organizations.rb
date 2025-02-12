@@ -13,7 +13,7 @@ module DataSources
       raise ArgumentError, "Must have institution id" unless @inst_id
 
       @country_code = country_code
-      @weight = weight
+      @weight = weight.to_f
       if @weight.nil? || (@weight < 0) || (@weight > 10)
         raise ArgumentError, "Weight must be between 0 and 10"
       end
