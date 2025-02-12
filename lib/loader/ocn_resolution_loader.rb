@@ -7,8 +7,8 @@ module Loader
   # Constructs batches of HtItems from incoming file data
   class OCNResolutionLoader
     def item_from_line(line)
-      (deprecated, resolved) = line.split.map(&:to_i)
-      Clusterable::OCNResolution.new(deprecated: deprecated, resolved: resolved)
+      (variant, canonical) = line.split.map(&:to_i)
+      Clusterable::OCNResolution.new(variant: variant, canonical: canonical)
     end
 
     def load(batch)

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module Clusterable
-  # A mapping from a deprecated OCN to a resolved OCN
+  # A mapping from a deprecated/variant OCN to a resolved/canonical OCN
   class OCNResolution < Clusterable::Base
-    attr_accessor :deprecated, :resolved
+    attr_accessor :variant, :canonical
     #    include Mongoid::Document
     #
     #    # store_in collection: "resolutions", database: "test", client: "default"
@@ -28,10 +28,10 @@ module Clusterable
       return to_enum(__method__, ocns) unless block_given?
 
       ocns = ocns.to_a
-      dataset = table.where(oclc: ocns).or(canonical: ocns)
+      dataset = table.where(variant: ocns).or(canonical: ocns)
 
       dataset.each do |row|
-        yield new(deprecated: row[:oclc], resolved: row[:canonical])
+        yield new(variant: row[:variant], canonical: row[:canonical])
       end
     end
 
@@ -44,11 +44,11 @@ module Clusterable
     end
 
     def ocns
-      [deprecated, resolved]
+      [variant, canonical]
     end
 
     def batch_with?(other)
-      resolved == other.resolved
+      canonical == other.canonical
     end
 
     def save
@@ -58,7 +58,7 @@ module Clusterable
       #
       # Use replace rather than insert so if the row already exists, this is a
       # no-op.
-      table.replace([:oclc, :canonical], [deprecated, resolved])
+      table.replace([:variant, :canonical], [variant, canonical])
     end
 
     alias_method :save!, :save

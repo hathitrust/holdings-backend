@@ -5,7 +5,7 @@ require "clustering/cluster_ocn_resolution"
 
 RSpec.describe Clustering::ClusterOCNResolution do
   let(:resolution) { build(:ocn_resolution) }
-  let(:resolution2) { build(:ocn_resolution, resolved: resolution.resolved) }
+  let(:resolution2) { build(:ocn_resolution, canonical: resolution.canonical) }
 
   let(:c) { build(:cluster, ocns: resolution.ocns) }
 
@@ -16,9 +16,9 @@ RSpec.describe Clustering::ClusterOCNResolution do
       cluster = described_class.new(resolution, resolution2).cluster
 
       expect(cluster.ocn_resolutions.to_a.size).to eq(2)
-      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
-        resolution.resolved,
-        resolution2.deprecated)
+      expect(cluster.ocns).to contain_exactly(resolution.variant,
+        resolution.canonical,
+        resolution2.variant)
       expect(Cluster.count).to eq(1)
     end
 
@@ -27,9 +27,9 @@ RSpec.describe Clustering::ClusterOCNResolution do
       cluster = described_class.new(resolution.dup).cluster
 
       expect(cluster.ocn_resolutions.to_a.size).to eq(2)
-      expect(cluster.ocns).to contain_exactly(resolution.deprecated,
-        resolution.resolved,
-        resolution2.deprecated)
+      expect(cluster.ocns).to contain_exactly(resolution.variant,
+        resolution.canonical,
+        resolution2.variant)
       expect(Cluster.count).to eq(1)
     end
 
@@ -65,16 +65,16 @@ RSpec.describe Clustering::ClusterOCNResolution do
 
       expect(Cluster.count).to eq(1)
       expect(Cluster.first.ocn_resolutions.to_a.size).to eq(2)
-      expect(Cluster.first.ocns).to contain_exactly(resolution.deprecated,
-        resolution2.deprecated,
-        resolution.resolved)
+      expect(Cluster.first.ocns).to contain_exactly(resolution.variant,
+        resolution2.variant,
+        resolution.canonical)
     end
 
     xit "merges two or more clusters" do
       # first cluster with resolution's ocns
-      create(:cluster, ocns: [resolution.deprecated])
+      create(:cluster, ocns: [resolution.variant])
       # a second cluster with different ocns
-      create(:cluster, ocns: [resolution.resolved])
+      create(:cluster, ocns: [resolution.canonical])
       described_class.new(resolution).cluster
 
       expect(Cluster.each.to_a.size).to eq(1)
@@ -99,59 +99,59 @@ RSpec.describe Clustering::ClusterOCNResolution do
 
     it "results in a single cluster without the resolution rule" do
       described_class.new(resolution2).delete
-      clusters = Cluster.where(ocns: resolution.resolved)
+      clusters = Cluster.where(ocns: resolution.canonical)
       expect(clusters.to_a.size).to eq(1)
       expect(clusters.first.ocn_resolutions.to_a.size).to eq(1)
     end
 
-    it "has no clusters with the deprecated OCN from the deleted rule" do
+    it "has no clusters with the variant OCN from the deleted rule" do
       described_class.new(resolution2).delete
-      clusters = Cluster.where(ocns: resolution2.deprecated)
+      clusters = Cluster.where(ocns: resolution2.variant)
       expect(clusters.to_a.size).to eq(0)
     end
 
-    it "removes the old deprecated OCN from the cluster" do
+    it "removes the old variant OCN from the cluster" do
       described_class.new(resolution2).delete
 
-      cluster = Cluster.where(ocns: resolution.resolved).first
+      cluster = Cluster.where(ocns: resolution.canonical).first
       expect(cluster.ocns).to contain_exactly(*resolution.ocns)
     end
 
     context "with HtItems matching OCNs from both rules" do
       before(:each) do
-        [resolution.deprecated,
-          resolution.resolved,
-          resolution2.deprecated].each do |ocn|
+        [resolution.variant,
+          resolution.canonical,
+          resolution2.variant].each do |ocn|
           Clustering::ClusterHtItem.new(build(:ht_item, ocns: [ocn])).cluster.save
         end
       end
 
-      it "creates a new cluster with the deprecated OCN from the deleted rule" do
+      it "creates a new cluster with the variant OCN from the deleted rule" do
         described_class.new(resolution2).delete
-        clusters = Cluster.where(ocns: resolution2.deprecated)
+        clusters = Cluster.where(ocns: resolution2.variant)
         expect(clusters.to_a.size).to eq(1)
-        expect(clusters.first.ocns).to contain_exactly(resolution2.deprecated)
+        expect(clusters.first.ocns).to contain_exactly(resolution2.variant)
         expect(clusters.first.ocn_resolutions.to_a.size).to eq(0)
       end
 
       it "cluster with remaining resolution rule has correct HtItems" do
         described_class.new(resolution2).delete
 
-        cluster_htitem_ocns = Cluster.where(ocns: resolution.resolved)
+        cluster_htitem_ocns = Cluster.where(ocns: resolution.canonical)
           .first.ht_items.map(&:ocns)
 
         expect(cluster_htitem_ocns).to contain_exactly(
-          [resolution.deprecated], [resolution.resolved]
+          [resolution.variant], [resolution.canonical]
         )
       end
 
-      it "cluster with deprecated OCN from deleted rule has correct HtItem" do
+      it "cluster with variant OCN from deleted rule has correct HtItem" do
         described_class.new(resolution2).delete
 
-        cluster_htitem_ocns = Cluster.where(ocns: resolution2.deprecated)
+        cluster_htitem_ocns = Cluster.where(ocns: resolution2.variant)
           .first.ht_items.map(&:ocns)
 
-        expect(cluster_htitem_ocns).to contain_exactly([resolution2.deprecated])
+        expect(cluster_htitem_ocns).to contain_exactly([resolution2.variant])
       end
     end
   end
