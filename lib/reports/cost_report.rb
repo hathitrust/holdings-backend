@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "overlap/ht_item_overlap"
+require "frequency_table"
 require "services"
 
 # In Aug 2023 we decided that items with rights:icus should behave as if
@@ -60,11 +61,6 @@ module Reports
       @target_cost = Float(cost)
       @maxlines = lines
       @logger = logger
-      # Member Hash of a format hash of a member count hash
-      # { org => { ser : { 1 org : count, 2 org : count }, mpm : {...
-      @freq_table = Hash.new do |hash, member|
-        hash[member] = Hash.new { |fmt_hash, fmt| fmt_hash[fmt] = Hash.new(0) }
-      end
     end
 
     def active_members
@@ -89,36 +85,14 @@ module Reports
     end
 
     def freq_table
-      compile_frequency_table unless @freq_table.any?
-      @freq_table
+      @freq_table ||= compile_frequency_table
     end
 
     # Dump freq table so these computes can be re-used in member_counts_report.
     def dump_freq_table(dump_fn = "freq.txt")
       FileUtils.mkdir_p(Settings.cost_report_freq_path)
-      dump_file = File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w")
-      freq_table.sort.each do |org, freq_data|
-        dump_file.puts([org, JSON.generate(freq_data)].join("\t"))
-      end
-      dump_file.close
-    end
-
-    def compile_frequency_table
-      @marker = Services.progress_tracker.call(batch_size: maxlines)
-      logger.info("Begin compiling hscore frequency table.")
-      Clusterable::HtItem.ic_volumes do |ht_item|
-        marker.incr
-        add_ht_item_to_freq_table(ht_item)
-        marker.on_batch { |m| logger.info m.batch_line }
-      end
-    end
-
-    # TODO: break FrequencyTable out to its own class
-    def add_ht_item_to_freq_table(ht_item)
-      item_format = CalculateFormat.new(ht_item.cluster).item_format(ht_item).to_sym
-      item_overlap = Overlap::HtItemOverlap.new(ht_item)
-      item_overlap.matching_members.each do |org|
-        @freq_table[org.to_sym][item_format][item_overlap.matching_members.count] += 1
+      File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w") do |dump_file|
+        dump_file.puts(freq_table.serialize)
       end
     end
 
@@ -155,6 +129,18 @@ module Reports
     end
 
     private
+
+    def compile_frequency_table
+      @marker = Services.progress_tracker.call(batch_size: maxlines)
+      FrequencyTable.new.tap do |ft|
+        logger.info("Begin compiling hscore frequency table.")
+        Clusterable::HtItem.ic_volumes do |ht_item|
+          marker.incr
+          ft.add_ht_item ht_item
+          marker.on_batch { |m| logger.info m.batch_line }
+        end
+      end
+    end
 
     def report_file
       year = Time.now.year.to_s

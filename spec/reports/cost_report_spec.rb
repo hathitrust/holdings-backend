@@ -90,7 +90,7 @@ RSpec.describe Reports::CostReport do
     end
   end
 
-  describe "#compile_frequency_table" do
+  describe "#freq_table" do
     it "ignores PD items" do
       pd_item = build(
         :ht_item,
@@ -103,13 +103,26 @@ RSpec.describe Reports::CostReport do
       load_test_data(pd_item)
       expect(cr.freq_table[:upenn][:mpm]).to eq({})
     end
+
+    it "counts OCN-less items" do
+      ocnless_item = build(
+        :ht_item,
+        :spm,
+        ocns: [],
+        access: "deny",
+        rights: "ic",
+        collection_code: "PU"
+      )
+      load_test_data ocnless_item
+      expect(cr.freq_table[:upenn][:spm]).to eq({1 => 1})
+    end
   end
 
-  describe "#add_ht_item_to_freq_table" do
-    it "adds an ht_item to the freq_table for all matching orgs" do
-      load_test_data(mpm)
-      cr.add_ht_item_to_freq_table(mpm)
-      expect(cr.freq_table).to eq(ualberta: {mpm: {1 => 1}})
+  describe "#dump_freq_table" do
+    it "dumps frequency table" do
+      load_test_data(spm, mpm, ht_allow)
+      cr.dump_freq_table("freq.txt")
+      expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
     end
   end
 
@@ -126,7 +139,6 @@ RSpec.describe Reports::CostReport do
 
     it "includes only member holdings" do
       load_test_data(spm, holding, holding2, non_member_holding)
-      cr.compile_frequency_table
       expect(cr.freq_table[:umich][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:upenn][:spm]).to eq({2 => 1})
       expect(cr.freq_table[:non_member]).to eq({})
@@ -224,15 +236,12 @@ RSpec.describe Reports::CostReport do
 
       it "handles multiple HT copies of the same spm" do
         load_test_data(spm, ht_copy)
-
-        cr.compile_frequency_table
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
+        expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "handles multiple copies of the same spm and holdings" do
         load_test_data(spm, ht_copy, spm_holding)
-        cr.compile_frequency_table
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
+        expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 2}})
       end
 
       it "multiple holdings lead to one hshare" do
@@ -240,18 +249,16 @@ RSpec.describe Reports::CostReport do
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
         load_test_data(spm, spm_holding, mpm_holding)
-        cr.compile_frequency_table
-        expect(cr.freq_table).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
+        expect(cr.freq_table.to_h).to eq(spm.billing_entity.to_sym => {spm: {1 => 1}})
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
         # two ht items, one upenn, one michigan
         ht_copy.collection_code = "MIU"
         load_test_data(spm, ht_copy)
-        cr.compile_frequency_table
         expected_freq = {upenn: {spm: {1 => 1}},
                          umich: {spm: {1 => 1}}}
-        expect(cr.freq_table).to eq(expected_freq)
+        expect(cr.freq_table.to_h).to eq(expected_freq)
       end
     end
 
@@ -260,8 +267,7 @@ RSpec.describe Reports::CostReport do
 
       it "assigns mpm shares to empty enum chron holdings" do
         load_test_data(mpm, mpm_wo_ec)
-        cr.compile_frequency_table
-        expect(cr.freq_table[mpm_wo_ec.organization.to_sym]).to eq(mpm: {2 => 1})
+        expect(cr.freq_table[mpm_wo_ec.organization]).to eq(mpm: {2 => 1})
       end
     end
 
@@ -276,8 +282,7 @@ RSpec.describe Reports::CostReport do
 
       it "gives mpm shares when enum_chron does not match anything" do
         load_test_data(mpm, mpm_wrong_ec)
-        cr.compile_frequency_table
-        expect(cr.freq_table[mpm_wrong_ec.organization.to_sym]).to eq(mpm: {2 => 1})
+        expect(cr.freq_table[mpm_wrong_ec.organization]).to eq(mpm: {2 => 1})
       end
     end
 
@@ -316,10 +321,9 @@ RSpec.describe Reports::CostReport do
 
       it "assigns all serials to the member and ht_item billing entities affect hshare" do
         load_test_data(ht_serial, ht_serial2, holding_serial)
-        cr.compile_frequency_table
         # ht_serial.billing_entity + holding_serial.org and
         # ht_serial2.billing_entity + holding_serial.org
-        expect(cr.freq_table[holding_serial.organization.to_sym]).to eq(ser: {2 => 2})
+        expect(cr.freq_table[holding_serial.organization]).to eq(ser: {2 => 2})
       end
     end
   end
@@ -428,15 +432,6 @@ RSpec.describe Reports::CostReport do
         "upenn	0.0	0.3333333333333333	0.0	0.125	1.0	0.0	0.4583333333333333",
         "utexas	0.0	0.3333333333333333	0.5	0.375	3.0	0.0	1.2083333333333333"
       ].join("\n"))
-    end
-
-    it "has a setting for where to dump freq files" do
-      expect(Settings.cost_report_freq_path.length).to be > 5
-    end
-
-    it "dumps frequency table upon request" do
-      cr.dump_freq_table("freq.txt")
-      expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
     end
   end
 end
