@@ -80,7 +80,7 @@ RSpec.xdescribe Clustering::ClusterCommitment do
     }
     let(:ocn1) { 1 }
     let(:ocn2) { 2 }
-    let(:reso) { build(:ocn_resolution, deprecated: ocn1, resolved: ocn2) }
+    let(:reso) { build(:ocn_resolution, variant: ocn1, canonical: ocn2) }
 
     let(:finder) { SharedPrint::Finder.new(ocn: [ocn1, ocn2]) }
     it "Puts commitments together when their clusters merge." do
