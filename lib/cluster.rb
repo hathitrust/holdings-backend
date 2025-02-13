@@ -134,11 +134,11 @@ class Cluster
   end
 
   def ocn_resolutions
-    Clusterable::OCNResolution.with_ocns(ocns)
+    @ocn_resolutions ||= Clusterable::OCNResolution.with_ocns(ocns).to_a
   end
 
   def ht_items
-    Clusterable::HtItem.with_ocns(ocns)
+    @ht_items ||= Clusterable::HtItem.with_ocns(ocns).to_a
   end
 
   def ht_item(item_id)
@@ -150,7 +150,14 @@ class Cluster
   end
 
   def holdings
-    Clusterable::Holding.with_ocns(ocns)
+    @holdings ||= Clusterable::Holding.with_ocns(ocns).to_a
+  end
+
+  # invalidate the cache after adding items elsewhere
+  def reload
+    @holdings = nil
+    @ocn_resolutions = nil
+    @ht_items = nil
   end
 
   # Add a Set of new OCLC numbers to this cluster.

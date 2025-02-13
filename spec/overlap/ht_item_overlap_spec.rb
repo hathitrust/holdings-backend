@@ -77,6 +77,7 @@ RSpec.describe Overlap::HtItemOverlap do
           ocn: c.ocns.first,
           organization: "smu"
         )
+        c.reload
         # Number of holdings goes up, overlap.organizations_with_holdings.count does not
         expect(c.holdings.count).to eq(4)
         overlap = described_class.new(c.ht_items.first)

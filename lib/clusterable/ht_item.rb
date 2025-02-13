@@ -94,15 +94,20 @@ module Clusterable
     end
 
     def cluster
+      # TODO clean this up
+      return @cluster if @cluster
+
       if ocns.none?
-        return OCNLessCluster.new(bib_key: ht_bib_key)
+        @cluster = OCNLessCluster.new(bib_key: ht_bib_key)
       end
-      clusters = Cluster.for_ocns(ocns)
+      clusters = Cluster.for_ocns(ocns).to_a
       if clusters.count > 1
         raise "ocns #{ocns} for item #{item_id} match multiple clusters"
       else
-        clusters.first
+        @cluster = clusters.first
       end
+
+      @cluster
     end
 
     def collection_code=(collection_code)
