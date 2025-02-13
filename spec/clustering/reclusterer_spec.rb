@@ -8,9 +8,9 @@ require "clustering/cluster_ocn_resolution"
 
 RSpec.xdescribe Clustering::Reclusterer do
   let(:glue) { build(:ocn_resolution) }
-  let(:ht_item) { build(:ht_item, ocns: [glue.deprecated]) }
-  let(:holding) { build(:holding, ocn: glue.resolved) }
-  let(:comm) { build(:commitment, ocn: glue.resolved) }
+  let(:ht_item) { build(:ht_item, ocns: [glue.variant]) }
+  let(:holding) { build(:holding, ocn: glue.canonical) }
+  let(:comm) { build(:commitment, ocn: glue.canonical) }
 
   context "when removing glue from Item/Holding/Commitment cluster" do
     before(:each) do
@@ -29,14 +29,14 @@ RSpec.xdescribe Clustering::Reclusterer do
 
     it "moves ht_item, holding, and comm to new clusters" do
       Clustering::ClusterOCNResolution.new(glue).delete
-      expect(Cluster.find_by(ocns: glue.deprecated).ht_items.count).to eq(1)
-      expect(Cluster.find_by(ocns: glue.resolved).holdings.count).to eq(1)
-      expect(Cluster.find_by(ocns: glue.resolved).commitments.count).to eq(1)
+      expect(Cluster.find_by(ocns: glue.variant).ht_items.count).to eq(1)
+      expect(Cluster.find_by(ocns: glue.canonical).holdings.count).to eq(1)
+      expect(Cluster.find_by(ocns: glue.canonical).commitments.count).to eq(1)
     end
   end
 
   context "when removing non-glue from cluster" do
-    let(:nonglue) { build(:ocn_resolution, ocns: [glue.resolved, 666]) }
+    let(:nonglue) { build(:ocn_resolution, ocns: [glue.canonical, 666]) }
 
     before(:each) do
       Cluster.each(&:delete)
@@ -111,7 +111,7 @@ RSpec.xdescribe Clustering::Reclusterer do
 
     it "returns false if removed_ocns are all in other clusterable_ocn_tuples" do
       cluster = Cluster.first
-      reclusterer = described_class.new(cluster, [glue.resolved, 999])
+      reclusterer = described_class.new(cluster, [glue.canonical, 999])
       expect(reclusterer.ocns_changed?).to be false
     end
   end

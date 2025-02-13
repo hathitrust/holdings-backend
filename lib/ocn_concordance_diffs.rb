@@ -7,7 +7,7 @@ require "loader/file_loader"
 require "loader/ocn_resolution_loader"
 
 # Responsible for locating and loading a pair of diffs from an OCN concordance.
-# Both files contain OCNResolutions represented as deprecated, resolved pairs
+# Both files contain OCNResolutions represented as variant, canonical (resolved) pairs
 # One file contains OCNResolutions to add, the other contains OCNResolutions to
 # delete.
 #
