@@ -74,6 +74,68 @@ RSpec.describe FrequencyTable do
     end
   end
 
+  describe "#append!" do
+    let(:ft1) { described_class.new }
+    let(:ft2) { described_class.new }
+
+    it "returns the reciever" do
+      expect(ft1.append!(ft2).object_id).to eq(ft1.object_id)
+    end
+
+    it "adds organizations" do
+      ft1.add_ht_item ht1
+      ft2.add_ht_item ht2
+      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
+      expect(ft1.append!(ft2).to_h.keys.sort).to eq(expected_keys)
+    end
+
+    it "adds counts" do
+      ft1.add_ht_item ht1
+      ft2.add_ht_item ht1
+      ft2.add_ht_item ht2
+      expect(ft1.append!(ft2).to_h[:umich][:spm][1]).to eq(2)
+      expect(ft2[:umich][:spm][1]).to eq(1)
+    end
+
+    it "isolates the receiver from subsequent changes to added table" do
+      ft1.add_ht_item ht1
+      ft2.add_ht_item ht2
+      ft1.append! ft2
+      expect(ft2[:upenn][:spm][1]).to eq(1)
+      ft1.add_ht_item ht2
+      expect(ft2[:upenn][:spm][1]).to eq(1)
+    end
+  end
+
+  describe "#+" do
+    let(:ft1) { described_class.new }
+    let(:ft2) { described_class.new }
+
+    it "returns a new FrequencyTable" do
+      ft3 = ft1 + ft2
+      expect(ft3).to be_a(described_class)
+      expect(ft3.object_id).not_to eq(ft1.object_id)
+      expect(ft3.object_id).not_to eq(ft2.object_id)
+    end
+
+    it "returns a FrequencyTable with all organizations in the addends" do
+      ft1.add_ht_item ht1
+      ft2.add_ht_item ht2
+      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
+      ft3 = ft1 + ft2
+      expect(ft3.to_h.keys.sort).to eq(expected_keys)
+    end
+
+    it "returns a FrequencyTable with all counts in the addends" do
+      ft1.add_ht_item ht1
+      ft2.add_ht_item ht1
+      ft2.add_ht_item ht2
+      ft3 = ft1 + ft2
+      expect(ft3[:umich][:spm][1]).to eq(2)
+      expect(ft3[:upenn][:spm][1]).to eq(1)
+    end
+  end
+
   describe "#serialize" do
     it "returns the expected String" do
       ft.add_ht_item ht1
