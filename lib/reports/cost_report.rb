@@ -48,11 +48,11 @@ module Reports
 
       # Dump freq table to file
       ymd = Time.new.strftime("%F")
-      dump_freq_table("freq_#{ymd}.txt")
+      dump_frequency_table("frequency_#{ymd}.txt")
       logger.info marker.final_line
     end
 
-    def initialize(organization: nil, cost: Settings.target_cost, lines: 50_000, logger: Services.logger)
+    def initialize(organization: nil, cost: Settings.target_cost, lines: 50_000, logger: Services.logger, precomputed_frequency_table: nil)
       cost ||= Settings.target_cost
 
       raise "Target cost not set" if cost.nil?
@@ -61,6 +61,12 @@ module Reports
       @target_cost = Float(cost)
       @maxlines = lines
       @logger = logger
+
+      # If not set, frequency_table will call compile_frequency_table.
+      # If you pass a precomputed frequency table, do not modify it after passing it in.
+      # This warning is in the place of actually implementing proper cloning.
+
+      @frequency_table = precomputed_frequency_table
     end
 
     def active_members
@@ -84,15 +90,15 @@ module Reports
       (pd_cost / total_weight) * active_members[member.to_s].weight
     end
 
-    def freq_table
-      @freq_table ||= compile_frequency_table
+    def frequency_table
+      @frequency_table ||= compile_frequency_table
     end
 
     # Dump freq table so these computes can be re-used in member_counts_report.
-    def dump_freq_table(dump_fn = "freq.txt")
+    def dump_frequency_table(dump_fn = "freq.txt")
       FileUtils.mkdir_p(Settings.cost_report_freq_path)
       File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w") do |dump_file|
-        dump_file.puts(freq_table.serialize)
+        dump_file.puts(frequency_table.serialize)
       end
     end
 
@@ -104,7 +110,7 @@ module Reports
       # HScore for a particular format
       define_method :"#{format}_total" do |member|
         total = 0.0
-        freq_table[member.to_sym][format].each do |num_orgs, freq|
+        frequency_table[member.to_sym][format].each do |num_orgs, freq|
           total += freq.to_f / num_orgs
         end
         total
