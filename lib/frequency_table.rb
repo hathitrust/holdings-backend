@@ -8,11 +8,17 @@ require "overlap/ht_item_overlap"
 class FrequencyTable
   protected attr_reader :table
 
-  # TODO: the tests would be more readable if we could pass either JSON or a Hash.
-  # Maybe try a `case` on the class of the parameter and parse JSON if it's a String
-  # and deep copy if it's a Hash.
-  def initialize(json: nil)
-    @table = json ? JSON.parse(json, symbolize_names: true) : {}
+  def initialize(data: nil)
+    @table = case data
+    when String
+      JSON.parse(data, symbolize_names: true)
+    when Hash
+      deep_copy data
+    when NilClass
+      {}
+    else
+      raise "unrecognized data format #{data.inspect}"
+    end
   end
 
   def to_json
@@ -60,7 +66,7 @@ class FrequencyTable
     other.each do |org, data|
       # Example data: org = :umich, data = {:spm=>{1=>1}}
       if !table.key? org
-        table[org] = Marshal.load(Marshal.dump(other.table[org]))
+        table[org] = deep_copy other.table[org]
         next
       end
       table[org] = {} unless table.key?(org)
@@ -97,5 +103,11 @@ class FrequencyTable
     table[org][fmt] = {} unless table[org].key?(fmt)
     table[org][fmt][bucket] = 0 unless table[org][fmt].key?(bucket)
     table[org][fmt][bucket] += 1
+  end
+
+  private
+
+  def deep_copy(obj)
+    Marshal.load(Marshal.dump(obj))
   end
 end

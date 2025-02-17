@@ -176,7 +176,7 @@ RSpec.describe Reports::CostReport do
         }
       JSON
     }
-    let(:pft) { FrequencyTable.new(json: json) }
+    let(:pft) { FrequencyTable.new(data: json) }
     let(:cr) { described_class.new(cost: 10, precomputed_frequency_table: pft) }
     before(:each) do
       # add 3 items & 2 holdings
