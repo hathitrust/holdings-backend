@@ -33,8 +33,9 @@ class FrequencyTable
     table.keys.sort
   end
 
-  def fetch(organization:, format: nil, bucket: nil)
-    # If bucket is passed and format is not, that's an error.
+  def fetch(organization: nil, format: nil, bucket: nil)
+    return table if organization.nil?
+
     data = table[organization.to_sym] || {}
     if format
       data = data[format.to_sym] || {}

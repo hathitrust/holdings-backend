@@ -268,8 +268,7 @@ RSpec.describe Reports::CostReport do
 
       it "handles multiple copies of the same spm and holdings" do
         load_test_data(spm, ht_copy, spm_holding)
-        expect(cr.frequency_table.organizations.count).to eq 1
-        expect(cr.frequency_table.fetch(organization: spm.billing_entity)).to eq({spm: {"1": 2}})
+        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 2}}})
       end
 
       it "multiple holdings lead to one hshare" do
@@ -277,17 +276,17 @@ RSpec.describe Reports::CostReport do
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
         load_test_data(spm, spm_holding, mpm_holding)
-        expect(cr.frequency_table.organizations.count).to eq 1
-        expect(cr.frequency_table.fetch(organization: spm.billing_entity)).to eq({spm: {"1": 1}})
+        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 1}}})
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
         # two ht items, one upenn, one michigan
         ht_copy.collection_code = "MIU"
         load_test_data(spm, ht_copy)
+        expected_freq = {upenn: {spm: {"1": 1}},
+                         umich: {spm: {"1": 1}}}
         expect(cr.frequency_table.organizations.count).to eq 2
-        expect(cr.frequency_table.fetch(organization: :upenn)).to eq({spm: {"1": 1}})
-        expect(cr.frequency_table.fetch(organization: :umich)).to eq({spm: {"1": 1}})
+        expect(cr.frequency_table.fetch).to eq(expected_freq)
       end
     end
 
