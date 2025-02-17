@@ -33,6 +33,7 @@ module Reports
 
     def run(output_filename = report_file)
       logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum maxlines}"
+      logger.info "Writing to #{output_filename}"
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"
@@ -52,13 +53,13 @@ module Reports
       logger.info marker.final_line
     end
 
-    def initialize(organization: nil, cost: Settings.target_cost, lines: 50_000, logger: Services.logger, precomputed_frequency_table: nil)
-      cost ||= Settings.target_cost
+    def initialize(organization: nil, target_cost: Settings.target_cost, lines: 5000, logger: Services.logger, precomputed_frequency_table: nil)
+      target_cost ||= Settings.target_cost
 
-      raise "Target cost not set" if cost.nil?
+      raise "Target cost not set" if target_cost.nil?
 
       @organization = organization
-      @target_cost = Float(cost)
+      @target_cost = target_cost.to_f
       @maxlines = lines
       @logger = logger
 
@@ -75,15 +76,15 @@ module Reports
     end
 
     def cost_per_volume
-      target_cost / Clusterable::HtItem.count.to_f
+      @cost_per_volume ||= target_cost / Clusterable::HtItem.count.to_f
     end
 
     def total_weight
-      active_members.map { |_id, member| member.weight }.sum
+      @total_weight ||= active_members.map { |_id, member| member.weight }.sum
     end
 
     def pd_cost
-      cost_per_volume * Clusterable::HtItem.pd_count
+      @pd_cost ||= cost_per_volume * Clusterable::HtItem.pd_count
     end
 
     def pd_cost_for_member(member)

@@ -16,7 +16,7 @@ RSpec.describe Reports::CostReport do
   let(:ic) { "ic" }
   let(:icus) { "icus" }
 
-  let(:cr) { described_class.new(cost: 10) }
+  let(:cr) { described_class.new(target_cost: 10) }
   let(:c) { build(:cluster) }
   let(:c2) { build(:cluster) }
   let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: deny, rights: ic, collection_code: "PU") }
@@ -351,7 +351,7 @@ RSpec.describe Reports::CostReport do
     # - 1 spm with 0 holdings
     # - 2 mpm with the same ocns with 1 holding
     # - 1 spm with access = allow
-    let(:cr) { Reports::CostReport.new(cost: 5) }
+    let(:cr) { Reports::CostReport.new(target_cost: 5) }
     let(:allow) { "allow" }
     let(:deny) { "deny" }
     let(:pd) { "pd" }

@@ -98,7 +98,7 @@ RSpec.describe DataSources::HTOrganizations do
       end
 
       it "raises an error if no weight" do
-        expect { described_class.new(inst_id: "example", weight: nil) }.to \
+        expect { described_class.new(inst_id: "example", weight: -1) }.to \
           raise_exception("Weight must be between 0 and 10")
       end
     end
