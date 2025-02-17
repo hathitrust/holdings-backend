@@ -39,6 +39,19 @@ RSpec.describe FrequencyTable do
     it "creates a `FrequencyTable`" do
       expect(ft).to be_a(FrequencyTable)
     end
+
+    it "accepts JSON" do
+      expect(described_class.new(json: "{}")).to be_a described_class
+    end
+
+    it "round-trips JSON" do
+      ft.add_ht_item ht1
+      ft.add_ht_item ht2
+      round_tripped = described_class.new(json: ft.to_json)
+      expect(round_tripped.organizations.sort).to eq [:umich, :upenn].sort
+      expect(round_tripped.fetch(organization: :umich)).to eq(ft.fetch(organization: :umich))
+      expect(round_tripped.fetch(organization: :upenn)).to eq(ft.fetch(organization: :upenn))
+    end
   end
 
   describe "#organizations" do
@@ -53,27 +66,6 @@ RSpec.describe FrequencyTable do
     end
   end
 
-  describe "#[]" do
-    it "returns empty Array for unknown organization" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft["no such organization"][:spm]).to eq({})
-    end
-
-    it "returns empty Array for unknown format" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft[:umich][:no_such_format]).to eq({})
-    end
-
-    it "returns an Array of statistics when available" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft[:umich][:spm]).to eq({1 => 1})
-      expect(ft[:upenn][:spm]).to eq({1 => 1})
-    end
-  end
-
   describe "#append!" do
     let(:ft1) { described_class.new }
     let(:ft2) { described_class.new }
@@ -85,25 +77,29 @@ RSpec.describe FrequencyTable do
     it "adds organizations" do
       ft1.add_ht_item ht1
       ft2.add_ht_item ht2
-      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
-      expect(ft1.append!(ft2).to_h.keys.sort).to eq(expected_keys)
+      expected_keys = (ft1.organizations + ft2.organizations).uniq.sort
+      expect(ft1.append!(ft2).organizations).to eq(expected_keys)
     end
 
     it "adds counts" do
       ft1.add_ht_item ht1
       ft2.add_ht_item ht1
       ft2.add_ht_item ht2
-      expect(ft1.append!(ft2).to_h[:umich][:spm][1]).to eq(2)
-      expect(ft2[:umich][:spm][1]).to eq(1)
+      expect(ft1.append!(ft2).fetch(organization: :umich, format: :spm, bucket: 1)).to eq(2)
+      expect(ft2.fetch(organization: :umich, format: :spm, bucket: 1)).to eq(1)
     end
 
     it "isolates the receiver from subsequent changes to added table" do
       ft1.add_ht_item ht1
       ft2.add_ht_item ht2
       ft1.append! ft2
-      expect(ft2[:upenn][:spm][1]).to eq(1)
+      expect(ft2.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
+      ft1.increment(organization: :smu, format: :mpm, bucket: 10)
       ft1.add_ht_item ht2
-      expect(ft2[:upenn][:spm][1]).to eq(1)
+      # TODO: rewrite especially this test in terms of `increment` and have ft1 initialized from data
+      # so it's obvious what is there and what is not (without calling `puts` on the table all the time.
+      expect(ft2.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
+      expect(ft2.organizations).not_to include(:smu)
     end
   end
 
@@ -121,9 +117,9 @@ RSpec.describe FrequencyTable do
     it "returns a FrequencyTable with all organizations in the addends" do
       ft1.add_ht_item ht1
       ft2.add_ht_item ht2
-      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
+      expected_keys = (ft1.organizations + ft2.organizations).uniq.sort
       ft3 = ft1 + ft2
-      expect(ft3.to_h.keys.sort).to eq(expected_keys)
+      expect(ft3.organizations).to eq(expected_keys)
     end
 
     it "returns a FrequencyTable with all counts in the addends" do
@@ -131,20 +127,16 @@ RSpec.describe FrequencyTable do
       ft2.add_ht_item ht1
       ft2.add_ht_item ht2
       ft3 = ft1 + ft2
-      expect(ft3[:umich][:spm][1]).to eq(2)
-      expect(ft3[:upenn][:spm][1]).to eq(1)
+      expect(ft3.fetch(organization: :umich, format: :spm, bucket: 1)).to eq(2)
+      expect(ft3.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
     end
   end
 
-  describe "#serialize" do
-    it "returns the expected String" do
+  describe "#to_json" do
+    it "produces JSON" do
       ft.add_ht_item ht1
       ft.add_ht_item ht2
-      expected = <<~END.strip
-        umich	{"spm":{"1":1}}
-        upenn	{"spm":{"1":1}}
-      END
-      expect(ft.serialize).to eq(expected)
+      expect(ft.to_json).to be_a(String)
     end
   end
 end

@@ -6,33 +6,45 @@ require "calculate_format"
 require "overlap/ht_item_overlap"
 
 class FrequencyTable
-  def initialize
-    @table = Hash.new do |hash, member|
-      hash[member] = Hash.new { |fmt_hash, fmt| fmt_hash[fmt] = Hash.new(0) }
-    end
+  protected attr_reader :table
+
+  # TODO: the tests would be more readable if we could pass either JSON or a Hash.
+  # Maybe try a `case` on the class of the parameter and parse JSON if it's a String
+  # and deep copy if it's a Hash.
+  def initialize(json: nil)
+    @table = json ? JSON.parse(json, symbolize_names: true) : {}
+  end
+
+  def to_json
+    JSON.generate(table)
+  end
+
+  def ==(other)
+    self.class == other.class && table == other.table
   end
 
   def organizations
-    @table.keys.sort
+    table.keys.sort
   end
 
-  def [](organization)
-    @table[organization.to_sym]
+  def fetch(organization:, format: nil, bucket: nil)
+    # If bucket is passed and format is not, that's an error.
+    data = table[organization.to_sym] || {}
+    if format
+      data = data[format.to_sym] || {}
+      if bucket
+        data = data[bucket.to_s.to_sym] || 0
+      end
+    end
+    data
   end
 
-  # For testing. I don't know if this is useful in the long run.
-  def to_h
-    @table.clone.freeze
-  end
-
-  # Lower-memory alternative to `to_h` for the purposes of `+` and `append!`
   def each
-    @table.each do |key, value|
+    table.each do |key, value|
       yield key, value
     end
   end
 
-  # Create a public #append(ft) method that we can call on a clone?
   def +(other)
     new_obj = self.class.new
     new_obj.append! self
@@ -42,26 +54,26 @@ class FrequencyTable
   # We try to optimize this beyond a deep addition from the leaves inward by
   # checking for missing keys and when possible copying chunks of the operand's
   # data structure.
+  # We use `Marshal` for deep copies and `clone` for shallow copies in order to keep
+  # prevent subsequent changes to the addend from affecting this object.
   def append!(other)
     other.each do |org, data|
       # Example data: org = :umich, data = {:spm=>{1=>1}}
-      #
-      # One could try to optimize this level by detecting missing `org` keys
-      # in the receiver and copying over an entire chunk of data structure from `other`
-      # but subsequent changes to `self` can propagate to `other`.
-      # `Marshal` can't handle the funky initializer on `@data`
-      # ("can't dump hash with default proc") so that deep copy hack doesn't seem
-      # available to us.
+      if !table.key? org
+        table[org] = Marshal.load(Marshal.dump(other.table[org]))
+        next
+      end
+      table[org] = {} unless table.key?(org)
       data.each do |fmt, frequencies|
         # Example data: fmt = :spm, frequencies = {1 => 1}
         #
         # Safe to shallow clone `frequencies` since its keys and values are scalars.
-        if !@table[org].key? fmt
-          @table[org][fmt] = frequencies.clone
+        if !table[org].key? fmt
+          table[org][fmt] = frequencies.clone
           next
         end
         frequencies.each do |bucket, count|
-          @table[org][fmt][bucket] += count
+          table[org][fmt][bucket] += count
         end
       end
     end
@@ -73,15 +85,17 @@ class FrequencyTable
     item_overlap = Overlap::HtItemOverlap.new(ht_item)
     member_count = item_overlap.matching_members.count
     item_overlap.matching_members.each do |org|
-      @table[org.to_sym][item_format][member_count] += 1
+      increment(organization: org, format: item_format, bucket: member_count)
     end
   end
 
-  def serialize
-    [].tap do |data|
-      @table.sort.each do |org, freq_data|
-        data << [org, JSON.generate(freq_data)].join("\t")
-      end
-    end.join "\n"
+  def increment(organization:, format:, bucket:)
+    org = organization.to_sym
+    fmt = format.to_sym
+    bucket = bucket.to_s.to_sym
+    table[org] = {} unless table.key?(org)
+    table[org][fmt] = {} unless table[org].key?(fmt)
+    table[org][fmt][bucket] = 0 unless table[org][fmt].key?(bucket)
+    table[org][fmt][bucket] += 1
   end
 end
