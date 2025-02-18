@@ -29,10 +29,6 @@ class FrequencyTable
     self.class == other.class && table == other.table
   end
 
-  def organizations
-    table.keys.sort
-  end
-
   def fetch(organization: nil, format: nil, bucket: nil)
     return table if organization.nil?
 

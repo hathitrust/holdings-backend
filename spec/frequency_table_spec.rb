@@ -9,8 +9,7 @@ RSpec.describe FrequencyTable do
   let(:ft) { described_class.new }
   let(:umich_data) { {umich: {spm: {"1": 1}}} }
   let(:upenn_data) { {upenn: {spm: {"1": 1}}} }
-  let(:ft_data) { umich_data.merge upenn_data }
-  let(:ft_with_data) { described_class.new(data: ft_data) }
+  let(:ft_with_data) { described_class.new(data: umich_data.merge(upenn_data)) }
 
   describe ".new" do
     it "creates a `FrequencyTable`" do
@@ -33,23 +32,13 @@ RSpec.describe FrequencyTable do
 
     it "round-trips JSON" do
       round_tripped = described_class.new(data: ft_with_data.to_json)
-      expect(round_tripped.organizations.sort).to eq [:umich, :upenn].sort
+      expect(round_tripped.fetch.keys.sort).to eq [:umich, :upenn].sort
       expect(round_tripped.fetch(organization: :umich)).to eq(ft_with_data.fetch(organization: :umich))
       expect(round_tripped.fetch(organization: :upenn)).to eq(ft_with_data.fetch(organization: :upenn))
     end
 
     it "raises on unhandled types" do
       expect { described_class.new(data: 3.14159) }.to raise_error(RuntimeError)
-    end
-  end
-
-  describe "#organizations" do
-    it "returns empty Array when initialized" do
-      expect(ft.organizations).to eq([])
-    end
-
-    it "returns each org in the cluster" do
-      expect(ft_with_data.organizations).to eq([:umich, :upenn])
     end
   end
 
@@ -62,8 +51,8 @@ RSpec.describe FrequencyTable do
     end
 
     it "adds organizations" do
-      expected_keys = (ft1.organizations + ft2.organizations).uniq.sort
-      expect(ft1.append!(ft2).organizations).to eq(expected_keys)
+      expected_keys = (ft1.fetch.keys + ft2.fetch.keys).uniq.sort
+      expect(ft1.append!(ft2).fetch.keys).to eq(expected_keys)
     end
 
     it "adds counts" do
@@ -83,7 +72,7 @@ RSpec.describe FrequencyTable do
       ft2.increment(organization: :upenn, format: :ser, bucket: 1)
       ft2.increment(organization: :upenn, format: :spm, bucket: 10)
       ft2.increment(organization: :umich, format: :spm, bucket: 1)
-      expect(ft1.organizations).not_to include(:smu)
+      expect(ft1.fetch.keys).not_to include(:smu)
       expect(ft1.fetch(organization: :upenn, format: :ser)).to eq({})
       expect(ft1.fetch(organization: :upenn, format: :spm, bucket: 10)).to eq(0)
       expect(ft1.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
@@ -102,9 +91,9 @@ RSpec.describe FrequencyTable do
     end
 
     it "returns a FrequencyTable with all organizations in the addends" do
-      expected_keys = (ft1.organizations + ft2.organizations).uniq.sort
+      expected_keys = (ft1.fetch.keys + ft2.fetch.keys).uniq.sort
       ft3 = ft1 + ft2
-      expect(ft3.organizations).to eq(expected_keys)
+      expect(ft3.fetch.keys.sort).to eq(expected_keys)
     end
 
     it "returns a FrequencyTable with all counts in the addends" do

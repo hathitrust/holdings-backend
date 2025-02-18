@@ -262,8 +262,7 @@ RSpec.describe Reports::CostReport do
 
       it "handles multiple HT copies of the same spm" do
         load_test_data(spm, ht_copy)
-        expect(cr.frequency_table.organizations.count).to eq 1
-        expect(cr.frequency_table.fetch(organization: spm.billing_entity)).to eq({spm: {"1": 2}})
+        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 2}}})
       end
 
       it "handles multiple copies of the same spm and holdings" do
@@ -285,7 +284,7 @@ RSpec.describe Reports::CostReport do
         load_test_data(spm, ht_copy)
         expected_freq = {upenn: {spm: {"1": 1}},
                          umich: {spm: {"1": 1}}}
-        expect(cr.frequency_table.organizations.count).to eq 2
+        expect(cr.frequency_table.fetch.keys.count).to eq 2
         expect(cr.frequency_table.fetch).to eq(expected_freq)
       end
     end
