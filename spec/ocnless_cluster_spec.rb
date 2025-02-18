@@ -88,6 +88,14 @@ RSpec.describe OCNLessCluster do
       end
     end
 
+    describe "#holding_enum_orgs" do
+      it "returns empty Array no matter what" do
+        expect(c1.holding_enum_orgs["1"]).to eq([])
+        expect(c1.holding_enum_orgs["2"]).to eq([])
+        expect(c1.holding_enum_orgs["an impossible key"]).to eq([])
+      end
+    end
+
     describe "#organizations_with_holdings_but_no_matches" do
       it "returns an empty Array" do
         expect(c1.organizations_with_holdings_but_no_matches).to eq([])

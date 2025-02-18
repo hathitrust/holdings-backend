@@ -46,16 +46,33 @@ RSpec.describe Overlap::HtItemOverlap do
 
   # we end up inserting the same kinds of things...
   # this adds the given item and holdings to cluster c
-  def cluster_item_holdings(item:, holdings:)
-    c.save
-    insert_htitem(item)
-    holdings.each { |holding| holding.save }
+
+  context "with an ocn-less spm" do
+    describe "#organizations_with_holdings" do
+      it "only returns the contributor" do
+        ocnless_spm = build(:ht_item, :spm, ocns: [], collection_code: "PU")
+        overlap = described_class.new(ocnless_spm)
+        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+      end
+    end
+  end
+
+  context "with an ocn-less mpm" do
+    describe "#organizations_with_holdings" do
+      it "only returns the contributor" do
+        ocnless_mpm = build(:ht_item, :mpm, ocns: [], collection_code: "PU")
+        load_test_data(ocnless_mpm)
+
+        overlap = described_class.new(ocnless_mpm)
+        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+      end
+    end
   end
 
   context "with an spm cluster and spm holdings" do
     describe "#organizations_with_holdings" do
       before(:each) do
-        cluster_item_holdings(item: spm, holdings: [spm_holding1, spm_holding2, spm_holding3])
+        load_test_data(spm, spm_holding1, spm_holding2, spm_holding3)
       end
 
       it "returns all organizations that overlap with an item" do
@@ -105,9 +122,9 @@ RSpec.describe Overlap::HtItemOverlap do
       end
 
       it "excludes organizations that are not members" do
-        cluster_item_holdings(
-          item: spm,
-          holdings: [spm_holding1, spm_holding2, spm_holding3, non_member_holding]
+        load_test_data(
+          spm,
+          spm_holding1, spm_holding2, spm_holding3, non_member_holding
         )
 
         overlap = described_class.new(c.ht_items.first)
@@ -233,20 +250,20 @@ RSpec.describe Overlap::HtItemOverlap do
 
     describe "#h_share" do
       it "returns 0 for a member that is not a holder" do
-        cluster_item_holdings(item: spm, holdings: [])
+        load_test_data(spm)
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.h_share("umich")).to eq(0)
       end
 
       it "returns 1 for a member who is the only holder" do
-        cluster_item_holdings(item: spm, holdings: [])
+        load_test_data(spm)
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.h_share("upenn")).to eq(1)
       end
 
       it "returns ratio of organizations" do
         # that is, if there are 4 holders, each holder gets a 1/4 share.
-        cluster_item_holdings(item: spm, holdings: [spm_holding1, spm_holding2, spm_holding3])
+        load_test_data(spm, spm_holding1, spm_holding2, spm_holding3)
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.h_share(spm.billing_entity)).to eq(1.0 / 4)
         expect(overlap.h_share(spm_holding1.organization)).to eq(1.0 / 4)
