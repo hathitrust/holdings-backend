@@ -37,6 +37,10 @@ RSpec.describe FrequencyTable do
       expect(round_tripped.fetch(organization: :umich)).to eq(ft_with_data.fetch(organization: :umich))
       expect(round_tripped.fetch(organization: :upenn)).to eq(ft_with_data.fetch(organization: :upenn))
     end
+
+    it "raises on unhandled types" do
+      expect { described_class.new(data: 3.14159) }.to raise_error(RuntimeError)
+    end
   end
 
   describe "#organizations" do
