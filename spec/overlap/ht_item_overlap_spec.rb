@@ -46,10 +46,33 @@ RSpec.describe Overlap::HtItemOverlap do
 
   # we end up inserting the same kinds of things...
   # this adds the given item and holdings to cluster c
+  # todo replace with spec helper version
   def cluster_item_holdings(item:, holdings:)
     c.save
     insert_htitem(item)
     holdings.each { |holding| holding.save }
+  end
+
+  context "with an ocn-less spm" do
+    describe "#organizations_with_holdings" do
+      it "only returns the contributor" do
+        ocnless_spm = build(:ht_item, :spm, ocns: [], collection_code: "PU")
+        overlap = described_class.new(ocnless_spm)
+        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+      end
+    end
+  end
+
+  context "with an ocn-less mpm" do
+    describe "#organizations_with_holdings" do
+      it "only returns the contributor" do
+        ocnless_mpm = build(:ht_item, :mpm, ocns: [], collection_code: "PU")
+        load_test_data(ocnless_mpm)
+
+        overlap = described_class.new(ocnless_mpm)
+        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+      end
+    end
   end
 
   context "with an spm cluster and spm holdings" do

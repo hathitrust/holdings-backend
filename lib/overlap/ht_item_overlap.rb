@@ -21,6 +21,7 @@ module Overlap
         # all orgs with a holding hold every spm or ser in cluster
         (@cluster.org_enums.keys + [@ht_item.billing_entity]).uniq
       else
+
         # ht_items match on enum and holdings without enum
         (@cluster.holding_enum_orgs[""] +
          @cluster.holding_enum_orgs[@ht_item.n_enum] +

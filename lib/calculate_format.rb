@@ -6,7 +6,6 @@ require "cluster"
 class CalculateFormat
   def initialize(cluster)
     @cluster = cluster
-    require "debug"
   end
 
   # Calculate format for this particular ht_item in this particular cluster

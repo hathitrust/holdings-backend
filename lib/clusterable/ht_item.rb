@@ -94,20 +94,7 @@ module Clusterable
     end
 
     def cluster
-      # TODO clean this up
-      return @cluster if @cluster
-
-      if ocns.none?
-        @cluster = OCNLessCluster.new(bib_key: ht_bib_key)
-      end
-      clusters = Cluster.for_ocns(ocns).to_a
-      if clusters.count > 1
-        raise "ocns #{ocns} for item #{item_id} match multiple clusters"
-      else
-        @cluster = clusters.first
-      end
-
-      @cluster
+      @cluster ||= find_cluster
     end
 
     def collection_code=(collection_code)
@@ -125,6 +112,16 @@ module Clusterable
 
     def set_billing_entity
       self.billing_entity = Services.ht_collections[collection_code].billing_entity
+    end
+
+    def find_cluster
+      return OCNLessCluster.new(bib_key: ht_bib_key) if ocns.none?
+
+      clusters = Cluster.for_ocns(ocns).to_a
+      raise "ocns #{ocns} for item #{item_id} match multiple clusters" if clusters.count > 1
+      raise "ocns #{ocns} for item #{item_id} match zero clusters" if clusters.count == 0
+
+      clusters.first
     end
   end
 end

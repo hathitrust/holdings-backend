@@ -141,10 +141,9 @@ RSpec.describe Clusterable::HtItem do
     end
 
     it "returns nil if there is no cluster" do
-      create(:cluster, ocns: [3, 4])
       h = build(:ht_item, ocns: [1, 2])
 
-      expect(h.cluster).to be(nil)
+      expect { h.cluster }.to raise_exception(/zero clusters/)
     end
 
     it "raises an exception if there are multiple clusters with its ocns" do
