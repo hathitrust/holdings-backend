@@ -49,7 +49,7 @@ class OCNLessCluster
   end
 
   def org_enums
-    Hash.new([])
+    Hash.new { [] }
   end
 
   # Orgs that don't have "" enum chron or an enum chron found in the items

@@ -7,7 +7,7 @@ if ENV["REDIS_SIDEKIQ_RW_HOST"] && ENV["REDIS_SIDEKIQ_RW_PASSWORD"]
   Services.register(:redis_config) do
     {
       host: ENV["REDIS_SIDEKIQ_RW_HOST"],
-      password: ENV["REDIS_SIDEKIQ_RW_PASSWORD"],
+      password: ENV["REDIS_SIDEKIQ_RW_PASSWORD"]
     }
   end
 else
