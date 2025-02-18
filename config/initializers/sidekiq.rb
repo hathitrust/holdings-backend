@@ -3,18 +3,11 @@ require "services"
 
 # Add anything here you need for sidekiq initialization
 
-if ENV["REDIS_MASTER_SET_NAME"] && ENV["REDIS_HEADLESS_SERVICE"]
-  require "resolv"
-
+if ENV["REDIS_SIDEKIQ_RW_HOST"] && ENV["REDIS_SIDEKIQ_RW_PASSWORD"]
   Services.register(:redis_config) do
-    # https://github.com/mperham/sidekiq/issues/5194
     {
-      name: ENV["REDIS_MASTER_SET_NAME"],
-      password: ENV["REDIS_PASSWORD"],
-      sentinel_password: ENV["REDIS_PASSWORD"],
-      sentinels: Resolv.getaddresses(ENV["REDIS_HEADLESS_SERVICE"]).map do |address|
-        {host: address, port: 26379}
-      end
+      name: ENV["REDIS_SIDEKIQ_RW_HOST"],
+      password: ENV["REDIS_SIDEKIQ_RW_PASSWORD"],
     }
   end
 else
