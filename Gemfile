@@ -25,7 +25,7 @@ gem "sidekiq-batch", git: "https://github.com/breamware/sidekiq-batch"
 group :test do
   gem "factory_bot"
   gem "faker"
-  gem "hathifiles_database", git: "https://github.com/hathitrust/hathifiles_database.git", branch: "DEV-1381_daily_delta"
+  gem "hathifiles_database", git: "https://github.com/hathitrust/hathifiles_database.git", branch: "main"
   gem "rspec"
   gem "rspec-sidekiq"
   gem "simplecov"
