@@ -10,11 +10,11 @@ class ConcordanceProcessing
     fout = File.open(fout, "w")
 
     c = ConcordanceValidation::Concordance.new(fin)
-    c.raw_to_resolved.each_key do |raw|
-      next if c.raw_to_resolved[raw].count.zero?
+    c.variant_to_canonical.each_key do |variant|
+      next if c.variant_to_canonical[variant].count.zero?
 
       begin
-        sub = c.compile_sub_graph(raw)
+        sub = c.compile_sub_graph(variant)
         c.detect_cycles(*sub)
       rescue => e
         log.puts e
@@ -22,14 +22,14 @@ class ConcordanceProcessing
         next
       end
       begin
-        # checks for multiple terminal ocns
-        _terminal = c.terminal_ocn(raw)
+        # checks for multiple canonical ocns
+        _canonical = c.canonical_ocn(variant)
       rescue => e
         log.puts e
         next
       end
 
-      fout.puts [raw, c.terminal_ocn(raw)].join("\t")
+      fout.puts [variant, c.canonical_ocn(variant)].join("\t")
     end
 
     log.close

@@ -21,8 +21,8 @@ module ConcordanceValidation
         if old_conc_lines.include? line
           old_conc_lines.delete(line)
         else
-          dead_ocn, resolved_ocn = line.chomp.split("\t")
-          adds[resolved_ocn] << dead_ocn
+          variant_ocn, canonical_ocn = line.chomp.split("\t")
+          adds[canonical_ocn] << variant_ocn
         end
       end
       write(File.open(diff_out_path + ".adds", "w"), adds)
@@ -31,9 +31,9 @@ module ConcordanceValidation
     end
 
     def write(fout, diffs)
-      diffs.keys.sort.each do |resolved_ocn|
-        diffs[resolved_ocn].each do |dead_ocn|
-          fout.puts [dead_ocn, resolved_ocn].join("\t")
+      diffs.keys.sort.each do |canonical_ocn|
+        diffs[canonical_ocn].each do |variant_ocn|
+          fout.puts [variant_ocn, canonical_ocn].join("\t")
         end
       end
       fout.flush
@@ -55,8 +55,8 @@ module ConcordanceValidation
 
     def deletes_from_remaining_lines(lines)
       lines.each do |line|
-        dead_ocn, resolved_ocn = line.chomp.split("\t")
-        deletes[resolved_ocn] << dead_ocn
+        variant_ocn, canonical_ocn = line.chomp.split("\t")
+        deletes[canonical_ocn] << variant_ocn
       end
     end
   end
