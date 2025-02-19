@@ -20,16 +20,17 @@ ARGF.each_line do |line|
     item_id: fields[0],
     ht_bib_key: fields[1],
     rights: fields[2],
-    access: fields[3] ? "allow" : "deny",
+    access: fields[3] == "1" ? "allow" : "deny",
     bib_fmt: fields[4],
     enum_chron: fields[5],
     collection_code: fields[6],
-    ocns: fields[7]&.split(",")&.map { |ocn| ocn.to_i } || []
+    ocns: fields[7]
   )
   # ensure ocns are on the same cluster
   Cluster.cluster_ocns!(h.ocns)
 
   f.add_ht_item(h)
+
   marker.incr
   marker.on_batch { |m| log.info "#{$$}: #{m.batch_line}" }
 end
@@ -38,4 +39,4 @@ log.info("#{$$}: done w freq table, writing to #{filename}.freq")
 
 
 out = File.open("#{filename}.freq","w")
-out.puts(f.serialize)
+out.puts(f.to_json)

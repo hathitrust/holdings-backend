@@ -11,10 +11,10 @@ module Clusterable
 
     IC_RIGHTS_CODES = %w[ic op und nobody pd-pvt].freeze
 
-    attr_accessor :ocns, :item_id, :ht_bib_key, :rights, :access, :bib_fmt,
+    attr_accessor :item_id, :rights, :access, :bib_fmt,
       :n_enum, :n_chron, :n_enum_chron, :billing_entity
 
-    attr_reader :collection_code, :enum_chron
+    attr_reader :collection_code, :enum_chron, :ocns, :ht_bib_key
 
     class << self
       def table
@@ -67,7 +67,7 @@ module Clusterable
           bib_fmt: row[:bib_fmt],
           enum_chron: row[:description],
           collection_code: row[:collection_code],
-          ocns: row[:oclc].split(",").map { |ocn| ocn.to_i }
+          ocns: row[:oclc]
         })
       end
 
@@ -100,6 +100,21 @@ module Clusterable
     def collection_code=(collection_code)
       @collection_code = collection_code
       set_billing_entity
+    end
+
+    def ocns=(new_ocns)
+      case new_ocns
+      when String
+        @ocns = new_ocns.split(",").map { |ocn| ocn.to_i }
+      when Enumerable
+        @ocns = new_ocns.map(&:to_i)
+      else
+        raise ArgumentError
+      end
+    end
+
+    def ht_bib_key=(new_ht_bib_key)
+      @ht_bib_key = new_ht_bib_key.to_i
     end
 
     def batch_with?(other)

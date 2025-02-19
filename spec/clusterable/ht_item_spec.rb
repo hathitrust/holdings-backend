@@ -119,6 +119,14 @@ RSpec.describe Clusterable::HtItem do
     expect(build(:ht_item).access).to eq("allow").or eq("deny")
   end
 
+  it "always returns an integer for ht_bib_key" do
+    expect(described_class.new(ht_bib_key: "123456").ht_bib_key).to eq(123456)
+  end
+
+  it "ocns is an array of integers" do
+    expect(described_class.new(ocns: "1,2,3").ocns).to contain_exactly(1, 2, 3)
+  end
+
   describe "#billing_entity" do
     it "is automatically set when collection_code is set" do
       expect(build(:ht_item, collection_code: "KEIO").billing_entity).to eq("hathitrust")
