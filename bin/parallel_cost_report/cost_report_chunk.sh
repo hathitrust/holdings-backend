@@ -10,4 +10,4 @@ bin/mariadb.sh -e "SELECT htid, bib_num, rights_code, access, bib_fmt, descripti
 
 split -l 100000 hf_dump/hf_dump
 
-# parallel bundle exec ruby bin/generate_freq_table.rb ::: hf_dump/hf_dump_*
+# parallel bundle exec ruby bin/parallel_cost_report/generate_freq_table.rb ::: hf_dump/hf_dump_*

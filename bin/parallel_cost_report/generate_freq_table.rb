@@ -7,20 +7,19 @@ f = FrequencyTable.new
 log = Services.logger
 marker = Milemarker.new(batch_size: 5000)
 
-#Services.holdings_db.loggers << Logger.new($stdout);
+# Services.holdings_db.loggers << Logger.new($stdout);
 log.info("#{$$}: starting freq table")
 filename = ARGV[0]
-fh = File.open(filename,"r")
 
 ARGF.each_line do |line|
-  fields = line.split("\t",-1)
+  fields = line.split("\t", -1)
   # ignore things missing collection code?
   next unless fields[6]
   h = Clusterable::HtItem.new(
     item_id: fields[0],
     ht_bib_key: fields[1],
     rights: fields[2],
-    access: fields[3] == "1" ? "allow" : "deny",
+    access: (fields[3] == "1") ? "allow" : "deny",
     bib_fmt: fields[4],
     enum_chron: fields[5],
     collection_code: fields[6],
@@ -35,8 +34,7 @@ ARGF.each_line do |line|
   marker.on_batch { |m| log.info "#{$$}: #{m.batch_line}" }
 end
 log.info "#{$$}: #{marker.final_line}"
-log.info("#{$$}: done w freq table, writing to #{filename}.freq")
+log.info("#{$$}: done w freq table, writing to #{filename}.json")
 
-
-out = File.open("#{filename}.freq","w")
+out = File.open("#{filename}.json", "w")
 out.puts(f.to_json)
