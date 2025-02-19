@@ -7,109 +7,81 @@ RSpec.describe FrequencyTable do
   include_context "with tables for holdings"
 
   let(:ft) { described_class.new }
-  let(:ht1) {
-    build(
-      :ht_item,
-      :spm,
-      ocns: [5],
-      access: "deny",
-      rights: "ic",
-      collection_code: "MIU"
-    )
-  }
-  let(:ht2) {
-    build(
-      :ht_item,
-      :spm,
-      ocns: [5, 6],
-      access: "deny",
-      rights: "ic",
-      collection_code: "PU"
-    )
-  }
-
-  before(:each) do
-    Cluster.each(&:delete)
-    Cluster.create(ocns: ht2.ocns)
-    insert_htitem ht1
-    insert_htitem ht2
-  end
+  let(:umich_data) { {umich: {spm: {"1": 1}}} }
+  let(:upenn_data) { {upenn: {spm: {"1": 1}}} }
+  let(:ft_with_data) { described_class.new(data: umich_data.merge(upenn_data)) }
 
   describe ".new" do
     it "creates a `FrequencyTable`" do
       expect(ft).to be_a(FrequencyTable)
     end
-  end
 
-  describe "#organizations" do
-    it "returns empty Array when initialized" do
-      expect(ft.organizations).to eq([])
+    it "accepts a Hash" do
+      expect(described_class.new(data: {})).to be_a described_class
     end
 
-    it "returns each org in the cluster" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft.organizations).to eq([:umich, :upenn])
-    end
-  end
-
-  describe "#[]" do
-    it "returns empty Array for unknown organization" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft["no such organization"][:spm]).to eq({})
+    it "operates on a copy of the initializer data" do
+      ft = described_class.new(data: umich_data)
+      umich_data[:umich][:spm][:"1"] = 10
+      expect(ft.fetch(organization: :umich, format: :spm, bucket: 1)).to eq(1)
     end
 
-    it "returns empty Array for unknown format" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft[:umich][:no_such_format]).to eq({})
+    it "accepts JSON" do
+      expect(described_class.new(data: "{}")).to be_a described_class
     end
 
-    it "returns an Array of statistics when available" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expect(ft[:umich][:spm]).to eq({1 => 1})
-      expect(ft[:upenn][:spm]).to eq({1 => 1})
+    it "round-trips JSON" do
+      round_tripped = described_class.new(data: ft_with_data.to_json)
+      expect(round_tripped.fetch.keys.sort).to eq [:umich, :upenn].sort
+      expect(round_tripped.fetch(organization: :umich)).to eq(ft_with_data.fetch(organization: :umich))
+      expect(round_tripped.fetch(organization: :upenn)).to eq(ft_with_data.fetch(organization: :upenn))
+    end
+
+    it "raises on unhandled types" do
+      expect { described_class.new(data: 3.14159) }.to raise_error(RuntimeError)
     end
   end
 
   describe "#append!" do
-    let(:ft1) { described_class.new }
-    let(:ft2) { described_class.new }
+    let(:ft1) { described_class.new(data: umich_data) }
+    let(:ft2) { described_class.new(data: upenn_data) }
 
     it "returns the reciever" do
       expect(ft1.append!(ft2).object_id).to eq(ft1.object_id)
     end
 
     it "adds organizations" do
-      ft1.add_ht_item ht1
-      ft2.add_ht_item ht2
-      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
-      expect(ft1.append!(ft2).to_h.keys.sort).to eq(expected_keys)
+      expected_keys = (ft1.fetch.keys + ft2.fetch.keys).uniq.sort
+      expect(ft1.append!(ft2).fetch.keys).to eq(expected_keys)
     end
 
     it "adds counts" do
-      ft1.add_ht_item ht1
-      ft2.add_ht_item ht1
-      ft2.add_ht_item ht2
-      expect(ft1.append!(ft2).to_h[:umich][:spm][1]).to eq(2)
-      expect(ft2[:umich][:spm][1]).to eq(1)
+      ft2.increment(organization: :umich, format: :spm, bucket: 1)
+      expect(ft1.append!(ft2).fetch(organization: :umich, format: :spm, bucket: 1)).to eq(2)
+    end
+
+    it "adds formats" do
+      ft2.increment(organization: :umich, format: :mpm, bucket: 10)
+      expect(ft1.append!(ft2).fetch(organization: :umich, format: :mpm, bucket: 10)).to eq(1)
     end
 
     it "isolates the receiver from subsequent changes to added table" do
-      ft1.add_ht_item ht1
-      ft2.add_ht_item ht2
       ft1.append! ft2
-      expect(ft2[:upenn][:spm][1]).to eq(1)
-      ft1.add_ht_item ht2
-      expect(ft2[:upenn][:spm][1]).to eq(1)
+      # Add an organization, a format, a bucket, and a count
+      ft2.increment(organization: :smu, format: :spm, bucket: 1)
+      ft2.increment(organization: :upenn, format: :ser, bucket: 1)
+      ft2.increment(organization: :upenn, format: :spm, bucket: 10)
+      ft2.increment(organization: :umich, format: :spm, bucket: 1)
+      expect(ft1.fetch.keys).not_to include(:smu)
+      expect(ft1.fetch(organization: :upenn, format: :ser)).to eq({})
+      expect(ft1.fetch(organization: :upenn, format: :spm, bucket: 10)).to eq(0)
+      expect(ft1.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
     end
   end
 
   describe "#+" do
-    let(:ft1) { described_class.new }
-    let(:ft2) { described_class.new }
+    let(:ft1) { described_class.new(data: umich_data) }
+    let(:ft2) { described_class.new(data: upenn_data) }
 
     it "returns a new FrequencyTable" do
       ft3 = ft1 + ft2
@@ -119,32 +91,40 @@ RSpec.describe FrequencyTable do
     end
 
     it "returns a FrequencyTable with all organizations in the addends" do
-      ft1.add_ht_item ht1
-      ft2.add_ht_item ht2
-      expected_keys = (ft1.to_h.keys + ft2.to_h.keys).uniq.sort
+      expected_keys = (ft1.fetch.keys + ft2.fetch.keys).uniq.sort
       ft3 = ft1 + ft2
-      expect(ft3.to_h.keys.sort).to eq(expected_keys)
+      expect(ft3.fetch.keys.sort).to eq(expected_keys)
     end
 
     it "returns a FrequencyTable with all counts in the addends" do
-      ft1.add_ht_item ht1
-      ft2.add_ht_item ht1
-      ft2.add_ht_item ht2
+      ft2.increment(organization: :umich, format: :spm, bucket: 1)
       ft3 = ft1 + ft2
-      expect(ft3[:umich][:spm][1]).to eq(2)
-      expect(ft3[:upenn][:spm][1]).to eq(1)
+      expect(ft3.fetch(organization: :umich, format: :spm, bucket: 1)).to eq(2)
+      expect(ft3.fetch(organization: :upenn, format: :spm, bucket: 1)).to eq(1)
     end
   end
 
-  describe "#serialize" do
-    it "returns the expected String" do
-      ft.add_ht_item ht1
-      ft.add_ht_item ht2
-      expected = <<~END.strip
-        umich	{"spm":{"1":1}}
-        upenn	{"spm":{"1":1}}
-      END
-      expect(ft.serialize).to eq(expected)
+  describe "#add_ht_item" do
+    it "adds an item" do
+      ht_item = build(
+        :ht_item,
+        :spm,
+        ocns: [5],
+        access: "deny",
+        rights: "ic",
+        collection_code: "MIU"
+      )
+      Cluster.create(ocns: ht_item.ocns)
+      insert_htitem ht_item
+      ft.add_ht_item(ht_item)
+      expect(ft.fetch(organization: :umich, format: :spm, bucket: 1)).to eq(1)
+    end
+  end
+
+  describe "#to_json" do
+    it "produces JSON String that parses to a Hash" do
+      expect(ft_with_data.to_json).to be_a(String)
+      expect(JSON.parse(ft_with_data.to_json)).to be_a(Hash)
     end
   end
 end

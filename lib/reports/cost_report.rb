@@ -99,7 +99,7 @@ module Reports
     def dump_frequency_table(dump_fn = "freq.txt")
       FileUtils.mkdir_p(Settings.cost_report_freq_path)
       File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w") do |dump_file|
-        dump_file.puts(frequency_table.serialize)
+        dump_file.puts(frequency_table.to_json)
       end
     end
 
@@ -111,8 +111,8 @@ module Reports
       # HScore for a particular format
       define_method :"#{format}_total" do |member|
         total = 0.0
-        frequency_table[member.to_sym][format].each do |num_orgs, freq|
-          total += freq.to_f / num_orgs
+        frequency_table.fetch(organization: member, format: format).each do |num_orgs, freq|
+          total += freq.to_f / num_orgs.to_s.to_i
         end
         total
       end
