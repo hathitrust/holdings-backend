@@ -83,7 +83,7 @@ CREATE TABLE `holdings` (
   `gov_doc_flag` tinyint(1),
   `mono_multi_serial` enum('mix', 'mon', 'spm', 'mpm', 'ser') NOT NULL,
   `date_received` date NOT NULL,
-  `uuid`         char(36) NOT NULL,
+  `uuid`         char(36) NOT NULL, -- TODO: make unique and deal with the consequences of that
   `issn`         varchar(255) NULL,
   KEY (`ocn`),
   KEY (`organization`)
