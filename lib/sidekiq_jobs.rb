@@ -82,6 +82,7 @@ module Jobs
         Services.logger.info "Adding Print Holdings from #{filename}."
         Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(filename))
           .load(filename, skip_header_match: /\A\s*OCN/)
+        Services.logger.info "Finished Adding Print Holdings from #{filename}."
       end
     end
   end

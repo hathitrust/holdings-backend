@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
-require "services"
 require "clusterable/base"
-require "json"
 require "enum_chron"
+require "json"
+require "securerandom"
+require "services"
 
 module Clusterable
   # A holding
@@ -36,19 +37,43 @@ module Clusterable
       # OCN  BIB  MEMBER_ID  STATUS  CONDITION  DATE  ENUM_CHRON  TYPE  \
       # ISSN  N_ENUM  N_CHRON  GOV_DOC UUID
       fields = holding_line.split("\t")
-      {ocn: fields[0].to_i,
-       local_id: fields[1],
-       organization: fields[2],
-       status: fields[3],
-       condition: fields[4],
-       date_received: DateTime.parse(fields[5]),
-       enum_chron: fields[6],
-       mono_multi_serial: fields[7],
-       issn: fields[8],
-       n_enum: fields[9],
-       n_chron: fields[10],
-       gov_doc_flag: !fields[11].to_i.zero?,
-       uuid: fields[12]}
+
+      if fields[3].empty?
+        fields[3] = "CH"
+      end
+
+      # The old tsv files likely have the old holdings.type (mono|multi|serial)
+      case fields[7]
+      when "mono"
+        fields[7] = "spm"
+      when "multi"
+        fields[7] = "mpm"
+      when "serial"
+        fields[7] = "ser"
+      when ""
+        fields[7] = "mix"
+      end
+
+      # The old tsv files likely don't have a uuid
+      if fields[12].nil?
+        fields[12] = SecureRandom.uuid
+      end
+
+      {
+        ocn: fields[0].to_i,
+        local_id: fields[1],
+        organization: fields[2],
+        status: fields[3],
+        condition: fields[4],
+        date_received: DateTime.parse(fields[5]),
+        enum_chron: fields[6],
+        mono_multi_serial: fields[7],
+        issn: fields[8],
+        n_enum: fields[9],
+        n_chron: fields[10],
+        gov_doc_flag: !fields[11].to_i.zero?,
+        uuid: fields[12]
+      }
     end
 
     def self.new_from_holding_file_line(line)
@@ -82,7 +107,7 @@ module Clusterable
     def self.batch_add(batch)
       columns = table.columns
       rows = batch.map { |h| columns.map { |c| h.public_send(c) } }
-      table.import(columns, rows)
+      table.insert_ignore.import(columns, rows)
     end
 
     def date_received=(date)
