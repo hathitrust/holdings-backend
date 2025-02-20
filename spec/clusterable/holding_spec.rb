@@ -119,9 +119,9 @@ RSpec.describe Clusterable::Holding do
     # Prepares strings from the old style holdings file format
     # (HT003_#{organization}.#{mono_multi_serial}.tsv) for loading.
     # ht003_ser_str has no status, no uuid and its mono_multi_serial is outdated
-    let(:ht003_mon_str) {"1\t99106\tallegheny\tCH\t\t2020-09-29\t\tmono\t\t\t\t0"}
-    let(:ht003_mul_str) {"2\t99106\tallegheny\tCH\t\t2020-09-29\tv.1\tmulti\t\t1\t\t0"}
-    let(:ht003_ser_str) {"3\t99106\tallegheny\t\t\t2020-09-29\t\tserial\t\t\t\t0"}
+    let(:ht003_mon_str) { "1\t99106\tallegheny\tCH\t\t2020-09-29\t\tmono\t\t\t\t0" }
+    let(:ht003_mul_str) { "2\t99106\tallegheny\tCH\t\t2020-09-29\tv.1\tmulti\t\t1\t\t0" }
+    let(:ht003_ser_str) { "3\t99106\tallegheny\t\t\t2020-09-29\t\tserial\t\t\t\t0" }
     let(:fixed_mon_cols) { described_class.holding_to_record(ht003_mon_str) }
     let(:fixed_mul_cols) { described_class.holding_to_record(ht003_mul_str) }
     let(:fixed_ser_cols) { described_class.holding_to_record(ht003_ser_str) }
