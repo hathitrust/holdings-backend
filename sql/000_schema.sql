@@ -91,8 +91,8 @@ CREATE TABLE `holdings` (
 
 DROP TABLE IF EXISTS `oclc_concordance`;
 CREATE TABLE `oclc_concordance` (
-  `oclc` bigint unsigned NOT NULL,
+  `variant` bigint unsigned NOT NULL,
   `canonical` bigint unsigned DEFAULT NULL,
-  PRIMARY KEY (`oclc`,`canonical`),
+  PRIMARY KEY (`variant`,`canonical`),
   INDEX (`canonical`)
 ) ENGINE=InnoDB

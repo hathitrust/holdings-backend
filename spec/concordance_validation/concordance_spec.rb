@@ -24,12 +24,12 @@ RSpec.describe ConcordanceValidation::Concordance do
   describe "terminal_ocn" do
     it "can find root ocns" do
       chained = described_class.new("spec/concordance_validation/data/chained.tsv")
-      expect(chained.terminal_ocn(1)).to eq(3)
+      expect(chained.canonical_ocn(1)).to eq(3)
     end
 
     it "complains if there are multiple terminal ocns" do
       multi = described_class.new("spec/concordance_validation/data/multiple_terminal.tsv")
-      expect { multi.terminal_ocn(1) }.to \
+      expect { multi.canonical_ocn(1) }.to \
         raise_error("OCN:1 resolves to multiple ocns: 2, 3")
     end
   end
@@ -37,13 +37,13 @@ RSpec.describe ConcordanceValidation::Concordance do
   describe "described_class.new" do
     it "builds a basic concordance structure" do
       chained_file = "spec/concordance_validation/data/chained.tsv"
-      expect(described_class.new(chained_file).raw_to_resolved).to \
+      expect(described_class.new(chained_file).variant_to_canonical).to \
         eq(1 => [2], 2 => [3])
     end
 
     it "handles gzipped files" do
       chained_gzip_file = "spec/concordance_validation/data/chained.tsv.gz"
-      expect(described_class.new(chained_gzip_file).raw_to_resolved).to \
+      expect(described_class.new(chained_gzip_file).variant_to_canonical).to \
         eq(1 => [2], 2 => [3])
     end
   end

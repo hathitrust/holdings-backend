@@ -204,7 +204,7 @@ RSpec.describe Clustering::ClusterHtItem do
     xcontext "with concordance rules" do
       it "can add an HTItem" do
         resolution = build(:ocn_resolution)
-        htitem = build(:ht_item, ocns: [resolution.deprecated])
+        htitem = build(:ht_item, ocns: [resolution.variant])
         create(:cluster, ocns: resolution.ocns, ocn_resolutions: [resolution])
         c = described_class.new(htitem).cluster
         expect(c.valid?).to be true
@@ -212,7 +212,7 @@ RSpec.describe Clustering::ClusterHtItem do
 
       # No longer necessary. Reclusterer will determine if it actually needs to be reclustered.
       it "reclusters if an HTItem loses an OCN that is not in a concordance rule" do
-        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        resolution = build(:ocn_resolution, variant: 1, canonical: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         old_cluster = create(:cluster, ocns: [1, 2, 3],
           ocn_resolutions: [resolution],
@@ -228,7 +228,7 @@ RSpec.describe Clustering::ClusterHtItem do
       end
 
       it "updates cluster.ocns if an HTItem loses an OCN that is not in a concordance rule" do
-        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        resolution = build(:ocn_resolution, variant: 1, canonical: 2)
         htitem = build(:ht_item, ocns: [2, 3])
         create(:cluster, ocns: [1, 2, 3],
           ocn_resolutions: [resolution],
@@ -244,7 +244,7 @@ RSpec.describe Clustering::ClusterHtItem do
       end
 
       it "does not recluster if an HTItem loses an OCN that is in the concordance" do
-        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        resolution = build(:ocn_resolution, variant: 1, canonical: 2)
         htitem = build(:ht_item, ocns: [1, 2])
         old_cluster = create(:cluster, ocns: [1, 2],
           ocn_resolutions: [resolution],
@@ -260,7 +260,7 @@ RSpec.describe Clustering::ClusterHtItem do
       end
 
       it "does not recluster if an HTItem changes from one OCN to another in the concordance" do
-        resolution = build(:ocn_resolution, deprecated: 1, resolved: 2)
+        resolution = build(:ocn_resolution, variant: 1, canonical: 2)
         htitem = build(:ht_item, ocns: [1])
         old_cluster = create(:cluster, ocns: [1, 2],
           ocn_resolutions: [resolution],
@@ -279,7 +279,7 @@ RSpec.describe Clustering::ClusterHtItem do
         htitem = build(:ht_item, ocns: [3])
 
         old_cluster = create(:cluster, ocns: [1, 2, 3],
-          ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+          ocn_resolutions: [build(:ocn_resolution, variant: 1, canonical: 2)],
           ht_items: [htitem,
             build(:ht_item, ocns: [1, 3])])
 
@@ -350,7 +350,7 @@ RSpec.describe Clustering::ClusterHtItem do
       it "does not recluster if all the old HTItems's OCNs are covered by concordance rules" do
         htitem = build(:ht_item, ocns: [1, 2])
         old_cluster = create(:cluster, ocns: [1, 2],
-          ocn_resolutions: [build(:ocn_resolution, deprecated: 1, resolved: 2)],
+          ocn_resolutions: [build(:ocn_resolution, variant: 1, canonical: 2)],
           ht_items: [htitem, build(:ht_item, ocns: [1])])
 
         htitem.ocns = [3]

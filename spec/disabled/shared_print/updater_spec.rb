@@ -141,7 +141,7 @@ RSpec.xdescribe SharedPrint::Updater do
 
     it "can update to an ocn on the same cluster" do
       # set up a cluster with ocn1 and ocn2
-      resolution = build(:ocn_resolution, deprecated: ocn1, resolved: ocn2)
+      resolution = build(:ocn_resolution, variant: ocn1, canonical: ocn2)
       cluster = build(:cluster, ocns: [ocn1, ocn2])
       cluster.save
       cluster.add_ocn_resolutions([resolution])

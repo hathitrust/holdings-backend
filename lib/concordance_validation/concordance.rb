@@ -3,28 +3,28 @@
 require "zlib"
 
 # Concordance validation.
-# Takes a file with <raw ocn> <tab> <resolved ocn>, checks that its ok.
-# Prints only <raw> to <terminal ocn>
+# Takes a file with <variant ocn> <tab> <canonical ocn>, checks that its ok.
+# Prints only <variant> to <canonical ocn>
 module ConcordanceValidation
   # A Concordance.
-  # Hash maps of raw to resolved and resolved to raw.
+  # Hash maps of variant to canonical and canonical to variant.
   # Associated validation methods.
   class Concordance
-    attr_accessor :raw_to_resolved, :resolved_to_raw, :infile
+    attr_accessor :variant_to_canonical, :canonical_to_variant, :infile
 
     def initialize(infile)
       @infile = infile
       Concordance.numbers_tab_numbers(infile)
-      @raw_to_resolved = Hash.new { |h, k| h[k] = [] }
-      @resolved_to_raw = Hash.new { |h, k| h[k] = [] }
+      @variant_to_canonical = Hash.new { |h, k| h[k] = [] }
+      @canonical_to_variant = Hash.new { |h, k| h[k] = [] }
       file_handler.open(infile).each do |line|
         # first pass
-        raw, resolved = line.chomp.split("\t")
-        raw_to_resolved[raw.to_i] << resolved.to_i if raw != resolved
-        resolved_to_raw[resolved.to_i] << raw.to_i if raw != resolved
+        variant, canonical = line.chomp.split("\t")
+        variant_to_canonical[variant.to_i] << canonical.to_i if variant != canonical
+        canonical_to_variant[canonical.to_i] << variant.to_i if variant != canonical
       end
-      @raw_to_resolved.default_proc = ->(_, _) {}
-      @resolved_to_raw.default_proc = ->(_, _) {}
+      @variant_to_canonical.default_proc = ->(_, _) {}
+      @canonical_to_variant.default_proc = ->(_, _) {}
     end
 
     def file_handler
@@ -72,12 +72,12 @@ module ConcordanceValidation
       ocns_checked = []
       while ocns_to_check.any?
         ocn = ocns_to_check.pop
-        out_edges[ocn] = @raw_to_resolved[ocn].clone if @raw_to_resolved[ocn]&.any?
-        @raw_to_resolved[ocn]&.each do |to_ocn|
+        out_edges[ocn] = @variant_to_canonical[ocn].clone if @variant_to_canonical[ocn]&.any?
+        @variant_to_canonical[ocn]&.each do |to_ocn|
           ocns_to_check << to_ocn unless ocns_checked.include? to_ocn
         end
-        in_edges[ocn] = @resolved_to_raw[ocn].clone if @resolved_to_raw[ocn]&.any?
-        @resolved_to_raw[ocn]&.each do |from_ocn|
+        in_edges[ocn] = @canonical_to_variant[ocn].clone if @canonical_to_variant[ocn]&.any?
+        @canonical_to_variant[ocn]&.each do |from_ocn|
           ocns_to_check << from_ocn unless ocns_checked.include? from_ocn
         end
         ocns_checked << ocn
@@ -89,31 +89,31 @@ module ConcordanceValidation
     #
     # @param ocn to check
     # @return true if it doesn't resolve to something
-    def terminal_ocn?(ocn)
-      !@raw_to_resolved.key? ocn
+    def canonical_ocn?(ocn)
+      !@variant_to_canonical.key? ocn
     end
 
     # Find the terminal ocn for a given ocn
     # Will fail endlessly if there are cycles.
-    def terminal_ocn(ocn)
-      resolved = @raw_to_resolved[ocn].clone
+    def canonical_ocn(ocn)
+      canonical = @variant_to_canonical[ocn].clone
       loop do
         # only one ocn and it is a terminal
-        return resolved.first if (resolved.count == 1) && terminal_ocn?(resolved.first)
+        return canonical.first if (canonical.count == 1) && canonical_ocn?(canonical.first)
 
         # multiple ocns, but they are all terminal
-        if resolved.all? { |o| terminal_ocn? o }
-          raise "OCN:#{ocn} resolves to multiple ocns: #{resolved.join(", ")}"
+        if canonical.all? { |o| canonical_ocn? o }
+          raise "OCN:#{ocn} resolves to multiple ocns: #{canonical.join(", ")}"
         end
 
         # find more ocns in the chain
-        resolved.each do |o|
+        canonical.each do |o|
           # it is not terminal so we replace with the ocns it resolves to
-          if @raw_to_resolved.key? o
-            resolved.map! { |x| (x == o) ? @raw_to_resolved[o] : x }.flatten!
+          if @variant_to_canonical.key? o
+            canonical.map! { |x| (x == o) ? @variant_to_canonical[o] : x }.flatten!
           end
         end
-        resolved.uniq!
+        canonical.uniq!
       end
     end
 

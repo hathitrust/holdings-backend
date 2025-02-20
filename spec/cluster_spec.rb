@@ -675,8 +675,8 @@ RSpec.describe Cluster do
     it "gets OCN resolution rules for merged OCNs" do
       create(:cluster, ocns: [5, 7])
       create(:cluster, ocns: [6, 8])
-      create(:ocn_resolution, resolved: 5, deprecated: 7)
-      create(:ocn_resolution, resolved: 6, deprecated: 8)
+      create(:ocn_resolution, canonical: 5, variant: 7)
+      create(:ocn_resolution, canonical: 6, variant: 8)
 
       expect(merged_cluster.ocn_resolutions.count).to eq(2)
     end
