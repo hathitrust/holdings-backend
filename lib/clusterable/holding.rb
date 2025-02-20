@@ -107,7 +107,7 @@ module Clusterable
     def self.batch_add(batch)
       columns = table.columns
       rows = batch.map { |h| columns.map { |c| h.public_send(c) } }
-      table.import(columns, rows)
+      table.insert_ignore.import(columns, rows)
     end
 
     def date_received=(date)

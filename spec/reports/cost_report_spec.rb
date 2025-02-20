@@ -272,6 +272,7 @@ RSpec.describe Reports::CostReport do
 
       it "multiple holdings lead to one hshare" do
         mpm_holding = spm_holding.clone
+        mpm_holding.uuid = SecureRandom.uuid
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
         load_test_data(spm, spm_holding, mpm_holding)

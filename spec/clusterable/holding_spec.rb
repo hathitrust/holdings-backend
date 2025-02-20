@@ -23,6 +23,22 @@ RSpec.describe Clusterable::Holding do
     expect(holding.n_enum_chron).to eq("")
   end
 
+  describe "#batch_add" do
+    include_context "with tables for holdings"
+
+    it "inserts multiple holdings" do
+      described_class.batch_add([build(:holding), build(:holding)])
+      expect(Services.holdings_table.count).to eq(2)
+    end
+
+    it "ignores duplicate holdings" do
+      described_class.batch_add([h])
+      expect(Services.holdings_table.count).to eq(1)
+      described_class.batch_add([h, build(:holding)])
+      expect(Services.holdings_table.count).to eq(2)
+    end
+  end
+
   describe "#cluster" do
     include_context "with tables for holdings"
 
