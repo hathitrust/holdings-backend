@@ -50,6 +50,8 @@ module Clusterable
         fields[7] = "mpm"
       when "serial"
         fields[7] = "ser"
+      when ""
+        fields[7] = "mix"
       end
 
       # The old tsv files likely don't have a uuid

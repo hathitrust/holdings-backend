@@ -115,6 +115,30 @@ RSpec.describe Clusterable::Holding do
     end
   end
 
+  describe "#{described_class}.holding_to_record" do
+    # Prepares strings from the old style holdings file format
+    # (HT003_#{organization}.#{mono_multi_serial}.tsv) for loading.
+    # ht003_ser_str has no status, no uuid and its mono_multi_serial is outdated
+    let(:ht003_mon_str) {"1\t99106\tallegheny\tCH\t\t2020-09-29\t\tmono\t\t\t\t0"}
+    let(:ht003_mul_str) {"2\t99106\tallegheny\tCH\t\t2020-09-29\tv.1\tmulti\t\t1\t\t0"}
+    let(:ht003_ser_str) {"3\t99106\tallegheny\t\t\t2020-09-29\t\tserial\t\t\t\t0"}
+    let(:fixed_mon_cols) { described_class.holding_to_record(ht003_mon_str) }
+    let(:fixed_mul_cols) { described_class.holding_to_record(ht003_mul_str) }
+    let(:fixed_ser_cols) { described_class.holding_to_record(ht003_ser_str) }
+
+    it "adds status if missing" do
+      expect(fixed_ser_cols[:status]).to eq "CH"
+    end
+    it "adds uuid if missing" do
+      expect(fixed_ser_cols[:uuid]).to match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/)
+    end
+    it "fixes mono_multi_serial if outdated" do
+      expect(fixed_mon_cols[:mono_multi_serial]).to eq "spm"
+      expect(fixed_mul_cols[:mono_multi_serial]).to eq "mpm"
+      expect(fixed_ser_cols[:mono_multi_serial]).to eq "ser"
+    end
+  end
+
   describe "#new_from_holding_file_line" do
     it "turns a holdings file line into a new Holding" do
       line = "100000252\t005556200\tumich\tCH\t\t2019-10-24\t\tspm\t\t\t\t0"
