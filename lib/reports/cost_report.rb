@@ -53,15 +53,14 @@ module Reports
       logger.info "Done"
     end
 
-    def initialize(organization: nil, 
-                   target_cost: Settings.target_cost,
-                   lines: 5000,
-                   logger: Services.logger,
-                   precomputed_frequency_table_file: nil,
-                   precomputed_frequency_table_dir: nil,
-                   precomputed_frequency_table: read_freq_tables(precomputed_frequency_table_dir, 
-                                                                 precomputed_frequency_table_file)
-                  )
+    def initialize(organization: nil,
+      target_cost: Settings.target_cost,
+      lines: 5000,
+      logger: Services.logger,
+      precomputed_frequency_table_file: nil,
+      precomputed_frequency_table_dir: nil,
+      precomputed_frequency_table: read_freq_tables(precomputed_frequency_table_dir,
+        precomputed_frequency_table_file))
       target_cost ||= Settings.target_cost
 
       raise "Target cost not set" if target_cost.nil?
@@ -75,7 +74,6 @@ module Reports
       # If you pass a precomputed frequency table, do not modify it after passing it in.
       # This warning is in the place of actually implementing proper cloning.
       @frequency_table = precomputed_frequency_table
-
     end
 
     def active_members
@@ -153,7 +151,7 @@ module Reports
         raise ArgumentError "Must provide at most one of a directory or a file for precomputed frequency tables for cost report"
       end
 
-      if(dir)
+      if dir
         # read all .json files in the given directory as frequency tables and
         # sum them together
         Dir.glob("#{dir}/*.json")
@@ -161,8 +159,6 @@ module Reports
           .reduce(:+)
       elsif file
         FrequencyTable.new(data: File.read(file))
-      else
-        nil
       end
     end
 
