@@ -111,6 +111,8 @@ RSpec.describe "phctl integration" do
         .to match(/Target cost: 9999/)
     end
 
+    xit "CostReport produces output with precomputed frequency table(s)"
+
     xit "Estimate produces output" do
       phctl("report", "estimate", fixture("ocn_list.txt"))
 

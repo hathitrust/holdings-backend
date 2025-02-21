@@ -47,6 +47,27 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     end
   end
 
+  describe "report costreport" do
+    include_context "with tables for holdings"
+
+    it "accepts a directory for frequency tables" do
+      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table-dir","/freq/table/dir"])
+
+      expect(Jobs::Common.jobs[0]["args"])
+        .to eq(["Reports::CostReport", 
+            {"precomputed_frequency_table_dir"=>"/freq/table/dir"}])
+    end
+
+    it "accepts a file for frequency table" do
+      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table","/path/to/freqtable.json"])
+
+      expect(Jobs::Common.jobs[0]["args"])
+        .to eq(["Reports::CostReport", 
+                {"precomputed_frequency_table"=>"/path/to/freqtable.json"}])
+      # expect the output to contain the expected value
+    end
+  end
+
   xdescribe "running inline" do
     before(:each) do
       Cluster.each(&:delete)
