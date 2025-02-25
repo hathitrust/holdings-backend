@@ -93,6 +93,11 @@ module Clusterable
       end
     end
 
+    def initialize(params = {})
+      super
+      @cluster = params[:cluster] if params[:cluster]
+    end
+
     def cluster
       @cluster ||= find_cluster
     end
@@ -121,6 +126,13 @@ module Clusterable
       return false if ocns.empty?
 
       ocns == other.ocns
+    end
+
+    # True if this item is one where those who hold the item share the cost, as
+    # opposed to those where all members share the cost according to their
+    # tier.
+    def ic?
+      IC_RIGHTS_CODES.include?(rights)
     end
 
     private

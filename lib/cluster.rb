@@ -15,6 +15,8 @@ require "cluster_error"
 # - commitments
 class Cluster
   attr_reader :id, :ocns
+  # can use if deserializing
+  attr_writer :ht_items, :holdings
 
   # make these available as instance methods
   extend Forwardable

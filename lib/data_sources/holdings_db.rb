@@ -17,9 +17,9 @@ module DataSources
 
     def initialize
       @rawdb = self.class.connection
-      # Always check that we're actually connected and reconnect if necessary
+      # Check once every few seconds that we're actually connected and reconnect if necessary
       @rawdb.extension(:connection_validator)
-      @rawdb.pool.connection_validation_timeout = -1
+      @rawdb.pool.connection_validation_timeout = 5
       super(@rawdb)
     end
 

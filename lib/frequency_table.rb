@@ -45,6 +45,7 @@ class FrequencyTable
   end
 
   def each
+    return to_enum(__method__) unless block_given?
     table.each do |key, value|
       yield key, value
     end

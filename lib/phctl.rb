@@ -109,11 +109,9 @@ module PHCTL
       run_common_job(Reports::CostReport, options)
     end
 
-    desc "report frequency-table HT_ITEM_FILE OUTFILE", "Generate a frequency table from (partial) hathifiles data"
-    option :ht_item_file, type: :string, desc: "Full path to input tabular 8-column data from hf (htid, bib_num, rights_code, access, bib_fmt, description, collection_code, oclc)"
-    option :output_file, type: :string, desc: "Full path to output cost report file"
-    def frequency_table
-      run_common_job(Reports::FrequencyTableChunk, options, ht_item_file, output_file)
+    desc "frequency-table SOLR_RECORDS OUTFILE", "Generate a frequency table from in-copyright items in solr records (newline-delimited JSON, with fields at least id, format, oclc, oclc_search, ht_json)"
+    def frequency_table(solr_records, output_file = solr_records + ".freqtable.json")
+      run_common_job(Reports::FrequencyTableFromSolr, options, solr_records, output_file)
     end
 
     desc "estimate OCN_FILE", "Run an estimate"

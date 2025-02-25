@@ -2,12 +2,13 @@
 # fields: htid, bib_num, rights_code, access, bib_fmt, descxription, collection_code, oclc
 # order by bib_num
 
-mkdir hf_dump
+# or whatever
+export SOLR_URL="http://localhost:8983/solr/catalog/"
 
-bin/mariadb.sh -e "SELECT htid, bib_num, rights_code, access, bib_fmt, description, collection_code, oclc FROM hf WHERE rights_code IN ('ic','und','op','nobody','pd-pvt') ORDER BY bib_num;" > hf_dump/hf_dump
+mkdir solr_dump
 
-# chunk
+bundle exec ruby solr_records_for_cost_report.rb > all_records.ndj
 
-split -l 100000 hf_dump/hf_dump
+split -l 50000 solr_dump/all_records.ndj records_
 
-# parallel bundle exec ruby bin/parallel_cost_report/generate_freq_table.rb ::: hf_dump/hf_dump_*
+parallel ./phctl.sh frequency-table ::: solr_dump/records_*
