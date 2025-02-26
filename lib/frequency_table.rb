@@ -9,6 +9,7 @@ class FrequencyTable
   protected attr_reader :table
 
   def initialize(data: nil)
+    @log = File.open("freqtable-debug-#{$$}.txt", "w")
     @table = case data
     when String
       JSON.parse(data, symbolize_names: true)
@@ -91,6 +92,7 @@ class FrequencyTable
     item_overlap = Overlap::HtItemOverlap.new(ht_item)
     member_count = item_overlap.matching_members.count
     item_overlap.matching_members.each do |org|
+      @log.puts "add_ht_item\t#{ht_item.item_id}\t#{org}\t#{item_format}\t#{member_count}"
       increment(organization: org, format: item_format, bucket: member_count)
     end
   end

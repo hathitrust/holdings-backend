@@ -51,11 +51,11 @@ module Reports
         cluster.ht_items.select(&:ic?).each do |htitem|
           freqtable.add_ht_item(htitem)
           marker.incr
-          marker.on_batch { |m| log.info "#{$$}: #{m.batch_line}" }
+          marker.on_batch { |m| log.info m.batch_line }
         end
       end
-      log.info "#{$$}: #{marker.final_line}"
-      log.info("#{$$}: done w freq table, writing to #{output_file}")
+      log.info marker.final_line
+      log.info("done w freq table, writing to #{output_file}")
 
       File.open(output_file, "w") do |fh|
         fh.puts(freqtable.to_json)
@@ -64,6 +64,7 @@ module Reports
 
     private
 
+    # TODO compare what catalog indexing does vs. hathifiles
     def map_bib_fmt(bib_fmt)
       return "SE" if bib_fmt.include?("Serial")
       return "BK" if bib_fmt.include?("Book")

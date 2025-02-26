@@ -45,10 +45,10 @@ module Reports
         freqtable.add_ht_item(htitem)
 
         marker.incr
-        marker.on_batch { |m| log.info "#{$$}: #{m.batch_line}" }
+        marker.on_batch { |m| log.info m.batch_line }
       end
-      log.info "#{$$}: #{marker.final_line}"
-      log.info("#{$$}: done w freq table, writing to #{output_file}")
+      log.info marker.final_line
+      log.info("done w freq table, writing to #{output_file}")
 
       File.open(output_file, "w") do |fh|
         fh.puts(freqtable.to_json)
