@@ -42,6 +42,18 @@ class FrequencyTable
     data
   end
 
+  def frequencies(organization:, format:)
+    
+    return [] unless table.key? organization.to_sym
+
+    [].tap do |freqs|
+      table[organization.to_sym][format.to_sym]&.each do |bucket, count|
+        #TODO: maybe put the bucket/count into a "readout" object?
+        freqs << [bucket.to_s.to_i, count]
+      end
+    end
+  end
+
   def each
     table.each do |key, value|
       yield key, value
@@ -108,3 +120,36 @@ class FrequencyTable
     Marshal.load(Marshal.dump(obj))
   end
 end
+
+class OrganizationData
+  attr_accessor :organization
+
+  def initialize(organization:, bucket: nil, frequency: 0)
+    @organization = organization
+    @data = {}
+    if bucket
+      @data[bucket] = frequency
+    end
+  end
+
+  def fetch(format: nil, bucket: nil)
+    if format
+      data = data[format.to_sym] || {}
+      if bucket
+        data = data[bucket.to_s.to_sym] || 0
+      end
+    end
+    data
+  end
+end
+
+class FrequencyData
+  attr_accessor :bucket, :frequency
+  def initialize(bucket:, frequency:)
+    @bucket = bucket
+    @frequency = frequency
+  end
+
+  def 
+end
+

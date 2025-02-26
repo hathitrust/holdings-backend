@@ -42,6 +42,26 @@ RSpec.describe FrequencyTable do
     end
   end
 
+  describe "#frequencies" do
+    let(:ft1) { described_class.new(data: umich_data) }
+
+    it "returns an Enumerable" do
+      expect(ft1.frequencies(organization: :umich, format: :spm)).to be_a(Enumerable)
+    end
+
+    it "returns the expected frequency data" do
+      expect(ft1.frequencies(organization: :umich, format: :spm)).to eq([[1, 1]])
+    end
+
+    it "returns empty Array for unattested organization" do
+      expect(ft1.frequencies(organization: :nobody_here_by_that_name, format: :spm)).to eq([])
+    end
+  
+    it "returns empty Array for unattested format" do
+      expect(ft1.frequencies(organization: :umich, format: :mpm)).to eq([])
+    end
+  end
+
   describe "#append!" do
     let(:ft1) { described_class.new(data: umich_data) }
     let(:ft2) { described_class.new(data: upenn_data) }
@@ -125,6 +145,21 @@ RSpec.describe FrequencyTable do
     it "produces JSON String that parses to a Hash" do
       expect(ft_with_data.to_json).to be_a(String)
       expect(JSON.parse(ft_with_data.to_json)).to be_a(Hash)
+    end
+  end
+end
+
+
+RSpec.describe OrganizationData do
+  describe ".new" do
+    it "creates a `#{described_class}`" do
+      expect(described_class.new(organization: :umich)).to be_a(described_class)
+    end
+  end
+
+  describe "#organization" do
+    it "returns the organization" do
+      expect(described_class.new(organization: :umich).organization).to eq(:umich)
     end
   end
 end

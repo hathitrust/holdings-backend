@@ -118,7 +118,7 @@ RSpec.describe Reports::CostReport do
         collection_code: "PU"
       )
       load_test_data(pd_item)
-      expect(cr.frequency_table.fetch(organization: :upenn, format: :mpm)).to eq({})
+      expect(cr.frequency_table.frequencies(organization: :upenn, format: :mpm)).to eq([])
     end
 
     it "counts OCN-less items" do
@@ -132,6 +132,7 @@ RSpec.describe Reports::CostReport do
       )
       load_test_data ocnless_item
       expect(cr.frequency_table.fetch(organization: :upenn, format: :spm)).to eq({"1": 1})
+      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([[1, 1]])
     end
   end
 
