@@ -10,6 +10,8 @@ RSpec.describe FrequencyTable do
   let(:umich_data) { {umich: {spm: {"1": 1}}} }
   let(:upenn_data) { {upenn: {spm: {"1": 1}}} }
   let(:ft_with_data) { described_class.new(data: umich_data.merge(upenn_data)) }
+  let(:frequency_1_1) { Frequency.new(bucket: 1, frequency: 1) }
+  let(:frequency_1_2) { Frequency.new(bucket: 1, frequency: 2) }
 
   describe ".new" do
     it "creates a `FrequencyTable`" do
@@ -23,7 +25,7 @@ RSpec.describe FrequencyTable do
     it "operates on a copy of the initializer data" do
       ft = described_class.new(data: umich_data)
       umich_data[:umich][:spm][:"1"] = 10
-      expect(ft.frequencies(organization: :umich, format: :spm).map(&:to_a)).to eq([[1, 1]])
+      expect(ft.frequencies(organization: :umich, format: :spm)).to eq([frequency_1_1])
     end
 
     it "accepts JSON" do
@@ -44,13 +46,9 @@ RSpec.describe FrequencyTable do
     let(:ft1) { described_class.new(data: umich_data) }
     let(:freqs) { ft1.frequencies(organization: :umich, format: :spm) }
 
-    it "returns an Array" do
+    it "returns an Array of Frequency" do
       expect(freqs).to be_a(Array)
-    end
-
-    it "returns the expected frequency data" do
-      expect(freqs.first).to be_a(Frequency)
-      expect(freqs.map(&:to_a)).to eq([[1, 1]])
+      expect(freqs.first).to eq(frequency_1_1)
     end
 
     it "returns empty Array for unattested organization" do
@@ -77,12 +75,14 @@ RSpec.describe FrequencyTable do
 
     it "adds counts" do
       ft2.increment(organization: :umich, format: :spm, bucket: 1)
-      expect(ft1.append!(ft2).frequencies(organization: :umich, format: :spm).map(&:to_a)).to eq([[1, 2]])
+      expect(ft1.append!(ft2).frequencies(organization: :umich, format: :spm)).to eq([frequency_1_2])
     end
 
     it "adds formats" do
       ft2.increment(organization: :umich, format: :mpm, bucket: 10)
-      expect(ft1.append!(ft2).frequencies(organization: :umich, format: :mpm).map(&:to_a)).to eq([[10, 1]])
+      expect(ft1.append!(ft2).frequencies(organization: :umich, format: :mpm)).to eq(
+        [Frequency.new(bucket: 10, frequency: 1)]
+      )
     end
 
     it "isolates the receiver from subsequent changes to added table" do
@@ -94,7 +94,7 @@ RSpec.describe FrequencyTable do
       ft2.increment(organization: :umich, format: :spm, bucket: 1)
       expect(ft1.keys).not_to include(:smu)
       expect(ft1.frequencies(organization: :upenn, format: :ser)).to eq([])
-      expect(ft1.frequencies(organization: :upenn, format: :spm).map(&:to_a)).to eq([[1, 1]])
+      expect(ft1.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
     end
   end
 
@@ -118,8 +118,8 @@ RSpec.describe FrequencyTable do
     it "returns a FrequencyTable with all counts in the addends" do
       ft2.increment(organization: :umich, format: :spm, bucket: 1)
       ft3 = ft1 + ft2
-      expect(ft3.frequencies(organization: :umich, format: :spm).map(&:to_a)).to eq([[1, 2]])
-      expect(ft3.frequencies(organization: :upenn, format: :spm).map(&:to_a)).to eq([[1, 1]])
+      expect(ft3.frequencies(organization: :umich, format: :spm)).to eq([frequency_1_2])
+      expect(ft3.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
     end
   end
 
@@ -136,7 +136,7 @@ RSpec.describe FrequencyTable do
       Cluster.create(ocns: ht_item.ocns)
       insert_htitem ht_item
       ft.add_ht_item(ht_item)
-      expect(ft.frequencies(organization: :umich, format: :spm).map(&:to_a)).to eq([[1, 1]])
+      expect(ft.frequencies(organization: :umich, format: :spm)).to eq([frequency_1_1])
     end
   end
 
