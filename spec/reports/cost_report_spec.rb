@@ -24,6 +24,12 @@ RSpec.describe Reports::CostReport do
   let(:ht_allow) { build(:ht_item, access: allow, rights: pd) }
   let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
   let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "upenn") }
+  let(:frequency_1_1) { Frequency.new(bucket: 1, frequency: 1) }
+  let(:frequency_1_2) { Frequency.new(bucket: 1, frequency: 2) }
+  let(:frequency_2_1) { Frequency.new(bucket: 2, frequency: 1) }
+  let(:frequency_2_2) { Frequency.new(bucket: 2, frequency: 2) }
+  let(:frequency_3_1) { Frequency.new(bucket: 3, frequency: 1) }
+  let(:frequency_3_2) { Frequency.new(bucket: 3, frequency: 2) }
 
   describe "making sure that access and rights come out the way they go in" do
     it "pd == allow" do
@@ -131,8 +137,7 @@ RSpec.describe Reports::CostReport do
         collection_code: "PU"
       )
       load_test_data ocnless_item
-      expect(cr.frequency_table.fetch(organization: :upenn, format: :spm)).to eq({"1": 1})
-      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([[1, 1]])
+      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
     end
   end
 
@@ -157,9 +162,9 @@ RSpec.describe Reports::CostReport do
 
     it "includes only member holdings" do
       load_test_data(spm, holding, holding2, non_member_holding)
-      expect(cr.frequency_table.fetch(organization: :umich, format: :spm)).to eq({"2": 1})
-      expect(cr.frequency_table.fetch(organization: :upenn, format: :spm)).to eq({"2": 1})
-      expect(cr.frequency_table.fetch(organization: :non_member)).to eq({})
+      expect(cr.frequency_table.frequencies(organization: :umich, format: :spm)).to eq([frequency_2_1])
+      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([frequency_2_1])
+      expect(cr.frequency_table.keys).not_to include(:non_member)
     end
   end
 
@@ -263,12 +268,12 @@ RSpec.describe Reports::CostReport do
 
       it "handles multiple HT copies of the same spm" do
         load_test_data(spm, ht_copy)
-        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 2}}})
+        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_2])
       end
 
       it "handles multiple copies of the same spm and holdings" do
         load_test_data(spm, ht_copy, spm_holding)
-        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 2}}})
+        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_2])
       end
 
       it "multiple holdings lead to one hshare" do
@@ -277,17 +282,16 @@ RSpec.describe Reports::CostReport do
         mpm_holding.n_enum = "1"
         mpm_holding.mono_multi_serial = "mpm"
         load_test_data(spm, spm_holding, mpm_holding)
-        expect(cr.frequency_table.fetch).to eq({spm.billing_entity.to_sym => {spm: {"1": 1}}})
+        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_1])
       end
 
       it "HtItem billing entity derived matches are independent of all others in the cluster" do
         # two ht items, one upenn, one michigan
         ht_copy.collection_code = "MIU"
         load_test_data(spm, ht_copy)
-        expected_freq = {upenn: {spm: {"1": 1}},
+        expected_data = {upenn: {spm: {"1": 1}},
                          umich: {spm: {"1": 1}}}
-        expect(cr.frequency_table.fetch.keys.count).to eq 2
-        expect(cr.frequency_table.fetch).to eq(expected_freq)
+        expect(cr.frequency_table).to eq(FrequencyTable.new(data: expected_data))
       end
     end
 
@@ -296,7 +300,7 @@ RSpec.describe Reports::CostReport do
 
       it "assigns mpm shares to empty enum chron holdings" do
         load_test_data(mpm, mpm_wo_ec)
-        expect(cr.frequency_table.fetch(organization: mpm_wo_ec.organization)).to eq(mpm: {"2": 1})
+        expect(cr.frequency_table.frequencies(organization: mpm_wo_ec.organization, format: :mpm)).to eq([frequency_2_1])
       end
     end
 
@@ -311,7 +315,7 @@ RSpec.describe Reports::CostReport do
 
       it "gives mpm shares when enum_chron does not match anything" do
         load_test_data(mpm, mpm_wrong_ec)
-        expect(cr.frequency_table.fetch(organization: mpm_wrong_ec.organization)).to eq(mpm: {"2": 1})
+        expect(cr.frequency_table.frequencies(organization: mpm_wrong_ec.organization, format: :mpm)).to eq([frequency_2_1])
       end
     end
 
@@ -352,7 +356,7 @@ RSpec.describe Reports::CostReport do
         load_test_data(ht_serial, ht_serial2, holding_serial)
         # ht_serial.billing_entity + holding_serial.org and
         # ht_serial2.billing_entity + holding_serial.org
-        expect(cr.frequency_table.fetch(organization: holding_serial.organization)).to eq(ser: {"2": 2})
+        expect(cr.frequency_table.frequencies(organization: holding_serial.organization, format: :ser)).to eq([frequency_2_2])
       end
     end
   end
@@ -439,7 +443,9 @@ RSpec.describe Reports::CostReport do
       # umich has 1 instance of a spm held by 1 org (umich)
       # umich has 1 instance of a ser held by 2 org (umich and utexas)
       # umich has 2 instance of a mpm held by 3 org ([smu, umich, utexas] and [smu, umich, upenn])
-      expect(cr.frequency_table.fetch(organization: :umich)).to eq(spm: {"1": 1}, ser: {"2": 1}, mpm: {"3": 2})
+      expect(cr.frequency_table.frequencies(organization: :umich, format: :spm)).to eq([frequency_1_1])
+      expect(cr.frequency_table.frequencies(organization: :umich, format: :ser)).to eq([frequency_2_1])
+      expect(cr.frequency_table.frequencies(organization: :umich, format: :mpm)).to eq([frequency_3_2])
       # 1/2 of the ht_serial
       # 1 of the ht_spm
       # 1/3 of ht_mpm1 (with SMU and upenn)
@@ -447,7 +453,8 @@ RSpec.describe Reports::CostReport do
       expect(cr.total_hscore(:umich)).to be_within(0.0001).of(1 / 2.0 + 1.0 + 1 / 3.0 + 1 / 3.0)
       # 1 instance of a ser held by 2 orgs (umich and utexas)
       # 1 instance of a mpm held by 3 orgs (smu, umich, utexas)
-      expect(cr.frequency_table.fetch(organization: :utexas)).to eq(ser: {"2": 1}, mpm: {"3": 1})
+      expect(cr.frequency_table.frequencies(organization: :utexas, format: :ser)).to eq([frequency_2_1])
+      expect(cr.frequency_table.frequencies(organization: :utexas, format: :mpm)).to eq([frequency_3_1])
     end
 
     it "produces .tsv output" do

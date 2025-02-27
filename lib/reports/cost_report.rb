@@ -111,8 +111,8 @@ module Reports
       # HScore for a particular format
       define_method :"#{format}_total" do |member|
         total = 0.0
-        frequency_table.frequencies(organization: member, format: format).each do |num_orgs, freq|
-          total += freq.to_f / num_orgs
+        frequency_table.frequencies(organization: member, format: format).each do |freq|
+          total += freq.frequency.to_f / freq.member_count
         end
         total
       end

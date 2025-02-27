@@ -29,27 +29,16 @@ class FrequencyTable
     self.class == other.class && table == other.table
   end
 
-  def fetch(organization: nil, format: nil, bucket: nil)
-    return table if organization.nil?
-
-    data = table[organization.to_sym] || {}
-    if format
-      data = data[format.to_sym] || {}
-      if bucket
-        data = data[bucket.to_s.to_sym] || 0
-      end
-    end
-    data
+  def keys
+    table.keys.sort
   end
 
   def frequencies(organization:, format:)
-    
     return [] unless table.key? organization.to_sym
 
     [].tap do |freqs|
-      table[organization.to_sym][format.to_sym]&.each do |bucket, count|
-        #TODO: maybe put the bucket/count into a "readout" object?
-        freqs << [bucket.to_s.to_i, count]
+      table[organization.to_sym][format.to_sym]&.each do |bucket, frequency|
+        freqs << Frequency.new(bucket: bucket, frequency: frequency)
       end
     end
   end
@@ -121,35 +110,28 @@ class FrequencyTable
   end
 end
 
-class OrganizationData
-  attr_accessor :organization
-
-  def initialize(organization:, bucket: nil, frequency: 0)
-    @organization = organization
-    @data = {}
-    if bucket
-      @data[bucket] = frequency
-    end
-  end
-
-  def fetch(format: nil, bucket: nil)
-    if format
-      data = data[format.to_sym] || {}
-      if bucket
-        data = data[bucket.to_s.to_sym] || 0
-      end
-    end
-    data
-  end
-end
-
-class FrequencyData
+# Encapsulate a member count or bucket and its corresponding frequency.
+# Both are integers.
+# This is a "readout" class not used in the FrequencyTable internals.
+class Frequency
   attr_accessor :bucket, :frequency
+
   def initialize(bucket:, frequency:)
-    @bucket = bucket
+    @bucket = bucket.to_s.to_i
     @frequency = frequency
   end
 
-  def 
-end
+  def ==(other)
+    self.class == other.class && bucket == other.bucket && frequency == other.frequency
+  end
 
+  def to_a
+    [bucket, frequency]
+  end
+
+  def to_h
+    {bucket: bucket, frequency: frequency}
+  end
+
+  alias_method :member_count, :bucket
+end
