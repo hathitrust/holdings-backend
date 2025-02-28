@@ -155,6 +155,16 @@ RSpec.describe Frequency do
     it "creates a `#{described_class}`" do
       expect(freq).to be_a(described_class)
     end
+
+    it "accepts symbolized bucket and returns integer" do
+      from_bucket_sym = described_class.new(bucket: :"1", frequency: 2)
+      expect(from_bucket_sym).to be_a(described_class)
+      expect(from_bucket_sym.bucket).to eq(1)
+    end
+
+    it "raises on non-Integer frequency" do
+      expect { described_class.new(bucket: 1, frequency: Date.new) }.to raise_error(RuntimeError)
+    end
   end
 
   describe "#bucket" do

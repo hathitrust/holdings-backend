@@ -110,14 +110,27 @@ class FrequencyTable
   end
 end
 
-# Encapsulate a member count or bucket and its corresponding frequency.
+# Encapsulate a member count a.k.a. bucket and its corresponding frequency.
 # Both are integers.
-# This is a "readout" class not used in the FrequencyTable internals.
+# This is an immutable "readout" class not used in the FrequencyTable internals
+# (mainly so FrequencyTable JSON can use all native types).
 class Frequency
   attr_accessor :bucket, :frequency
 
+  # Bucket may be from serialized data with symbolized hash keys, so we take care
+  # to turn it into an Integer.
+  # (This initializer lets you get away with passing `bucket` as a lot of different
+  # classes that cast to Integer via String; it's really only intended to be used with
+  # Integer/Symbol/String, however.)
   def initialize(bucket:, frequency:)
-    @bucket = bucket.to_s.to_i
+    @bucket = if bucket.is_a?(Integer)
+      bucket
+    else
+      bucket.to_s.to_i
+    end
+    if !frequency.is_a?(Integer)
+      raise "frequency initialized with unknown class #{frequency.class}"
+    end
     @frequency = frequency
   end
 
