@@ -29,17 +29,18 @@ class FrequencyTable
     self.class == other.class && table == other.table
   end
 
-  def fetch(organization: nil, format: nil, bucket: nil)
-    return table if organization.nil?
+  def keys
+    table.keys.sort
+  end
 
-    data = table[organization.to_sym] || {}
-    if format
-      data = data[format.to_sym] || {}
-      if bucket
-        data = data[bucket.to_s.to_sym] || 0
+  def frequencies(organization:, format:)
+    return [] unless table.key? organization.to_sym
+
+    [].tap do |freqs|
+      table[organization.to_sym][format.to_sym]&.each do |bucket, frequency|
+        freqs << Frequency.new(bucket: bucket, frequency: frequency)
       end
     end
-    data
   end
 
   def each
@@ -107,4 +108,43 @@ class FrequencyTable
   def deep_copy(obj)
     Marshal.load(Marshal.dump(obj))
   end
+end
+
+# Encapsulate a member count a.k.a. bucket and its corresponding frequency.
+# Both are integers.
+# This is an immutable "readout" class not used in the FrequencyTable internals
+# (mainly so FrequencyTable JSON can use all native types).
+class Frequency
+  attr_accessor :bucket, :frequency
+
+  # Bucket may be from serialized data with symbolized hash keys, so we take care
+  # to turn it into an Integer.
+  # (This initializer lets you get away with passing `bucket` as a lot of different
+  # classes that cast to Integer via String; it's really only intended to be used with
+  # Integer/Symbol/String, however.)
+  def initialize(bucket:, frequency:)
+    @bucket = if bucket.is_a?(Integer)
+      bucket
+    else
+      bucket.to_s.to_i
+    end
+    if !frequency.is_a?(Integer)
+      raise "frequency initialized with unknown class #{frequency.class}"
+    end
+    @frequency = frequency
+  end
+
+  def ==(other)
+    self.class == other.class && bucket == other.bucket && frequency == other.frequency
+  end
+
+  def to_a
+    [bucket, frequency]
+  end
+
+  def to_h
+    {bucket: bucket, frequency: frequency}
+  end
+
+  alias_method :member_count, :bucket
 end
