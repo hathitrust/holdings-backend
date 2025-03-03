@@ -44,6 +44,7 @@ class FrequencyTable
   end
 
   def each
+    return to_enum(__method__) unless block_given?
     table.each do |key, value|
       yield key, value
     end
@@ -77,7 +78,7 @@ class FrequencyTable
           next
         end
         frequencies.each do |bucket, count|
-          table[org][fmt][bucket] += count
+          increment(organization: org, format: fmt, bucket: bucket, amount: count)
         end
       end
     end
@@ -93,14 +94,14 @@ class FrequencyTable
     end
   end
 
-  def increment(organization:, format:, bucket:)
+  def increment(organization:, format:, bucket:, amount: 1)
     org = organization.to_sym
     fmt = format.to_sym
     bucket = bucket.to_s.to_sym
     table[org] = {} unless table.key?(org)
     table[org][fmt] = {} unless table[org].key?(fmt)
     table[org][fmt][bucket] = 0 unless table[org][fmt].key?(bucket)
-    table[org][fmt][bucket] += 1
+    table[org][fmt][bucket] += amount
   end
 
   private

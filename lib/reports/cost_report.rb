@@ -32,8 +32,8 @@ module Reports
     end
 
     def run(output_filename = report_file)
-      logger.info "Starting #{Pathname.new(__FILE__).basename}. Batches of #{ppnum maxlines}"
-      logger.info "Writing to #{output_filename}"
+      logger.info "Starting #{Pathname.new(__FILE__).basename}."
+      logger.info "Writing report to #{output_filename}"
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"
@@ -49,11 +49,18 @@ module Reports
 
       # Dump freq table to file
       ymd = Time.new.strftime("%F")
-      dump_frequency_table("frequency_#{ymd}.txt")
-      logger.info marker.final_line
+      dump_frequency_table("frequency_#{ymd}.json")
+      logger.info "Done"
     end
 
-    def initialize(organization: nil, target_cost: Settings.target_cost, lines: 5000, logger: Services.logger, precomputed_frequency_table: nil)
+    def initialize(organization: nil,
+      target_cost: Settings.target_cost,
+      lines: 5000,
+      logger: Services.logger,
+      precomputed_frequency_table_file: nil,
+      precomputed_frequency_table_dir: nil,
+      precomputed_frequency_table: read_freq_tables(precomputed_frequency_table_dir,
+        precomputed_frequency_table_file))
       target_cost ||= Settings.target_cost
 
       raise "Target cost not set" if target_cost.nil?
@@ -66,7 +73,6 @@ module Reports
       # If not set, frequency_table will call compile_frequency_table.
       # If you pass a precomputed frequency table, do not modify it after passing it in.
       # This warning is in the place of actually implementing proper cloning.
-
       @frequency_table = precomputed_frequency_table
     end
 
@@ -96,7 +102,8 @@ module Reports
     end
 
     # Dump freq table so these computes can be re-used in member_counts_report.
-    def dump_frequency_table(dump_fn = "freq.txt")
+    def dump_frequency_table(dump_fn = "freq.json")
+      logger.info "Writing frequency table to #{dump_fn}"
       FileUtils.mkdir_p(Settings.cost_report_freq_path)
       File.open(File.join(Settings.cost_report_freq_path, dump_fn), "w") do |dump_file|
         dump_file.puts(frequency_table.to_json)
@@ -137,8 +144,27 @@ module Reports
 
     private
 
+    # Reads either a set of frequency tables from a given directory containing
+    # json files, or a single one from a file.
+    def read_freq_tables(dir, file)
+      if dir && file
+        raise ArgumentError "Must provide at most one of a directory or a file for precomputed frequency tables for cost report"
+      end
+
+      if dir
+        # read all .json files in the given directory as frequency tables and
+        # sum them together
+        Dir.glob("#{dir}/*.json")
+          .map { |file| FrequencyTable.new(data: File.read(file)) }
+          .reduce(:+)
+      elsif file
+        FrequencyTable.new(data: File.read(file))
+      end
+    end
+
     def compile_frequency_table
-      @marker = Services.progress_tracker.call(batch_size: maxlines)
+      logger.info "Begin compiling frequency table; batches of #{ppnum maxlines}"
+      marker = Services.progress_tracker.call(batch_size: maxlines)
       FrequencyTable.new.tap do |ft|
         logger.info("Begin compiling hscore frequency table.")
         Clusterable::HtItem.ic_volumes do |ht_item|
@@ -146,6 +172,7 @@ module Reports
           ft.add_ht_item ht_item
           marker.on_batch { |m| logger.info m.batch_line }
         end
+        marker.final_line
       end
     end
 

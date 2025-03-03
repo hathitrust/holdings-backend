@@ -114,6 +114,28 @@ RSpec.describe Reports::CostReport do
       expect(cr.frequency_table).to eq ft
     end
 
+    it "the precomputed frequency table is used to run the cost report" do
+      ft = FrequencyTable.new
+      load_test_data(spm)
+      ft.add_ht_item(spm)
+      cr = described_class.new(precomputed_frequency_table: ft)
+      cr.run
+
+      # only one item loaded from upenn -- upenn pays for everything
+      expect(cr.total_cost_for_member("upenn")).to eq Settings.target_cost
+    end
+
+    it "can use a frequency table file" do
+      cr = described_class.new(precomputed_frequency_table_file: fixture("freqtable.json"))
+
+      expect(cr.frequency_table).to eq(FrequencyTable.new(data: {umich: {spm: {"1": 1}}}))
+    end
+
+    it "can sum a directory of frequency table files" do
+      cr = described_class.new(precomputed_frequency_table_dir: fixture("freqtables"))
+      expect(cr.frequency_table).to eq(FrequencyTable.new(data: File.read(fixture("summed_freqtable.json"))))
+    end
+
     it "ignores PD items" do
       pd_item = build(
         :ht_item,

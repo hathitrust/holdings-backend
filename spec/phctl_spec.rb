@@ -29,6 +29,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
+    %w[report frequency-table ht_item_file output_dir] => Jobs::Common,
     %w[report etas-overlap] => Jobs::Common,
     %w[report etas-overlap someinst] => Jobs::Common,
     %w[report organization-holdings-overlap --organization=umich --ph=true] => Jobs::Common,
@@ -44,6 +45,26 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   commands.each do |args, job_class|
     it "command '#{args.join(" ")}' queues a #{job_class}" do
       expect { PHCTL::PHCTL.start(args) }.to change(job_class.jobs, :size).by(1)
+    end
+  end
+
+  describe "report costreport" do
+    include_context "with tables for holdings"
+
+    it "accepts a directory for frequency tables" do
+      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table-dir", "/freq/table/dir"])
+
+      expect(Jobs::Common.jobs[0]["args"])
+        .to eq(["Reports::CostReport",
+          {"precomputed_frequency_table_dir" => "/freq/table/dir"}])
+    end
+
+    it "accepts a file for frequency table" do
+      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table", "/path/to/freqtable.json"])
+
+      expect(Jobs::Common.jobs[0]["args"])
+        .to eq(["Reports::CostReport",
+          {"precomputed_frequency_table" => "/path/to/freqtable.json"}])
     end
   end
 
