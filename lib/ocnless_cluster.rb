@@ -48,6 +48,10 @@ class OCNLessCluster
     @item_enums ||= ht_items.collect(&:n_enum).uniq
   end
 
+  def holding_enum_orgs
+    Hash.new { [] }
+  end
+
   def org_enums
     Hash.new { [] }
   end
