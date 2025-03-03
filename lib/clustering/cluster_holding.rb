@@ -37,6 +37,7 @@ module Clustering
           end
         end
         to_add.map(&:save)
+        c.reload
       end
     end
 
