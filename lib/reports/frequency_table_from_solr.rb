@@ -10,7 +10,9 @@ require "solr_record"
 
 module Reports
   class FrequencyTableFromSolr
-    def initialize(solr_records, output_file, batch_size: 5000)
+    attr_reader :solr_records, :output_file, :batch_size
+
+    def initialize(solr_records, output_file, batch_size: 1000)
       @solr_records = solr_records
       @output_file = output_file
       @batch_size = batch_size
@@ -19,7 +21,8 @@ module Reports
     def run
       freqtable = FrequencyTable.new
       log = Services.logger
-      marker = Milemarker.new(batch_size: batch_size)
+      milemarker = Milemarker.new(batch_size: batch_size)
+      milemarker.logger = Services.logger
 
       # Services.holdings_db.loggers << Logger.new($stdout)
       log.info("starting freq table generation from #{solr_records}")
@@ -27,18 +30,16 @@ module Reports
       File.open(solr_records).each_line do |line|
         SolrRecord.from_json(line).ht_items.select(&:ic?).each do |htitem|
           freqtable.add_ht_item(htitem)
-          marker.incr
-          marker.on_batch { |m| log.info m.batch_line }
+          milemarker.increment_and_log_batch_line
         end
       end
-      log.info marker.final_line
+
+      milemarker.log_final_line
       log.info("done w freq table, writing to #{output_file}")
 
       File.open(output_file, "w") do |fh|
         fh.puts(freqtable.to_json)
       end
     end
-
-    attr_reader :solr_records, :output_file, :batch_size
   end
 end

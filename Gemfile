@@ -21,8 +21,10 @@ gem "puma"
 gem "rack-session"
 gem "sidekiq"
 gem "sidekiq-batch", git: "https://github.com/breamware/sidekiq-batch"
+gem "solr_cursorstream"
 
 group :test do
+  gem "climate_control"
   gem "factory_bot"
   gem "faker"
   gem "hathifiles_database", git: "https://github.com/hathitrust/hathifiles_database.git", branch: "main"

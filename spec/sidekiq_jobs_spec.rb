@@ -61,7 +61,7 @@ RSpec.describe Jobs::Common do
       })
   end
 
-  xit "can batch jobs and call callbacks" do
+  it "can batch jobs and call callbacks" do
     Sidekiq::Testing.disable! do
       TestCallback.set_run(false)
 

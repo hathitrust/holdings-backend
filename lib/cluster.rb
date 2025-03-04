@@ -156,7 +156,7 @@ class Cluster
   end
 
   # invalidate the cache after adding items elsewhere
-  def reload
+  def invalidate_cache
     @holdings = nil
     @ocn_resolutions = nil
     @ht_items = nil
@@ -283,7 +283,7 @@ class Cluster
       item._association = send(field)._association
       item.cluster = self
     end
-    reload
+    invalidate_cache
   end
 
   def add_members_from(cluster)

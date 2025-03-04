@@ -24,7 +24,7 @@ RSpec.xdescribe Overlap::Overlap do
       Clustering::ClusterHolding.new(h).cluster.tap(&:save)
       Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
       Clustering::ClusterHolding.new(h3).cluster.tap(&:save)
-      c.reload
+      c.invalidate_cache
     end
 
     describe "#to_hash" do

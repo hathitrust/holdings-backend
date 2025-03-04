@@ -146,6 +146,9 @@ module Reports
 
     # Reads either a set of frequency tables from a given directory containing
     # json files, or a single one from a file.
+    #
+    # If neither are given, read nothing, and compute the frequency table on
+    # the fly.
     def read_freq_tables(dir, file)
       if dir && file
         raise ArgumentError "Must provide at most one of a directory or a file for precomputed frequency tables for cost report"

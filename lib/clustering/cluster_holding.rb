@@ -37,7 +37,7 @@ module Clustering
           end
         end
         to_add.map(&:save)
-        c.reload
+        c.invalidate_cache
       end
     end
 
@@ -51,7 +51,7 @@ module Clustering
         c = Cluster.find_by(ocns: holding.ocn)
         holding.delete
         c.save
-        c.reload
+        c.invalidate_cache
         c.delete unless c._children.any?
       end
     end
