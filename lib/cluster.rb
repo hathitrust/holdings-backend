@@ -128,11 +128,11 @@ class Cluster
 
   def initialize(id: nil, ocns: [])
     @id = id
-    @ocns = ocns.to_set
+    @ocns = ocns.map(&:to_i).to_set
   end
 
   def ocns=(ocns)
-    @ocns = ocns.to_set
+    @ocns = ocns.map(&:to_i).to_set
   end
 
   def ocn_resolutions
