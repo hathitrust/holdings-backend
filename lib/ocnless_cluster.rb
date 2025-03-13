@@ -15,6 +15,7 @@ require "cluster_error"
 # - commitments
 class OCNLessCluster
   attr_reader :id
+  attr_writer :ht_items
 
   def initialize(bib_key:)
     @bib_key = bib_key
@@ -25,7 +26,7 @@ class OCNLessCluster
   end
 
   def ht_items
-    Clusterable::HtItem.with_bib_key(@bib_key)
+    @ht_items ||= Clusterable::HtItem.with_bib_key(@bib_key)
   end
 
   def commitments

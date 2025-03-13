@@ -10,20 +10,22 @@ system("#{__dir__}/../bin/reset_database.sh --force")
 
 # Note: We don't require our entire project here. This allows us to
 # require only those files we need to run our tests.
+require "climate_control"
 require "factory_bot"
+require "fileutils"
+require "rspec-sidekiq"
+require "sidekiq/batch"
 require "simplecov"
 require "simplecov-lcov"
 require "webmock/rspec"
-require "fixtures/organizations"
-require "fixtures/collections"
-require "pry"
-require "settings"
+
 require "services"
-require "sidekiq/batch"
-require "rspec-sidekiq"
-require "fileutils"
-require_relative "support/holdings_tables"
+require "settings"
+require "fixtures/collections"
+require "fixtures/organizations"
+
 require_relative "support/cluster_fixture_data"
+require_relative "support/holdings_tables"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true
@@ -111,11 +113,11 @@ RSpec.configure do |config|
 
   config.around(:each) do |example|
     Dir.mktmpdir("holdings-testing") do |tmpdir|
-      ENV["TEST_TMP"] = tmpdir
-      Settings.reload!
-      FileUtils.touch(Settings.rclone_config_path)
-      example.run
-      ENV.delete("TEST_TMP")
+      ClimateControl.modify(TEST_TMP: tmpdir) do
+        Settings.reload!
+        FileUtils.touch(Settings.rclone_config_path)
+        example.run
+      end
     end
   end
 end

@@ -15,6 +15,8 @@ require "cluster_error"
 # - commitments
 class Cluster
   attr_reader :id, :ocns
+  # can use if deserializing
+  attr_writer :ht_items, :holdings
 
   # make these available as instance methods
   extend Forwardable
@@ -126,19 +128,19 @@ class Cluster
 
   def initialize(id: nil, ocns: [])
     @id = id
-    @ocns = ocns.to_set
+    @ocns = ocns.map(&:to_i).to_set
   end
 
   def ocns=(ocns)
-    @ocns = ocns.to_set
+    @ocns = ocns.map(&:to_i).to_set
   end
 
   def ocn_resolutions
-    Clusterable::OCNResolution.with_ocns(ocns)
+    @ocn_resolutions ||= Clusterable::OCNResolution.with_ocns(ocns).to_a
   end
 
   def ht_items
-    Clusterable::HtItem.with_ocns(ocns)
+    @ht_items ||= Clusterable::HtItem.with_ocns(ocns).to_a
   end
 
   def ht_item(item_id)
@@ -150,7 +152,14 @@ class Cluster
   end
 
   def holdings
-    Clusterable::Holding.with_ocns(ocns)
+    @holdings ||= Clusterable::Holding.with_ocns(ocns).to_a
+  end
+
+  # invalidate the cache after adding items elsewhere
+  def invalidate_cache
+    @holdings = nil
+    @ocn_resolutions = nil
+    @ht_items = nil
   end
 
   # Add a Set of new OCLC numbers to this cluster.
@@ -274,7 +283,7 @@ class Cluster
       item._association = send(field)._association
       item.cluster = self
     end
-    reload
+    invalidate_cache
   end
 
   def add_members_from(cluster)

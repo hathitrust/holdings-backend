@@ -100,11 +100,18 @@ module PHCTL
   end
 
   class Report < JobCommand
-    desc "costreport (--organization ORG) (--target_cost COST)", "Run a cost report"
+    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--precomputed-frequency-table-dir /path/to/tables)", "Run a cost report. If neither --precomputed-frequency-table nor --frequency-table-dir is specified, generate a new frequency table."
     option :organization, type: :string, default: nil
     option :target_cost, type: :numeric, default: nil
+    option :precomputed_frequency_table, type: :string, default: nil, desc: "The full path to a .json frequency table to use for the report."
+    option :precomputed_frequency_table_dir, type: :string, default: nil, desc: "A directory containing .json frequency tables to sum for this cost report."
     def costreport
       run_common_job(Reports::CostReport, options)
+    end
+
+    desc "frequency-table SOLR_RECORDS OUTFILE", "Generate a frequency table from in-copyright items in solr records (newline-delimited JSON, with fields at least id, format, oclc, oclc_search, ht_json)"
+    def frequency_table(solr_records, output_file = solr_records + ".freqtable.json")
+      run_common_job(Reports::FrequencyTableFromSolr, options, solr_records, output_file)
     end
 
     desc "estimate OCN_FILE", "Run an estimate"

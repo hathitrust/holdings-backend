@@ -93,16 +93,13 @@ module Clusterable
       end
     end
 
+    def initialize(params = {})
+      super
+      @cluster = params[:cluster] if params[:cluster]
+    end
+
     def cluster
-      if ocns.none?
-        return OCNLessCluster.new(bib_key: ht_bib_key)
-      end
-      clusters = Cluster.for_ocns(ocns)
-      if clusters.count > 1
-        raise "ocns #{ocns} for item #{item_id} match multiple clusters"
-      else
-        clusters.first
-      end
+      @cluster ||= find_cluster
     end
 
     def collection_code=(collection_code)
@@ -131,10 +128,27 @@ module Clusterable
       ocns == other.ocns
     end
 
+    # True if this item is one where those who hold the item share the cost, as
+    # opposed to those where all members share the cost according to their
+    # tier.
+    def ic?
+      IC_RIGHTS_CODES.include?(rights)
+    end
+
     private
 
     def set_billing_entity
       self.billing_entity = Services.ht_collections[collection_code].billing_entity
+    end
+
+    def find_cluster
+      return OCNLessCluster.new(bib_key: ht_bib_key) if ocns.none?
+
+      clusters = Cluster.for_ocns(ocns).to_a
+      raise "ocns #{ocns} for item #{item_id} match multiple clusters" if clusters.count > 1
+      raise "ocns #{ocns} for item #{item_id} match zero clusters" if clusters.count == 0
+
+      clusters.first
     end
   end
 end

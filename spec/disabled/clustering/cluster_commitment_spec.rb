@@ -27,7 +27,7 @@ RSpec.xdescribe Clustering::ClusterCommitment do
       end
 
       it "does NOT update cluster last modified date" do
-        c.reload
+        c.invalidate_cache
         orig_last_modified = c.last_modified
         sleep(1)
         cluster = described_class.new(comm).cluster
