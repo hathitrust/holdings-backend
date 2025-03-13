@@ -35,25 +35,9 @@ RSpec.describe "phctl integration" do
       end
     end
 
-    it "HtItems creates clusters with ocns in hathifile" do
-      expect { phctl("load", "ht_items", fixture("hathifile_sample.txt")) }
-        .to change { Cluster.count }.by(5)
-    end
-
-    it "Concordance loads concordance diffs" do
-      Settings.concordance_path = fixture("concordance")
-      expect { phctl(*%w[load concordance 2022-08-01]) }
-        .to change { cluster_count(:ocn_resolutions) }.by(5)
-    end
-
     it "Holdings loads holdings" do
       expect { phctl("load", "holdings", fixture("umich_fake_testdata.ndj")) }
         .to change { Clusterable::Holding.table.count }.by(10)
-    end
-
-    xit "ClusterFile loads json clusters" do
-      expect { phctl("load", "cluster_file", fixture("cluster_2503661.json")) }
-        .to change { Cluster.count }.by(1)
     end
   end
 

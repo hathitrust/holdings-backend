@@ -5,10 +5,6 @@ require "phctl"
 
 RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   commands = {
-    %w[load commitments somefile] => Jobs::Load::Commitments,
-    %w[load concordance date] => Jobs::Load::Concordance,
-    %w[load ht-items somefile] => Jobs::Load::HtItems,
-    %w[load cluster-file somefile] => Jobs::Load::ClusterFile,
     %w[load holdings somefile] => Jobs::Load::Holdings,
     %w[cleanup holdings instid date] => Jobs::Cleanup::Holdings,
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
@@ -34,7 +30,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report etas-overlap] => Jobs::Common,
     %w[report etas-overlap someinst] => Jobs::Common,
     %w[report organization-holdings-overlap --organization=umich --ph=true] => Jobs::Common,
-    %w[load concordance somefile] => Jobs::Load::Concordance,
     %w[report weeding_decision someinst] => Jobs::Common
 
     # Not covered by phctl

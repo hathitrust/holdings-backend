@@ -2,12 +2,9 @@ require "services"
 require "sidekiq"
 require "cost_report_workflow"
 require "concordance_processing"
-require "loader/cluster_loader"
 require "loader/file_loader"
 require "loader/holding_loader"
-require "loader/ht_item_loader"
 require "loader/shared_print_loader"
-require "ocn_concordance_diffs"
 require "reports/commitment_replacements"
 require "reports/cost_report"
 require "reports/dynamic"
@@ -51,30 +48,6 @@ module Jobs
         Services.logger.info "Loading Shared Print Commitments: #{filename}"
         Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.for(filename))
           .load(filename, filehandle: Loader::SharedPrintLoader.filehandle_for(filename))
-      end
-    end
-
-    class HtItems
-      include Sidekiq::Job
-      def perform(filename)
-        Services.logger.info "Updating HT Items."
-        Loader::FileLoader.new(batch_loader: Loader::HtItemLoader.new).load(filename)
-      end
-    end
-
-    class Concordance
-      include Sidekiq::Job
-      def perform(date)
-        OCNConcordanceDiffs.new(Date.parse(date)).load
-      end
-    end
-
-    class ClusterFile
-      include Sidekiq::Job
-      def perform(filename)
-        loader = Loader::ClusterLoader.new
-        loader.load(filename)
-        Services.logger.info loader.stats
       end
     end
 

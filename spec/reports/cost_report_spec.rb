@@ -2,8 +2,6 @@
 
 require "spec_helper"
 require "reports/cost_report"
-require "clustering/cluster_holding"
-require "clustering/cluster_ht_item"
 require "data_sources/ht_organizations"
 require "frequency_table"
 
@@ -34,21 +32,21 @@ RSpec.describe Reports::CostReport do
   describe "making sure that access and rights come out the way they go in" do
     it "pd == allow" do
       load_test_data(build(:ht_item, access: allow, rights: pd, ocns: [111]))
-      cluster = Cluster.for_ocns([111]).first
+      cluster = Cluster.for_ocns([111])
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq pd
       expect(cluster.ht_items.first.access).to eq allow
     end
     it "icus == allow" do
       load_test_data(build(:ht_item, access: allow, rights: icus, ocns: [222]))
-      cluster = Cluster.for_ocns([222]).first
+      cluster = Cluster.for_ocns([222])
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq icus
       expect(cluster.ht_items.first.access).to eq allow
     end
     it "ic == deny" do
       load_test_data(build(:ht_item, access: deny, rights: ic, ocns: [333]))
-      cluster = Cluster.for_ocns([333]).first
+      cluster = Cluster.for_ocns([333])
       expect(cluster.ht_items.count).to eq 1
       expect(cluster.ht_items.first.rights).to eq ic
       expect(cluster.ht_items.first.access).to eq deny

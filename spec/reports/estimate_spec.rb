@@ -2,7 +2,6 @@
 
 require "spec_helper"
 require "reports/estimate"
-require "clustering/cluster_ht_item"
 
 RSpec.xdescribe Reports::Estimate do
   let(:ht_allow) { build(:ht_item, access: "allow") }

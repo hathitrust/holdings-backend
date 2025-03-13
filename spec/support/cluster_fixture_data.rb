@@ -3,7 +3,6 @@ RSpec.shared_context "with complete data for one cluster" do
 
   # Data from spec/fixtures/cluster_2503661.json, without commitments
   before(:each) do
-    Cluster.create(ocns: [2503661])
     insert_htitem(build(:ht_item,
       ocns: [2503661],
       item_id: "nyp.33433082421565",

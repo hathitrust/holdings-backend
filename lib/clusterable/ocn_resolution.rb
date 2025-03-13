@@ -4,22 +4,7 @@ module Clusterable
   # A mapping from a deprecated/variant OCN to a resolved/canonical OCN
   class OCNResolution < Clusterable::Base
     attr_accessor :variant, :canonical
-    #    include Mongoid::Document
-    #
-    #    # store_in collection: "resolutions", database: "test", client: "default"
-    #    field :deprecated
-    #    field :resolved
-    #    field :ocns, type: Array
-    #
-    #    embedded_in :cluster
-    #    validates :deprecated, uniqueness: true
-    #    validates_presence_of :deprecated, :resolved, :ocns
-    #    index(ocns: 1)
-    #
-    #    scope :for_cluster, lambda { |_cluster|
-    #      where(:$in => ocns)
-    #    }
-    #
+
     def self.table
       Services[:holdings_db][:oclc_concordance]
     end
@@ -33,6 +18,27 @@ module Clusterable
       dataset.each do |row|
         yield new(variant: row[:variant], canonical: row[:canonical])
       end
+    end
+
+    # Returns the given OCNs and any variant or canonical OCNs the given OCNs map to.
+    def self.concordanced_ocns(ocns)
+      # and gather all OCNs that concordance to those OCNs
+      o2_variant = Sequel.qualify(:o2, :variant)
+      o2_canonical = Sequel.qualify(:o2, :canonical)
+      o1_variant = Sequel.qualify(:o1, :variant)
+      o1_canonical = Sequel.qualify(:o1, :canonical)
+
+      concordance_ocns =
+        Services.holdings_db
+          .select(o2_variant, o2_canonical)
+          .from(Sequel.as(:oclc_concordance, :o1), Sequel.as(:oclc_concordance, :o2))
+          .where(o1_canonical => o2_canonical)
+          .where(Sequel.or(
+            o1_canonical => ocns,
+            o1_variant => ocns
+          ))
+
+      (ocns + concordance_ocns.map(:variant) + concordance_ocns.map(:canonical)).uniq.flatten
     end
 
     def cluster

@@ -43,15 +43,13 @@ RSpec.describe Clusterable::Holding do
     include_context "with tables for holdings"
 
     it "can get the cluster with the holding ocn" do
-      create(:cluster, ocns: [1001, 1002])
+      load_test_data(
+        build(:ht_item, ocns: [1001, 1002]),
+        build(:ocn_resolution, canonical: 1001, variant: 1003)
+      )
 
       holding = build(:holding, ocn: 1001)
-      expect(holding.cluster.ocns).to include(1001)
-    end
-
-    it "returns nil if there is no cluster with that ocn" do
-      holding = build(:holding, ocn: 9999)
-      expect(holding.cluster).to be(nil)
+      expect(holding.cluster.ocns).to contain_exactly(1001, 1002, 1003)
     end
   end
 

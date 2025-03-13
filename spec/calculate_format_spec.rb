@@ -13,13 +13,13 @@ RSpec.describe CalculateFormat do
   describe "#item_format" do
     it "defaults to SPM" do
       insert_htitem ht_spm
-      c = Clustering::ClusterHtItem.new(ht_spm).cluster
+      c = ht_spm.cluster
       expect(described_class.new(c).item_format(ht_spm)).to eq("spm")
     end
 
     it "is a MPM if it or another item has enum" do
       insert_htitem ht_mpm
-      c = Clustering::ClusterHtItem.new(ht_mpm).cluster
+      c = ht_mpm.cluster
       expect(
         described_class.new(c).item_format(ht_mpm)
       ).to eq("mpm")
@@ -28,7 +28,7 @@ RSpec.describe CalculateFormat do
     it "is NOT an MPM if it has a chron but no enum" do
       ht_chron = build(:ht_item, bib_fmt: "BK", enum_chron: "1994")
       insert_htitem ht_chron
-      c = Clustering::ClusterHtItem.new(ht_chron).cluster
+      c = ht_chron.cluster
       expect(
         described_class.new(c).item_format(ht_chron)
       ).to eq("spm")
@@ -57,7 +57,7 @@ RSpec.describe CalculateFormat do
       ht_spm.ocns = ht_mpm.ocns
       insert_htitem ht_spm
       insert_htitem ht_mpm
-      c = Clustering::ClusterHtItem.new(ht_spm, ht_mpm).cluster
+      c = ht_spm.cluster
       expect(described_class.new(c).item_format(ht_spm)).to eq("mpm")
     end
 
@@ -66,13 +66,13 @@ RSpec.describe CalculateFormat do
       ht_spm.ocns = ht_mpm.ocns
       insert_htitem ht_spm
       insert_htitem ht_mpm
-      c = Clustering::ClusterHtItem.new(ht_spm, ht_mpm).cluster
+      c = ht_spm.cluster
       expect(described_class.new(c).item_format(ht_spm)).to eq("spm")
     end
 
     it "is a SER if the htitem has bibformat SE" do
       insert_htitem ht_ser
-      c = Clustering::ClusterHtItem.new(ht_ser).cluster
+      c = ht_ser.cluster
       expect(described_class.new(c).item_format(ht_ser)).to eq("ser")
       expect(
         described_class.new(c).item_format(c.ht_items.first)
@@ -83,7 +83,7 @@ RSpec.describe CalculateFormat do
       ht_ser.ocns = ht_mpm.ocns
       insert_htitem ht_ser
       insert_htitem ht_mpm
-      c = Clustering::ClusterHtItem.new(ht_ser, ht_mpm).cluster
+      c = ht_ser.cluster
       expect(
         described_class.new(c).item_format(ht_ser)
       ).to eq("ser")
@@ -99,19 +99,19 @@ RSpec.describe CalculateFormat do
       insert_htitem ht_mpm
       insert_htitem ht_spm
       insert_htitem ht_ser
-      c = Clustering::ClusterHtItem.new(ht_mpm, ht_spm, ht_ser).cluster
+      c = ht_mpm.cluster
       expect(described_class.new(c).cluster_format).to eq("mpm")
     end
 
     it "is a SPM if all items are SPM" do
       insert_htitem ht_spm
-      c = Clustering::ClusterHtItem.new(ht_spm).cluster
+      c = ht_spm.cluster
       expect(described_class.new(c).cluster_format).to eq("spm")
     end
 
     it "is a SER if all items are SER" do
       insert_htitem ht_ser
-      c = Clustering::ClusterHtItem.new(ht_ser).cluster
+      c = ht_ser.cluster
       expect(described_class.new(c).cluster_format).to eq("ser")
     end
 
@@ -119,7 +119,7 @@ RSpec.describe CalculateFormat do
       ht_spm.ocns = ht_ser.ocns
       insert_htitem ht_spm
       insert_htitem ht_ser
-      c = Clustering::ClusterHtItem.new(ht_spm, ht_ser).cluster
+      c = ht_spm.cluster
       expect(described_class.new(c).cluster_format).to eq("ser/spm")
     end
   end
