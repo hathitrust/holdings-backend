@@ -9,19 +9,23 @@ require "solr/cursorstream"
 class CostReportWorkflow
   class CostReportWorkflow::Callback
     def on_success(_status, options)
-      Reports::CostReport.new(precomputed_frequency_table_dir: options["frequency_table_dir"]).run
+      Reports::CostReport.new(precomputed_frequency_table_dir: options["frequency_table_dir"],
+        ht_item_count: options["ht_item_count"],
+        ht_item_pd_count: options["ht_item_pd_count"]).run
       # Don't delete intermediate files for now to aid in debugging.
       # In the future: consider removing by default, but disabling that if a debug flag is present.
       # FileUtils.remove_entry(options["frequency_table_dir"])
     end
   end
 
-  def initialize(working_directory: default_working_directory,
+  def initialize(ht_item_count:, ht_item_pd_count:, working_directory: default_working_directory,
     chunk_size: 10000,
     inline_callback_test: false)
     @working_directory = working_directory
     @chunk_size = chunk_size
     @inline_callback_test = inline_callback_test
+    @ht_item_count = ht_item_count
+    @ht_item_pd_count = ht_item_pd_count
   end
 
   def run
@@ -32,7 +36,7 @@ class CostReportWorkflow
 
   private
 
-  attr_reader :working_directory, :chunk_size, :inline_callback_test
+  attr_reader :working_directory, :chunk_size, :inline_callback_test, :ht_item_count, :ht_item_pd_count
 
   def default_working_directory
     work_base = File.join(Settings.cost_report_path, "work")
@@ -70,7 +74,9 @@ class CostReportWorkflow
 
   def queue_frequency_table_jobs
     batch = Sidekiq::Batch.new
-    callback_params = {"frequency_table_dir" => working_directory}
+    callback_params = {"frequency_table_dir" => working_directory,
+                       "ht_item_count" => ht_item_count,
+                       "ht_item_pd_count" => ht_item_pd_count}
     batch.description = "Generate frequency tables for cost report"
     batch.on(:success, CostReportWorkflow::Callback, callback_params)
     batch.jobs do
@@ -83,7 +89,7 @@ class CostReportWorkflow
     end
     # In test, where sidekiq is not running, we do this
     # instead of relying on the on_success-hook.
-    if @inline_callback_test
+    if @inline_callback_test && ENV["DATABASE_ENV"] == "test"
       Services.logger.info("Running cost report inline -- TEST ONLY")
       CostReportWorkflow::Callback.new.on_success(:success, callback_params)
     end

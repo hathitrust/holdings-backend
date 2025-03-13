@@ -3,47 +3,35 @@ require "frequency_table"
 require "spec_helper"
 
 RSpec.describe CostReportWorkflow do
-  before(:each) do
-    stub_request(:get, "http://localhost:8983/solr/catalog/select?cursorMark=*&fl=ht_json,id,oclc,oclc_search,title,format&fq=ht_rightscode:(ic%20op%20und%20nobody%20pd-pvt)&q=*:*&rows=5000&sort=id%20asc&wt=json")
-      .with(
-        headers: {
-          "Accept" => "*/*",
-          "Accept-Encoding" => "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
-          "User-Agent" => "Faraday v2.12.2"
-        }
-      )
-      .to_return(status: 200,
-        body: File.read(fixture("solr_response.json")),
-        headers: {
-          "Content-type" => "application/json"
-        })
-  end
+  include_context "with mocked solr response"
 
   around(:each) do |example|
     @tmpdir = Dir.mktmpdir("test-cost-report-workflow")
     begin
-      ClimateControl.modify(
-        SOLR_URL: "http://localhost:8983/solr/catalog"
-      ) do
-        example.run
-      end
-    # The callback will delete our temporary directory out from under us; don't
-    # freak out
-    ensure Errno::ENOENT => e
-           FileUtils.remove_entry @tmpdir if File.exist? @tmpdir
+      example.run
+    ensure
+      # Not using the block form of mktmpdir because we may
+      # eventually remove this inline.
+      FileUtils.remove_entry @tmpdir if File.exist? @tmpdir
     end
   end
 
-  it "dumps solr records to given directory" do
-    allrecords = File.join(@tmpdir, "allrecords.ndj")
-    described_class.new(working_directory: @tmpdir).run
+  def workflow_with_chunk_size(size)
+    # item count shouldn't matter - not being tested here as it's only used in
+    # the callback for the final cost report - but we must provide it
+    described_class.new(working_directory: @tmpdir, ht_item_count: 0, ht_item_pd_count: 0, chunk_size: size)
+  end
 
+  it "dumps solr records to given directory" do
+    workflow_with_chunk_size(5).run
+
+    allrecords = File.join(@tmpdir, "allrecords.ndj")
     expect(File.size(allrecords)).to be > 0
     expect(File.readlines(allrecords).count).to be == 5
   end
 
   it "chunks solr records" do
-    described_class.new(working_directory: @tmpdir, chunk_size: 2).run
+    workflow_with_chunk_size(2).run
 
     expect(File.readlines(File.join(@tmpdir, "records_00000.ndj")).count).to be == 2
     expect(File.readlines(File.join(@tmpdir, "records_00001.ndj")).count).to be == 2
@@ -53,14 +41,14 @@ RSpec.describe CostReportWorkflow do
 
   describe "frequency table jobs", type: :sidekiq_fake do
     it "queues one job for each chunk" do
-      expect { described_class.new(working_directory: @tmpdir, chunk_size: 1).run }
+      expect { workflow_with_chunk_size(1).run }
         .to change(Jobs::Common.jobs, :size).by(5)
 
       expect(Jobs::Common.jobs.map { |j| j["args"][0] }).to all eq "Reports::FrequencyTableFromSolr"
     end
 
     it "job reads from records_CHUNK and writes to records_CHUNK.freqtable.json" do
-      described_class.new(working_directory: @tmpdir, chunk_size: 5).run
+      workflow_with_chunk_size(5).run
       expect(Jobs::Common.jobs[0]["args"]).to eq([
         "Reports::FrequencyTableFromSolr",
         {},
@@ -71,7 +59,6 @@ RSpec.describe CostReportWorkflow do
   end
 
   context "with inline callback testing" do
-    include_context "with tables for holdings"
     # We can't test the callbacks directly without 'real' sidekiq, but we can
     # simulate.
 
@@ -82,7 +69,12 @@ RSpec.describe CostReportWorkflow do
       described_class.new(
         working_directory: @tmpdir,
         chunk_size: 2,
-        inline_callback_test: true
+        inline_callback_test: true,
+        # these match the counts of IC items from solresponse.json -- i.e. what our mock solr
+        # will return to work on -- plus a made-up 5 public domain volumes to help the math work out
+        # below
+        ht_item_count: 16,
+        ht_item_pd_count: 5
       )
     end
 
@@ -97,11 +89,6 @@ RSpec.describe CostReportWorkflow do
     it "outputs some data in the cost report" do
       old_target_cost = Settings.target_cost
       Settings.target_cost = 16
-      # The data here is only used for the counts of items, not the actual data!
-      # The items in the solr file are all Michigan, and we have no holdings,
-      # so everybody's costs should be zero but Michigan.
-      11.times { load_test_data(build(:ht_item, rights: "ic", collection_code: "PU")) }
-      5.times { load_test_data(build(:ht_item, rights: "pd", collection_code: "PU")) }
 
       workflow.run
 

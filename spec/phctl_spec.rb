@@ -26,6 +26,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report shared-print-phase-count --phase 1] => Jobs::Common,
     # Has wrappers in holdings/jobs
     %w[report member-counts infile outpath] => Jobs::Common,
+    %w[report costreport-workflow] => Jobs::Common,
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,

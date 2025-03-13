@@ -37,8 +37,8 @@ module Reports
 
       File.open(output_filename, "w") do |fh|
         fh.puts "Target cost: #{target_cost}"
-        fh.puts "Num volumes: #{Clusterable::HtItem.count}"
-        fh.puts "Num pd volumes: #{Clusterable::HtItem.pd_count}"
+        fh.puts "Num volumes: #{ht_item_count}"
+        fh.puts "Num pd volumes: #{ht_item_pd_count}"
         fh.puts "Cost per volume: #{cost_per_volume}"
         fh.puts "Total weight: #{total_weight}"
         fh.puts "PD Cost: #{pd_cost}"
@@ -57,6 +57,8 @@ module Reports
       target_cost: Settings.target_cost,
       lines: 5000,
       logger: Services.logger,
+      ht_item_pd_count: nil,
+      ht_item_count: nil,
       precomputed_frequency_table_file: nil,
       precomputed_frequency_table_dir: nil,
       precomputed_frequency_table: read_freq_tables(precomputed_frequency_table_dir,
@@ -69,11 +71,21 @@ module Reports
       @target_cost = target_cost.to_f
       @maxlines = lines
       @logger = logger
+      @ht_item_pd_count ||= ht_item_pd_count
+      @ht_item_count ||= ht_item_count
 
       # If not set, frequency_table will call compile_frequency_table.
       # If you pass a precomputed frequency table, do not modify it after passing it in.
       # This warning is in the place of actually implementing proper cloning.
       @frequency_table = precomputed_frequency_table
+    end
+
+    def ht_item_pd_count
+      @ht_item_pd_count ||= Clusterable::HtItem.pd_count
+    end
+
+    def ht_item_count
+      @ht_item_count ||= Clusterable::HtItem.count
     end
 
     def active_members
@@ -82,7 +94,7 @@ module Reports
     end
 
     def cost_per_volume
-      @cost_per_volume ||= target_cost / Clusterable::HtItem.count.to_f
+      @cost_per_volume ||= target_cost / ht_item_count.to_f
     end
 
     def total_weight
@@ -90,7 +102,7 @@ module Reports
     end
 
     def pd_cost
-      @pd_cost ||= cost_per_volume * Clusterable::HtItem.pd_count
+      @pd_cost ||= cost_per_volume * ht_item_pd_count
     end
 
     def pd_cost_for_member(member)
