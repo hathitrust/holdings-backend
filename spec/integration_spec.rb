@@ -102,13 +102,16 @@ RSpec.describe "phctl integration" do
   # SharedPrintOps - integration tests are in the respective SharedPrint class
 
   describe "Report" do
-    include_context "with complete data for one cluster"
+    include_context "with mocked solr response"
 
-    it "CostReport produces output" do
-      phctl(*%w[report costreport])
+    it "CostReportWorkflow produces output" do
+      # item counts match what we have in the mock solr response
+      phctl(*%w[report costreport-workflow --ht-item-count 16 --ht-item-pd-count 5 --inline-callback-test])
       year = Time.new.year.to_s
-      expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first))
-        .to match(/Target cost: 9999/)
+
+      costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
+      expect(costreport).to match(/Num volumes: 16/)
+      expect(costreport).to match(/Num pd volumes: 5/)
     end
 
     xit "Estimate produces output" do

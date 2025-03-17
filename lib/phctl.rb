@@ -109,6 +109,15 @@ module PHCTL
       run_common_job(Reports::CostReport, options)
     end
 
+    desc "costreport-workflow --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
+    option :chunk_size, type: :numeric, default: 10000
+    option :ht_item_count, type: :numeric
+    option :ht_item_pd_count, type: :numeric
+    option :inline_callback_test, type: :boolean
+    def costreport_workflow
+      run_common_job(CostReportWorkflow, options)
+    end
+
     desc "frequency-table SOLR_RECORDS OUTFILE", "Generate a frequency table from in-copyright items in solr records (newline-delimited JSON, with fields at least id, format, oclc, oclc_search, ht_json)"
     def frequency_table(solr_records, output_file = solr_records + ".freqtable.json")
       run_common_job(Reports::FrequencyTableFromSolr, options, solr_records, output_file)

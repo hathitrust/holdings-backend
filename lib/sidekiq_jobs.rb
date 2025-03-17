@@ -1,5 +1,6 @@
 require "services"
 require "sidekiq"
+require "cost_report_workflow"
 require "concordance_processing"
 require "loader/cluster_loader"
 require "loader/file_loader"
