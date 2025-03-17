@@ -3,7 +3,9 @@
 require "spec_helper"
 require "reports/estimate"
 
-RSpec.xdescribe Reports::Estimate do
+RSpec.describe Reports::Estimate do
+  include_context "with tables for holdings"
+
   let(:ht_allow) { build(:ht_item, access: "allow") }
   let(:ht_deny) { build(:ht_item, access: "deny") }
   let(:ocns) { [1, 2, ht_allow.ocns, ht_deny.ocns].flatten }
@@ -11,9 +13,7 @@ RSpec.xdescribe Reports::Estimate do
 
   before(:each) do
     Settings.target_cost = 20
-    Cluster.each(&:delete)
-    Clustering::ClusterHtItem.new(ht_allow).cluster.tap(&:save)
-    Clustering::ClusterHtItem.new(ht_deny).cluster.tap(&:save)
+    load_test_data(ht_allow, ht_deny)
   end
 
   describe "#cost_report" do
