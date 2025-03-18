@@ -18,7 +18,7 @@ RSpec.describe Overlap::ClusterOverlap do
   end
 
   before(:each) do
-    load_test_data(spm,holding,holding2)
+    load_test_data(spm, holding, holding2)
   end
 
   describe "#each" do

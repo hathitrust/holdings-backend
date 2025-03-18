@@ -90,10 +90,28 @@ module Clusterable
       Services.holdings_table
     end
 
+    def self.all
+      return to_enum(__method__) unless block_given?
+
+      table.each do |row|
+        yield from_row(row)
+      end
+    end
+
     def self.with_ocns(ocns)
       return to_enum(__method__, ocns) unless block_given?
 
       dataset = table.where(ocn: ocns.to_a)
+
+      dataset.each do |row|
+        yield from_row(row)
+      end
+    end
+
+    def self.for_organization(organization)
+      return to_enum(__method__, organization) unless block_given?
+
+      dataset = table.where(organization: organization)
 
       dataset.each do |row|
         yield from_row(row)
