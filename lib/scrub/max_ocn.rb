@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "json"
-require "open-uri"
+require "faraday"
 require "services"
 
 OCLC_URL = "https://www.oclc.org/apps/oclc/wwg"
@@ -66,7 +66,7 @@ module Scrub
       if @mock
         IO.read("spec/fixtures/max_oclc_response.json")
       else
-        URI.parse(OCLC_URL).open.read
+        Faraday.get(OCLC_URL).body
       end
     end
 
