@@ -43,15 +43,5 @@ module Overlap
         SinglePartOverlap.new(@cluster, org, ht_item)
       end
     end
-
-    def self.matching_clusters(org = nil)
-      if org.nil?
-        Cluster.where("ht_items.0": {"$exists": 1})
-      else
-        Cluster.where("ht_items.0": {"$exists": 1},
-          "$or": [{"holdings.organization": org},
-            {"ht_items.billing_entity": org}])
-      end
-    end
   end
 end
