@@ -25,16 +25,16 @@ RSpec.describe Overlap::ETASOverlap do
       expect(eo.ocn).to be_a(Numeric)
     end
 
-    xit "has an item_type" do
-      expect(eo.item_type).to be_in(["mix", "mon", "spm", "mpm", "ser"])
+    it "has an item_type" do
+      expect(["mix", "mon", "spm", "mpm", "ser"].include?(eo.item_type)).to be true
     end
 
-    xit "has an access" do
-      expect(eo.access).to be_in(["deny", "allow"])
+    it "has an access" do
+      expect(["deny", "allow"].include?(eo.access)).to be true
     end
 
-    xit "has a rights" do
-      expect(eo.rights).to be_in(["pd", "ic", "und"])
+    it "has a rights" do
+      expect(["pd", "ic", "und"].include?(eo.rights)).to be true
     end
 
     it "has a catalog_id" do
