@@ -24,10 +24,7 @@ RSpec.describe Overlap::SerialOverlap do
   let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
 
   before(:each) do
-    c.save
-
-    [ht, ht2].each { |htitem| insert_htitem(htitem) }
-    [h, h2, h3].each { |holding| holding.save }
+    load_test_data(ht, ht2, h, h2, h3)
   end
 
   describe "#copy_count" do

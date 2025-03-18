@@ -133,7 +133,6 @@ RSpec.describe FrequencyTable do
         rights: "ic",
         collection_code: "MIU"
       )
-      Cluster.create(ocns: ht_item.ocns)
       insert_htitem ht_item
       ft.add_ht_item(ht_item)
       expect(ft.frequencies(organization: :umich, format: :spm)).to eq([frequency_1_1])

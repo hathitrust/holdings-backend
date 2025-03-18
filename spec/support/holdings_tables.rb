@@ -9,11 +9,11 @@ RSpec.shared_context "with tables for holdings" do
     hf_db.recreate_tables!
   end
 
-  before(:each) do
-    db[:oclc_concordance].truncate
-    db[:cluster_ocns].truncate
-    Services.hathifiles_table.truncate
-    Services.holdings_table.truncate
+  around(:each) do |example|
+    Services.holdings_db
+      .transaction(rollback: :always, auto_savepoint: true) do
+        example.run
+      end
   end
 
   # e.g. insert_htitem(build(:ht_item))

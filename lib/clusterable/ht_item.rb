@@ -21,6 +21,26 @@ module Clusterable
         Services.hathifiles_table
       end
 
+      # returns the given OCNs + all OCNs from all catalog records that have any
+      # of the given OCNs
+      def related_ocns(ocns)
+        hfo1_htid = Sequel.qualify(:hfo1, :htid)
+        hfo1_value = Sequel.qualify(:hfo1, :value)
+        hfo2_htid = Sequel.qualify(:hfo2, :htid)
+        hfo2_value = Sequel.qualify(:hfo2, :value)
+
+        related_ocns = Services.holdings_db
+          .from(Sequel.as(:hf_oclc, :hfo1))
+          .join(Sequel.as(:hf_oclc, :hfo2),
+            hfo1_htid => hfo2_htid)
+          .where(hfo1_value => ocns.map(&:to_s))
+          .select(hfo2_value)
+          .distinct
+          .map(:value)
+
+        (ocns + related_ocns).uniq.flatten
+      end
+
       def with_ocns(ocns)
         return to_enum(__method__, ocns) unless block_given?
 
@@ -99,7 +119,11 @@ module Clusterable
     end
 
     def cluster
-      @cluster ||= find_cluster
+      @cluster ||= if ocns.none?
+        OCNLessCluster.new(bib_key: ht_bib_key)
+      else
+        Cluster.for_ocns(ocns)
+      end
     end
 
     def collection_code=(collection_code)
@@ -116,6 +140,9 @@ module Clusterable
       else
         raise ArgumentError
       end
+
+      # invalidate cached cluster, since this depends on ocns
+      @cluster = nil
     end
 
     def ht_bib_key=(new_ht_bib_key)
@@ -139,16 +166,6 @@ module Clusterable
 
     def set_billing_entity
       self.billing_entity = Services.ht_collections[collection_code].billing_entity
-    end
-
-    def find_cluster
-      return OCNLessCluster.new(bib_key: ht_bib_key) if ocns.none?
-
-      clusters = Cluster.for_ocns(ocns).to_a
-      raise "ocns #{ocns} for item #{item_id} match multiple clusters" if clusters.count > 1
-      raise "ocns #{ocns} for item #{item_id} match zero clusters" if clusters.count == 0
-
-      clusters.first
     end
   end
 end

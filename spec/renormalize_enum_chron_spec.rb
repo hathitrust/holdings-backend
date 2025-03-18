@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "clustering/cluster_holding"
 require_relative "../bin/renormalize_enumchrons"
 
 RSpec.xdescribe "Renormalize Enumchrons" do

@@ -20,7 +20,7 @@ module Clusterable
     attr_reader :date_received, :enum_chron
 
     def cluster
-      Cluster.for_ocns([ocn]).first
+      @cluster ||= Cluster.for_ocns([ocn])
     end
 
     # validates_presence_of :ocn, :organization, :mono_multi_serial, :date_received

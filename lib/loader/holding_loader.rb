@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "clustering/cluster_holding"
 require "utils/file_transfer"
 
 module Loader

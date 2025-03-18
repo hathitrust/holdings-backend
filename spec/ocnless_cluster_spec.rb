@@ -2,7 +2,6 @@
 
 require "spec_helper"
 require "cluster"
-require "clustering/cluster_ht_item"
 
 RSpec.describe OCNLessCluster do
   let(:bib_key1) { 1 }

@@ -133,11 +133,7 @@ def load_test_data(*clusterables)
     case clusterable
     when Clusterable::HtItem
       insert_htitem(clusterable)
-      Clustering::ClusterHtItem.new(clusterable).cluster
-    when Clusterable::OCNResolution
-      Clustering::ClusterOCNResolution.new(clusterable).cluster
-    when Clusterable::Holding
-      # no need to do ClusterHolding at the current time
+    when Clusterable::OCNResolution, Clusterable::Holding
       clusterable.save
     else
       raise "Can't persist #{clusterable}"

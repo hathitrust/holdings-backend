@@ -5,7 +5,6 @@ require "clusterable/ht_item"
 require "clusterable/commitment"
 require "clusterable/ocn_resolution"
 require "calculate_format"
-require "clustering/cluster_ht_item"
 require "cluster_error"
 
 # A set of identifiers (e.g. OCLC numbers),
@@ -14,120 +13,28 @@ require "cluster_error"
 # - htitems
 # - commitments
 class Cluster
-  attr_reader :id, :ocns
+  attr_reader :ocns
   # can use if deserializing
   attr_writer :ht_items, :holdings
 
-  # make these available as instance methods
-  extend Forwardable
-  def_delegators self, :db, :table
-
-  def self.db
-    Services.holdings_db
-  end
-
-  def self.table
-    db[:cluster_ocns]
-  end
-
-  def self.cluster_ocns!(ocns)
-    db.transaction(**transaction_opts) do
-      find_or_create(ocns).tap { |c| yield c if block_given? }
-    end
-  end
-
-  class << self
-    private
-
-    def transaction_opts
-      {retry_on: [Sequel::UniqueConstraintViolation]}
-    end
-
-    # separately defined as a method so we can instrument it
-    # in concurrency testing
-    def array_for_ocns(ocns)
-      for_ocns(ocns).to_a
-    end
-
-    def find_or_create(ocns)
-      return if ocns.empty?
-
-      clusters = array_for_ocns(ocns)
-
-      if clusters.none?
-        create(ocns: ocns)
-      else
-        clusters.first.tap do |target_cluster|
-          update_cluster_ocns(ocns, target_cluster, clusters)
-        end
-      end
-    end
-
-    # Sets the OCNs in target_cluster to all the OCNs present in all found
-    # clusters (i.e. merges clusters) and adds any additional OCNs from @ocns
-    # not found in any cluster.
-    def update_cluster_ocns(ocns, target_cluster, clusters)
-      # OCNs (from the ones we want) that are in any cluster
-      attested_ocns = clusters.collect(&:ocns).reduce(Set.new, &:merge)
-      # OCNs that are not in any cluster
-      additional_ocns = ocns.to_set - attested_ocns
-
-      target_cluster.add_ocns(additional_ocns)
-      target_cluster.update_ocns(attested_ocns)
-    end
-  end
-
-  # Creates a new cluster with the given OCNs, using the next value from the
-  # cluster_ids sequence as the next primary key.
-  #
-  # We do not yet have a
-  # cluster-specific table with a primary key; otherwise we'd do an insert
-  # there. We may find we want that if we want to track cluster-specific info
-  # such as modification date.
-  def self.create(ocns: [])
-    new(ocns: ocns).save
-  end
-
-  def self.first
-    first_cluster_id = table.select(:cluster_id).first[:cluster_id]
-    find(id: first_cluster_id)
-  end
-
-  def self.count
-    table.distinct(:cluster_id).count
-  end
-
-  def self.find(id:)
-    ocns = table.select(:ocn).where(cluster_id: id).map(:ocn)
-    new(id: id, ocns: ocns)
-  end
-
   def self.for_ocns(ocns)
-    return to_enum(__method__, ocns) unless block_given?
+    # TODO: likely more efficient to get this from solr rather than from
+    # mariadb - we can gather up everything in "oclc_search" from records with
+    # matching OCNs
 
-    dataset = table
-      .select(:cluster_id)
-      .distinct
-      .where(ocn: ocns.to_a)
+    # 1. Get all variant & canonical OCNs for the given OCNs
+    concordanced_ocns = Clusterable::OCNResolution.concordanced_ocns(ocns)
 
-    dataset.each do |row|
-      yield find(id: row[:cluster_id])
-    end
+    # 2. Get all catalog records matching those OCNs
+    catalog_record_ocns = Clusterable::HtItem.related_ocns(concordanced_ocns)
+
+    # 3. Get all variant & canonical OCNs from the expanded set above
+    concordanced_catalog_ocns = Clusterable::OCNResolution.concordanced_ocns(catalog_record_ocns)
+
+    new(ocns: concordanced_catalog_ocns)
   end
 
-  def self.each
-    return to_enum(__method__) unless block_given?
-    # TODO -- if we have a cluster table w/ last modified date and a primary
-    # key, iterate over that instead
-    dataset = table.select(:cluster_id).distinct
-
-    dataset.each do |row|
-      yield(find(id: row[:cluster_id]))
-    end
-  end
-
-  def initialize(id: nil, ocns: [])
-    @id = id
+  def initialize(ocns: [])
     @ocns = ocns.map(&:to_i).to_set
   end
 
@@ -155,43 +62,22 @@ class Cluster
     @holdings ||= Clusterable::Holding.with_ocns(ocns).to_a
   end
 
-  # invalidate the cache after adding items elsewhere
+  # invalidate memoized attributes after adding items elsewhere
   def invalidate_cache
     @holdings = nil
     @ocn_resolutions = nil
     @ht_items = nil
-  end
-
-  # Add a Set of new OCLC numbers to this cluster.
-  #
-  # Raises a duplicate key error if these OCLC numbers are already in some other
-  # cluster.
-  def add_ocns(ocns)
-    new_ocns = ocns - @ocns
-    raise "cluster must be saved first" unless @id
-    db.transaction do
-      data = ocns.map { |ocn| [@id, ocn] }
-      table.import([:cluster_id, :ocn], data)
-      db.after_commit { @ocns.merge(new_ocns) }
-    end
-  end
-
-  # Moves OCLC numbers from other clusters into this one.
-  def update_ocns(ocns)
-    new_ocns = ocns - @ocns
-    return if new_ocns.empty?
-    raise "cluster must be saved first" unless @id
-    db.transaction do
-      updated_rows = table.where(ocn: new_ocns.to_a).update(cluster_id: @id)
-      if updated_rows != new_ocns.count
-        raise "didn't update as many rows (#{updated_rows}) as expected (#{new_ocns.count})"
-      end
-      db.after_commit { @ocns.merge(new_ocns) }
-    end
-  end
-
-  def add_commitments(*items)
-    push_to_field(:commitments, items.flatten)
+    @format = nil
+    @organizations_in_cluster = nil
+    @item_enums = nil
+    @holding_enum_orgs = nil
+    @org_enums = nil
+    @organizations_with_holdings_but_no_matches = nil
+    @copy_counts = nil
+    @brt_counts = nil
+    @wd_counts = nil
+    @lm_counts = nil
+    @holdings_by_org = nil
   end
 
   def format
@@ -199,12 +85,12 @@ class Cluster
   end
 
   def organizations_in_cluster
-    @organizations_in_cluster ||= (holdings.pluck(:organization) +
-                                  ht_items.pluck(:billing_entity)).uniq
+    @organizations_in_cluster ||= (holdings.map(&:organization) +
+                                  ht_items.map(&:billing_entity)).uniq
   end
 
   def item_enums
-    @item_enums ||= ht_items.collect(&:n_enum).uniq
+    @item_enums ||= ht_items.map(&:n_enum).uniq
   end
 
   # Maps enums to list of orgs that have a holding with that enum
@@ -267,56 +153,7 @@ class Cluster
     @holdings_by_org ||= holdings.group_by(&:organization)
   end
 
-  def push_to_field(field, items, extra_ops = {})
-    raise "not implemented"
-    return if items.empty?
-
-    result = collection.update_one(
-      {_id: _id},
-      {"$push" => {field => {"$each" => items.map(&:as_document)}}}.merge(extra_ops),
-      session: Mongoid::Threaded.get_session
-    )
-    raise ClusterError, "#{inspect} deleted before update" unless result.modified_count > 0
-
-    items.each do |item|
-      item.parentize(self)
-      item._association = send(field)._association
-      item.cluster = self
-    end
-    invalidate_cache
-  end
-
-  def add_members_from(cluster)
-    raise "not implemented"
-    relations.values.map(&:name).each do |relation|
-      push_to_field(relation, cluster.send(relation).map(&:dup))
-    end
-  end
-
   def empty?
     ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
   end
-
-  def clusterable_ocn_tuples
-    @clusterable_ocn_tuples ||= ocn_resolutions.pluck(:ocns) + ht_items.pluck(:ocns) +
-      holdings.pluck(:ocn) + commitments.pluck(:ocn)
-  end
-
-  # Get an id if we don't already have one, then persist
-  # this as the cluster for each of our OCNs.
-  #
-  # Raises an error if we already have an ID, or a duplicate key
-  # exception if any of the OCNs is already in some other cluster.
-  def save
-    db.transaction do
-      raise "Call #add_ocns or #update_ocns to update an existing cluster" if @id
-      @id = db.fetch("select next value for cluster_ids").get
-      data = ocns.map { |ocn| [@id, ocn] }
-      table.import([:cluster_id, :ocn], data)
-    end
-
-    self
-  end
-
-  alias_method :save!, :save
 end

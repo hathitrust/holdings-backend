@@ -168,11 +168,7 @@ RSpec.describe Overlap::HtItemOverlap do
 
     describe "#organizations_with_holdings" do
       before(:each) do
-        c.save
-        insert_htitem(mpm)
-        [mpm_holding1, mpm_holding2, mpm_non_match_holding].each do |holding|
-          holding.save
-        end
+        load_test_data(mpm, mpm_holding1, mpm_holding2, mpm_non_match_holding)
       end
 
       it "returns all organizations that overlap with an item" do
@@ -192,7 +188,7 @@ RSpec.describe Overlap::HtItemOverlap do
           enum_chron: "2",
           n_enum: "2",
           collection_code: "PU")
-        Clustering::ClusterHtItem.new(mpm2).cluster
+        load_test_data(mpm2)
         overlap = described_class.new(mpm2)
         expect(overlap.ht_item.n_enum).to eq("2")
         expect(overlap.organizations_with_holdings).not_to include("umich")
@@ -207,7 +203,7 @@ RSpec.describe Overlap::HtItemOverlap do
           n_enum: "1"
         )
 
-        Clustering::ClusterHolding.new(holding).cluster
+        load_test_data(holding)
         expect(CalculateFormat.new(c).cluster_format).to eq("mpm")
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.organizations_with_holdings.count).to eq(4)
@@ -219,7 +215,8 @@ RSpec.describe Overlap::HtItemOverlap do
           organization: "umich",
           enum_chron: "",
           n_enum: "")
-        Clustering::ClusterHolding.new(empty_holding).cluster
+
+        load_test_data(empty_holding)
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.organizations_with_holdings).to include("umich")
       end
@@ -231,7 +228,7 @@ RSpec.describe Overlap::HtItemOverlap do
           enum_chron: "Aug",
           n_enum: "",
           n_chron: "Aug")
-        Clustering::ClusterHolding.new(almost_empty_holding).cluster
+        load_test_data(almost_empty_holding)
         overlap = described_class.new(c.ht_items.first)
         expect(overlap.organizations_with_holdings).to include("umich")
       end
@@ -242,7 +239,7 @@ RSpec.describe Overlap::HtItemOverlap do
           collection_code: "PU",
           enum_chron: "",
           n_enum: "")
-        Clustering::ClusterHtItem.new(empty_mpm).cluster
+        load_test_data(empty_mpm)
         overlap = described_class.new(empty_mpm)
         expect(overlap.organizations_with_holdings).to eq([mpm_non_match_holding.organization,
           empty_mpm.billing_entity])
@@ -301,14 +298,14 @@ RSpec.describe Overlap::HtItemOverlap do
           )
         end
         it "assigns an h_share to hathitrust for KEIO items" do
-          Clustering::ClusterHtItem.new(keio_item).cluster
+          load_test_data(keio_item)
           overlap = described_class.new(keio_item)
           expect(keio_item.billing_entity).to eq("hathitrust")
           expect(overlap.h_share("hathitrust")).to eq(1.0)
         end
 
         it "assigns an h_share to UCM as it would anyone else" do
-          Clustering::ClusterHtItem.new(ucm_item).cluster
+          load_test_data(ucm_item)
           overlap = described_class.new(ucm_item)
           expect(ucm_item.billing_entity).to eq("ucm")
           expect(overlap.h_share("ucm")).to eq(1.0)

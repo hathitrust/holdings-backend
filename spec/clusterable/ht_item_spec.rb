@@ -12,7 +12,7 @@ RSpec.describe Clusterable::HtItem do
   let(:ht_bib_key_rand) { rand(1_000_000).to_i }
   let(:htitem) { build(:ht_item) }
   let(:htitem_hash) { htitem.to_hash }
-  let(:c) { create(:cluster, ocns: htitem_hash[:ocns]) }
+  let(:c) { Cluster.new(ocns: htitem_hash[:ocns]) }
 
   it "can be created" do
     expect(described_class.new(htitem_hash)).to be_a(described_class)
@@ -82,25 +82,6 @@ RSpec.describe Clusterable::HtItem do
     end
   end
 
-  xit "prevents duplicates from being created" do
-    c.ht_items.create(htitem_hash)
-    cloned = htitem_hash.clone
-    c.ht_items.create(cloned)
-    expect { c.save! }.to \
-      raise_error(Mongoid::Errors::Validations, /Validation of Cluster failed./)
-  end
-
-  xit "provides its parent cluster with its ocns" do
-    ht_multi_ocns = htitem_hash.clone
-    ht_multi_ocns[:ocns] << rand(1_000_000).to_i
-    c.ht_items.create(ht_multi_ocns)
-    expect(c.ocns.count).to eq(2)
-  end
-
-  xit "can have an empty ocns field" do
-    expect(build(:ht_item, ocns: []).valid?).to be true
-  end
-
   it "normalizes enum_chron" do
     htitem = build(:ht_item, enum_chron: "v.1 Jul 1999")
     expect(htitem.enum_chron).to eq("v.1 Jul 1999")
@@ -135,31 +116,15 @@ RSpec.describe Clusterable::HtItem do
 
   describe "#cluster" do
     it "returns a cluster with all its ocns" do
-      create(:cluster, ocns: [1, 2])
       h = build(:ht_item, ocns: [1, 2])
 
       expect(h.cluster.ocns).to contain_exactly(1, 2)
     end
 
-    it "returns a cluster with some of its ocns (if there is only one)" do
-      create(:cluster, ocns: [1])
-      h = build(:ht_item, ocns: [1, 2])
+    it "with an item without ocns, returns a cluster with no ocns" do
+      h = build(:ht_item, ocns: [])
 
-      expect(h.cluster.ocns).to contain_exactly(1)
-    end
-
-    it "returns nil if there is no cluster" do
-      h = build(:ht_item, ocns: [1, 2])
-
-      expect { h.cluster }.to raise_exception(/zero clusters/)
-    end
-
-    it "raises an exception if there are multiple clusters with its ocns" do
-      create(:cluster, ocns: [1, 2])
-      create(:cluster, ocns: [3, 4])
-      h = build(:ht_item, ocns: [1, 3])
-
-      expect { h.cluster }.to raise_exception(/multiple clusters/)
+      expect(h.cluster.ocns).to be_empty
     end
   end
 

@@ -1,35 +1,29 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "clustering/cluster_holding"
-require "clustering/cluster_ht_item"
 require "overlap/single_part_overlap"
 
 RSpec.describe Overlap::SinglePartOverlap do
   include_context "with tables for holdings"
 
-  let(:c) { build(:cluster) }
-  let(:ht) { build(:ht_item, :spm, ocns: c.ocns) }
+  let(:ht) { build(:ht_item, :spm) }
+  let(:c) { Cluster.new(ocns: ht.ocns) }
   let(:ht2) do
     build(:ht_item, :spm,
-      ocns: c.ocns,
+      ocns: ht.ocns,
       collection_code: "MIU")
   end
-  let(:h) { build(:holding, ocn: c.ocns.first, organization: "umich", status: "LM") }
+  let(:h) { build(:holding, ocn: ht.ocns.first, organization: "umich", status: "LM") }
   let(:h2) do
     build(:holding,
       ocn: c.ocns.first,
       organization: "umich",
       condition: "BRT")
   end
-  let(:h3) { build(:holding, ocn: c.ocns.first, organization: "smu") }
+  let(:h3) { build(:holding, ocn: ht.ocns.first, organization: "smu") }
 
   before(:each) do
-    c.save
-
-    insert_htitem(ht)
-
-    [h, h2, h3].each { |holding| holding.save }
+    load_test_data(ht, h, h2, h3)
   end
 
   describe "#copy_count" do

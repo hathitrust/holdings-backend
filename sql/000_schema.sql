@@ -59,16 +59,6 @@ CREATE TABLE `holdings_loaded_files` (
   KEY (`type`,`source`,`produced`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DROP TABLE IF EXISTS `cluster_ocns`;
-CREATE TABLE `cluster_ocns` (
-  cluster_id int unsigned NOT NULL,
-  ocn bigint unsigned NOT NULL,
-  PRIMARY KEY (ocn),
-  INDEX (cluster_id)
-) ENGINE=InnoDB;
-
-CREATE SEQUENCE IF NOT EXISTS `cluster_ids`;
-
 DROP TABLE IF EXISTS `holdings`;
 CREATE TABLE `holdings` (
   `ocn`          int(11) NOT NULL,
