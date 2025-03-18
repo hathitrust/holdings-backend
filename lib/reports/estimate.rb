@@ -31,13 +31,13 @@ module Reports
     def find_matching_ocns(ocns = @ocns)
       ocns.each do |ocn|
         marker.incr
-        cluster = Cluster.find_by(ocns: ocn.to_i,
-          "ht_items.0": {"$exists": 1})
+        cluster = Cluster.for_ocns([ocn.to_i])
         next if cluster.nil?
 
         @num_ocns_matched += 1
-
-        next if clusters_seen.include?(cluster._id)
+        # If data changes while this is running, items from some clusters could
+        # get double-counted.
+        next if clusters_seen.include?(cluster.ocns.hash)
 
         count_matching_items(cluster)
 
@@ -87,7 +87,7 @@ module Reports
     private
 
     def count_matching_items(cluster)
-      @clusters_seen << cluster._id
+      @clusters_seen << cluster.ocns.hash
 
       @num_items_matched += cluster.ht_items.count
       cluster.ht_items.each do |ht_item|

@@ -98,7 +98,7 @@ RSpec.describe "phctl integration" do
       expect(costreport).to match(/Num pd volumes: 5/)
     end
 
-    xit "Estimate produces output" do
+    it "Estimate produces output" do
       phctl("report", "estimate", fixture("ocn_list.txt"))
 
       expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/estimates/ocn_list-estimate-*.txt").first))
