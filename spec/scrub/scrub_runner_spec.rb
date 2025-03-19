@@ -83,7 +83,6 @@ RSpec.describe Scrub::ScrubRunner do
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
-      #expect { sr.run }.to change { cluster_count(:holdings) }.by(6)
       expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
     end
   end
@@ -95,7 +94,6 @@ RSpec.describe Scrub::ScrubRunner do
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
-      #expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
       expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
       
       # Expect log file to end up in the remote dir
@@ -115,7 +113,6 @@ RSpec.describe Scrub::ScrubRunner do
           file.puts i
         end
       end
-      #expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(0)
       expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(0)
       # Log should have been uploaded.
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
@@ -126,7 +123,6 @@ RSpec.describe Scrub::ScrubRunner do
         org1,
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
-      #expect { sr_force.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
       expect { sr_force.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
     end
   end
