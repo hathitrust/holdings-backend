@@ -31,8 +31,8 @@ RSpec.describe Scrub::MaxOcn do
     expect(File.exist?(loc)).to be(false)
     smo = described_class.new(mock: true, age_limit: 1)
     smo.ocn
+    FileUtils.touch(loc, mtime: Time.now - 10)
     mtime1 = File.stat(loc).mtime.to_i
-    sleep 2
     smo.ocn
     mtime2 = File.stat(loc).mtime.to_i
     expect(mtime2).to be > mtime1
@@ -42,8 +42,8 @@ RSpec.describe Scrub::MaxOcn do
     expect(File.exist?(loc)).to be(false)
     smo = described_class.new(mock: true, age_limit: 10)
     smo.ocn
+    FileUtils.touch(loc, mtime: Time.now - 1)
     mtime1 = File.stat(loc).mtime.to_i
-    sleep 1
     smo.ocn
     mtime2 = File.stat(loc).mtime.to_i
     expect(mtime2).to eq(mtime1)
