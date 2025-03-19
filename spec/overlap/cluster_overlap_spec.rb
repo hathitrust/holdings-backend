@@ -3,28 +3,27 @@
 require "spec_helper"
 require "overlap/cluster_overlap"
 
-RSpec.xdescribe Overlap::ClusterOverlap do
-  let(:c) { build(:cluster) }
-  let(:spm) { build(:ht_item, ocns: c.ocns, enum_chron: "", billing_entity: "ucr") }
-  let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
+RSpec.describe Overlap::ClusterOverlap do
+  include_context "with tables for holdings"
+
+  let(:spm) { build(:ht_item, enum_chron: "", billing_entity: "ucr") }
+  let(:ocns) { spm.ocns }
+  let(:cluster) { Cluster.for_ocns(ocns) }
+  let(:holding) { build(:holding, ocn: ocns.first, organization: "umich") }
   let(:holding2) do
     build(:holding,
-      ocn: c.ocns.first,
+      ocn: ocns.first,
       organization: "smu",
       condition: "brt")
   end
 
   before(:each) do
-    Cluster.each(&:delete)
-    c.save
-    Clustering::ClusterHtItem.new(spm).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(holding).cluster.tap(&:save)
-    Clustering::ClusterHolding.new(holding2).cluster.tap(&:save)
+    load_test_data(spm, holding, holding2)
   end
 
   describe "#each" do
     it "provides an overlap for each ht_item" do
-      overlap = described_class.new(Cluster.first, ["smu", "umich"])
+      overlap = described_class.new(cluster, ["smu", "umich"])
       expect(overlap.each.count).to eq(2)
       overlap.each do |rec|
         expect(rec.to_hash[:volume_id]).to eq(spm.item_id)
@@ -33,38 +32,13 @@ RSpec.xdescribe Overlap::ClusterOverlap do
     end
 
     it "filters based on org" do
-      overlap = described_class.new(Cluster.first, "smu")
+      overlap = described_class.new(cluster, "smu")
       expect(overlap.each.count).to eq(1)
     end
 
     it "returns everything if we don't give it an org" do
-      overlap = described_class.new(Cluster.first)
+      overlap = described_class.new(cluster)
       expect(overlap.each.count).to eq(3)
-    end
-  end
-
-  describe "Overlap::ClusterOverlap.matching_clusters" do
-    let(:h) { build(:holding) }
-    let(:ht) { build(:ht_item, ocns: [h.ocn], billing_entity: "not_same_as_holding") }
-    let(:ht2) { build(:ht_item, billing_entity: "not_same_as_holding") }
-
-    before(:each) do
-      Cluster.each(&:delete)
-      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
-    end
-
-    it "finds them all if org is nil" do
-      expect(described_class.matching_clusters.count).to eq(2)
-    end
-
-    it "finds by holding" do
-      expect(described_class.matching_clusters(h.organization).count).to eq(1)
-    end
-
-    it "finds by ht_item" do
-      expect(described_class.matching_clusters(ht.billing_entity).count).to eq(2)
     end
   end
 end

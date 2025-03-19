@@ -28,7 +28,6 @@ module Overlap
     def to_hash
       {
         lock_id: lock_id,
-        cluster_id: @cluster._id.to_s,
         volume_id: @ht_item.item_id,
         n_enum: @ht_item.n_enum,
         member_id: @org,
@@ -44,9 +43,9 @@ module Overlap
     def lock_id
       case @cluster.format
       when "mpm"
-        [@cluster._id.to_s, @ht_item.n_enum].join(":")
+        [@cluster.ocns.hash.to_s, @ht_item.n_enum].join(":")
       when "spm"
-        @cluster._id.to_s
+        @cluster.ocns.hash.to_s
       when "ser", "ser/spm"
         @ht_item.item_id
       end

@@ -87,6 +87,7 @@ RSpec.describe "phctl integration" do
 
   describe "Report" do
     include_context "with mocked solr response"
+    include_context "with complete data for one cluster"
 
     it "CostReportWorkflow produces output" do
       # item counts match what we have in the mock solr response
@@ -112,7 +113,7 @@ RSpec.describe "phctl integration" do
       expect(File.size("#{output_path}/member_counts_#{Date.today}.tsv")).to be > 0
     end
 
-    xit "EtasOverlap produces output" do
+    it "EtasOverlap produces output" do
       phctl(*%w[report etas-overlap umich])
 
       expect(File.size("#{ENV["TEST_TMP"]}/etas_overlap_report_remote/umich-hathitrust-member-data/analysis/etas_overlap_umich_#{Date.today}.tsv.gz")).to be > 0

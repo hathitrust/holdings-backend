@@ -3,10 +3,12 @@
 require "spec_helper"
 require "reports/etas_organization_overlap_report"
 
-RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
+RSpec.describe Reports::EtasOrganizationOverlapReport do
   let(:tmp_local) { Settings.local_report_path }
   let(:tmp_pers) { Settings.etas_overlap_reports_path }
   let(:tmp_rmt) { Settings.etas_overlap_reports_remote_path }
+
+  include_context "with tables for holdings"
 
   describe "#initialize" do
     it "makes the directory if it doesn't exist" do
@@ -43,9 +45,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
     let(:ht) { build(:ht_item, ocns: [h.ocn]) }
 
     before(:each) do
-      Cluster.each(&:delete)
-      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      load_test_data(h, ht)
     end
 
     it "gzips and prepends file name" do
@@ -65,11 +65,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
     let(:orgs) { [h.organization, h2.organization] }
 
     before(:each) do
-      Cluster.each(&:delete)
-      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht2).cluster.tap(&:save)
+      load_test_data(h, h2, ht, ht2)
     end
 
     it "has a file for each organization" do
@@ -81,8 +77,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
     end
 
     it "only has a file for the organization given" do
-      new_h = build(:holding, ocn: h2.ocn)
-      Clustering::ClusterHolding.new(new_h).cluster.tap(&:save)
+      load_test_data(build(:holding, ocn: h2.ocn))
       rpt = described_class.new(orgs.last)
       rpt.run
       expect(rpt.reports.keys).to eq([orgs.last])
@@ -121,9 +116,11 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
 
     it "has records for holdings that don't match HTItems" do
       no_match = build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1")
-      Clustering::ClusterHolding.new(no_match).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn],
-        enum_chron: "V.2")).cluster.tap(&:save)
+      load_test_data(
+        no_match,
+        build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn], enum_chron: "V.2")
+      )
+
       rpt = described_class.new.tap(&:run)
       rpt.report_for_org(no_match.organization).close
       recs = File.readlines(rpt.report_for_org(no_match.organization).path)
@@ -141,9 +138,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
     end
 
     before(:each) do
-      Cluster.each(&:delete)
-      Clustering::ClusterHolding.new(h1).cluster.tap(&:save)
-      Clustering::ClusterHolding.new(h2).cluster.tap(&:save)
+      load_test_data(h1, h2)
     end
 
     it "writes only 1 no-match record" do
@@ -156,7 +151,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
 
     it "writes only 1 match record" do
       ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "SE", enum_chron: "V.3")
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      load_test_data(ht)
       rpt = described_class.new(h1.organization)
       rpt.run
       rpt.report_for_org(h1.organization).close
@@ -169,7 +164,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
 
     it "writes only the 1 record that matches" do
       ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "BK", enum_chron: "V.2")
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      load_test_data(ht)
       rpt = described_class.new(h1.organization)
       rpt.run
       rpt.report_for_org(h1.organization).close
@@ -186,9 +181,7 @@ RSpec.xdescribe Reports::EtasOrganizationOverlapReport do
     let(:ht) { build(:ht_item, ocns: [h.ocn]) }
 
     before(:each) do
-      Cluster.each(&:delete)
-      Clustering::ClusterHolding.new(h).cluster.tap(&:save)
-      Clustering::ClusterHtItem.new(ht).cluster.tap(&:save)
+      load_test_data(h, ht)
     end
 
     it "moves the gzipped report to the persistent storage path" do

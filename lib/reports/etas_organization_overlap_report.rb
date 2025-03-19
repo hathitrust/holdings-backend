@@ -22,6 +22,10 @@ module Reports
       # public access location
       @remote_report_path = Settings.etas_overlap_reports_remote_path
       @organization = organization
+
+      # TODO - this probably won't scale; would be better to iterate over
+      # catalog records
+      @ocns_seen = Set.new
     end
 
     def open_report(org, date)
@@ -38,14 +42,21 @@ module Reports
     end
 
     def clusters_with_holdings
-      raise "not implemented"
-      Utils::SessionKeepAlive.new(120).run do
-        if organization.nil?
-          Cluster.batch_size(Settings.etas_overlap_batch_size)
-            .where("holdings.0": {"$exists": 1}).no_timeout.pluck(:_id).to_a
-        else
-          Cluster.batch_size(Settings.etas_overlap_batch_size)
-            .where("holdings.organization": organization).no_timeout.pluck(:_id).to_a
+      return to_enum(__method__) unless block_given?
+
+      if organization.nil?
+        Clusterable::Holding.all do |h|
+          cluster = h.cluster
+          next if cluster.ocns.any? { |o| @ocns_seen.include?(o) }
+          @ocns_seen.merge(cluster.ocns)
+          yield cluster
+        end
+      else
+        Clusterable::Holding.for_organization(organization) do |h|
+          cluster = h.cluster
+          next if cluster.ocns.any? { |o| @ocns_seen.include?(o) }
+          @ocns_seen.merge(cluster.ocns)
+          yield cluster
         end
       end
     end
@@ -55,7 +66,7 @@ module Reports
     # @param cluster [Cluster]
     # @param holdings_matched [Set] set of holdings that did match an item
     def missed_holdings(cluster, holdings_matched)
-      org_local_ids = Set.new(holdings_matched.pluck(:organization, :local_id))
+      org_local_ids = Set.new(holdings_matched.map { |h| [h.organization, h.local_id] })
       if organization.nil?
         cluster.holdings.reject { |h| org_local_ids.include? [h.organization, h.local_id] }
       else
@@ -95,9 +106,7 @@ module Reports
     end
 
     def run
-      clusters_with_holdings.each do |c|
-        cluster = Cluster.find_by(_id: c)
-        next if cluster.nil?
+      clusters_with_holdings.each do |cluster|
         holdings_matched = write_overlaps(cluster, organization)
         write_records_for_unmatched_holdings(cluster, holdings_matched)
         Thread.pass
