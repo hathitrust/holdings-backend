@@ -129,23 +129,4 @@ It does NOT attempt to update the concordance as it may conflict with reporting 
 
 ## Other Actions
 
-### Delete Holdings
-
-`bin/holdings_deleter.rb` can delete a set of holdings which matches the given criteria.
-Critera are given on the commandline as key-value pairs, where the key corresponds to a field on `Clusterable::Holding`.
-
-It is invoked as:
-`bundle exec ruby bin/holdings_deleter.rb --key_1 val_1 ... --key_n val_n`
-
-Internally the criteria are joined with an `AND`-operator, so:
-
-`bundle exec ruby bin/holdings_deleter.rb --organization starfleet --status WD`
-
-... would delete all holdings held by starfleet AND with status WD, nothing else.
-
-Additional non-field control switches are: 
-
-* `--noop` if you don't actually want to execute the deletes
-* `--verbose` for extra logging
-* `--leave_empties` if you don't want to delete empty clusters that may result from deleting holdings.
-* `--help` for the full set of options available.
+...
