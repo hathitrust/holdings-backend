@@ -8,7 +8,7 @@ module Reports
   # Generate IC estimate from a list of OCNS
   class Estimate
     attr_accessor :ocns, :ocn_file, :h_share_total, :num_ocns_matched, :num_items_matched, :num_items_pd,
-      :num_items_ic, :clusters_seen, :marker
+      :num_items_ic, :ocns_seen, :marker
 
     def initialize(ocn_file = nil, batch_size = 100_000)
       @ocn_file = ocn_file
@@ -17,7 +17,7 @@ module Reports
       @num_items_matched = 0
       @num_items_pd = 0
       @num_items_ic = 0
-      @clusters_seen = Set.new
+      @ocns_seen = Set.new
       @marker = Services.progress_tracker.call(batch_size: batch_size)
       if Settings.estimates_path.nil?
         raise ArgumentError, "Settings.estimates_path must be set."
@@ -32,12 +32,14 @@ module Reports
       ocns.each do |ocn|
         marker.incr
         cluster = Cluster.for_ocns([ocn.to_i])
-        next if cluster.nil?
+        next if cluster.ht_items.empty?
 
+        # number of _submitted_ OCNs matched -- true if there are any items
+        # that ocn matches, regardless of if we've already processed overlap
+        # for that cluster
         @num_ocns_matched += 1
-        # If data changes while this is running, items from some clusters could
-        # get double-counted.
-        next if clusters_seen.include?(cluster.ocns.hash)
+
+        next if cluster.ocns.any? { |ocn| ocns_seen.include?(ocn) }
 
         count_matching_items(cluster)
 
@@ -87,15 +89,16 @@ module Reports
     private
 
     def count_matching_items(cluster)
-      @clusters_seen << cluster.ocns.hash
+      ocns_seen.merge(cluster.ocns)
 
       @num_items_matched += cluster.ht_items.count
       cluster.ht_items.each do |ht_item|
-        if ht_item.access == "allow"
+        if Clusterable::HtItem::IC_RIGHTS_CODES.include?(ht_item.rights)
+          @num_items_ic += 1
+        else
           @num_items_pd += 1
           next
         end
-        @num_items_ic += 1
 
         overlap = Overlap::HtItemOverlap.new(ht_item)
         # Insert a placeholder for the prospective member
