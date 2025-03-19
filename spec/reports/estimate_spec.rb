@@ -6,8 +6,8 @@ require "reports/estimate"
 RSpec.describe Reports::Estimate do
   include_context "with tables for holdings"
 
-  let(:ht_allow) { build(:ht_item, access: "allow") }
-  let(:ht_deny) { build(:ht_item, access: "deny") }
+  let(:ht_allow) { build(:ht_item, rights: "pd") }
+  let(:ht_deny) { build(:ht_item, rights: "ic") }
   let(:ocns) { [1, 2, ht_allow.ocns, ht_deny.ocns].flatten }
   let(:rpt) { described_class.new }
 
@@ -38,6 +38,23 @@ RSpec.describe Reports::Estimate do
       rpt.find_matching_ocns(ocns)
       # the contributor gets the other half of the IC item
       expect(rpt.h_share_total).to eq(0.5)
+    end
+
+    it "counts only matching ocns" do
+      rpt.find_matching_ocns(ocns)
+      expect(rpt.num_ocns_matched).to eq(2)
+    end
+
+    it "counts items that match multiple OCNs only once" do
+      multi_ocn_item = build(:ht_item, rights: "pd", ocns: [5, 6]).tap { |i| insert_htitem(i) }
+      rpt.find_matching_ocns(multi_ocn_item.ocns)
+      expect(rpt.num_items_pd).to eq(1)
+    end
+
+    it "counts icus items as pd" do
+      icus_item = build(:ht_item, rights: "icus").tap { |i| insert_htitem(i) }
+      rpt.find_matching_ocns(icus_item.ocns)
+      expect(rpt.num_items_pd).to eq(1)
     end
   end
 
