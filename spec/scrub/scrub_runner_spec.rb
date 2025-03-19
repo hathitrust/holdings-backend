@@ -95,7 +95,6 @@ RSpec.describe Scrub::ScrubRunner do
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
       expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
-      
       # Expect log file to end up in the remote dir
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
