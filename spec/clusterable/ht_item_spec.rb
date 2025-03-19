@@ -173,4 +173,32 @@ RSpec.describe Clusterable::HtItem do
       expect(no_ocn1.batch_with?(no_ocn3)).to be false
     end
   end
+
+  describe "Factory (spec/factories/ht_item.rb)" do
+    it "can specify billing_entity" do
+      ht_item = build(:ht_item, billing_entity: "umich")
+      expect(ht_item.billing_entity).to eq "umich"
+    end
+    it "can specify collection_code" do
+      ht_item = build(:ht_item, collection_code: "MIU")
+      expect(ht_item.collection_code).to eq "MIU"
+    end
+    it "makes sure collection_code and billing_entity belong to the same org" do
+      ht_item_with_billing_entity = build(:ht_item, billing_entity: "umich")
+      expect(ht_item_with_billing_entity.collection_code).to eq "MIU"
+
+      # Clusterable::HtItem.collection_code= takes care of this for us,
+      # by setting the proper billing_entity given a collection_code
+      ht_item_with_collection_code = build(:ht_item, collection_code: "MIU")
+      expect(ht_item_with_collection_code.billing_entity).to eq "umich"
+    end
+    it "bases collection_code on billing_entity in case they don't match" do
+      ht_item_with_mismatch = build(:ht_item, billing_entity: "umich", collection_code: "PU")
+      expect(ht_item_with_mismatch.collection_code).to eq "MIU"
+    end
+    it "makes billing_entity and collection_code match if neither are specified" do
+      ht_item_with_neither = build(:ht_item)
+      expect([["umich", "MIU"], ["upenn", "PU"]]).to include [ht_item_with_neither.billing_entity, ht_item_with_neither.collection_code]
+    end
+  end
 end

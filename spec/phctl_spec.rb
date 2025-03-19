@@ -6,7 +6,6 @@ require "phctl"
 RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
   commands = {
     %w[load holdings somefile] => Jobs::Load::Holdings,
-    %w[cleanup holdings instid date] => Jobs::Cleanup::Holdings,
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
     %w[concordance delta oldfile newfile] => Jobs::Concordance::Delta,
     %w[sp update infile] => Jobs::Common,
