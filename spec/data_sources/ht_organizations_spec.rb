@@ -63,16 +63,7 @@ RSpec.describe DataSources::HTOrganizations do
   describe "db connection" do
     let(:ht_organizations) { described_class.new }
 
-    # Ensure we have a clean database connection for each test
-    around(:each) do |example|
-      old_holdings_db = Services.holdings_db
-      Services.register(:holdings_db) { DataSources::HoldingsDB.connection }
-      begin
-        example.run
-      ensure
-        Services.register(:holdings_db) { old_holdings_db }
-      end
-    end
+    include_context "with tables for holdings"
 
     it "can fetch data from the database" do
       expect(ht_organizations["umich"].country_code).to eq("us")

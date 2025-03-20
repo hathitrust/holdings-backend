@@ -1,13 +1,6 @@
 concordance_path: <%= ENV["CONCORDANCE_PATH"] %>
 cost_report_freq_path: <%= ENV["COST_REPORT_FREQ_PATH"] %>
 cost_report_path: <%= ENV["COST_REPORT_PATH"] %>
-database:
-  opts:
-    adapter_class: mysql2
-    host: <%= ENV["MARIADB_HOLDINGS_RW_HOST"] %>
-    user: <%= ENV["MARIADB_HOLDINGS_RW_USERNAME"] %>
-    password: <%= ENV["MARIADB_HOLDINGS_RW_PASSWORD"] %>
-    database: <%= ENV["MARIADB_HOLDINGS_RW_DATABASE"] %>
 deprecation_report_path: <%= ENV["DEPRECATION_REPORT_PATH"] %>
 estimates_path: <%= ENV["ESTIMATES_PATH"] %>
 etas_overlap_batch_size: <%= ENV["ETAS_OVERLAP_BATCH_SIZE"] %>

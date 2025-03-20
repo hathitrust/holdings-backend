@@ -29,7 +29,7 @@ module Clusterable
         hfo2_htid = Sequel.qualify(:hfo2, :htid)
         hfo2_value = Sequel.qualify(:hfo2, :value)
 
-        related_ocns = Services.holdings_db
+        related_ocns = table.db
           .from(Sequel.as(:hf_oclc, :hfo1))
           .join(Sequel.as(:hf_oclc, :hfo2),
             hfo1_htid => hfo2_htid)

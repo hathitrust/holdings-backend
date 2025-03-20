@@ -6,7 +6,7 @@ module Clusterable
     attr_accessor :variant, :canonical
 
     def self.table
-      Services[:holdings_db][:oclc_concordance]
+      Services.concordance_table
     end
 
     def self.with_ocns(ocns, cluster: nil)
@@ -29,7 +29,7 @@ module Clusterable
       o1_canonical = Sequel.qualify(:o1, :canonical)
 
       concordance_ocns =
-        Services.holdings_db
+        table.db
           .select(o2_variant, o2_canonical)
           .from(Sequel.as(:oclc_concordance, :o1), Sequel.as(:oclc_concordance, :o2))
           .where(o1_canonical => o2_canonical)

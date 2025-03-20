@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "mysql2"
 require "services"
 
 module DataSources
@@ -52,7 +51,7 @@ module DataSources
     end
 
     def load_from_db
-      Services.holdings_db[:ht_billing_members]
+      Services.billing_members_table
         .select(:inst_id, :country_code, :weight, :oclc_sym, :status)
         .as_hash(:inst_id)
         .transform_values { |h| HTOrganization.new(**h) }

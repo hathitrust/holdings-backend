@@ -22,6 +22,10 @@ x-holdings-container: &holdings-container-defaults
     MARIADB_HOLDINGS_RW_USERNAME: root
     MARIADB_HOLDINGS_RW_PASSWORD: holdings
     MARIADB_HOLDINGS_RW_DATABASE: holdings_dev
+    MARIADB_HT_RO_HOST: mariadb
+    MARIADB_HT_RO_USERNAME: root
+    MARIADB_HT_RO_PASSWORD: holdings
+    MARIADB_HT_RO_DATABASE: holdings_dev
     MARIADB_HATHIFILES_RW_HOST: mariadb
     MARIADB_HATHIFILES_RW_USERNAME: root
     MARIADB_HATHIFILES_RW_PASSWORD: holdings
@@ -42,6 +46,7 @@ services:
       DATABASE_ENV: test
       MARIADB_HATHIFILES_RW_DATABASE: holdings_test
       MARIADB_HOLDINGS_RW_DATABASE: holdings_test
+      MARIADB_HT_RO_DATABASE: holdings_test
     depends_on: 
       mariadb: *healthy
       redis: *healthy

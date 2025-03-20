@@ -20,7 +20,7 @@ module Clusterable
     attr_reader :date_received, :enum_chron
 
     def self.count
-      Services.holdings_db[:holdings].count
+      table.count
     end
 
     def cluster
