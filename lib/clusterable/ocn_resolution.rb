@@ -9,14 +9,14 @@ module Clusterable
       Services[:holdings_db][:oclc_concordance]
     end
 
-    def self.with_ocns(ocns)
+    def self.with_ocns(ocns, cluster: nil)
       return to_enum(__method__, ocns) unless block_given?
 
       ocns = ocns.to_a
       dataset = table.where(variant: ocns).or(canonical: ocns)
 
       dataset.each do |row|
-        yield new(variant: row[:variant], canonical: row[:canonical])
+        yield new(variant: row[:variant], canonical: row[:canonical], cluster: cluster)
       end
     end
 
@@ -42,7 +42,7 @@ module Clusterable
     end
 
     def cluster
-      Cluster.for_ocns(ocns).first
+      @cluster ||= Cluster.for_ocns(ocns)
     end
 
     def table

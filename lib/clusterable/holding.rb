@@ -102,13 +102,13 @@ module Clusterable
       end
     end
 
-    def self.with_ocns(ocns)
+    def self.with_ocns(ocns, cluster: nil)
       return to_enum(__method__, ocns) unless block_given?
 
       dataset = table.where(ocn: ocns.to_a)
 
       dataset.each do |row|
-        yield from_row(row)
+        yield from_row(row, cluster: cluster)
       end
     end
 
@@ -122,8 +122,8 @@ module Clusterable
       end
     end
 
-    def self.from_row(row)
-      new(row)
+    def self.from_row(row, cluster: nil)
+      new(row.merge(cluster: cluster))
     end
 
     def self.batch_add(batch)

@@ -53,6 +53,7 @@ module Clusterable
       all_attrs.each do |attr|
         send(attr.to_s + "=", params[attr]) if params.has_key?(attr)
       end
+      @cluster = params[:cluster] if params[:cluster]
     end
 
     def ==(other)
