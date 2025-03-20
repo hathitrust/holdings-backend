@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "clusterable/holding"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
 require "date"
@@ -10,6 +11,8 @@ require "scrub/scrub_runner"
 require "spec_helper"
 
 RSpec.describe Scrub::ScrubRunner do
+  include_context "with tables for holdings"
+
   let(:org1) { "umich" }
   # Only set force_holding_loader_cleanup_test to true in testing.
   let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true}) }
@@ -74,24 +77,24 @@ RSpec.describe Scrub::ScrubRunner do
     end
   end
 
-  xdescribe "#run" do
+  describe "#run" do
     it "checks a member for new files and scrubs+loads them" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
-      expect { sr.run }.to change { cluster_count(:holdings) }.by(6)
+      expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
     end
   end
 
-  xdescribe "#run_file" do
+  describe "#run_file" do
     it "run for a specific remote file" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
-      expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
+      expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
       # Expect log file to end up in the remote dir
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
@@ -109,7 +112,7 @@ RSpec.describe Scrub::ScrubRunner do
           file.puts i
         end
       end
-      expect { sr.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(0)
+      expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(0)
       # Log should have been uploaded.
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
@@ -119,7 +122,7 @@ RSpec.describe Scrub::ScrubRunner do
         org1,
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
-      expect { sr_force.run_file(remote_file) }.to change { cluster_count(:holdings) }.by(6)
+      expect { sr_force.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
     end
   end
 end

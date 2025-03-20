@@ -19,6 +19,10 @@ module Clusterable
 
     attr_reader :date_received, :enum_chron
 
+    def self.count
+      Services.holdings_db[:holdings].count
+    end
+
     def cluster
       @cluster ||= Cluster.for_ocns([ocn])
     end
