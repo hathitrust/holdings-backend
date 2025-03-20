@@ -10,7 +10,7 @@ module Reports
     attr_accessor :ocns, :ocn_file, :h_share_total, :num_ocns_matched, :num_items_matched, :num_items_pd,
       :num_items_ic, :ocns_seen, :marker
 
-    def initialize(ocn_file = nil, batch_size = 100_000)
+    def initialize(ocn_file = nil, batch_size = 1000)
       @ocn_file = ocn_file
       @h_share_total = 0
       @num_ocns_matched = 0
@@ -18,7 +18,7 @@ module Reports
       @num_items_pd = 0
       @num_items_ic = 0
       @ocns_seen = Set.new
-      @marker = Services.progress_tracker.call(batch_size: batch_size)
+      @marker = Milemarker.new(batch_size: batch_size)
       if Settings.estimates_path.nil?
         raise ArgumentError, "Settings.estimates_path must be set."
       end
@@ -31,6 +31,7 @@ module Reports
     def find_matching_ocns(ocns = @ocns)
       ocns.each do |ocn|
         marker.incr
+
         cluster = Cluster.for_ocns([ocn.to_i])
         next if cluster.ht_items.empty?
 

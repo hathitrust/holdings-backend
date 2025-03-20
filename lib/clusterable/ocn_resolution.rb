@@ -20,8 +20,10 @@ module Clusterable
       end
     end
 
-    # Returns the given OCNs and any variant or canonical OCNs the given OCNs map to.
+    # Returns the given OCNs and any variant or canonical OCNs the given OCNs
+    # map to, as a Set
     def self.concordanced_ocns(ocns)
+      ocn_query = ocns.map(&:to_s).uniq
       # and gather all OCNs that concordance to those OCNs
       o2_variant = Sequel.qualify(:o2, :variant)
       o2_canonical = Sequel.qualify(:o2, :canonical)
@@ -34,11 +36,13 @@ module Clusterable
           .from(Sequel.as(:oclc_concordance, :o1), Sequel.as(:oclc_concordance, :o2))
           .where(o1_canonical => o2_canonical)
           .where(Sequel.or(
-            o1_canonical => ocns,
-            o1_variant => ocns
-          ))
+            o1_canonical => ocn_query,
+            o1_variant => ocn_query
+          )).to_a
 
-      (ocns + concordance_ocns.map(:variant) + concordance_ocns.map(:canonical)).uniq.flatten
+      all_ocns = (ocns + concordance_ocns.map { |o| o[:variant] } + concordance_ocns.map { |o| o[:canonical] })
+
+      all_ocns.flatten.map(&:to_i).to_set
     end
 
     def cluster

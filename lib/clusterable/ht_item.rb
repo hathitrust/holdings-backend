@@ -33,12 +33,12 @@ module Clusterable
           .from(Sequel.as(:hf_oclc, :hfo1))
           .join(Sequel.as(:hf_oclc, :hfo2),
             hfo1_htid => hfo2_htid)
-          .where(hfo1_value => ocns.map(&:to_s))
+          .where(hfo1_value => ocns.map(&:to_s).uniq)
           .select(hfo2_value)
           .distinct
           .map(:value)
 
-        (ocns + related_ocns).uniq.flatten
+        (ocns + related_ocns).flatten.map(&:to_i).to_set
       end
 
       def with_ocns(ocns, cluster: nil)
