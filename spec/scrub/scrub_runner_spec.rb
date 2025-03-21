@@ -105,7 +105,6 @@ RSpec.describe Scrub::ScrubRunner do
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
       # expect to see a row in holdings_loaded_files with filename=fixture_file_name
       expect(count_loaded_files).to eq(1)
-      
     end
     it "will refuse a file if it breaks Settings.scrub_line_count_diff_max" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
