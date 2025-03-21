@@ -73,7 +73,7 @@ module Loader
       timestamp = options["loaded_file"].match(/\d{4}-\d\d-\d\d-\d{6}/)[0]
       time = Time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
       loaded_file_hash = {
-        filename: options["loaded_file"],
+        filename: options["raw_file"],
         produced: time.to_date,
         loaded: time,
         source: options["organization"],
