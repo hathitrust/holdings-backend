@@ -6,15 +6,17 @@ require "overlap/cluster_overlap"
 RSpec.describe Overlap::ClusterOverlap do
   include_context "with tables for holdings"
 
-  let(:spm) { build(:ht_item, enum_chron: "", billing_entity: "ucr") }
+  let(:spm) { build(:ht_item, enum_chron: "", billing_entity: "upenn") }
   let(:ocns) { spm.ocns }
   let(:cluster) { Cluster.for_ocns(ocns) }
   let(:holding) { build(:holding, ocn: ocns.first, organization: "umich") }
   let(:holding2) do
-    build(:holding,
+    build(
+      :holding,
       ocn: ocns.first,
       organization: "smu",
-      condition: "brt")
+      condition: "brt"
+    )
   end
 
   before(:each) do

@@ -28,5 +28,21 @@ FactoryBot.define do
       bib_fmt { "SE" }
       enum_chron { "V.#{rand(200).to_int}" }
     end
+
+    # The collection_code and billing_entity must "belong to" the same organization.
+    # Not putting this in the main class, because this is only addressing wonky tests.
+    after(:build) do |ht_item, context|
+      query = {
+        billing_entity: context.billing_entity,
+        content_provider_cluster: context.billing_entity,
+        responsible_entity: context.billing_entity
+      }
+      collection_codes = Services.holdings_db[:ht_collections][query]
+
+      # If the collection_code does not belong to the billing_entity, make it.
+      if !collection_codes.nil? && context.collection_code != collection_codes[:collection]
+        context.collection_code = collection_codes[:collection]
+      end
+    end
   end
 end

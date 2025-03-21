@@ -52,18 +52,6 @@ module PHCTL
     end
   end
 
-  class Cleanup < JobCommand
-    desc "holdings INST DATE", "Deletes holdings for INST that were last updated prior to DATE."
-    def holdings(inst, date)
-      run_job(Jobs::Cleanup::Holdings, inst, date)
-    end
-
-    desc "duplicate_holdings", "Cleans duplicate holdings from all clusters"
-    def duplicate_holdings
-      CleanupDuplicateHoldings.queue_jobs
-    end
-  end
-
   class Concordance < JobCommand
     desc "validate INFILE OUTFILE", "Validate a concordance file"
     def validate(infile, outfile)
@@ -254,8 +242,5 @@ module PHCTL
 
     desc "sp", "Shared print operations"
     subcommand "sp", SharedPrintOps
-
-    desc "cleanup", "Cleanup operations"
-    subcommand "cleanup", Cleanup
   end
 end

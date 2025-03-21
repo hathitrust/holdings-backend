@@ -41,14 +41,6 @@ RSpec.describe "phctl integration" do
     end
   end
 
-  xdescribe "Cleanup" do
-    it "Holdings removes old holdings" do
-      phctl("load", "holdings", fixture("umich_fake_testdata.ndj"))
-      expect { phctl(*%w[cleanup holdings umich 2022-01-01]) }
-        .to change { cluster_count(:holdings) }.by(-10)
-    end
-  end
-
   describe "Concordance" do
     it "Validate produces output and log" do
       def cleanup(output)

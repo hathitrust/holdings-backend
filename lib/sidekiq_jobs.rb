@@ -62,15 +62,6 @@ module Jobs
     end
   end
 
-  module Cleanup
-    class Holdings
-      include Sidekiq::Job
-      def perform(instid, date)
-        Clustering::ClusterHolding.delete_old_holdings(instid, Date.parse(date))
-      end
-    end
-  end
-
   module Concordance
     class Validate
       include Sidekiq::Job
