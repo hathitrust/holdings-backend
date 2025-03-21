@@ -157,6 +157,26 @@ RSpec.describe "phctl integration" do
     end
   end
 
+  describe "Parse" do
+    it "parses holdings xml files" do
+      cmd_array = [
+        "parse",
+        "parse-holdings-xml",
+        "--organization", "foo",
+        "--files", fixture("exlibris_mon_in.xml"), fixture("exlibris_ser_in.xml"),
+        "--output-dir", ENV["TEST_TMP"]
+      ]
+      phctl(*cmd_array)
+
+      date = Date.today.strftime("%Y%m%d")
+      mon_output = File.join(ENV["TEST_TMP"], "foo_mon_full_#{date}.tsv")
+      ser_output = File.join(ENV["TEST_TMP"], "foo_ser_full_#{date}.tsv")
+
+      expect(FileUtils.compare_file(mon_output, fixture("exlibris_mon_out.tsv"))).to be_truthy
+      expect(FileUtils.compare_file(ser_output, fixture("exlibris_ser_out.tsv"))).to be_truthy
+    end
+  end
+
   describe "Scrub" do
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.

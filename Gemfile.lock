@@ -110,6 +110,9 @@ GEM
     library_stdnums (1.6.0)
     lint_roller (1.1.0)
     logger (1.6.6)
+    marc (1.3.0)
+      nokogiri (~> 1.0)
+      rexml
     method_source (1.1.0)
     milemarker (1.0.1)
     minitest (5.25.4)
@@ -117,6 +120,10 @@ GEM
     net-http (0.6.0)
       uri
     nio4r (2.7.4)
+    nokogiri (1.18.5-aarch64-linux-gnu)
+      racc (~> 1.4)
+    nokogiri (1.18.5-x86_64-linux-gnu)
+      racc (~> 1.4)
     pairing_heap (3.1.0)
     parallel (1.26.3)
     parser (3.3.7.1)
@@ -281,6 +288,7 @@ DEPENDENCIES
   faker
   faraday
   hathifiles_database!
+  marc
   mysql2
   prometheus-client
   pry
