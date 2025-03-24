@@ -283,7 +283,6 @@ DEPENDENCIES
   canister
   climate_control
   debug
-  dotenv
   ettin
   factory_bot
   faker

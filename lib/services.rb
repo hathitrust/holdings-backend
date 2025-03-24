@@ -13,16 +13,16 @@ require "prometheus/client/push"
 
 Services = Canister.new
 
-Services.register(:holdings_rw_db) { DataSources::MariaDB.new("HOLDINGS_RW") }
-Services.register(:holdings_table) { Services.holdings_rw_db[:holdings] }
-Services.register(:relational_overlap_table) { Services.holdings_rw_db[:holdings_htitem_htmember] }
+Services.register(:holdings_db) { DataSources::MariaDB.new("HOLDINGS_RW") }
+Services.register(:holdings_table) { Services.holdings_db[:holdings] }
+Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
 
-Services.register(:ht_ro_db) { DataSources::MariaDB.new("HT_RO") }
-Services.register(:hathifiles_table) { Services.ht_ro_db[:hf] }
-Services.register(:hathifiles_ocn_table) { Services.ht_ro_db[:hf_oclc] }
-Services.register(:concordance_table) { Services.ht_ro_db[:oclc_concordance] }
-Services.register(:billing_members_table) { Services.ht_ro_db[:ht_billing_members] }
-Services.register(:collections_table) { Services.ht_ro_db[:ht_collections] }
+Services.register(:ht_db) { DataSources::MariaDB.new("HT_RO") }
+Services.register(:hathifiles_table) { Services.ht_db[:hf] }
+Services.register(:hathifiles_ocn_table) { Services.ht_db[:hf_oclc] }
+Services.register(:concordance_table) { Services.ht_db[:oclc_concordance] }
+Services.register(:billing_members_table) { Services.ht_db[:ht_billing_members] }
+Services.register(:collections_table) { Services.ht_db[:ht_collections] }
 
 Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
 Services.register(:ht_collections) { DataSources::HTCollections.new }

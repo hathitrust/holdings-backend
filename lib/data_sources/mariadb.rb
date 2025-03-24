@@ -1,13 +1,8 @@
 # frozen_string_literal: true
 
-require "dotenv"
-Dotenv.load(".env")
-
 require "delegate"
-require "trilogy"
 require "sequel"
 require "services"
-require "tempfile"
 
 module DataSources
   # Backend for connection to MySQL database for production information about
