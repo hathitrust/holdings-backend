@@ -29,23 +29,23 @@ module Clusterable
         hfo2_htid = Sequel.qualify(:hfo2, :htid)
         hfo2_value = Sequel.qualify(:hfo2, :value)
 
-        related_ocns = Services.holdings_db
+        related_ocns = table.db
           .from(Sequel.as(:hf_oclc, :hfo1))
           .join(Sequel.as(:hf_oclc, :hfo2),
             hfo1_htid => hfo2_htid)
-          .where(hfo1_value => ocns.map(&:to_s))
+          .where(hfo1_value => ocns.map(&:to_s).uniq)
           .select(hfo2_value)
           .distinct
           .map(:value)
 
-        (ocns + related_ocns).uniq.flatten
+        (ocns + related_ocns).flatten.map(&:to_i).to_set
       end
 
-      def with_ocns(ocns)
+      def with_ocns(ocns, cluster: nil)
         return to_enum(__method__, ocns) unless block_given?
 
         ocns_dataset(ocns).each do |row|
-          yield from_row(row)
+          yield from_row(row, cluster: cluster)
         end
       end
 
@@ -78,7 +78,7 @@ module Clusterable
         from_row(dataset.first!)
       end
 
-      def from_row(row)
+      def from_row(row, cluster: nil)
         new({
           item_id: row[:htid],
           ht_bib_key: row[:bib_num],
@@ -87,7 +87,8 @@ module Clusterable
           bib_fmt: row[:bib_fmt],
           enum_chron: row[:description],
           collection_code: row[:collection_code],
-          ocns: row[:oclc]
+          ocns: row[:oclc],
+          cluster: cluster
         })
       end
 
@@ -111,11 +112,6 @@ module Clusterable
           table
         end
       end
-    end
-
-    def initialize(params = {})
-      super
-      @cluster = params[:cluster] if params[:cluster]
     end
 
     def cluster

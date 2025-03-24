@@ -51,6 +51,12 @@ RSpec.describe Clusterable::Holding do
       holding = build(:holding, ocn: 1001)
       expect(holding.cluster.ocns).to contain_exactly(1001, 1002, 1003)
     end
+
+    it "can be provided to the constructor" do
+      c = double(:cluster)
+      h = described_class.new({cluster: c})
+      expect(h.cluster).to eq(c)
+    end
   end
 
   describe "#==" do

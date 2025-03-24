@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "mysql2"
 require "services"
 
 module DataSources
@@ -41,7 +40,7 @@ module DataSources
     end
 
     def load_from_db
-      Services.holdings_db[:ht_collections]
+      Services.collections_table
         .select(:collection,
           :content_provider_cluster,
           :responsible_entity,

@@ -126,6 +126,12 @@ RSpec.describe Clusterable::HtItem do
 
       expect(h.cluster.ocns).to be_empty
     end
+
+    it "can be provided to the constructor" do
+      c = double(:cluster)
+      h = described_class.new({cluster: c})
+      expect(h.cluster).to eq(c)
+    end
   end
 
   describe "#to_hash" do

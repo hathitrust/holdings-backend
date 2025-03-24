@@ -6,22 +6,24 @@ module Clusterable
     attr_accessor :variant, :canonical
 
     def self.table
-      Services[:holdings_db][:oclc_concordance]
+      Services.concordance_table
     end
 
-    def self.with_ocns(ocns)
+    def self.with_ocns(ocns, cluster: nil)
       return to_enum(__method__, ocns) unless block_given?
 
       ocns = ocns.to_a
       dataset = table.where(variant: ocns).or(canonical: ocns)
 
       dataset.each do |row|
-        yield new(variant: row[:variant], canonical: row[:canonical])
+        yield new(variant: row[:variant], canonical: row[:canonical], cluster: cluster)
       end
     end
 
-    # Returns the given OCNs and any variant or canonical OCNs the given OCNs map to.
+    # Returns the given OCNs and any variant or canonical OCNs the given OCNs
+    # map to, as a Set
     def self.concordanced_ocns(ocns)
+      ocn_query = ocns.map(&:to_s).uniq
       # and gather all OCNs that concordance to those OCNs
       o2_variant = Sequel.qualify(:o2, :variant)
       o2_canonical = Sequel.qualify(:o2, :canonical)
@@ -29,20 +31,22 @@ module Clusterable
       o1_canonical = Sequel.qualify(:o1, :canonical)
 
       concordance_ocns =
-        Services.holdings_db
+        table.db
           .select(o2_variant, o2_canonical)
           .from(Sequel.as(:oclc_concordance, :o1), Sequel.as(:oclc_concordance, :o2))
           .where(o1_canonical => o2_canonical)
           .where(Sequel.or(
-            o1_canonical => ocns,
-            o1_variant => ocns
-          ))
+            o1_canonical => ocn_query,
+            o1_variant => ocn_query
+          )).to_a
 
-      (ocns + concordance_ocns.map(:variant) + concordance_ocns.map(:canonical)).uniq.flatten
+      all_ocns = (ocns + concordance_ocns.map { |o| o[:variant] } + concordance_ocns.map { |o| o[:canonical] })
+
+      all_ocns.flatten.map(&:to_i).to_set
     end
 
     def cluster
-      Cluster.for_ocns(ocns).first
+      @cluster ||= Cluster.for_ocns(ocns)
     end
 
     def table

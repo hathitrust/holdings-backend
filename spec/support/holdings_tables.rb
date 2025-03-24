@@ -2,18 +2,17 @@ require "hathifiles_database"
 require "services"
 
 RSpec.shared_context "with tables for holdings" do
-  let(:db) { Services.holdings_db }
-
   before(:all) do
     hf_db = HathifilesDatabase.new
     hf_db.recreate_tables!
   end
 
   around(:each) do |example|
-    Services.holdings_db
-      .transaction(rollback: :always, auto_savepoint: true) do
+    Services.holdings_db.transaction(rollback: :always, auto_savepoint: true) do
+      Services.ht_db.transaction(rollback: :always, auto_savepoint: true) do
         example.run
       end
+    end
   end
 
   # e.g. insert_htitem(build(:ht_item))

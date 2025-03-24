@@ -43,15 +43,15 @@ class Cluster
   end
 
   def ocn_resolutions
-    @ocn_resolutions ||= Clusterable::OCNResolution.with_ocns(ocns).to_a
+    @ocn_resolutions ||= Clusterable::OCNResolution.with_ocns(ocns, cluster: self).to_a
   end
 
   def ht_items
-    @ht_items ||= Clusterable::HtItem.with_ocns(ocns).to_a
+    @ht_items ||= Clusterable::HtItem.with_ocns(ocns, cluster: self).to_a
   end
 
   def ht_item(item_id)
-    Clusterable::HtItem.find(item_id: item_id, ocns: ocns)
+    Clusterable::HtItem.find(item_id: item_id, ocns: ocns, cluster: self)
   end
 
   def commitments
@@ -59,7 +59,7 @@ class Cluster
   end
 
   def holdings
-    @holdings ||= Clusterable::Holding.with_ocns(ocns).to_a
+    @holdings ||= Clusterable::Holding.with_ocns(ocns, cluster: self).to_a
   end
 
   # invalidate memoized attributes after adding items elsewhere

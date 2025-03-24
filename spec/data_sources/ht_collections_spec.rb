@@ -33,16 +33,7 @@ RSpec.describe DataSources::HTCollections do
   end
 
   describe "db connection" do
-    # Ensure we have a clean database connection for each test
-    around(:each) do |example|
-      old_holdings_db = Services.holdings_db
-      begin
-        Services.register(:holdings_db) { DataSources::HoldingsDB.connection }
-        example.run
-      ensure
-        Services.register(:holdings_db) { old_holdings_db }
-      end
-    end
+    include_context "with tables for holdings"
 
     let(:ht_collections) { described_class.new }
 

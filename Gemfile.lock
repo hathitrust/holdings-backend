@@ -248,6 +248,7 @@ GEM
     stream (0.5.5)
     stringio (3.1.5)
     thor (1.3.2)
+    trilogy (2.9.0)
     tty-color (0.6.0)
     tty-cursor (0.7.1)
     tty-prompt (0.23.1)
@@ -282,14 +283,12 @@ DEPENDENCIES
   canister
   climate_control
   debug
-  dotenv
   ettin
   factory_bot
   faker
   faraday
   hathifiles_database!
   marc
-  mysql2
   prometheus-client
   pry
   puma
@@ -309,6 +308,7 @@ DEPENDENCIES
   solr_cursorstream
   standard
   thor
+  trilogy
   webmock
   yard
   zinzout
