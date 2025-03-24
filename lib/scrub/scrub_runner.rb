@@ -78,6 +78,7 @@ module Scrub
         batch = Sidekiq::Batch.new
         batch.description = "Holdings load for #{@organization}'s #{scrubber_out_file}"
         cleanup_data = {
+          "raw_file" => file["Name"],
           "tmp_chunk_dir" => chunker.tmp_chunk_dir,
           "organization" => @organization,
           "scrub_log" => scrubber.logger_path,

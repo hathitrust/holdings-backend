@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "utils/file_transfer"
+require "loader/loaded_file"
 
 module Loader
   # Constructs batches of Holdings from incoming file data
@@ -68,6 +69,20 @@ module Loader
       )
       Services.logger.info "moving loaded file to scrubber.member_loaded"
       FileUtils.mv(options["loaded_file"], options["loaded_dir"])
+
+      timestamp = options["loaded_file"].match(/\d{4}-\d\d-\d\d-\d{6}/)[0]
+      time = Time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
+      loaded_file_hash = {
+        filename: options["raw_file"],
+        produced: time.to_date,
+        loaded: time,
+        source: options["organization"],
+        type: "holding"
+      }
+      Services.logger.info "saving holdings_loaded_files entry (#{loaded_file_hash})"
+      loaded_file = Loader::LoadedFile.new(loaded_file_hash)
+      loaded_file.save
+
       Services.logger.info "cleanup done"
     end
   end

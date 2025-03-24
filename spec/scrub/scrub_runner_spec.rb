@@ -16,7 +16,12 @@ RSpec.describe Scrub::ScrubRunner do
   let(:org1) { "umich" }
   # Only set force_holding_loader_cleanup_test to true in testing.
   let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true}) }
-  let(:fixture_file) { "spec/fixtures/umich_mon_full_20220101.tsv" }
+  let(:fixture_file_name) { "umich_mon_full_20220101.tsv" }
+  let(:fixture_file) { fixture(fixture_file_name) }
+
+  def count_loaded_files
+    Services.holdings_db[:holdings_loaded_files].where(filename: fixture_file_name).count
+  end
 
   before(:each) do
     FileUtils.touch(Settings.rclone_config_path)
@@ -98,6 +103,8 @@ RSpec.describe Scrub::ScrubRunner do
       # Expect log file to end up in the remote dir
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
+      # expect to see a row in holdings_loaded_files with filename=fixture_file_name
+      expect(count_loaded_files).to eq(1)
     end
     it "will refuse a file if it breaks Settings.scrub_line_count_diff_max" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
@@ -123,6 +130,8 @@ RSpec.describe Scrub::ScrubRunner do
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
       expect { sr_force.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
+      # expect to see a row in holdings_loaded_files with filename=fixture_file_name
+      expect(count_loaded_files).to eq(1)
     end
   end
 end
