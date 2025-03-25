@@ -103,7 +103,7 @@ module Clusterable
     end
 
     def self.with_ocns(ocns, cluster: nil)
-      return to_enum(__method__, ocns) unless block_given?
+      return to_enum(__method__, ocns, cluster: cluster) unless block_given?
 
       dataset = table.where(ocn: ocns.to_a)
 
