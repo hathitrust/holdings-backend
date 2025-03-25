@@ -42,7 +42,7 @@ module Clusterable
       end
 
       def with_ocns(ocns, cluster: nil)
-        return to_enum(__method__, ocns) unless block_given?
+        return to_enum(__method__, ocns, cluster: cluster) unless block_given?
 
         ocns_dataset(ocns).each do |row|
           yield from_row(row, cluster: cluster)
