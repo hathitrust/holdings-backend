@@ -21,6 +21,7 @@ require "reports/shared_print_newly_ingested"
 require "reports/shared_print_phase_count"
 require "reports/uncommitted_holdings"
 require "reports/weeding_decision"
+require "scrub/pre_load_backup"
 require "scrub/scrub_runner"
 require "shared_print/deprecator"
 require "shared_print/phase_3_validator"
@@ -74,6 +75,21 @@ module Jobs
       include Sidekiq::Job
       def perform(old, new)
         ConcordanceProcessing.new.delta(old, new)
+      end
+    end
+  end
+
+  module Backup
+    class Holdings
+      include Sidekiq::Job
+      def perform(organization, mono_multi_serial)
+        Services.logger.info "Starting backup job for #{organization}:#{mono_multi_serial}"
+        backup_obj = Scrub::PreLoadBackup.new(
+          organization: organization,
+          mono_multi_serial: mono_multi_serial
+        )
+        backup_obj.write_backup_file
+        Services.logger.info "Wrote backup file for #{organization}:#{mono_multi_serial} to #{backup_obj.backup_path}"
       end
     end
   end

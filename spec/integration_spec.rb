@@ -177,6 +177,29 @@ RSpec.describe "phctl integration" do
     end
   end
 
+  describe "Backup holdings" do
+    it "generates the expected backup file with the expected number of holdings" do
+      # Generate holdings
+      holdings_count = 3
+      1.upto(holdings_count) do
+        load_test_data(build(:holding, organization: "umich", mono_multi_serial: "mon"))
+      end
+
+      # Set up expected output file and expect it to not exist initially
+      date = Time.new.strftime("%Y%m%d")
+      expected_output_path = File.join(Settings.backup_dir, "umich_mon_full_#{date}_backup.ndj")
+      expect(File.exist?(expected_output_path)).to be false
+
+      # Run the backup command,
+      # and expect to see the generated backup file with the expected record count.
+      cmd_array = ["backup", "holdings", "--organization", "umich", "--mono-multi-serial", "mon"]
+      phctl(*cmd_array)
+      expect(File.exist?(expected_output_path)).to be true
+      lines = File.read(expected_output_path).split("\n")
+      expect(lines.count).to eq holdings_count
+    end
+  end
+
   describe "Scrub" do
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.

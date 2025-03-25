@@ -15,6 +15,8 @@ FactoryBot.define do
     status {}
     uuid { SecureRandom.uuid }
     gov_doc_flag { [true, false].sample }
+    delete_flag { 0 }
+    enum_chron { "" }
 
     trait :all_fields do
       issn { format("%04d-%04d", rand(1000), rand(1000)) }

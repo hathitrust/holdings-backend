@@ -87,6 +87,18 @@ module PHCTL
     end
   end
 
+  class Backup < JobCommand
+    desc "holdings --organization ORG --mono_multi_serial LIST", "Back up holdings for organization"
+    option :organization, type: :string
+    option :mono_multi_serial, type: :array, default: []
+
+    def holdings
+      options["mono_multi_serial"].each do |mono_multi_serial|
+        run_job(Jobs::Backup::Holdings, options["organization"], mono_multi_serial)
+      end
+    end
+  end
+
   class Parse < JobCommand
     desc "parse-holdings-xml --organization ORG --files LIST (--output-dir PATH)",
       "Parse ExLibris holdings xml files from ORG"
@@ -241,6 +253,9 @@ module PHCTL
 
     desc "parse", "various parsing commands"
     subcommand "parse", Parse
+
+    desc "backup", "various backup commands"
+    subcommand "backup", Backup
 
     desc "concordance", "Validate or validate and compute deltas"
     subcommand "concordance", Concordance
