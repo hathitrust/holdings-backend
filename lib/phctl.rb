@@ -178,15 +178,6 @@ module PHCTL
       run_common_job(Reports::Phase3OCLCRegistration, options, organization)
     end
 
-    desc "organization-holdings-overlap", "Organization-based overlap report that counts overlaps with holdings, commitments and/or items"
-    option :organization, type: :string, default: nil
-    option :ph, type: :string, default: nil
-    option :htdl, type: :string, default: nil
-    option :sp, type: :string, default: nil
-    def organization_holdings_overlap
-      run_common_job(Reports::OverlapReport, options)
-    end
-
     desc "holdings-by-date", "List the last time an org submitted holdings, grouped by org and mono_multi_serial"
     def holdings_by_date
       run_common_job(Reports::HoldingsByDateReport, options)
