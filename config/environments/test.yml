@@ -4,8 +4,8 @@ cost_report_path: <%= ENV["TEST_TMP"] %>/cost_reports
 deprecation_report_path: <%= ENV["TEST_TMP"] %>/deprecation_report
 estimates_path: <%= ENV["TEST_TMP"] %>/estimates
 etas_overlap_batch_size: 50
-etas_overlap_reports_path: <%= ENV["TEST_TMP"] %>/etas_overlap_reports
-etas_overlap_reports_remote_path: <%= ENV["TEST_TMP"] %>/etas_overlap_report_remote
+overlap_reports_path: <%= ENV["TEST_TMP"] %>/overlap_reports
+overlap_reports_remote_path: <%= ENV["TEST_TMP"] %>/overlap_report_remote
 hathifile_path: <%= ENV["TEST_TMP"] %>/hathifiles
 loading_flag_path: <%= ENV["TEST_TMP"] %>/loading_flag
 local_member_data: <%= ENV["TEST_TMP"] %>/local_member_data

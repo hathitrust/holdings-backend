@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "spec_helper"
-require "reports/etas_organization_overlap_report"
+require "reports/overlap_report"
 
-RSpec.describe Reports::EtasOrganizationOverlapReport do
+RSpec.describe Reports::OverlapReport do
   let(:tmp_local) { Settings.local_report_path }
-  let(:tmp_pers) { Settings.etas_overlap_reports_path }
-  let(:tmp_rmt) { Settings.etas_overlap_reports_remote_path }
+  let(:tmp_pers) { Settings.overlap_reports_path }
+  let(:tmp_rmt) { Settings.overlap_reports_remote_path }
 
   include_context "with tables for holdings"
 
@@ -24,13 +24,13 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt = described_class.new
       expect(rpt.report_for_org("smu")).to be_a(File)
       expect(rpt.report_for_org("smu").path)
-        .to eq("#{tmp_local}/etas_overlap_smu_#{rpt.date_of_report}.tsv")
+        .to eq("#{tmp_local}/overlap_smu_#{rpt.date_of_report}.tsv")
     end
 
     it "gives us a 'nonus' filehandle for non-us orgs" do
       rpt = described_class.new
       expect(rpt.report_for_org("uct").path)
-        .to eq("#{tmp_local}/etas_overlap_uct_#{rpt.date_of_report}_nonus.tsv")
+        .to eq("#{tmp_local}/overlap_uct_#{rpt.date_of_report}_nonus.tsv")
     end
 
     it "has a header" do
@@ -53,7 +53,7 @@ RSpec.describe Reports::EtasOrganizationOverlapReport do
       rpt.run
       gz = rpt.gzip_report(rpt.report_for_org(h.organization))
       expect(File.path(gz))
-        .to eq("#{tmp_local}/etas_overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
+        .to eq("#{tmp_local}/overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
     end
   end
 

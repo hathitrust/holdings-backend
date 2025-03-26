@@ -133,10 +133,9 @@ module PHCTL
       run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
     end
 
-    desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
-    def etas_overlap(org = nil)
-      # TODO rename report class
-      run_common_job(Reports::EtasOrganizationOverlapReport, options, org)
+    desc "overlap ORGANIZATON", "Run an overlap report"
+    def overlap(org = nil)
+      run_common_job(Reports::OverlapReport, options, org)
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"

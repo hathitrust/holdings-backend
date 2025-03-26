@@ -9,7 +9,7 @@ module Overlap
   # - catalog_id
   # - volume_id
   # - enum_chron
-  class ETASOverlap
+  class ReportRecord
     attr_accessor :organization, :ocn, :local_id, :item_type, :rights, :access,
       :catalog_id, :volume_id, :enum_chron
 

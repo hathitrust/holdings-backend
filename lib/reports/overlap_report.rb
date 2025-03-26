@@ -3,11 +3,11 @@
 require "services"
 require "cluster"
 require "overlap/cluster_overlap"
-require "overlap/etas_overlap"
+require "overlap/report_record"
 
 module Reports
   # Generates overlap reports for 1 or all organizations
-  class EtasOrganizationOverlapReport
+  class OverlapReport
     attr_accessor :reports, :date_of_report, :local_report_path, :persistent_report_path, :remote_report_path, :organization
 
     def initialize(organization = nil)
@@ -17,10 +17,10 @@ module Reports
       @local_report_path = Settings.local_report_path || "local_reports"
       Dir.mkdir(@local_report_path) unless File.exist?(@local_report_path)
       # persistent storage
-      @persistent_report_path = Settings.etas_overlap_reports_path
+      @persistent_report_path = Settings.overlap_reports_path
       Dir.mkdir(@persistent_report_path) unless File.exist?(@persistent_report_path)
       # public access location
-      @remote_report_path = Settings.etas_overlap_reports_remote_path
+      @remote_report_path = Settings.overlap_reports_remote_path
       @organization = organization
 
       # TODO - this probably won't scale; would be better to iterate over
@@ -30,7 +30,7 @@ module Reports
 
     def open_report(org, date)
       nonus = (Services.ht_organizations[org]&.country_code == "us") ? "" : "_nonus"
-      File.open("#{local_report_path}/etas_overlap_#{org}_#{date}#{nonus}.tsv", "w")
+      File.open("#{local_report_path}/overlap_#{org}_#{date}#{nonus}.tsv", "w")
     end
 
     def report_for_org(org)
@@ -99,14 +99,14 @@ module Reports
       Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
         overlap.matching_holdings.each do |holding|
           holdings_matched << holding
-          etas_record = Overlap::ETASOverlap.new(organization: holding.organization,
+          report_record = Overlap::ReportRecord.new(organization: holding.organization,
             ocn: holding.ocn, local_id: holding.local_id, item_type: holding.mono_multi_serial,
             rights:     overlap.ht_item.rights, access:     overlap.ht_item.access,
             catalog_id: overlap.ht_item.ht_bib_key, volume_id:  overlap.ht_item.item_id,
             enum_chron: overlap.ht_item.enum_chron)
 
-          write_record(etas_record) unless records_written.include? etas_record.to_s
-          records_written << etas_record.to_s
+          write_record(report_record) unless records_written.include? report_record.to_s
+          records_written << report_record.to_s
         end
       end
       holdings_matched
@@ -137,14 +137,14 @@ module Reports
     def write_records_for_unmatched_holdings(cluster, holdings_matched)
       records_written = Set.new
       missed_holdings(cluster, holdings_matched).each do |holding|
-        etas_record = Overlap::ETASOverlap.new(organization: holding.organization,
+        report_record = Overlap::ReportRecord.new(organization: holding.organization,
           ocn: holding.ocn,
           local_id: holding.local_id,
           item_type: holding.mono_multi_serial)
-        next if records_written.include? etas_record.to_s
+        next if records_written.include? report_record.to_s
 
-        records_written << etas_record.to_s
-        write_record(etas_record)
+        records_written << report_record.to_s
+        write_record(report_record)
       end
     end
 

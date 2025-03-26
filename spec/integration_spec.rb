@@ -105,10 +105,10 @@ RSpec.describe "phctl integration" do
       expect(File.size("#{output_path}/member_counts_#{Date.today}.tsv")).to be > 0
     end
 
-    it "EtasOverlap produces output" do
-      phctl(*%w[report etas-overlap umich])
+    it "Overlap produces output" do
+      phctl(*%w[report overlap umich])
 
-      expect(File.size("#{ENV["TEST_TMP"]}/etas_overlap_report_remote/umich-hathitrust-member-data/analysis/etas_overlap_umich_#{Date.today}.tsv.gz")).to be > 0
+      expect(File.size("#{ENV["TEST_TMP"]}/overlap_report_remote/umich-hathitrust-member-data/analysis/overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end
 
     xcontext "shared print reports" do
