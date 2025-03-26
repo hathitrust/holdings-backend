@@ -30,6 +30,7 @@ module Reports
 
     def find_matching_ocns(ocns = @ocns)
       ocns.each do |ocn|
+        Services.logger.debug "estimate: getting cluster for ocn #{ocn}"
         marker.incr
 
         cluster = Cluster.for_ocns([ocn.to_i])
@@ -39,6 +40,7 @@ module Reports
         # that ocn matches, regardless of if we've already processed overlap
         # for that cluster
         @num_ocns_matched += 1
+        Services.logger.debug "estimate: matched OCN: #{ocn}"
 
         next if cluster.ocns.any? { |ocn| ocns_seen.include?(ocn) }
 
@@ -105,6 +107,7 @@ module Reports
         # Insert a placeholder for the prospective member
         overlap.matching_members << "prospective_member"
         @h_share_total += overlap.h_share("prospective_member")
+        Services.logger.debug "running total: num_items_matched=#{num_items_matched} num_items_pd=#{num_items_pd} num_items_ic=#{num_items_ic} h_share_total=#{h_share_total}"
       end
     end
 
