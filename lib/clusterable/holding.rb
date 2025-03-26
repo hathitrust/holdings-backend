@@ -94,10 +94,18 @@ module Clusterable
       Services.holdings_table
     end
 
+    # apply order and used paged each -- fetches blocks of rows
+    # by doing e.g. select * from holdings where uuid > LAST_UUID order by uuid limit 1000
+    def self.paged_each(dataset, &block)
+      return to_enum(__method__, dataset) unless block_given?
+
+      dataset.order(:uuid).paged_each(strategy: :filter, &block)
+    end
+
     def self.all
       return to_enum(__method__) unless block_given?
 
-      table.each do |row|
+      paged_each(table) do |row|
         yield from_row(row)
       end
     end
@@ -117,7 +125,7 @@ module Clusterable
 
       dataset = table.where(organization: organization)
 
-      dataset.each do |row|
+      paged_each(dataset) do |row|
         yield from_row(row)
       end
     end
