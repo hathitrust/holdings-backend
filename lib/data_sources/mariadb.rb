@@ -15,6 +15,9 @@ module DataSources
       # Check once every few seconds that we're actually connected and reconnect if necessary
       @rawdb.extension(:connection_validator)
       @rawdb.pool.connection_validation_timeout = 5
+      if ENV["LOG_SQL"]
+        @rawdb.loggers << Services.logger
+      end
       super(@rawdb)
     end
 

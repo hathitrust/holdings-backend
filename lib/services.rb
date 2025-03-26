@@ -27,12 +27,13 @@ Services.register(:collections_table) { Services.ht_db[:ht_collections] }
 Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
 Services.register(:ht_collections) { DataSources::HTCollections.new }
 Services.register(:logger) do
-  Logger.new($stderr, level: Logger::INFO)
+  level = ENV["DEBUG"] ? Logger::DEBUG : Logger::INFO
+  Logger.new($stdout, level: level)
 end
 
 # Re-register with path once you know it.
 Services.register(:scrub_logger) do
-  Logger.new($stderr)
+  Logger.new($stdout)
 end
 
 Services.register(:scrub_stats) { {} }
