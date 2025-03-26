@@ -42,6 +42,7 @@ module Reports
     end
 
     def clusters_with_holdings
+      marker = Milemarker.new(batch_size: 1000)
       return to_enum(__method__) unless block_given?
 
       if organization.nil?
@@ -50,6 +51,8 @@ module Reports
           next if cluster.ocns.any? { |o| @ocns_seen.include?(o) }
           @ocns_seen.merge(cluster.ocns)
           yield cluster
+          marker.incr
+          marker.on_batch { |m| Services.logger.info m.batch_line }
         end
       else
         Clusterable::Holding.for_organization(organization) do |h|
@@ -57,8 +60,12 @@ module Reports
           next if cluster.ocns.any? { |o| @ocns_seen.include?(o) }
           @ocns_seen.merge(cluster.ocns)
           yield cluster
+          marker.incr
+          marker.on_batch { |m| Services.logger.info m.batch_line }
         end
       end
+
+      Services.logger.info marker.final_line
     end
 
     # Holdings with org/local_id not found in holdings_matched
@@ -107,8 +114,10 @@ module Reports
 
     def run
       clusters_with_holdings.each do |cluster|
+        Services.logger.debug("Processing overlaps for #{cluster.ocns}")
         holdings_matched = write_overlaps(cluster, organization)
         write_records_for_unmatched_holdings(cluster, holdings_matched)
+
         Thread.pass
       end
       move_reports
