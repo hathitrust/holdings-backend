@@ -1,154 +1,214 @@
+# frozen_string_literal: true
+
 require "spec_helper"
 require "reports/overlap_report"
-require "pathname"
 
-RSpec.xdescribe Reports::OverlapReport do
-  let(:org1) { "umich" }
-  let(:org2) { "smu" }
-  let(:ocn1) { 1 }
-  let(:loc1) { "loc_001" }
-  let(:c0) { build(:cluster) }
-  let(:hol1) { build(:holding, organization: org1, ocn: ocn1, local_id: loc1) }
-  let(:hol2) { build(:holding, organization: org2, ocn: ocn1, local_id: loc1) }
-  let(:ht1) { build(:ht_item, ocns: [ocn1]) }
-  let(:ht2) { build(:ht_item, ocns: [ocn1]) }
-  let(:spc1) { build(:commitment, ocn: ocn1, organization: org1) }
-  let(:spc2) { build(:commitment, ocn: ocn1, organization: org2) }
-  let(:rep_short) { described_class.new(organization: org1, ph: true) }
-  let(:rep_long) { described_class.new(organization: org1, ph: true, htdl: true, sp: true) }
+RSpec.describe Reports::OverlapReport do
+  let(:tmp_local) { Settings.local_report_path }
+  let(:tmp_pers) { Settings.overlap_reports_path }
+  let(:tmp_rmt) { Settings.overlap_reports_remote_path }
 
-  before(:each) do
-    Cluster.collection.find.delete_many
-  end
+  include_context "with tables for holdings"
 
   describe "#initialize" do
-    it "requires organization, and 1+ of ph/htdl/sp to be true" do
-      # Should fail because no org
-      expect { described_class.new }.to raise_error(/fix inputs/)
-      # Should fail because all ph/htdl/sp are false (by default)
-      expect { described_class.new(organization: org1) }.to raise_error(/fix inputs/)
-      # Should work
-      expect { described_class.new(organization: org1, ph: true) }.not_to raise_error
-      expect { described_class.new(organization: org1, htdl: true) }.not_to raise_error
-      expect { described_class.new(organization: org1, sp: true) }.not_to raise_error
-      # (skipping some parameter permutations)
-      expect { rep_long }.not_to raise_error
+    it "makes the directory if it doesn't exist" do
+      rpt = described_class.new
+      expect(rpt.persistent_report_path).to eq(tmp_pers)
+      expect(File).to exist(tmp_pers)
+      expect(File).to exist(rpt.local_report_path)
     end
   end
-  describe "#outf_path" do
-    it "returns a writable path" do
-      p = rep_short.outf_path
-      expect { FileUtils.touch(p) }.not_to raise_error
+
+  describe "#report_for_org" do
+    it "gives us a filehandle for the org" do
+      rpt = described_class.new
+      expect(rpt.report_for_org("smu")).to be_a(File)
+      expect(rpt.report_for_org("smu").path)
+        .to eq("#{tmp_local}/overlap_smu_#{rpt.date_of_report}.tsv")
+    end
+
+    it "gives us a 'nonus' filehandle for non-us orgs" do
+      rpt = described_class.new
+      expect(rpt.report_for_org("uct").path)
+        .to eq("#{tmp_local}/overlap_uct_#{rpt.date_of_report}_nonus.tsv")
+    end
+
+    it "has a header" do
+      rpt = described_class.new
+      rpt.report_for_org("smu").close
+      expect(File.readlines(rpt.report_for_org("smu").path)).to eq([rpt.header + "\n"])
     end
   end
-  describe "#header" do
-    it "includes the proper cols" do
-      expect(rep_short.header).to eq ["ocn", "local_id", "ph_overlap"]
-      # Bigger example
-      all_cols_rep = described_class.new(organization: org1, ph: true, htdl: true, sp: true)
-      expect(all_cols_rep.header)
-        .to eq ["ocn", "local_id", "ph_overlap", "htdl_overlap", "sp_overlap"]
+
+  describe "#gzip_report" do
+    let(:h) { build(:holding) }
+    let(:ht) { build(:ht_item, ocns: [h.ocn]) }
+
+    before(:each) do
+      load_test_data(h, ht)
+    end
+
+    it "gzips and prepends file name" do
+      rpt = described_class.new
+      rpt.run
+      gz = rpt.gzip_report(rpt.report_for_org(h.organization))
+      expect(File.path(gz))
+        .to eq("#{tmp_local}/overlap_#{h.organization}_#{rpt.date_of_report}.tsv.gz")
     end
   end
-  describe "#clusters" do
-    it "returns an enumerator for clusters" do
-      # Gotta put something in the db or rep_short.clusters.first is nil
-      cluster_tap_save hol1
-      expect(rep_short.clusters).to be_a Enumerator
-      expect(rep_short.clusters.first).to be_a Cluster
-    end
-  end
-  describe "#row" do
-    it "formats report rows according to settings" do
-      expect(rep_short.row(hol1, 1, nil, nil)).to eq [ocn1, loc1, 1]
-      expect(rep_long.row(hol1, 1, 2, 3)).to eq [ocn1, loc1, 1, 2, 3]
-    end
-  end
-  describe "#count_cluster_ph" do
-    it "counts the number of distinct orgs with holdings in a cluster" do
-      # Zero if no holdings (which really shouldn't happen in the first place)
-      expect(rep_short.count_cluster_ph(c0)).to eq 0
 
-      # 1 if there is one org with holdings in cluster
-      cluster_tap_save hol1
-      expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
-
-      # 2 if there are two orgs with holdings in cluster, ... n
-      cluster_tap_save hol2
-      expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 2
-    end
-    it "counts multiple holdings on the same cluster by the same org as 1" do
-      cluster_tap_save hol1
-      expect(Cluster.where(ocns: [ocn1]).first.holdings.count).to eq 1
-      expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
-
-      # Add another holding with the same org & ocn, then holdings should go to 2
-      # but count_cluster_ph should stay 1
-      hol2.organization = org1
-      cluster_tap_save hol2
-      expect(Cluster.where(ocns: [ocn1]).first.holdings.count).to eq 2
-      expect(rep_short.count_cluster_ph(Cluster.where(ocns: [ocn1]).first)).to eq 1
-    end
-  end
-  describe "#count_cluster_htdl" do
-    it "counts the number of ht_items in a cluster" do
-      rep = described_class.new(organization: org1, htdl: true)
-      expect(rep.count_cluster_htdl(c0)).to eq 0
-
-      # 1 if there is one ht_item in cluster
-      cluster_tap_save ht1
-      expect(rep.count_cluster_htdl(Cluster.where(ocns: [ocn1]).first)).to eq 1
-
-      # 2 if there are 2 org ht_items_in cluster in cluster, ... n
-      cluster_tap_save ht2
-      expect(rep.count_cluster_htdl(Cluster.where(ocns: [ocn1]).first)).to eq 2
-    end
-  end
-  describe "#count_cluster_sp" do
-    it "counts the number of distinct orgs w commitments in a cluster" do
-      rep = described_class.new(organization: org1, sp: true)
-      expect(rep.count_cluster_sp(c0)).to eq 0
-
-      # 1 if there is one org w commitment in cluster
-      cluster_tap_save spc1
-      expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
-
-      # 2 if there are 2 orgs w commitment in cluster, ... n
-      cluster_tap_save spc2
-      expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 2
-    end
-    it "counts multiple commitments on the same cluster by the same org as 1" do
-      rep = described_class.new(organization: org1, sp: true)
-      cluster_tap_save spc1
-      expect(Cluster.where(ocns: [ocn1]).first.commitments.count).to eq 1
-      expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
-
-      # Add another holding with the same org & ocn, then holdings should go to 2
-      # but count_cluster_ph should stay 1
-      spc2.organization = org1
-      cluster_tap_save spc2
-      expect(Cluster.where(ocns: [ocn1]).first.commitments.count).to eq 2
-      expect(rep.count_cluster_sp(Cluster.where(ocns: [ocn1]).first)).to eq 1
-    end
-  end
   describe "#run" do
-    it "runs report and outputs to file" do
-      # Setup, put some data in the db
-      cluster_tap_save(ht1, ht2, hol1, hol2, spc1, spc2)
+    let(:h) { build(:holding) }
+    let(:h2) { build(:holding, organization: "ualberta") }
+    let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
+    let(:ht2) { build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd") }
+    let(:orgs) { [h.organization, h2.organization] }
 
-      # just one field
-      rep_short.run
-      report_rows = File.read(rep_short.outf_path).split("\n")
-      expect(report_rows.count).to eq 2
-      expect(report_rows.first).to eq "ocn\tlocal_id\tph_overlap"
-      expect(report_rows.last).to eq "1\tloc_001\t2"
+    before(:each) do
+      load_test_data(h, h2, ht, ht2)
+    end
 
-      # all fields
-      rep_long.run
-      report_rows = File.read(rep_long.outf_path).split("\n")
-      expect(report_rows.count).to eq 2
-      expect(report_rows.first).to eq "ocn\tlocal_id\tph_overlap\thtdl_overlap\tsp_overlap"
-      expect(report_rows.last).to eq "1\tloc_001\t2\t2\t2"
+    it "has a file for each organization" do
+      rpt = described_class.new
+      rpt.run
+      orgs.each do |org|
+        expect(rpt.reports.keys).to include(org)
+      end
+    end
+
+    it "only has a file for the organization given" do
+      load_test_data(build(:holding, ocn: h2.ocn))
+      rpt = described_class.new(orgs.last)
+      rpt.run
+      expect(rpt.reports.keys).to eq([orgs.last])
+    end
+
+    it "has a line for each ht_item in the holding organization rpt" do
+      rpt = described_class.new
+      rpt.run
+      f = rpt.report_for_org(h.organization)
+      f.close
+      lines = File.open(f.path).to_a
+      expect(lines.size).to eq(3)
+    end
+
+    it "has 8 columns in the report" do
+      rpt = described_class.new
+      rpt.run
+      orgs.each do |org|
+        rpt.report_for_org(org).close
+        lines = File.open(rpt.report_for_org(org).path).to_a.map { |x| x.split("\t") }
+        expect(lines.map(&:size)).to all(be == 8)
+      end
+    end
+
+    it "has 1 line with empty rights/access for holdings on clusters without HTItems" do
+      rpt = described_class.new
+      rpt.run
+      f = rpt.report_for_org(h2.organization)
+      f.close
+      lines = File.open(rpt.report_for_org(h2.organization).path).to_a
+      expect(lines.size).to eq(2)
+      rec = lines.last.split("\t")
+      expect(rec[3]).to eq("")
+      expect(rec[7]).to eq("\n")
+    end
+
+    it "has records for holdings that don't match HTItems" do
+      no_match = build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1")
+      load_test_data(
+        no_match,
+        build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn], enum_chron: "V.2")
+      )
+
+      rpt = described_class.new.tap(&:run)
+      rpt.report_for_org(no_match.organization).close
+      recs = File.readlines(rpt.report_for_org(no_match.organization).path)
+      expected_rec = [no_match.ocn, no_match.local_id, no_match.mono_multi_serial,
+        "", "", "", "", ""].join("\t")
+      expect(recs.find { |r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
+    end
+  end
+
+  context "when holdings have the same id" do
+    let(:h1) { build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1") }
+    let(:h2) do
+      build(:holding, mono_multi_serial: "mpm", ocn: h1.ocn,
+        organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
+    end
+
+    before(:each) do
+      load_test_data(h1, h2)
+    end
+
+    it "writes only 1 no-match record" do
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      expect(File.readlines(rpt.report_for_org(h1.organization).path).count)
+        .to eq(2)
+    end
+
+    it "writes only 1 match record" do
+      ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "SE", enum_chron: "V.3")
+      load_test_data(ht)
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      recs = File.readlines(rpt.report_for_org(h1.organization).path)
+      expect(recs.count).to eq(2)
+      expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
+        ht.access, ht.ht_bib_key, ht.item_id,
+        ht.enum_chron].join("\t"))
+    end
+
+    it "writes only the 1 record that matches" do
+      ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "BK", enum_chron: "V.2")
+      load_test_data(ht)
+      rpt = described_class.new(h1.organization)
+      rpt.run
+      rpt.report_for_org(h1.organization).close
+      recs = File.readlines(rpt.report_for_org(h1.organization).path)
+      expect(recs.count).to eq(2)
+      expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
+        ht.access, ht.ht_bib_key, ht.item_id,
+        ht.enum_chron].join("\t"))
+    end
+  end
+
+  describe "#move_reports" do
+    let(:h) { build(:holding) }
+    let(:ht) { build(:ht_item, ocns: [h.ocn]) }
+
+    before(:each) do
+      load_test_data(h, ht)
+    end
+
+    it "moves the gzipped report to the persistent storage path" do
+      rpt = described_class.new(h.organization)
+      rpt.run
+      rpt.move_reports
+      persistent_file = "#{tmp_pers}/" \
+        "#{File.basename(rpt.report_for_org(h.organization))}.gz"
+      expect(File.exist?(persistent_file)).to be true
+    end
+
+    it "moves the gzipped report to the \"remote\" path" do
+      rpt = described_class.new(h.organization)
+      rpt.run
+      rpt.move_reports
+      remote_file = "#{tmp_rmt}/#{h.organization}-hathitrust-member-data/analysis/" \
+        "#{File.basename(rpt.report_for_org(h.organization))}.gz"
+      expect(File.exist?(remote_file)).to be true
+    end
+  end
+
+  describe "#rclone_move" do
+    it "provides the proper system call for rclone" do
+      rpt = described_class.new
+      expect(rpt.rclone_move(File.open("test_file", "w"), "umich"))
+        .to eq(["rclone", "--config", Settings.rclone_config_path, "move", "test_file",
+          "#{tmp_rmt}/umich-hathitrust-member-data/analysis"])
     end
   end
 end

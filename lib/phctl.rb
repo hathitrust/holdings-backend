@@ -133,10 +133,9 @@ module PHCTL
       run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
     end
 
-    desc "etas-overlap ORGANIZATON", "Run an ETAS overlap report"
-    def etas_overlap(org = nil)
-      # TODO rename report class
-      run_common_job(Reports::EtasOrganizationOverlapReport, options, org)
+    desc "overlap ORGANIZATON", "Run an overlap report"
+    def overlap(org = nil)
+      run_common_job(Reports::OverlapReport, options, org)
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"
@@ -176,15 +175,6 @@ module PHCTL
     desc "phase3-oclc-registration ORGANIZATION", "Output all phase 3 commitments for ORG in OCLC Registration format"
     def phase3_oclc_registration(organization)
       run_common_job(Reports::Phase3OCLCRegistration, options, organization)
-    end
-
-    desc "organization-holdings-overlap", "Organization-based overlap report that counts overlaps with holdings, commitments and/or items"
-    option :organization, type: :string, default: nil
-    option :ph, type: :string, default: nil
-    option :htdl, type: :string, default: nil
-    option :sp, type: :string, default: nil
-    def organization_holdings_overlap
-      run_common_job(Reports::OverlapReport, options)
     end
 
     desc "holdings-by-date", "List the last time an org submitted holdings, grouped by org and mono_multi_serial"
