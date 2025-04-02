@@ -37,13 +37,13 @@ RSpec.describe ConcordanceValidation::Concordance do
   describe "described_class.new" do
     it "builds a basic concordance structure" do
       chained_file = "spec/concordance_validation/data/chained.tsv"
-      expect(described_class.new(chained_file).variant_to_canonical).to \
+      expect(described_class.new(chained_file).to_h).to \
         eq(1 => [2], 2 => [3])
     end
 
     it "handles gzipped files" do
       chained_gzip_file = "spec/concordance_validation/data/chained.tsv.gz"
-      expect(described_class.new(chained_gzip_file).variant_to_canonical).to \
+      expect(described_class.new(chained_gzip_file).to_h).to \
         eq(1 => [2], 2 => [3])
     end
   end

@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "milemarker"
 require "settings"
 require "concordance_validation/concordance"
 require "concordance_validation/delta"
@@ -10,15 +11,19 @@ class ConcordanceProcessing
     fout = File.open(fout, "w")
 
     c = ConcordanceValidation::Concordance.new(fin)
-    c.variant_to_canonical.each_key do |variant|
-      next if c.variant_to_canonical[variant].count.zero?
-
+    milemarker = Milemarker.new(batch_size: 10_000, name: "validate concordance")
+    milemarker.logger = Services.logger
+    c.db.prepare("SELECT variant FROM concordance").execute.each do |variant|
+      variant = variant[0]
+      # Can this ever happen? This is from the in-memory hash table version.
+      # next if c.variant_to_canonical[variant].count.zero?
       begin
         sub = c.compile_sub_graph(variant)
         c.detect_cycles(*sub)
       rescue => e
         log.puts e
         log.puts "Cycles:#{(sub[0].keys + sub[1].keys).flatten.uniq.join(", ")}"
+        log.flush
         next
       end
       begin
@@ -26,14 +31,16 @@ class ConcordanceProcessing
         _canonical = c.canonical_ocn(variant)
       rescue => e
         log.puts e
+        log.flush
         next
       end
-
       fout.puts [variant, c.canonical_ocn(variant)].join("\t")
+      milemarker.increment_and_log_batch_line
     end
 
     log.close
     fout.close
+    milemarker.log_final_line
   end
 
   # Compute deltas of new concordance with pre-existing validated concordance.
