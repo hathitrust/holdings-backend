@@ -18,6 +18,7 @@ class Cluster
   attr_writer :ht_items, :holdings
 
   def self.for_ocns(ocns)
+    Services.logger.debug("Getting cluster for ocns #{ocns} from mariadb")
     # TODO: likely more efficient to get this from solr rather than from
     # mariadb - we can gather up everything in "oclc_search" from records with
     # matching OCNs
@@ -60,6 +61,11 @@ class Cluster
 
   def holdings
     @holdings ||= Clusterable::Holding.with_ocns(ocns, cluster: self).to_a
+  end
+
+  def add_holding(holding)
+    @holdings ||= []
+    @holdings << holding
   end
 
   # invalidate memoized attributes after adding items elsewhere
