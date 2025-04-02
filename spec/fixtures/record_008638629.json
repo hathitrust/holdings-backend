@@ -1,0 +1,36 @@
+{
+  "responseHeader": {
+    "status": 0,
+    "QTime": 1,
+    "params": {
+      "q": "*:*",
+      "fl": "ht_json,id,oclc,oclc_search,title,format",
+      "fq": "oclc_search:(2503661)",
+      "wt": "json"
+    }
+  },
+  "response": {
+    "numFound": 1,
+    "start": 0,
+    "docs": [
+      {
+        "id": "008638629",
+        "format": [
+          "Book",
+          "Biography"
+        ],
+        "oclc": [
+          "2503661"
+        ],
+        "oclc_search": [
+          "2503661"
+        ],
+        "title": [
+          "Father and son : a study of two temperaments"
+        ],
+        "ht_json": "[{\"htid\":\"nyp.33433082421565\",\"newly_open\":null,\"ingest\":\"20241120\",\"rights\":[\"pd\",null],\"heldby\":[\"amherst\",\"auburn\",\"brynmawr\",\"claremont\",\"dickinson\",\"grinnell\",\"haverford\",\"muohio\",\"nypl\",\"ptsem\",\"queensu\",\"smu\",\"uic\",\"umt\",\"uoregon\",\"upenn\",\"usg\",\"utexas\"],\"collection_code\":\"nyp\",\"enum_pubdate\":\"1907\",\"enum_pubdate_range\":\"1900-1909\",\"dig_source\":\"google\"}]"
+      }
+    ]
+  }
+}
+

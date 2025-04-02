@@ -5,6 +5,7 @@ require "reports/cost_report"
 require "sidekiq/batch"
 require "sidekiq_jobs"
 require "solr/cursorstream"
+require "tmpdir"
 
 class CostReportWorkflow
   class CostReportWorkflow::Callback

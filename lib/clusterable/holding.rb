@@ -24,7 +24,6 @@ module Clusterable
     end
 
     def cluster
-      raise "don't call cluster from holding"
       @cluster ||= Cluster.for_ocns([ocn])
     end
 
@@ -111,11 +110,14 @@ module Clusterable
       end
     end
 
-    def self.with_ocns(ocns, cluster: nil)
-      raise unless ocns.count > 100
+    def self.with_ocns(ocns, cluster: nil, organization: nil)
       return to_enum(__method__, ocns, cluster: cluster) unless block_given?
 
-      dataset = table.where(ocn: ocns.to_a)
+      dataset = table.where(ocn: ocns.to_a.map(&:to_s))
+
+      if organization
+        dataset = dataset.where(organization: organization)
+      end
 
       paged_each(dataset) do |row|
         yield from_row(row, cluster: cluster)

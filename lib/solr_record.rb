@@ -30,11 +30,22 @@ class SolrRecord
   attr_reader :bib_fmt
 
   def htitem(solr_htitem)
+    # need this for overlap reports, although arguably it isn't very useful
+    # there as it isn't responsive to us vs. non-us
+    rights = solr_htitem["rights"][0]
+    ic = Clusterable::HtItem::IC_RIGHTS_CODES.include?(rights)
+    access = if ic || rights == "icus"
+      "deny"
+    else
+      "allow"
+    end
+
     Clusterable::HtItem.new(
       item_id: solr_htitem["htid"],
       ht_bib_key: record["id"],
       # See https://github.com/hathitrust/hathitrust_catalog_indexer/issues/81 for why this is an array..
       rights: solr_htitem["rights"][0],
+      access: access,
       bib_fmt: bib_fmt,
       enum_chron: solr_htitem["enumcron"],
       collection_code: solr_htitem["collection_code"].upcase,

@@ -146,7 +146,7 @@ module PHCTL
     end
 
     desc "overlap ORGANIZATON", "Run an overlap report"
-    def overlap(org = nil)
+    def overlap(org)
       run_common_job(Reports::OverlapReport, options, org)
     end
 

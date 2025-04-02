@@ -26,7 +26,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
     %w[report frequency-table ht_item_file output_dir] => Jobs::Common,
-    %w[report overlap] => Jobs::Common,
     %w[report overlap someinst] => Jobs::Common,
     %w[report weeding_decision someinst] => Jobs::Common,
     %w[parse parse-holdings-xml] => Jobs::Common,
