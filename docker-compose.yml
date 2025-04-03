@@ -104,7 +104,20 @@ services:
     restart: always
     healthcheck:
       <<: *healthcheck-defaults
-      test: ["CMD", "redis-cli","ping"]
+      test: ["CMD", "redis-cli", "ping"]
+
+  api:
+    <<: *holdings-container-defaults
+    restart: always
+    volumes:
+      - .:/usr/src/app
+      - gem_cache:/gems
+    command: bundle exec puma -p 4567 bin/api_config.ru
+    ports:
+      - 4567:4567
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "localhost:4567/v1/ping" ]
 
 volumes:
   gem_cache:

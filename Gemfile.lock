@@ -116,6 +116,8 @@ GEM
     method_source (1.1.0)
     milemarker (1.0.1)
     minitest (5.25.4)
+    mustermann (3.0.3)
+      ruby2_keywords (~> 0.0.1)
     mysql2 (0.5.6)
     net-http (0.6.0)
       uri
@@ -148,9 +150,17 @@ GEM
       nio4r (~> 2.0)
     racc (1.8.1)
     rack (3.1.12)
+    rack-protection (4.1.1)
+      base64 (>= 0.1.0)
+      logger (>= 1.6.0)
+      rack (>= 3.0.0, < 4)
     rack-session (2.1.0)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
+    rack-test (2.2.0)
+      rack (>= 1.3)
+    rackup (2.2.1)
+      rack (>= 3)
     rainbow (3.1.1)
     rake (13.2.1)
     rbs (3.8.1)
@@ -209,6 +219,7 @@ GEM
       ruby-lsp (~> 0.23.0)
     ruby-prof (1.7.1)
     ruby-progressbar (1.13.0)
+    ruby2_keywords (0.0.5)
     securerandom (0.4.1)
     sequel (5.90.0)
       bigdecimal
@@ -225,6 +236,13 @@ GEM
     simplecov-html (0.13.1)
     simplecov-lcov (0.8.0)
     simplecov_json_formatter (0.1.4)
+    sinatra (4.1.1)
+      logger (>= 1.6.0)
+      mustermann (~> 3.0)
+      rack (>= 3.0.0, < 4)
+      rack-protection (= 4.1.1)
+      rack-session (>= 2.0.0, < 3)
+      tilt (~> 2.0)
     solr_cursorstream (0.2.0)
       faraday
       faraday-retry
@@ -248,6 +266,7 @@ GEM
     stream (0.5.5)
     stringio (3.1.5)
     thor (1.3.2)
+    tilt (2.6.0)
     trilogy (2.9.0)
     tty-color (0.6.0)
     tty-cursor (0.7.1)
@@ -294,6 +313,8 @@ DEPENDENCIES
   puma
   push_metrics!
   rack-session
+  rack-test
+  rackup
   rgl
   rspec
   rspec-sidekiq
@@ -305,6 +326,7 @@ DEPENDENCIES
   sidekiq-batch!
   simplecov
   simplecov-lcov
+  sinatra
   solr_cursorstream
   standard
   thor
