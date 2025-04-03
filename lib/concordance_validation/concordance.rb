@@ -31,6 +31,10 @@ module ConcordanceValidation
 
     TEST_MEMORY_DB = false
 
+    # Match lines that are exactly X<tab>X and delete them.
+    # The literal regex that get passed to sed is /^\(.*\)\t\(\1\)$/d
+    SED_DEDUPE_REGEX = "/^\\(.*\\)\\t\\(\\1\\)$/d"
+
     def initialize(concordance_file)
       @concordance_file = concordance_file
       @db_dir = File.join(Settings.concordance_path, "db")
@@ -41,7 +45,6 @@ module ConcordanceValidation
       Services.logger.info "creating table at #{@db_file}..."
       @db.execute CREATE_TABLE_SQL
 
-      uncompress_concordance_file
       dedupe_concordance_file
       populate_database
 
@@ -74,29 +77,22 @@ module ConcordanceValidation
       end
     end
 
-    def uncompress_concordance_file
-      if /\.gz$/.match?(@concordance_file)
-        # Could also call Zlib::GzipReader#original_name?
-        uncompressed_concordance_file = File.join(
-          @db_dir,
-          File.basename(@concordance_file).sub(/\.gz$/, "")
-        )
-        Services.logger.info "unzipping #{@concordance_file} to #{uncompressed_concordance_file}..."
-        system("gunzip -c #{@concordance_file} > #{uncompressed_concordance_file}", exception: true)
-        @concordance_file = uncompressed_concordance_file
-      end
-    end
-
     def dedupe_concordance_file
       @deduped_concordance_file = File.join(
         @db_dir,
-        File.basename(@concordance_file, ".*") + "_dedupe.txt"
+        # Strip off possible double .txt.gz suffix on path to the compressed file.
+        File.basename(@concordance_file).split(".")[0] + "_dedupe.txt"
       )
       if File.exist? @deduped_concordance_file
         Services.logger.info "deduped concordance #{@deduped_concordance_file} already exists, skipping"
       else
+        cmd = if /\.gz$/.match?(@concordance_file)
+          "zcat -cf #{@concordance_file} | sed '#{SED_DEDUPE_REGEX}' > #{@deduped_concordance_file}"
+        else
+          "sed '#{SED_DEDUPE_REGEX}' #{@concordance_file} > #{@deduped_concordance_file}"
+        end
         Services.logger.info "deduping #{@concordance_file} to #{@deduped_concordance_file}..."
-        system("sed '/^\\(.*\\)\\t\\(\\1\\)$/d' #{@concordance_file} > #{@deduped_concordance_file}", exception: true)
+        system(cmd, exception: true)
       end
     end
 
