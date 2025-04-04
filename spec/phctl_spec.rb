@@ -29,7 +29,8 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report overlap] => Jobs::Common,
     %w[report overlap someinst] => Jobs::Common,
     %w[report weeding_decision someinst] => Jobs::Common,
-    %w[parse parse-holdings-xml] => Jobs::Common
+    %w[parse parse-holdings-xml] => Jobs::Common,
+    %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings
 
     # Not covered by phctl
     # bin/cost_changes.sh

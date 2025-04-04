@@ -4,8 +4,10 @@ require "clusterable/holding"
 require "data_sources/directory_locator"
 require "data_sources/ht_organizations"
 require "date"
+require "utils/line_counter"
 require "loader/holding_loader"
 require "scrub/autoscrub"
+require "scrub/pre_load_backup"
 require "scrub/record_counter"
 require "scrub/scrub_runner"
 require "spec_helper"
@@ -132,6 +134,25 @@ RSpec.describe Scrub::ScrubRunner do
       expect { sr_force.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
       # expect to see a row in holdings_loaded_files with filename=fixture_file_name
       expect(count_loaded_files).to eq(1)
+    end
+    it "will generate a backup file when overwriting holdings" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture("umich_mon_full_20220101.tsv"), remote_d.holdings_current)
+      remote_file = sr.check_new_files.first
+      sr.run_file(remote_file)
+      preloader = Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: "mon")
+      # this may go away if we decide not to write empty backup file
+      expect(File.exist?(preloader.backup_path)).to be true
+      expect(Utils::LineCounter.new(preloader.backup_path).count_lines).to eq 0
+
+      # Copy a new fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture("umich_mon_full_20220102.tsv"), remote_d.holdings_current)
+      remote_file = sr.check_new_files.first
+      sr.run_file(remote_file)
+      expect(File.exist?(preloader.backup_path)).to be true
+      expect(Utils::LineCounter.new(preloader.backup_path).count_lines).to eq 6
     end
   end
 end

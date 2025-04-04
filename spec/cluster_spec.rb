@@ -5,8 +5,8 @@ require "cluster"
 
 RSpec.describe Cluster do
   let(:ocn1) { rand(1_000_000) }
-  let(:ocn2) { ocn1 + rand(1_000) }
-  let(:ocn3) { ocn2 + rand(1_000) }
+  let(:ocn2) { ocn1 + 1 }
+  let(:ocn3) { ocn2 + 1 }
   let(:ht) { build(:ht_item).to_hash }
 
   include_context "with tables for holdings"
