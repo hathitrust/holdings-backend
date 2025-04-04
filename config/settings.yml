@@ -1,4 +1,5 @@
 concordance_path: <%= ENV["CONCORDANCE_PATH"] %>
+concordance_database_path: <%= ENV["CONCORDANCE_DATABASE_PATH"] %>
 cost_report_freq_path: <%= ENV["COST_REPORT_FREQ_PATH"] %>
 cost_report_path: <%= ENV["COST_REPORT_PATH"] %>
 deprecation_report_path: <%= ENV["DEPRECATION_REPORT_PATH"] %>

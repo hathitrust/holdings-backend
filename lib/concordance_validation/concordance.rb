@@ -9,8 +9,16 @@ require "zlib"
 # Prints only <variant> to <canonical ocn>
 module ConcordanceValidation
   # A Concordance.
-  # Hash maps of variant to canonical and canonical to variant.
-  # Associated validation methods.
+  # Uses a temporary (for now) Sqlite database with a single table `concordance`
+  # containing variant <-> canonical mappings under validation.
+  #
+  # Creates two derivative files
+  # - concordance.sqlite
+  # - <concordance_file>_dedupe.txt
+  #
+  # These are written to Settings.concordance_database_path which may be a temporary
+  # directory. For development this should be set to something persistent if testing
+  # a full workflow.
   class Concordance
     attr_reader :db, :concordance_file
 
@@ -37,7 +45,7 @@ module ConcordanceValidation
 
     def initialize(concordance_file)
       @concordance_file = concordance_file
-      @db_dir = File.join(Settings.concordance_path, "db")
+      @db_dir = Settings.concordance_database_path
       FileUtils.mkdir_p @db_dir
       @db_file = File.join(@db_dir, "concordance.sqlite")
       @db = SQLite3::Database.open @db_file
@@ -48,6 +56,9 @@ module ConcordanceValidation
       dedupe_concordance_file
       populate_database
 
+      # If we have enough memory to keep from thrashing then this may enhance performance.
+      # For now this is too much for desktop/Docker when running a real concordance
+      # so leave it disabled until we can re-evaluate.
       if TEST_MEMORY_DB
         mem_db = SQLite3::Database.new ":memory:"
         # Copy the source DB into the the memory DB
