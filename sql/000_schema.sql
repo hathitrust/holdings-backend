@@ -75,6 +75,7 @@ CREATE TABLE `holdings` (
   `date_received` date NOT NULL,
   `uuid`         char(36) PRIMARY KEY NOT NULL,
   `issn`         varchar(255) NULL,
+  `delete_flag`  tinyint(1) DEFAULT 0,
   KEY (`ocn`),
   KEY (`organization`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

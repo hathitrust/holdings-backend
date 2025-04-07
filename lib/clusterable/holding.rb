@@ -13,7 +13,7 @@ module Clusterable
 
     attr_accessor :ocn, :local_id, :organization, :n_enum, :n_chron,
       :n_enum_chron, :status, :condition, :gov_doc_flag, :mono_multi_serial,
-      :uuid, :issn
+      :uuid, :issn, :delete_flag
 
     equality_excluded_attr :uuid, :date_received
 

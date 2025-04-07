@@ -1,3 +1,4 @@
+backup_dir: <%= ENV["TEST_TMP"] %>/pre_load_backup
 concordance_path: <%= ENV["TEST_TMP"] %>/concordance
 concordance_database_path: <%= ENV["TEST_TMP"] %>/concordance/db
 cost_report_freq_path: <%= ENV["TEST_TMP"] %>/cost_report_freq

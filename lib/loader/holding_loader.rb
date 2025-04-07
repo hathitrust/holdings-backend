@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "utils/file_transfer"
 require "loader/loaded_file"
+require "scrub/pre_load_backup"
+require "utils/file_transfer"
 
 module Loader
   # Constructs batches of Holdings from incoming file data
@@ -61,15 +62,17 @@ module Loader
     def on_success(_status, options)
       Services.logger.info "removing chunks from #{options["tmp_chunk_dir"]}"
       FileUtils.rm_rf(options["tmp_chunk_dir"])
-      Services.logger.info "uploading scrub log #{options["scrub_log"]} " \
-                           "to remote dir #{options["remote_dir"]}"
+
+      Services.logger.info "uploading scrub log #{options["scrub_log"]} to remote dir #{options["remote_dir"]}"
       Utils::FileTransfer.new.upload(
         options["scrub_log"],
         options["remote_dir"]
       )
+
       Services.logger.info "moving loaded file to scrubber.member_loaded"
       FileUtils.mv(options["loaded_file"], options["loaded_dir"])
 
+      # Record which file was loaded in the holdings_loaded_files table.
       timestamp = options["loaded_file"].match(/\d{4}-\d\d-\d\d-\d{6}/)[0]
       time = Time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
       loaded_file_hash = {
@@ -82,6 +85,16 @@ module Loader
       Services.logger.info "saving holdings_loaded_files entry (#{loaded_file_hash})"
       loaded_file = Loader::LoadedFile.new(loaded_file_hash)
       loaded_file.save
+
+      # Check if there are records marked for deletion, delete if so.
+      pre_load_backup = Scrub::PreLoadBackup.new(
+        organization: options["organization"],
+        mono_multi_serial: options["mono_multi_serial"]
+      )
+      if pre_load_backup.marked_count > 0
+        Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
+        pre_load_backup.delete_marked!
+      end
 
       Services.logger.info "cleanup done"
     end
