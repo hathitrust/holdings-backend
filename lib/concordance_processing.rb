@@ -38,6 +38,7 @@ class ConcordanceProcessing
       end
       fout.puts [variant, c.canonical_ocn(variant)].join("\t")
       milemarker.increment_and_log_batch_line
+      Thread.pass
     end
 
     log.close
