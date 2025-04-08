@@ -2,62 +2,51 @@
 
 require "zlib"
 require "settings"
+require "tmpdir"
 
 module ConcordanceValidation
   # Performs a diff of two validated concordances
   class Delta
-    attr_accessor :old_conc, :new_conc, :adds, :deletes
+    def self.validated_concordance_path(concordance)
+      File.join(Settings.concordance_path, "validated", concordance)
+    end
 
     def initialize(old_conc_filename, new_conc_filename)
-      @old_conc = open_concordance(old_conc_filename)
-      @new_conc = open_concordance(new_conc_filename)
-      @adds = Hash.new { |h, resolved| h[resolved] = Set.new }
-      @deletes = Hash.new { |h, resolved| h[resolved] = Set.new }
+      @old_conc = self.class.validated_concordance_path old_conc_filename
+      @new_conc = self.class.validated_concordance_path new_conc_filename
     end
 
     def run
-      old_conc_lines = old_conc.readlines.to_set
-      new_conc.each do |line|
-        if old_conc_lines.include? line
-          old_conc_lines.delete(line)
-        else
-          variant_ocn, canonical_ocn = line.chomp.split("\t")
-          adds[canonical_ocn] << variant_ocn
-        end
+      Dir.mktmpdir do
+        # Lines only in old concordance == deletes
+        comm_cmd = "bash -c 'comm -23 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{deletes_file}'"
+        system(comm_cmd)
+        # Lines only in new concordance == adds
+        comm_cmd = "bash -c 'comm -13 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{adds_file}'"
+        system(comm_cmd)
       end
-      write(File.open(diff_out_path + ".adds", "w"), adds)
-      deletes_from_remaining_lines(old_conc_lines)
-      write(File.open(diff_out_path + ".deletes", "w"), deletes)
     end
 
-    def write(fout, diffs)
-      diffs.keys.sort.each do |canonical_ocn|
-        diffs[canonical_ocn].each do |variant_ocn|
-          fout.puts [variant_ocn, canonical_ocn].join("\t")
-        end
-      end
-      fout.flush
-    end
-
-    def open_concordance(filename)
-      if /\.gz$/.match?(filename)
-        Zlib::GzipReader.open(Settings.concordance_path + "/validated/" + filename)
+    # Apply sort, or gunzip and sort, depending on file extension.
+    # This is to be embedded in one of the top-level `comm` commands.
+    def sort_cmd(path)
+      if /\.gz$/.match?(path)
+        "zcat #{path} | sort"
       else
-        File.open(Settings.concordance_path + "/validated/" + filename)
+        "sort #{path}"
       end
+    end
+
+    def adds_file
+      @adds_file ||= diff_out_path + ".adds"
+    end
+
+    def deletes_file
+      @deletes_file ||= diff_out_path + ".deletes"
     end
 
     def diff_out_path
-      Settings.concordance_path + "/diffs/comm_diff_#{DateTime.now.strftime("%Y-%m-%d")}.txt"
-    end
-
-    private
-
-    def deletes_from_remaining_lines(lines)
-      lines.each do |line|
-        variant_ocn, canonical_ocn = line.chomp.split("\t")
-        deletes[canonical_ocn] << variant_ocn
-      end
+      File.join(Settings.concordance_path, "diffs", "comm_diff_#{DateTime.now.strftime("%Y-%m-%d")}.txt")
     end
   end
 end
