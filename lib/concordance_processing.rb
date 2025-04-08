@@ -10,6 +10,8 @@ class ConcordanceProcessing
     log = File.open("#{fout}.log", "w")
     fout = File.open(fout, "w")
 
+    Services.logger.info "checking concordance file format..."
+    ConcordanceValidation::Concordance.numbers_tab_numbers(fin)
     c = ConcordanceValidation::Concordance.new(fin)
     milemarker = Milemarker.new(batch_size: 10_000, name: "validate concordance")
     milemarker.logger = Services.logger
