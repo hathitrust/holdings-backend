@@ -2,7 +2,6 @@
 
 require "zlib"
 require "settings"
-require "tmpdir"
 
 module ConcordanceValidation
   # Performs a diff of two validated concordances
@@ -17,14 +16,12 @@ module ConcordanceValidation
     end
 
     def run
-      Dir.mktmpdir do
-        # Lines only in old concordance == deletes
-        comm_cmd = "bash -c 'comm -23 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{deletes_file}'"
-        system(comm_cmd)
-        # Lines only in new concordance == adds
-        comm_cmd = "bash -c 'comm -13 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{adds_file}'"
-        system(comm_cmd)
-      end
+      # Lines only in old concordance == deletes
+      comm_cmd = "bash -c 'comm -23 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{deletes_file}'"
+      system(comm_cmd)
+      # Lines only in new concordance == adds
+      comm_cmd = "bash -c 'comm -13 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{adds_file}'"
+      system(comm_cmd)
     end
 
     # Apply sort, or gunzip and sort, depending on file extension.
