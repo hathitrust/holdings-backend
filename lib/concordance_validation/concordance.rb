@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "benchmark"
 require "sqlite3"
 require "zlib"
 
