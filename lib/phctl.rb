@@ -58,7 +58,7 @@ module PHCTL
       run_job(Jobs::Concordance::Validate, infile, outfile)
     end
 
-    desc "delta", "Computes deltas in default concordance directory"
+    desc "delta OLD_FILE NEW_FILE", "Compute deltas between two concordance files"
     def delta(old, new)
       run_job(Jobs::Concordance::Delta, old, new)
     end

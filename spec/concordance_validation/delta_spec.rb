@@ -9,12 +9,16 @@ require "fileutils"
 # make test files
 
 RSpec.describe ConcordanceValidation::Delta do
-  let(:old_concordance) { described_class.validated_concordance_path "old_concordance.txt" }
-  let(:new_concordance) { described_class.validated_concordance_path "new_concordance.txt" }
-  let(:old_concordance_gz) { described_class.validated_concordance_path "old_concordance.txt.gz" }
-  let(:new_concordance_gz) { described_class.validated_concordance_path "new_concordance.txt.gz" }
-  let(:delta) { described_class.new("old_concordance.txt", "new_concordance.txt") }
-  let(:delta_with_gzip) { described_class.new("old_concordance.txt.gz", "new_concordance.txt.gz") }
+  def validated_concordance_path(concordance)
+    File.join(Settings.concordance_path, "validated", concordance)
+  end
+
+  let(:old_concordance) { validated_concordance_path "old_concordance.txt" }
+  let(:new_concordance) { validated_concordance_path "new_concordance.txt" }
+  let(:old_concordance_gz) { validated_concordance_path "old_concordance.txt.gz" }
+  let(:new_concordance_gz) { validated_concordance_path "new_concordance.txt.gz" }
+  let(:delta) { described_class.new(old_concordance, new_concordance) }
+  let(:delta_with_gzip) { described_class.new(old_concordance_gz, new_concordance_gz) }
   let(:adds) { delta.diff_out_path + ".adds" }
   let(:deletes) { delta.diff_out_path + ".deletes" }
   let(:old_concordance_data) {

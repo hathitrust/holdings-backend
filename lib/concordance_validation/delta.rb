@@ -6,22 +6,18 @@ require "settings"
 module ConcordanceValidation
   # Performs a diff of two validated concordances
   class Delta
-    def self.validated_concordance_path(concordance)
-      File.join(Settings.concordance_path, "validated", concordance)
-    end
-
-    def initialize(old_conc_filename, new_conc_filename)
-      @old_conc = self.class.validated_concordance_path old_conc_filename
-      @new_conc = self.class.validated_concordance_path new_conc_filename
+    def initialize(old_concordance, new_concordance)
+      @old_concordance = old_concordance
+      @new_concordance = new_concordance
     end
 
     def run
       # Lines only in old concordance == deletes
-      comm_cmd = "bash -c 'comm -23 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{deletes_file}'"
-      system(comm_cmd)
+      comm_cmd = "bash -c 'comm -23 <(#{sort_cmd @old_concordance}) <(#{sort_cmd @new_concordance}) > #{deletes_file}'"
+      system(comm_cmd, exception: true)
       # Lines only in new concordance == adds
-      comm_cmd = "bash -c 'comm -13 <(#{sort_cmd @old_conc}) <(#{sort_cmd @new_conc}) > #{adds_file}'"
-      system(comm_cmd)
+      comm_cmd = "bash -c 'comm -13 <(#{sort_cmd @old_concordance}) <(#{sort_cmd @new_concordance}) > #{adds_file}'"
+      system(comm_cmd, exception: true)
     end
 
     # Apply sort, or gunzip and sort, depending on file extension.
