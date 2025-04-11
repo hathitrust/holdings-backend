@@ -21,15 +21,15 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report shared-print-phase-count --phase 1] => Jobs::Common,
     # Has wrappers in holdings/jobs
     %w[report member-counts infile outpath] => Jobs::Common,
-    %w[report costreport-workflow] => Jobs::Common,
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
     %w[report frequency-table ht_item_file output_dir] => Jobs::Common,
-    %w[report overlap someinst] => Jobs::Common,
     %w[report weeding_decision someinst] => Jobs::Common,
     %w[parse parse-holdings-xml] => Jobs::Common,
     %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings
+    %w[workflow costreport] => Jobs::Common,
+    %w[workflow overlap instid] => Jobs::Common
 
     # Not covered by phctl
     # bin/cost_changes.sh
@@ -47,19 +47,19 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     include_context "with tables for holdings"
 
     it "accepts a directory for frequency tables" do
-      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table-dir", "/freq/table/dir"])
+      PHCTL::PHCTL.start(["report", "costreport", "--working-directory", "/freq/table/dir"])
 
       expect(Jobs::Common.jobs[0]["args"])
         .to eq(["Reports::CostReport",
-          {"precomputed_frequency_table_dir" => "/freq/table/dir"}])
+          {"working_directory" => "/freq/table/dir"}])
     end
 
     it "accepts a file for frequency table" do
-      PHCTL::PHCTL.start(["report", "costreport", "--precomputed-frequency-table", "/path/to/freqtable.json"])
+      PHCTL::PHCTL.start(["report", "costreport", "--frequency-table", "/path/to/freqtable.json"])
 
       expect(Jobs::Common.jobs[0]["args"])
         .to eq(["Reports::CostReport",
-          {"precomputed_frequency_table" => "/path/to/freqtable.json"}])
+          {"frequency_table" => "/path/to/freqtable.json"}])
     end
   end
 

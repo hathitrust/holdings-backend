@@ -84,9 +84,9 @@ RSpec.describe "phctl integration" do
     include_context "with mocked solr response"
     include_context "with complete data for one cluster"
 
-    it "CostReportWorkflow produces output" do
+    it "cost report workflow produces output" do
       # item counts match what we have in the mock solr response
-      phctl(*%w[report costreport-workflow --ht-item-count 16 --ht-item-pd-count 5 --inline-callback-test])
+      phctl(*%w[workflow costreport --ht-item-count 16 --ht-item-pd-count 5 --test-mode])
       year = Time.new.year.to_s
 
       costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
@@ -95,7 +95,7 @@ RSpec.describe "phctl integration" do
     end
 
     it "Estimate produces output" do
-      phctl("report", "estimate", fixture("ocn_list.txt"))
+      phctl("workflow", "estimate", fixture("ocn_list.txt"), "--test-mode")
 
       expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/estimates/ocn_list-estimate-*.txt").first))
         .to match(/Total Estimated IC Cost/)
@@ -109,7 +109,7 @@ RSpec.describe "phctl integration" do
     end
 
     it "Overlap produces output" do
-      phctl(*%w[report overlap umich])
+      phctl(*%w[workflow overlap umich --test-mode])
 
       expect(File.size("#{ENV["TEST_TMP"]}/overlap_report_remote/umich-hathitrust-member-data/analysis/overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end

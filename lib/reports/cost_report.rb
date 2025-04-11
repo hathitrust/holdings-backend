@@ -8,6 +8,8 @@ require "services"
 # they were access:allow (PD, everybody pay), instead of the traditional
 # access:deny (IC, holders pay).
 
+# TODO move to Workflow::CostReport?
+# TODO consider removing compile_frequency_table
 module Reports
   # Generates reports based on h_share
   class CostReport
@@ -59,10 +61,9 @@ module Reports
       logger: Services.logger,
       ht_item_pd_count: nil,
       ht_item_count: nil,
-      precomputed_frequency_table_file: nil,
-      precomputed_frequency_table_dir: nil,
-      precomputed_frequency_table: read_freq_tables(precomputed_frequency_table_dir,
-        precomputed_frequency_table_file))
+      frequency_table: nil,
+      working_directory: nil,
+      precomputed_frequency_table: read_freq_tables(working_directory, frequency_table))
       target_cost ||= Settings.target_cost
 
       raise "Target cost not set" if target_cost.nil?

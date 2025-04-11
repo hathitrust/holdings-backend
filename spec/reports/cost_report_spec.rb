@@ -124,13 +124,13 @@ RSpec.describe Reports::CostReport do
     end
 
     it "can use a frequency table file" do
-      cr = described_class.new(precomputed_frequency_table_file: fixture("freqtable.json"))
+      cr = described_class.new(frequency_table: fixture("freqtable.json"))
 
       expect(cr.frequency_table).to eq(FrequencyTable.new(data: {umich: {spm: {"1": 1}}}))
     end
 
     it "can sum a directory of frequency table files" do
-      cr = described_class.new(precomputed_frequency_table_dir: fixture("freqtables"))
+      cr = described_class.new(working_directory: fixture("freqtables"))
       expect(cr.frequency_table).to eq(FrequencyTable.new(data: File.read(fixture("summed_freqtable.json"))))
     end
 

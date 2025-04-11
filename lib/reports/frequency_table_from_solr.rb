@@ -8,15 +8,18 @@ require "solr_batch"
 # tabular data from hf:
 #    htid bib_num rights_code access bib_fmt description collection_code oclc
 
+# TODO move to Workflow::CostReport
 module Reports
   class FrequencyTableFromSolr
     SLICE_SIZE = 100
 
     attr_reader :solr_records, :output_file, :batch_size
 
-    def initialize(solr_records, output_file, batch_size: 1000)
+    def initialize(solr_records,
+      output: solr_records + ".freqtable.json",
+      batch_size: 1000)
       @solr_records = solr_records
-      @output_file = output_file
+      @output_file = output
       @batch_size = batch_size
     end
 

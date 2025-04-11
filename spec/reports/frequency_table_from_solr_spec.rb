@@ -13,7 +13,7 @@ RSpec.describe Reports::FrequencyTableFromSolr do
         organization: "upenn")
 
       outfile = File.join(tmpdir, "out.json")
-      described_class.new(record, outfile).run
+      described_class.new(record, output: outfile).run
 
       # umich & upenn each have one mpm that two institutions hold
       ft_from_report = FrequencyTable.new(data: File.read(outfile))
@@ -40,14 +40,14 @@ RSpec.describe Reports::FrequencyTableFromSolr do
     end
 
     it "can handle catalog record w/o ocn" do
-      described_class.new(fixture("solr_ocnless_record.ndj"), outfile).run
+      described_class.new(fixture("solr_ocnless_record.ndj"), output: outfile).run
 
       # one spm on the record, umich is depositor, should hold it
       expect(ft_report_freq(:umich, :spm)).to eq(Frequency.new(bucket: 1, frequency: 1))
     end
 
     it "can handle serial record" do
-      described_class.new(fixture("solr_serial_record.ndj"), outfile).run
+      described_class.new(fixture("solr_serial_record.ndj"), output: outfile).run
 
       # no holdings loaded; bib format is serial, two items on record both
       # deposited by umich; they should hold them.
@@ -55,7 +55,7 @@ RSpec.describe Reports::FrequencyTableFromSolr do
     end
 
     it "ignores pd items on record" do
-      described_class.new(fixture("solr_mixed_ic_pd_record.ndj"), outfile).run
+      described_class.new(fixture("solr_mixed_ic_pd_record.ndj"), output: outfile).run
 
       # no holdings loaded; bib format is serial, 12 items on record, 3 pdus, 9 ic, all from umich
       # pd items should be ignored so serial frequency should be 9
