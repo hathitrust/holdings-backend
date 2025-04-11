@@ -19,8 +19,9 @@ module Scrub
     # by another ruby class.
     attr_reader :output_struct, :out_files, :logger_path, :item_type
 
-    def initialize(path)
+    def initialize(path, force = false)
       @path = path
+      @force = force
 
       # @member_id and @item_type are used in the path to scrub_logger, but we
       # also need somewhere to log to before we know @member_id and @item_type
@@ -48,7 +49,7 @@ module Scrub
       @encoding = Utils::Encoding.new(@path)
       convert_to_utf8 unless @encoding.ascii_or_utf8?
 
-      Services.scrub_logger.info("Started scrubbing #{@path}")
+      Services.scrub_logger.info("Started scrubbing #{@path}, --force=#{@force}")
       write_to do |out_file|
         @member_holding_file.parse do |holding|
           out_file.puts(holding.to_json)

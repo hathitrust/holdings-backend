@@ -54,17 +54,14 @@ module Scrub
     def run_file(member_submitted_file)
       Services.logger.info "Running member_submitted_file #{member_submitted_file}"
       downloaded_file = download_to_work_dir(member_submitted_file)
-      scrubber = Scrub::AutoScrub.new(downloaded_file)
+      scrubber = Scrub::AutoScrub.new(downloaded_file, force)
       scrubber.run
 
-      rc = Scrub::RecordCounter.new(organization, scrubber.item_type)
-      unless rc.acceptable_diff? || force
+      record_counter = Scrub::RecordCounter.new(organization, scrubber.item_type)
+      unless record_counter.acceptable_diff? || force
         raise MalformedFileError, [
           "Diff too big for #{organization} when scrubbing #{member_submitted_file["Name"]}.",
-          "Last loaded file (#{rc.last_loaded}) had #{rc.count_loaded} records",
-          "The scrubbed file (#{rc.last_ready}) has #{rc.count_ready} records.",
-          "Diff is #{rc.diff * 100}%, which is greater than diff_max",
-          "(#{Settings.scrub_line_count_diff_max * 100}%).",
+          record_counter.message.join("\n"),
           "This file will not be loaded."
         ].join("\n")
         # Run again with --force to load anyways.
