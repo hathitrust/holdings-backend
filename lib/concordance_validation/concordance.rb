@@ -98,11 +98,7 @@ module ConcordanceValidation
       if File.exist? @deduped_concordance_file
         Services.logger.info "deduped concordance #{@deduped_concordance_file} already exists, skipping"
       else
-        cmd = if /\.gz$/.match?(@concordance_file)
-          "zcat -cf #{@concordance_file} | sed '#{SED_DEDUPE_REGEX}' > #{@deduped_concordance_file}"
-        else
-          "sed '#{SED_DEDUPE_REGEX}' #{@concordance_file} > #{@deduped_concordance_file}"
-        end
+        cmd = "zcat -cf #{@concordance_file} | sed '#{SED_DEDUPE_REGEX}' > #{@deduped_concordance_file}"
         Services.logger.info "deduping #{@concordance_file} to #{@deduped_concordance_file}..."
         system(cmd, exception: true)
       end
