@@ -3,6 +3,7 @@ require "sidekiq"
 require "cost_report_workflow"
 require "concordance_processing"
 require "ex_libris_holdings_xml_parser"
+require "loader/concordance_loader"
 require "loader/file_loader"
 require "loader/holding_loader"
 require "loader/shared_print_loader"
@@ -49,6 +50,19 @@ module Jobs
         Services.logger.info "Loading Shared Print Commitments: #{filename}"
         Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.for(filename))
           .load(filename, filehandle: Loader::SharedPrintLoader.filehandle_for(filename))
+      end
+    end
+
+    class Concordance
+      include Sidekiq::Job
+      def perform(date)
+        Services.logger.info "Loading Concordance Deltas for #{date}"
+        batch_loader = Loader::ConcordanceLoader.new(date)
+        Loader::FileLoader.new(batch_loader: batch_loader)
+          .load(batch_loader.adds_file)
+        Loader::FileLoader.new(batch_loader: batch_loader)
+          .batch_load_deletes(batch_loader.deletes_file)
+        Services.logger.info "Finished Concordance Deltas for #{date}."
       end
     end
 

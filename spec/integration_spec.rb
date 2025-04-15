@@ -39,6 +39,21 @@ RSpec.describe "phctl integration" do
       expect { phctl("load", "holdings", fixture("umich_fake_testdata.ndj")) }
         .to change { Clusterable::Holding.table.count }.by(10)
     end
+
+    describe "concordance" do
+      around(:each) do |example|
+        saved_concordance_path = Settings.concordance_path
+        Settings.concordance_path = File.join(__dir__, "fixtures", "concordance")
+        example.run
+        Settings.concordance_path = saved_concordance_path
+      end
+
+      # Adds 5 and deletes 1
+      it "loads adds and deletes" do
+        expect { phctl("load", "concordance", "20220801") }
+          .to change { Services[:concordance_table].count }.by(4)
+      end
+    end
   end
 
   describe "Concordance" do

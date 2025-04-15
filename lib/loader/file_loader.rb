@@ -60,6 +60,21 @@ module Loader
       logger.info marker.final_line
     end
 
+    def batch_load_deletes(filename, filehandle: Zinzout.zin(filename), skip_header_match: nil)
+      logger.info "Deleting items from #{filename}, batches of #{ppnum @batch_size}"
+
+      batch_loader.batches_for(
+        skip_matching_header(filehandle.enum_for(:each), skip_header_match).lazy
+        .map { |line| log_and_parse(line) }
+      ).each do |batch|
+        batch_loader.delete(batch)
+        Thread.pass
+      end
+
+      logger.info marker.final_line
+      marker.count
+    end
+
     private
 
     def log_and_parse(line)
