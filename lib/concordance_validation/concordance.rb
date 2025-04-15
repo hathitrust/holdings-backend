@@ -125,14 +125,6 @@ module ConcordanceValidation
         .uniq
     end
 
-    def file_handler
-      if /\.gz$/.match?(@concordance_file)
-        Zlib::GzipReader
-      else
-        File
-      end
-    end
-
     # Kahn's algorithm for detecting cycles in a graph
     #
     # @param out_edges, in_edges from unresolved to resolved and vice versa
