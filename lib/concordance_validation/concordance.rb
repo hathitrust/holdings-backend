@@ -7,6 +7,12 @@ require "zlib"
 # Takes a file with <variant ocn> <tab> <canonical ocn>, checks that its ok.
 # Prints only <variant> to <canonical ocn>
 module ConcordanceValidation
+  class OCNCycleError < RuntimeError
+  end
+
+  class MultipleOCNError < RuntimeError
+  end
+
   # A Concordance.
   # Uses a temporary (for now) Sqlite database with a single table `concordance`
   # containing variant <-> canonical mappings under validation.
@@ -158,7 +164,7 @@ module ConcordanceValidation
           end
         end
       end
-      raise "Cycles: #{in_edges.keys.sort.join(", ")}" if in_edges.keys.any?
+      raise OCNCycleError, "Cycles: #{in_edges.keys.sort.join(", ")}" if in_edges.keys.any?
     end
 
     # Given an ocn, compile all related edges
@@ -205,7 +211,7 @@ module ConcordanceValidation
 
         # multiple ocns, but they are all terminal
         if canonical.all? { |o| canonical_ocn? o }
-          raise "OCN:#{ocn} resolves to multiple ocns: #{canonical.join(", ")}"
+          raise MultipleOCNError, "OCN:#{ocn} resolves to multiple ocns: #{canonical.join(", ")}"
         end
 
         # find more ocns in the chain

@@ -17,30 +17,18 @@ class ConcordanceProcessing
     milemarker.logger = Services.logger
     c.db.prepare("SELECT variant FROM concordance").execute.each do |variant|
       variant = variant[0]
-      # Can this ever happen? This is from the in-memory hash table version.
-      # next if c.variant_to_canonical[variant].count.zero?
-      begin
-        sub = c.compile_sub_graph(variant)
-        c.detect_cycles(*sub)
-      rescue => e
-        log.puts e
-        log.puts "Cycles:#{(sub[0].keys + sub[1].keys).flatten.uniq.join(", ")}"
-        log.flush
-        next
-      end
-      begin
-        # checks for multiple canonical ocns
-        _canonical = c.canonical_ocn(variant)
-      rescue => e
-        log.puts e
-        log.flush
-        next
-      end
+      sub = c.compile_sub_graph(variant)
+      c.detect_cycles(*sub)
+      # checks for multiple canonical ocns
+      _canonical = c.canonical_ocn(variant)
       fout.puts [variant, c.canonical_ocn(variant)].join("\t")
       milemarker.increment_and_log_batch_line
       Thread.pass
+    rescue OCNCycleError, MultipleOCNError => e
+      log.puts e
+      log.flush
+      next
     end
-
     log.close
     fout.close
     milemarker.log_final_line
