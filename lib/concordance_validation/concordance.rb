@@ -216,7 +216,7 @@ module ConcordanceValidation
     # @param infile file name for the concordance
     # @return raise error if invalid
     def self.numbers_tab_numbers(infile)
-      grepper = infile.match?(/\.gz$/) ? "zgrep" : "grep"
+      grepper = infile.end_with?(".gz") ? "zgrep" : "grep"
       line_count = `#{grepper} -cvP '^[0-9]+\t[0-9]+$' #{infile}`
       raise "Invalid format. #{line_count.to_i} line(s) are malformed." unless line_count.to_i.zero?
     end

@@ -23,7 +23,7 @@ module ConcordanceValidation
     # Apply sort, or gunzip and sort, depending on file extension.
     # This is to be embedded in one of the top-level `comm` commands.
     def sort_cmd(path)
-      if /\.gz$/.match?(path)
+      if path.end_with?(".gz")
         "zcat #{path} | sort"
       else
         "sort #{path}"
