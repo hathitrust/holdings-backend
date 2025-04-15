@@ -80,12 +80,8 @@ module ConcordanceValidation
       count = @db.execute("SELECT COUNT(*) FROM concordance")[0][0]
       if count.zero?
         Services.logger.info "importing data from #{@deduped_concordance_file}..."
-        sqlite3_command = <<~END
-          sqlite3 "#{@db_file}" << EOF
-          .mode tabs
-          .import "#{@deduped_concordance_file}" "concordance"
-          EOF
-        END
+        sqlite_load_concordance = File.join(ENV["APP_HOME"], "bin", "sqlite_load_concordance.sh")
+        sqlite3_command = %(#{sqlite_load_concordance} "#{@db_file}" "#{@deduped_concordance_file}")
         system(sqlite3_command, exception: true)
         Services.logger.info "creating indexes..."
         @db.execute CREATE_VARIANT_INDEX_SQL

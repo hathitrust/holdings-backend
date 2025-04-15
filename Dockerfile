@@ -4,6 +4,7 @@ RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
   nodejs rclone uchardet sqlite3
 
 WORKDIR /usr/src/app
+ENV APP_HOME /usr/src/app
 ENV BUNDLE_PATH /gems
 ENV RUBYLIB /usr/src/app/lib
 RUN gem install bundler
