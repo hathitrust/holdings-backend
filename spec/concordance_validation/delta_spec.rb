@@ -45,8 +45,8 @@ RSpec.describe ConcordanceValidation::Delta do
     FileUtils.mkdir_p Settings.concordance_path + "/diffs/"
     File.write(old_concordance, old_concordance_data)
     File.write(new_concordance, new_concordance_data)
-    `gzip -c #{old_concordance} > #{old_concordance_gz}`
-    `gzip -c #{new_concordance} > #{new_concordance_gz}`
+    system("gzip -c #{old_concordance} > #{old_concordance_gz}", exception: true)
+    system("gzip -c #{new_concordance} > #{new_concordance_gz}", exception: true)
   end
 
   describe "#run" do
