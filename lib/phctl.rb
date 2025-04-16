@@ -36,9 +36,11 @@ module PHCTL
       run_job(Jobs::Load::HtItems, filename)
     end
 
-    desc "concordance DATE", "Load concordance deltas for the given date"
-    def concordance(date)
-      run_job(Jobs::Load::Concordance, date)
+    # This could be broken into "load concordance delta" and "load concordance file"
+    # if FILENAME_OR_DATE is too confusing.
+    desc "concordance FILENAME_OR_DATE", "Load concordance deltas if argument is YYYYMMDD, or a full concordance file"
+    def concordance(filename_or_date)
+      run_job(Jobs::Load::Concordance, filename_or_date)
     end
 
     desc "cluster-file FILENAME", "Add a whole file of clusters in JSON format."

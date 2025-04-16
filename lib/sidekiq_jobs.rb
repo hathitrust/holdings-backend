@@ -55,14 +55,19 @@ module Jobs
 
     class Concordance
       include Sidekiq::Job
-      def perform(date)
-        Services.logger.info "Loading Concordance Deltas for #{date}"
-        batch_loader = Loader::ConcordanceLoader.new(date)
+      def perform(filename_or_date)
+        # TODO: should we wrap this whole thing in a Sequel transaction?
+        batch_loader = Loader::ConcordanceLoader.for(filename_or_date)
+        Services.logger.info "Loading with #{batch_loader.class} for #{filename_or_date}"
+        # Allow batch loader subclass to truncate DB if loading full concordance
+        batch_loader.prepare
         Loader::FileLoader.new(batch_loader: batch_loader)
           .load(batch_loader.adds_file)
-        Loader::FileLoader.new(batch_loader: batch_loader)
-          .batch_load_deletes(batch_loader.deletes_file)
-        Services.logger.info "Finished Concordance Deltas for #{date}."
+        if batch_loader.deletes?
+          Loader::FileLoader.new(batch_loader: batch_loader)
+            .batch_load_deletes(batch_loader.deletes_file)
+        end
+        Services.logger.info "Finished Concordance load for #{filename_or_date}."
       end
     end
 

@@ -4,6 +4,13 @@ require "spec_helper"
 require "loader/concordance_loader"
 
 RSpec.describe Loader::ConcordanceLoader do
+  around(:each) do |example|
+    Services.ht_db.transaction(rollback: :always, auto_savepoint: true) do
+      Services.concordance_table.truncate
+      example.run
+    end
+  end
+
   let(:line) { [1, 2].join("\t") }
   let(:loader) { described_class.new("") }
 

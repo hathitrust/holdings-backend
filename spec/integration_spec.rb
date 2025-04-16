@@ -53,6 +53,13 @@ RSpec.describe "phctl integration" do
         expect { phctl("load", "concordance", "20220801") }
           .to change { Services[:concordance_table].count }.by(4)
       end
+
+      # Removes everything and adds 7
+      it "loads full concordance" do
+        concordance_file = File.join(Settings.concordance_path, "raw", "not_cycle_graph.tsv")
+        phctl("load", "concordance", concordance_file)
+        expect(Services[:concordance_table].count).to eq(7)
+      end
     end
   end
 
