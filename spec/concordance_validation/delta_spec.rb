@@ -19,8 +19,8 @@ RSpec.describe ConcordanceValidation::Delta do
   let(:new_concordance_gz) { validated_concordance_path "new_concordance.txt.gz" }
   let(:delta) { described_class.new(old_concordance, new_concordance) }
   let(:delta_with_gzip) { described_class.new(old_concordance_gz, new_concordance_gz) }
-  let(:adds) { delta.diff_out_path + ".adds" }
-  let(:deletes) { delta.diff_out_path + ".deletes" }
+  let(:adds) { described_class.adds_file }
+  let(:deletes) { described_class.deletes_file }
   let(:old_concordance_data) {
     <<~END
       333\t444

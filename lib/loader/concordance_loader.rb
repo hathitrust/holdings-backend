@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "concordance_validation/delta"
 require "services"
 
 module Loader
@@ -38,14 +39,12 @@ module Loader
       @load_batch_size = load_batch_size
     end
 
-    # FIXME: this duplicates some code in the concordance validation PR
-    # Can probably extract it to a Delta class
     def adds_file
-      File.join(Settings.concordance_path, "diffs", "comm_diff_#{Date.parse(@filename_or_date).strftime("%Y-%m-%d")}.txt.adds")
+      ConcordanceValidation::Delta.adds_file(date: Date.parse(@filename_or_date))
     end
 
     def deletes_file
-      File.join(Settings.concordance_path, "diffs", "comm_diff_#{Date.parse(@filename_or_date).strftime("%Y-%m-%d")}.txt.deletes")
+      ConcordanceValidation::Delta.deletes_file(date: Date.parse(@filename_or_date))
     end
 
     # ConcordanceLoaderFull subclass will truncate the database, default behavior is no-op.
