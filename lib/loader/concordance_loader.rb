@@ -13,6 +13,17 @@ module Loader
   # will accept anything that is not YYYYMMDD.
   #
   # If this proves onerous we can introduce a Thor subcommand.
+  #
+  # Note: this is a very inefficient way to load a full concordance file.
+  # The fastest way is to create a copy of oclc_concordance using CREATE TABLE,
+  # populate it with
+  #   LOAD DATA LOCAL INFILE '...' INTO TABLE oclc_concordance_copy FIELDS TERMINATED BY '\t';
+  # and then
+  #   RENAME TABLE oclc_concordance TO oclc_concordance_old, oclc_concordance_copy To oclc_concordance;
+  # But for automation, keeping permission from being too broad, logging, etc we can do it the slow way here.
+  #
+  # In fact, truncating the table before load is kind of unfriendly so we may need to get rid
+  # of support for loading anything but deltas altogether.
   class ConcordanceLoader
     def self.for(filename_or_date)
       if filename_or_date.match?(/^\d{8}$/)
