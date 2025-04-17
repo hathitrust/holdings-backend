@@ -9,45 +9,69 @@ require "fileutils"
 # make test files
 
 RSpec.describe ConcordanceValidation::Delta do
-  let(:delta) { described_class.new("old_concordance.txt", "new_concordance.txt") }
+  def validated_concordance_path(concordance)
+    File.join(Settings.concordance_path, "validated", concordance)
+  end
+
+  let(:old_concordance) { validated_concordance_path "old_concordance.txt" }
+  let(:new_concordance) { validated_concordance_path "new_concordance.txt" }
+  let(:old_concordance_gz) { validated_concordance_path "old_concordance.txt.gz" }
+  let(:new_concordance_gz) { validated_concordance_path "new_concordance.txt.gz" }
+  let(:delta) { described_class.new(old_concordance, new_concordance) }
+  let(:delta_with_gzip) { described_class.new(old_concordance_gz, new_concordance_gz) }
+  let(:adds) { delta.diff_out_path + ".adds" }
+  let(:deletes) { delta.diff_out_path + ".deletes" }
+  let(:old_concordance_data) {
+    <<~END
+      333\t444
+      777\t888
+      555\t666
+      111\t222
+    END
+  }
+  let(:new_concordance_data) {
+    <<~END
+      999\t000
+      555\t666
+      333\t444
+      777\t888
+    END
+  }
+  let(:added_data) { "999\t000\n" }
+  let(:deleted_data) { "111\t222\n" }
 
   before(:each) do
     FileUtils.mkdir_p Settings.concordance_path + "/validated/"
     FileUtils.mkdir_p Settings.concordance_path + "/diffs/"
-    File.write(Settings.concordance_path + "/validated/old_concordance.txt",
-      ["dupe\tdupe", "delete\tdelete"].join("\n"))
-    File.write(Settings.concordance_path + "/validated/new_concordance.txt",
-      ["dupe\tdupe", "add\tadd"].join("\n"))
-  end
-
-  describe "#initialize" do
-    it "opens the old and new concordances for reading" do
-      expect(delta.old_conc.to_a.size).to eq(2)
-      expect(delta.new_conc.to_a.size).to eq(2)
-    end
+    File.write(old_concordance, old_concordance_data)
+    File.write(new_concordance, new_concordance_data)
+    system("gzip -c #{old_concordance} > #{old_concordance_gz}", exception: true)
+    system("gzip -c #{new_concordance} > #{new_concordance_gz}", exception: true)
   end
 
   describe "#run" do
-    it "builds an index of adds" do
-      delta.run
-      expect(delta.adds["add"]).to include("add")
+    context "with compressed concordance files" do
+      it "writes a file of deletes to the diff_out_path + .deletes" do
+        delta_with_gzip.run
+        expect(File.read(deletes)).to eq(deleted_data)
+      end
+
+      it "writes a file of adds to the diff_out_path + .adds" do
+        delta_with_gzip.run
+        expect(File.read(adds)).to eq(added_data)
+      end
     end
 
-    it "builds an index of deletes" do
-      delta.run
-      expect(delta.deletes["delete"]).to include("delete")
-    end
+    context "with uncompressed concordance files" do
+      it "writes a file of deletes to the diff_out_path + .deletes" do
+        delta.run
+        expect(File.read(deletes)).to eq(deleted_data)
+      end
 
-    it "writes a file of deletes to the diff_out_path + .deletes" do
-      delta.run
-      deletes = File.open(delta.diff_out_path + ".deletes")
-      expect(deletes.readlines).to eq(["delete\tdelete\n"])
-    end
-
-    it "writes a file of adds to the diff_out_path + .adds" do
-      delta.run
-      adds = File.open(delta.diff_out_path + ".adds")
-      expect(adds.readlines).to eq(["add\tadd\n"])
+      it "writes a file of adds to the diff_out_path + .adds" do
+        delta.run
+        expect(File.read(adds)).to eq(added_data)
+      end
     end
   end
 end

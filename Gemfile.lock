@@ -328,6 +328,7 @@ DEPENDENCIES
   simplecov-lcov
   sinatra
   solr_cursorstream
+  sqlite3
   standard
   thor
   trilogy
