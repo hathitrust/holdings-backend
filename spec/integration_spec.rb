@@ -91,7 +91,10 @@ RSpec.describe "phctl integration" do
       FileUtils.mkdir_p(diffs_path)
       FileUtils.cp(fixture("concordance_sample.txt"), validated_path)
       FileUtils.cp(fixture("concordance_sample_2.txt"), validated_path)
-      Jobs::Concordance::Delta.new.perform("concordance_sample.txt", "concordance_sample_2.txt")
+      Jobs::Concordance::Delta.new.perform(
+        File.join(validated_path, "concordance_sample.txt"),
+        File.join(validated_path, "concordance_sample_2.txt")
+      )
       expect(File.size("#{diffs_path}/comm_diff_#{Date.today}.txt.adds")).to be > 0
       expect(File.size("#{diffs_path}/comm_diff_#{Date.today}.txt.deletes")).to be > 0
     end
