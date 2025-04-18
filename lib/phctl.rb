@@ -197,13 +197,12 @@ module PHCTL
   end
 
   class Workflow < JobCommand
-    # TODO make test mode and chunk size options for all workflow commands
-    #
+    class_option :records_per_job, type: :numeric, default: 10000
+    class_option :test_mode, type: :boolean, default: false
+
     desc "costreport --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
-    option :chunk_size, type: :numeric, default: 10000
     option :ht_item_count, type: :numeric
     option :ht_item_pd_count, type: :numeric
-    option :test_mode, type: :boolean, default: false
     def costreport_workflow
       run_common_job(Workflows::MapReduce,
         {
@@ -214,14 +213,12 @@ module PHCTL
             "ht_item_count" => options["ht_item_count"],
             "ht_item_pd_count" => options["ht_item_pd_count"]
           },
-          "chunk_size" => options["chunk_size"],
+          "records_per_job" => options["records_per_job"],
           "test_mode" => options["test_mode"]
         })
     end
 
     desc "overlap ORGANIZATION", "Generate an overlap report for the given organization"
-    option :chunk_size, type: :numeric, default: 10000
-    option :test_mode, type: :boolean, default: false
     def overlap_workflow(org)
       # TODO refactor this such that there is a Job that takes care of
       # marshalling & unmarshalling parameters for things but
@@ -235,14 +232,12 @@ module PHCTL
 
           "reducer" => Workflows::OverlapReport::Writer.to_s,
           "reducer_params" => {"organization" => org},
-          "chunk_size" => options["chunk_size"],
+          "records_per_job" => options["records_per_job"],
           "test_mode" => options["test_mode"]
         })
     end
 
     desc "estimate OCN_FILE", "Run an estimate"
-    option :chunk_size, type: :numeric, default: 10000
-    option :test_mode, type: :boolean, default: false
     def estimate(ocn_file)
       run_common_job(Workflows::MapReduce,
         {
@@ -253,7 +248,7 @@ module PHCTL
 
           "reducer" => Workflows::Estimate::Writer.to_s,
           "reducer_params" => {"ocn_file" => ocn_file},
-          "chunk_size" => options["chunk_size"],
+          "records_per_job" => options["records_per_job"],
           "test_mode" => options["test_mode"]
         })
     end

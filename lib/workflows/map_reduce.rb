@@ -24,7 +24,7 @@ module Workflows
   # complete, runs a callback (the "reducer") with the output
   # from the mapper.
   #
-  # Jobs are run in chunks of the given chunk_size lines (default 10,000)
+  # Jobs are run on files containing the given records_per_job lines (default 10,000)
   class MapReduce
     def initialize(
       data_source:,
@@ -32,13 +32,13 @@ module Workflows
       mapper_params: {},
       reducer_params: {},
       working_directory: default_working_directory,
-      chunk_size: 10000,
+      records_per_job: 10000,
       # for testing only; assumes running inline; runs the reduce step
       # immediately
       test_mode: false
     )
       @reducer_params = reducer_params
-      @chunk_size = chunk_size
+      @records_per_job = records_per_job
       @data_source = Object.const_get(data_source)
       @data_source_params = data_source_params
       @inline = false
@@ -60,7 +60,7 @@ module Workflows
 
     private
 
-    attr_reader :chunk_size, :mapper, :mapper_params, :reducer, :reducer_params, :data_source, :data_source_params, :working_directory, :test_mode
+    attr_reader :records_per_job, :mapper, :mapper_params, :reducer, :reducer_params, :data_source, :data_source_params, :working_directory, :test_mode
 
     def callback_params
       {
@@ -98,7 +98,7 @@ module Workflows
     end
 
     def split_records
-      system("split -d -a 5 --additional-suffix=.split -l #{chunk_size} #{allrecords} #{working_directory}/records_")
+      system("split -d -a 5 --additional-suffix=.split -l #{records_per_job} #{allrecords} #{working_directory}/records_")
     end
 
     def inline_reduce
