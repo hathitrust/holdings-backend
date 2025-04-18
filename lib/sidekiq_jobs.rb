@@ -23,6 +23,7 @@ require "shared_print/deprecator"
 require "shared_print/phase_3_validator"
 require "shared_print/replacer"
 require "shared_print/updater"
+require "workflow_component"
 require "workflows/cost_report"
 require "workflows/estimate"
 require "workflows/map_reduce"
@@ -35,10 +36,82 @@ if $0 == "sidekiq"
 end
 
 module Jobs
+  # make functions available as Jobs::whatever
+
+  module_function
+
+  # prepare parameters such that they can get passed through JSON
+  def prepare_params(params)
+    params
+      .transform_keys { |k| k.to_s }
+      .transform_values { |v| prepare_value(v) }
+  end
+
+  def prepare_value(value)
+    case value
+    when Hash
+      prepare_params(value)
+    when Array
+      value.map { |entry| prepare_value(entry) }
+    when Symbol, Class
+      value.to_s
+    when String, Integer, true, false, nil
+      value
+    when ->(v) { v.respond_to?(:to_h) }
+      prepare_params(value.to_h)
+    else
+      raise "Can't prepare value '#{value}' as sidekiq job param"
+    end
+  end
+
+  def symbolize_keys(params)
+    params.transform_keys { |k| k.to_sym }
+  end
+
+  # Symbolizes all keys in the hash and recursively symbolize keys in any values
+  # that are hashes
+  def symbolize(hash)
+    symbolize_keys(hash).transform_values do |value|
+      case value
+      when Hash
+        symbolize(value)
+      else
+        value
+      end
+    end
+  end
+
   class Common
     include Sidekiq::Job
     def perform(klass, options = {}, *)
-      Object.const_get(klass).new(*, **options.transform_keys { |k| k.to_sym }).run
+      Object.const_get(klass).new(*, **Jobs.symbolize_keys(options)).run
+    end
+
+    def self.perform_async(klass, options = {}, *)
+      super(klass.to_s, Jobs.prepare_params(options), *)
+    end
+  end
+
+  class MapReduceWorkflow
+    include Sidekiq::Job
+
+    def perform(options)
+      params = Jobs.symbolize(options)
+      params[:components].transform_values! do |component|
+        WorkflowComponent.new(
+          Object.const_get(component[:component_class]),
+          component.fetch(:params, {})
+        )
+      end
+      Workflows::MapReduce.new(**params).run
+    end
+
+    def self.perform_now(**params)
+      Workflows::MapReduce.new(**params).run
+    end
+
+    def self.perform_async(**params)
+      super(Jobs.prepare_params(params))
     end
   end
 

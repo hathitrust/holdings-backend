@@ -25,9 +25,10 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
       someinst --target-cost 123456] => Jobs::Common,
     %w[report weeding_decision someinst] => Jobs::Common,
     %w[parse parse-holdings-xml] => Jobs::Common,
-    %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings
-    %w[workflow costreport] => Jobs::Common,
-    %w[workflow overlap instid] => Jobs::Common
+    %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings,
+    %w[workflow costreport] => Jobs::MapReduceWorkflow,
+    %w[workflow estimate somefile] => Jobs::MapReduceWorkflow,
+    %w[workflow overlap instid] => Jobs::MapReduceWorkflow
 
     # Not covered by phctl
     # bin/cost_changes.sh

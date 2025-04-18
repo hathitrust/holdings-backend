@@ -1,5 +1,6 @@
 require "thor"
 require "sidekiq_jobs"
+require "workflow_component"
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
@@ -192,60 +193,68 @@ module PHCTL
   end
 
   class Workflow < JobCommand
-    class_option :records_per_job, type: :numeric, default: 10000
+    class_option :records_per_job, type: :numeric, default: Settings.mapreduce.records_per_job
     class_option :test_mode, type: :boolean, default: false
+
+    no_commands do
+      def component(...)
+        WorkflowComponent.new(...)
+      end
+
+      def run_workflow(components)
+        params = base_params.merge(components: components)
+        if parent_options[:inline]
+          Jobs::MapReduceWorkflow.perform_now(**params)
+        else
+          Jobs::MapReduceWorkflow.perform_async(**params)
+        end
+      end
+
+      def base_params
+        {
+          records_per_job: options[:records_per_job],
+          test_mode: options[:test_mode]
+        }
+      end
+    end
 
     desc "costreport --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
     option :ht_item_count, type: :numeric
     option :ht_item_pd_count, type: :numeric
     def costreport_workflow
-      run_common_job(Workflows::MapReduce,
-        {
-          "data_source" => Workflows::CostReport::DataSource.to_s,
-          "mapper" => Workflows::CostReport::Analyzer.to_s,
-          "reducer" => Reports::CostReport.to_s,
-          "reducer_params" => {
-            "ht_item_count" => options["ht_item_count"],
-            "ht_item_pd_count" => options["ht_item_pd_count"]
-          },
-          "records_per_job" => options["records_per_job"],
-          "test_mode" => options["test_mode"]
-        })
+      components = {
+        data_source: component(Workflows::CostReport::DataSource),
+        mapper: component(Workflows::CostReport::Analyzer),
+        reducer: component(Reports::CostReport,
+          {
+            ht_item_count: options[:ht_item_count],
+            ht_item_pd_count: options[:ht_item_pd_count]
+          })
+      }
+
+      run_workflow(components)
     end
 
     desc "overlap ORGANIZATION", "Generate an overlap report for the given organization"
     def overlap_workflow(org)
-      # TODO refactor this such that there is a Job that takes care of
-      # marshalling & unmarshalling parameters for things but
-      # Workflows::MapReduce doesn't need to
-      run_common_job(Workflows::MapReduce,
-        {
-          "data_source" => Workflows::OverlapReport::DataSource.to_s,
-          "data_source_params" => {"organization" => org},
-          "mapper" => Workflows::OverlapReport::Analyzer.to_s,
-          "mapper_params" => {"organization" => org},
+      components = {
+        data_source: component(Workflows::OverlapReport::DataSource, {organization: org}),
+        mapper: component(Workflows::OverlapReport::Analyzer, {organization: org}),
+        reducer: component(Workflows::OverlapReport::Writer, {organization: org})
+      }
 
-          "reducer" => Workflows::OverlapReport::Writer.to_s,
-          "reducer_params" => {"organization" => org},
-          "records_per_job" => options["records_per_job"],
-          "test_mode" => options["test_mode"]
-        })
+      run_workflow(components)
     end
 
     desc "estimate OCN_FILE", "Run an estimate"
     def estimate(ocn_file)
-      run_common_job(Workflows::MapReduce,
-        {
-          "data_source" => Workflows::Estimate::DataSource.to_s,
-          "data_source_params" => {"ocn_file" => ocn_file},
-          "mapper" => Workflows::Estimate::Analyzer.to_s,
-          "mapper_params" => {},
+      components = {
+        data_source: component(Workflows::Estimate::DataSource, {ocn_file: ocn_file}),
+        mapper: component(Workflows::Estimate::Analyzer),
+        reducer: component(Workflows::Estimate::Writer, {ocn_file: ocn_file})
+      }
 
-          "reducer" => Workflows::Estimate::Writer.to_s,
-          "reducer_params" => {"ocn_file" => ocn_file},
-          "records_per_job" => options["records_per_job"],
-          "test_mode" => options["test_mode"]
-        })
+      run_workflow(components)
     end
   end
 

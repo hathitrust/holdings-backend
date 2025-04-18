@@ -8,7 +8,7 @@ class SolrBatch
   # create SolrRecords and clusters in memory from json lines;
   # populates those clusters with holdings fetched from the database.
   #
-  # if a scope is given, i.e. { organization: someorg }, limits retrieved 
+  # if a scope is given, i.e. { organization: someorg }, limits retrieved
   # holdings to that scope. Otherwise, retrieves all holdings.
   def initialize(lines, **holdings_scope)
     @records = lines.map { |l| SolrRecord.from_json(l) }

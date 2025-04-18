@@ -3,22 +3,9 @@ require "milemarker"
 require "sidekiq/batch"
 require "tmpdir"
 require "sidekiq_jobs"
+require "workflow_component"
 
 module Workflows
-  class Callback
-    def on_success(_status, options)
-      reducer = Object.const_get(options["reducer"])
-      reducer_params = options["reducer_params"]
-        .transform_keys(&:to_sym)
-
-      reducer.new(**reducer_params).run
-
-      # Don't delete intermediate files for now to aid in debugging.
-      # In the future: consider removing by default, but disabling that if a debug flag is present.
-      # FileUtils.remove_entry(options["working_directory"])
-    end
-  end
-
   # Gets data (one record per line) from a data source, splits it into chunks,
   # then runs a job on each chunk (the "mapper"); when the mapping steps
   # complete, runs a callback (the "reducer") with the output
@@ -26,33 +13,40 @@ module Workflows
   #
   # Jobs are run on files containing the given records_per_job lines (default 10,000)
   class MapReduce
+    class Callback
+      def on_success(_status, options)
+        reducer = Object.const_get(options["component_class"])
+        reducer_params = Jobs.symbolize(options["params"])
+        reducer.new(**reducer_params).run
+
+        # Don't delete intermediate files for now to aid in debugging.
+        # In the future: consider removing by default, but disabling that if a debug flag is present.
+        # FileUtils.remove_entry(options["working_directory"])
+      end
+    end
+
     def initialize(
-      data_source:,
-      mapper:, reducer:, data_source_params: {},
-      mapper_params: {},
-      reducer_params: {},
       working_directory: default_working_directory,
       records_per_job: 10000,
+      components: {},
       # for testing only; assumes running inline; runs the reduce step
       # immediately
       test_mode: false
     )
-      @reducer_params = reducer_params
+      if components.keys.to_set != COMPONENT_TYPES
+        raise ArgumentError, "Components must be all of #{COMPONENT_TYPES}"
+      end
+      @components = components
       @records_per_job = records_per_job
-      @data_source = Object.const_get(data_source)
-      @data_source_params = data_source_params
       @inline = false
-
-      @mapper = mapper
-      @mapper_params = mapper_params
-      @reducer = reducer
-      @reducer_params = reducer_params
       @working_directory = working_directory
       @test_mode = test_mode
+
+      yield self if block_given?
     end
 
     def run
-      data_source.new(**data_source_params.transform_keys { |k| k.to_sym }).dump_records(allrecords)
+      data_source.new.dump_records(allrecords)
       split_records
       queue_jobs
       inline_reduce if test_mode
@@ -60,20 +54,28 @@ module Workflows
 
     private
 
-    attr_reader :records_per_job, :mapper, :mapper_params, :reducer, :reducer_params, :data_source, :data_source_params, :working_directory, :test_mode
+    attr_reader :components, :records_per_job, :working_directory, :test_mode
+
+    COMPONENT_TYPES = [:data_source, :mapper, :reducer].to_set
+
+    COMPONENT_TYPES.each do |component|
+      define_method(component) do
+        components[component]
+      end
+    end
 
     def callback_params
-      {
-        "reducer" => reducer,
-        "reducer_params" => reducer_params.merge(
-          "working_directory" => working_directory
+      Jobs.prepare_params({
+        component_class: reducer.component_class,
+        params: reducer.params.merge(
+          working_directory: working_directory
         )
-      }
+      })
     end
 
     def batch
       Sidekiq::Batch.new.tap do |b|
-        b.description = "map (#{@mapper}) reduce (#{@reducer}) workflow"
+        b.description = "map (#{mapper}) reduce (#{reducer}) workflow"
         b.on(:success, Callback, callback_params)
       end
     end
@@ -82,7 +84,7 @@ module Workflows
       batch.jobs do
         Dir.glob("#{working_directory}/records_*.split").each do |chunk|
           Services.logger.info "Queueing chunk #{chunk} with #{mapper}"
-          Jobs::Common.perform_async(mapper, mapper_params, chunk)
+          Jobs::Common.perform_async(mapper.component_class, mapper.params, chunk)
         end
       end
     end

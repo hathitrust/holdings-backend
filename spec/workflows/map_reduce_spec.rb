@@ -65,22 +65,15 @@ RSpec.describe Workflows::MapReduce do
   let(:allrecords) { File.join(@tmpdir, "allrecords") }
 
   def workflow(records_per_job: 1, mapper_params: {}, data_source_params: {})
-    # TODO can we refactor so we do e.g.
-    # MapReduce.new(...) do |m|
-    #   m.data_source("TestDataSource", data_source_params)
-    #   m.mapper("TestMapper", mapper_params)
-    #   m.reducer("TestReducer", reducer_params)
-    # end.run
-
     described_class.new(
       working_directory: @tmpdir,
       records_per_job: records_per_job,
-      test_mode: true,
-      data_source: "TestDataSource",
-      data_source_params: data_source_params,
-      mapper: "TestMapper",
-      mapper_params: mapper_params,
-      reducer: "TestReducer"
+      components: {
+        data_source: WorkflowComponent.new(TestDataSource, data_source_params),
+        mapper: WorkflowComponent.new(TestMapper, mapper_params),
+        reducer: WorkflowComponent.new(TestReducer)
+      },
+      test_mode: true
     )
   end
 
@@ -93,7 +86,7 @@ RSpec.describe Workflows::MapReduce do
   end
 
   it "passes through keyword parameters to mapper" do
-    workflow(mapper_params: {"prefix" => "10"}).run
+    workflow(mapper_params: {prefix: "10"}).run
 
     # each intermediate file should contain "101" - the given prefix prepended
     # to the line count of the file
@@ -150,9 +143,12 @@ RSpec.describe Workflows::MapReduce do
         working_directory: @tmpdir,
         records_per_job: 2,
         test_mode: true,
-        data_source: "TestDataSource",
-        mapper: "TestMapper",
-        reducer: "TestReducer"
+        # TODO provide component objects not hashes
+        components: {
+          data_source: WorkflowComponent.new(TestDataSource),
+          mapper: WorkflowComponent.new(TestMapper),
+          reducer: WorkflowComponent.new(TestReducer)
+        }
       )
     end
 

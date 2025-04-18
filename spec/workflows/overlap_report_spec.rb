@@ -76,15 +76,21 @@ RSpec.describe Workflows::OverlapReport do
     include_context "with mocked solr response"
 
     def workflow_for_org(org)
-      Workflows::MapReduce.new(
-        data_source: Workflows::OverlapReport::DataSource.to_s,
-        data_source_params: {"organization" => org},
-        mapper: Workflows::OverlapReport::Analyzer.to_s,
-        mapper_params: {"organization" => org},
-        reducer: Workflows::OverlapReport::Writer.to_s,
-        reducer_params: {"organization" => org},
-        test_mode: true
-      )
+      components = {
+        data_source: WorkflowComponent.new(
+          Workflows::OverlapReport::DataSource,
+          {organization: org}
+        ),
+        mapper: WorkflowComponent.new(
+          Workflows::OverlapReport::Analyzer,
+          {organization: org}
+        ),
+        reducer: WorkflowComponent.new(
+          Workflows::OverlapReport::Writer,
+          {organization: org}
+        )
+      }
+      Workflows::MapReduce.new(test_mode: true, components: components)
     end
 
     context "with two holdings and htitems" do

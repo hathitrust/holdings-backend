@@ -23,3 +23,5 @@ solr_data_source:
 solr_analyzer:
   milemarker_batch_size: 1000
   solr_batch_size: 100
+mapreduce:
+  records_per_job: 10000

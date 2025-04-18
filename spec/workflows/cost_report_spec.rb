@@ -95,21 +95,22 @@ RSpec.describe Workflows::CostReport do
 
     let(:workflow) do
       Workflows::MapReduce.new(
-        data_source: Workflows::CostReport::DataSource.to_s,
-        mapper: Workflows::CostReport::Analyzer.to_s,
-        reducer: Reports::CostReport.to_s,
-        reducer_params: {
-          # these match the counts of IC items from solresponse.json -- i.e. what our mock solr
-          # will return to work on -- plus a made-up 5 public domain volumes to help the math work out
-          # below
-          ht_item_count: 16,
-          ht_item_pd_count: 5
-        },
         records_per_job: 2,
-
-        # We can't test the callbacks directly without 'real' sidekiq, but we can
-        # simulate.
-        test_mode: true
+        test_mode: true,
+        components: {
+          data_source: WorkflowComponent.new(Workflows::CostReport::DataSource),
+          mapper: WorkflowComponent.new(Workflows::CostReport::Analyzer),
+          reducer: WorkflowComponent.new(
+            Reports::CostReport,
+            {
+              # these match the counts of IC items from solresponse.json -- i.e. what our mock solr
+              # will return to work on -- plus a made-up 5 public domain volumes to help the math work out
+              # below
+              ht_item_count: 16,
+              ht_item_pd_count: 5
+            }
+          )
+        }
       )
     end
 
