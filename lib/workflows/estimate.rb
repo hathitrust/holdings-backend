@@ -1,62 +1,55 @@
 # frozen_string_literal: true
 
-require "overlap/ht_item_overlap"
 require "services"
 require "tmpdir"
+require "overlap/ht_item_overlap"
 require "reports/cost_report"
-require "solr/cursorstream"
 require "solr_batch"
+require "workflows/solr_data_source"
 
 module Workflows
   # Generate IC estimate from a list of OCNS
   module Estimate
-    class DataSource
-      def initialize(ocn_file:, solr_query_size: 500)
+    class DataSource < Workflows::SolrDataSource
+      def initialize(ocn_file:, 
+                     ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
         @ocn_file = ocn_file
-        @solr_query_size = solr_query_size
+        @ocns_per_solr_query = ocns_per_solr_query
+        @ocns_seen = Set.new
+        @solr_records_seen = Set.new
       end
 
-      def dump_records(output)
+      def dump_records(output_filename)
         ocns = load_ocns
 
-        core_url = ENV["SOLR_URL"]
-        milemarker = Milemarker.new(batch_size: 1000, name: "get solr records")
-        milemarker.logger = Services.logger
-        ocns_seen = Set.new
-        solr_records_seen = Set.new
-
-        File.open(output, "w") do |out|
+        with_milemarked_output(output_filename) do |output_record|
           # first pass: dump solr records
-          ocns.each_slice(solr_query_size) do |ocn_batch|
-            # TODO refactor duplication
-            Solr::CursorStream.new(url: core_url) do |s|
-              s.fields = %w[ht_json id oclc oclc_search title format]
-              s.filters = ["oclc_search:(#{ocn_batch.join(" ")})"]
-              s.batch_size = 5000
+          ocns.each_slice(ocns_per_solr_query) do |ocn_slice|
+            cursorstream do |s|
+              s.filters = ["oclc_search:(#{ocn_slice.join(" ")})"]
             end.each do |record|
-              next if solr_records_seen.include?(record["id"])
-              solr_records_seen.add(record["id"])
-              ocns_seen.merge(record["oclc_search"].map(&:to_i))
-              out.puts record.to_json
-              milemarker.increment_and_log_batch_line
+              return if @solr_records_seen.include?(record["id"])
+              @solr_records_seen.add(record["id"])
+              @ocns_seen.merge(record["oclc_search"].map(&:to_i))
+              output_record.call(record)
             end
           end
-          milemarker.log_final_line
         end
 
-        File.open(File.join(File.dirname(output), "ocn_count.estimate.json"), "w") do |f|
-          f.puts(
-            {
-              "ocns_total" => ocns.count,
-              "ocns_matched" => ocns.intersection(ocns_seen).count
-            }.to_json
-          )
-        end
+        record_ocn_count(ocns, File.dirname(output_filename))
       end
 
       private
 
-      def record_ocn_count(outdir)
+      def record_ocn_count(ocns, outdir)
+        File.open(File.join(outdir, "ocn_count.estimate.json"), "w") do |f|
+          f.puts(
+            {
+              "ocns_total" => ocns.count,
+              "ocns_matched" => ocns.intersection(@ocns_seen).count
+            }.to_json
+          )
+        end
       end
 
       def load_ocns
@@ -66,7 +59,7 @@ module Workflows
         end
       end
 
-      attr_reader :ocn_file, :solr_query_size
+      attr_reader :ocn_file, :ocns_per_solr_query
     end
 
     class Analyzer

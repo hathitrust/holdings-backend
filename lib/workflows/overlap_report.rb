@@ -3,61 +3,50 @@
 require "services"
 require "overlap/cluster_overlap"
 require "overlap/report_record"
-require "solr/cursorstream"
+require "workflows/solr_data_source"
 
 module Workflows
   module OverlapReport
-    class DataSource
+    class DataSource < Workflows::SolrDataSource
       attr_reader :organization
 
-      def initialize(organization:)
+      def initialize(organization:,
+                     ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
         @organization = organization
+        @solr_records_seen = Set.new
+        @ocns_per_solr_query = ocns_per_solr_query
       end
 
-      def dump_records(output)
-        # TODO factor out core url, milemarker, cursorstream
-        #   what differs for cursorstream: filters
-
-        core_url = ENV["SOLR_URL"]
-        milemarker = Milemarker.new(batch_size: 1000, name: "get solr records")
-        milemarker.logger = Services.logger
-        solr_records_seen = Set.new
-
-        File.open(output, "w") do |out|
+      def dump_records(output_filename)
+        with_milemarked_output(output_filename) do |output_record|
           Clusterable::Holding.for_organization(organization)
-            # TODO setting for batch size here
-            .each_slice(100) do |holdings_batch|
-              ocn_batch = holdings_batch.map(&:ocn)
+            .each_slice(@ocns_per_solr_query) do |holdings_slice|
+              ocns = holdings_slice.map(&:ocn)
 
               matched_ocns = Set.new
 
-              # TODO refactor duplication
-              # TODO try querying for held records - any faster?
-              Solr::CursorStream.new(url: core_url) do |s|
-                s.fields = %w[ht_json id oclc oclc_search title format]
-                s.filters = ["oclc_search:(#{ocn_batch.join(" ")})"]
-                s.batch_size = 5000
+              # TODO once API is complete for updating member holdings in
+              # catalog -- try querying for held records - any faster?
+              cursorstream do |s|
+                s.filters = ["oclc_search:(#{ocns.join(" ")})"]
               end.each do |record|
-                next if solr_records_seen.include?(record["id"])
-                solr_records_seen.add(record["id"])
+                next if @solr_records_seen.include?(record["id"])
+                @solr_records_seen.add(record["id"])
                 matched_ocns.merge(record["oclc_search"].map(&:to_i))
-                out.puts record.to_json
-                milemarker.increment_and_log_batch_line
+                output_record.call(record)
               end
 
               # stub result for ocns that didn't match anything in this batch,
               # so we can write overlap records for unmatched holdings
-              ocn_batch.to_set.subtract(matched_ocns).each do |unmatched_ocn|
-                out.puts({
+              ocns.to_set.subtract(matched_ocns).each do |unmatched_ocn|
+                output_record.call({
                   format: "Unknown",
                   oclc_search: [unmatched_ocn],
                   ht_json: "[]"
-                }.to_json)
+                })
               end
             end
         end
-
-        milemarker.log_final_line
       end
     end
 
