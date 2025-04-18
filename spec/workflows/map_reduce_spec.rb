@@ -64,7 +64,7 @@ RSpec.describe Workflows::MapReduce do
 
   let(:allrecords) { File.join(@tmpdir, "allrecords") }
 
-  def workflow(chunk_size: 1, mapper_params: {}, data_source_params: {})
+  def workflow(records_per_job: 1, mapper_params: {}, data_source_params: {})
     # TODO can we refactor so we do e.g.
     # MapReduce.new(...) do |m|
     #   m.data_source("TestDataSource", data_source_params)
@@ -74,7 +74,7 @@ RSpec.describe Workflows::MapReduce do
 
     described_class.new(
       working_directory: @tmpdir,
-      chunk_size: chunk_size,
+      records_per_job: records_per_job,
       test_mode: true,
       data_source: "TestDataSource",
       data_source_params: data_source_params,
@@ -113,7 +113,7 @@ RSpec.describe Workflows::MapReduce do
   end
 
   it "chunks records" do
-    workflow(chunk_size: 8).run
+    workflow(records_per_job: 8).run
 
     expect(File.readlines(File.join(@tmpdir, "records_00000.split")).count).to be == 8
     expect(File.readlines(File.join(@tmpdir, "records_00001.split")).count).to be == 8
@@ -123,14 +123,14 @@ RSpec.describe Workflows::MapReduce do
 
   describe "frequency table jobs", type: :sidekiq_fake do
     it "queues one job for each chunk" do
-      expect { workflow(chunk_size: 4).run }
+      expect { workflow(records_per_job: 4).run }
         .to change(Jobs::Common.jobs, :size).by(5)
 
       expect(Jobs::Common.jobs.map { |j| j["args"][0] }).to all eq "TestMapper"
     end
 
     it "job reads from records_CHUNK and writes to records_CHUNK.freqtable.json" do
-      workflow(chunk_size: 5).run
+      workflow(records_per_job: 5).run
       expect(Jobs::Common.jobs[0]["args"]).to eq([
         "TestMapper",
         {},
@@ -148,7 +148,7 @@ RSpec.describe Workflows::MapReduce do
     let(:workflow) do
       described_class.new(
         working_directory: @tmpdir,
-        chunk_size: 2,
+        records_per_job: 2,
         test_mode: true,
         data_source: "TestDataSource",
         mapper: "TestMapper",

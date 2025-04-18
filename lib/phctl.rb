@@ -121,11 +121,6 @@ module PHCTL
       run_common_job(Reports::CostReport, options)
     end
 
-    desc "frequency-table SOLR_RECORDS OUTFILE", "Generate a frequency table from in-copyright items in solr records (newline-delimited JSON, with fields at least id, format, oclc, oclc_search, ht_json)"
-    def frequency_table(solr_records, output_file = solr_records + ".freqtable.json")
-      run_common_job(Reports::FrequencyTableFromSolr, options, solr_records, output_file)
-    end
-
     desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
     def member_counts(cost_rpt_freq_file, output_dir)
       run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
@@ -207,7 +202,7 @@ module PHCTL
       run_common_job(Workflows::MapReduce,
         {
           "data_source" => Workflows::CostReport::DataSource.to_s,
-          "mapper" => Reports::FrequencyTableFromSolr.to_s,
+          "mapper" => Workflows::CostReport::Analyzer.to_s,
           "reducer" => Reports::CostReport.to_s,
           "reducer_params" => {
             "ht_item_count" => options["ht_item_count"],

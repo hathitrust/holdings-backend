@@ -5,14 +5,14 @@ require "tmpdir"
 require "overlap/ht_item_overlap"
 require "reports/cost_report"
 require "solr_batch"
-require "workflows/solr_data_source"
+require "workflows/solr"
 
 module Workflows
   # Generate IC estimate from a list of OCNS
   module Estimate
-    class DataSource < Workflows::SolrDataSource
-      def initialize(ocn_file:, 
-                     ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
+    class DataSource < Workflows::Solr::DataSource
+      def initialize(ocn_file:,
+        ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
         @ocn_file = ocn_file
         @ocns_per_solr_query = ocns_per_solr_query
         @ocns_seen = Set.new
@@ -28,7 +28,7 @@ module Workflows
             cursorstream do |s|
               s.filters = ["oclc_search:(#{ocn_slice.join(" ")})"]
             end.each do |record|
-              return if @solr_records_seen.include?(record["id"])
+              next if @solr_records_seen.include?(record["id"])
               @solr_records_seen.add(record["id"])
               @ocns_seen.merge(record["oclc_search"].map(&:to_i))
               output_record.call(record)
@@ -62,16 +62,11 @@ module Workflows
       attr_reader :ocn_file, :ocns_per_solr_query
     end
 
-    class Analyzer
+    class Analyzer < Workflows::Solr::Analyzer
       attr_reader :output
 
-      def initialize(input, batch_size: 1000)
+      def initialize(input)
         @input = input
-        # TODO confusing to call this (mariadb query batch size) and milemarker
-        # batch size both "batch_size"
-        @batch_size = batch_size
-        @milemarker = Milemarker.new(batch_size: 1000, name: "compile estimate")
-        @milemarker.logger = Services.logger
 
         @num_items_matched = 0
         @num_items_ic = 0
@@ -80,23 +75,15 @@ module Workflows
       end
 
       def run
-        # second pass: for each chunk of solr records, fetch holdings in a batch
-        # & count matching items
-        File.open(input).each_slice(batch_size) do |lines|
-          SolrBatch.new(lines).records.each do |record|
-            # make sure htitems are parsed out
-            record.ht_items
-            count_matching_items(record.cluster)
-            milemarker.increment_and_log_batch_line
-          end
+        records_from_file(input).each do |record|
+          count_matching_items(record.cluster)
         end
         save_output
-        milemarker.log_final_line
       end
 
       private
 
-      attr_reader :milemarker, :input, :batch_size
+      attr_reader :input
 
       def save_output
         output = input + ".estimate.json"

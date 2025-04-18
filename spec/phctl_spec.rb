@@ -13,7 +13,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[sp deprecate infile] => Jobs::SharedPrintOps::Deprecate,
     %w[sp deprecate infile --verbose] => Jobs::SharedPrintOps::Deprecate,
     %w[sp phase3load somefile] => Jobs::Common,
-    %w[report estimate ocnfile] => Jobs::Common,
     %w[report eligible-commitments ocnfile] => Jobs::Common,
     %w[report uncommitted-holdings] => Jobs::Common,
     %w[report oclc-registration instid] => Jobs::Common,
@@ -24,7 +23,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
-    %w[report frequency-table ht_item_file output_dir] => Jobs::Common,
     %w[report weeding_decision someinst] => Jobs::Common,
     %w[parse parse-holdings-xml] => Jobs::Common,
     %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings

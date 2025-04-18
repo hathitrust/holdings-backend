@@ -1,5 +1,5 @@
 class SolrRecord
-  attr_reader :record
+  attr_reader :record, :ht_items
 
   def self.from_json(line)
     new(JSON.parse(line))
@@ -8,6 +8,7 @@ class SolrRecord
   def initialize(record)
     @record = record
     @bib_fmt = map_bib_fmt(record["format"])
+    parse_ht_items
   end
 
   def cluster
@@ -18,8 +19,8 @@ class SolrRecord
     end
   end
 
-  def ht_items
-    @ht_items ||= cluster.ht_items =
+  def parse_ht_items
+    @ht_items = cluster.ht_items =
       JSON.parse(record["ht_json"]).map do |solr_htitem|
         htitem(solr_htitem)
       end

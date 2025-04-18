@@ -3,15 +3,15 @@
 require "services"
 require "overlap/cluster_overlap"
 require "overlap/report_record"
-require "workflows/solr_data_source"
+require "workflows/solr"
 
 module Workflows
   module OverlapReport
-    class DataSource < Workflows::SolrDataSource
+    class DataSource < Workflows::Solr::DataSource
       attr_reader :organization
 
       def initialize(organization:,
-                     ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
+        ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
         @organization = organization
         @solr_records_seen = Set.new
         @ocns_per_solr_query = ocns_per_solr_query
@@ -22,68 +22,61 @@ module Workflows
           Clusterable::Holding.for_organization(organization)
             .each_slice(@ocns_per_solr_query) do |holdings_slice|
               ocns = holdings_slice.map(&:ocn)
-
-              matched_ocns = Set.new
-
-              # TODO once API is complete for updating member holdings in
-              # catalog -- try querying for held records - any faster?
-              cursorstream do |s|
-                s.filters = ["oclc_search:(#{ocns.join(" ")})"]
-              end.each do |record|
-                next if @solr_records_seen.include?(record["id"])
-                @solr_records_seen.add(record["id"])
-                matched_ocns.merge(record["oclc_search"].map(&:to_i))
-                output_record.call(record)
-              end
-
-              # stub result for ocns that didn't match anything in this batch,
-              # so we can write overlap records for unmatched holdings
-              ocns.to_set.subtract(matched_ocns).each do |unmatched_ocn|
-                output_record.call({
-                  format: "Unknown",
-                  oclc_search: [unmatched_ocn],
-                  ht_json: "[]"
-                })
-              end
+              matched_ocns = find_matching_ocns(ocns, output_record)
+              output_unmatched_ocns(ocns, matched_ocns, output_record)
             end
+        end
+      end
+
+      def output_unmatched_ocns(ocns, matched_ocns, output_record)
+        # stub result for ocns that didn't match anything in this batch,
+        # so we can write overlap records for unmatched holdings
+        ocns.to_set.subtract(matched_ocns).each do |unmatched_ocn|
+          output_record.call({
+            format: "Unknown",
+            oclc_search: [unmatched_ocn],
+            ht_json: "[]"
+          })
+        end
+      end
+
+      def find_matching_ocns(ocns, output_record)
+        Set.new.tap do |matched_ocns|
+          # TODO once API is complete for updating member holdings in
+          # catalog -- try querying for held records - any faster?
+          cursorstream do |s|
+            s.filters = ["oclc_search:(#{ocns.join(" ")})"]
+          end.each do |record|
+            next if @solr_records_seen.include?(record["id"])
+            @solr_records_seen.add(record["id"])
+            matched_ocns.merge(record["oclc_search"].map(&:to_i))
+            output_record.call(record)
+          end
         end
       end
     end
 
     # Analyzes batches of solr records and computes overlap
-    class Analyzer
-      attr_reader :input, :organization, :batch_size
+    class Analyzer < Workflows::Solr::Analyzer
+      attr_reader :input, :organization
 
-      def initialize(input, organization:, batch_size: 1000)
+      def initialize(input, organization:)
         @input = input
         @organization = organization
-        # TODO confusing to call this (mariadb query batch size) and milemarker
-        # batch size both "batch_size"
-        @batch_size = batch_size
-        @milemarker = Milemarker.new(batch_size: 1000, name: "compile overlap report")
-        @milemarker.logger = Services.logger
       end
 
       def run
         output = input + ".overlap.tsv"
+
         File.open(output, "w") do |output|
           @output = output
-          File.open(input).each_slice(batch_size) do |lines|
-            process_records(lines)
+
+          records_from_file(input, organization: organization).each do |record|
+            Services.logger.debug("Processing overlaps for #{record.cluster.ocns}")
+            holdings_matched = write_overlaps(record.cluster, organization)
+            write_records_for_unmatched_holdings(record.cluster, holdings_matched)
           end
         end
-        milemarker.log_final_line
-      end
-
-      def process_records(lines)
-        SolrBatch.new(lines, organization: organization).records.each do |record|
-          record.ht_items
-          Services.logger.debug("Processing overlaps for #{record.cluster.ocns}")
-          holdings_matched = write_overlaps(record.cluster, organization)
-          write_records_for_unmatched_holdings(record.cluster, holdings_matched)
-          milemarker.increment_and_log_batch_line
-        end
-        Thread.pass
       end
 
       def write_record(record)

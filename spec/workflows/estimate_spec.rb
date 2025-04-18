@@ -76,7 +76,9 @@ RSpec.describe Workflows::Estimate do
 
   describe Workflows::Estimate::Analyzer do
     let(:test_records) { File.join(ENV["TEST_TMP"], record_filename) }
-    let(:output_json) { JSON.parse(File.read(test_records + ".estimate.json")) }
+    let(:output_json) do
+      JSON.parse(File.read(test_records + ".estimate.json"))
+    end
 
     before(:each) do
       FileUtils.cp(fixture(record_filename), ENV["TEST_TMP"])
@@ -140,7 +142,7 @@ RSpec.describe Workflows::Estimate do
           mock_solr_oclc_search(solr_response_for,
             filter: /oclc_search:\(#{ocns.join(" ")}\)/)
 
-          data_source.dump_records(output)
+          expect { data_source.dump_records(output) }.not_to raise_exception
         end
 
         it "counts input & matching ocns and saves them to a JSON file" do
@@ -162,7 +164,7 @@ RSpec.describe Workflows::Estimate do
           ht_item = build(:ht_item, ocns: ocns)
 
           # query for only one of those OCNs at a time
-          data_source = described_class.new(ocn_file: ocn_file, solr_query_size: 1)
+          data_source = described_class.new(ocn_file: ocn_file, ocns_per_solr_query: 1)
 
           mock_solr_oclc_search(solr_response_for(ht_item), filter: /oclc_search:\(1\)/)
           mock_solr_oclc_search(solr_response_for(ht_item), filter: /oclc_search:\(2\)/)
