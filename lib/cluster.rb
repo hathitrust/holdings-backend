@@ -39,6 +39,13 @@ class Cluster
     @ocns = ocns.map(&:to_i).to_set
   end
 
+  # Call to ensure we don't load any of these things from the database
+  def no_db_load!
+    @ht_items ||= []
+    @holdings ||= []
+    @ocn_resolutions ||= []
+  end
+
   def ocns=(ocns)
     @ocns = ocns.map(&:to_i).to_set
   end
