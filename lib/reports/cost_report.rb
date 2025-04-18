@@ -8,14 +8,13 @@ require "services"
 # they were access:allow (PD, everybody pay), instead of the traditional
 # access:deny (IC, holders pay).
 
-# TODO move to Workflow::CostReport?
-# TODO consider removing compile_frequency_table
 module Reports
   # Generates reports based on h_share
   class CostReport
-    attr_reader :organization, :logger, :maxlines, :target_cost, :batch_size, :marker
+    attr_reader :organization, :logger, :maxlines, :target_cost, :batch_size, :marker, :frequency_table
 
     def to_tsv tsv = []
+      raise "no frequency table provided" unless @frequency_table
       tsv << ["member_id", "spm", "mpm", "ser", "pd", "weight", "extra", "total"].join("\t")
       Services.ht_organizations.members.keys.sort.each do |member|
         next unless organization.nil? || (member == organization)
@@ -75,7 +74,6 @@ module Reports
       @ht_item_pd_count ||= ht_item_pd_count
       @ht_item_count ||= ht_item_count
 
-      # If not set, frequency_table will call compile_frequency_table.
       # If you pass a precomputed frequency table, do not modify it after passing it in.
       # This warning is in the place of actually implementing proper cloning.
       @frequency_table = precomputed_frequency_table
@@ -108,10 +106,6 @@ module Reports
 
     def pd_cost_for_member(member)
       (pd_cost / total_weight) * active_members[member.to_s].weight
-    end
-
-    def frequency_table
-      @frequency_table ||= compile_frequency_table
     end
 
     # Dump freq table so these computes can be re-used in member_counts_report.
@@ -175,20 +169,6 @@ module Reports
           .reduce(:+)
       elsif file
         FrequencyTable.new(data: File.read(file))
-      end
-    end
-
-    def compile_frequency_table
-      logger.info "Begin compiling frequency table; batches of #{ppnum maxlines}"
-      marker = Services.progress_tracker.call(batch_size: maxlines)
-      FrequencyTable.new.tap do |ft|
-        logger.info("Begin compiling hscore frequency table.")
-        Clusterable::HtItem.ic_volumes do |ht_item|
-          marker.incr
-          ft.add_ht_item ht_item
-          marker.on_batch { |m| logger.info m.batch_line }
-        end
-        marker.final_line
       end
     end
 
