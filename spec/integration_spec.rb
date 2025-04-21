@@ -43,7 +43,7 @@ RSpec.describe "phctl integration" do
     describe "concordance" do
       around(:each) do |example|
         saved_concordance_path = Settings.concordance_path
-        Settings.concordance_path = File.join(__dir__, "fixtures", "concordance")
+        Settings.concordance_path = fixture("concordance")
         example.run
         Settings.concordance_path = saved_concordance_path
       end

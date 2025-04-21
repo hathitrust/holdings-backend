@@ -13,7 +13,7 @@ module ConcordanceValidation
     end
 
     def self.diff_file_base(date: Date.today)
-      DIFF_FILE_BASE_TEMPLATE.gsub("YYYYMMDD", date.strftime("%Y-%m-%d"))
+      DIFF_FILE_BASE_TEMPLATE.sub("YYYYMMDD", date.strftime("%Y-%m-%d"))
     end
 
     def self.adds_file(date: Date.today)

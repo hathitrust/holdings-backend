@@ -56,7 +56,6 @@ module Jobs
     class Concordance
       include Sidekiq::Job
       def perform(filename_or_date)
-        # TODO: should we wrap this whole thing in a Sequel transaction?
         batch_loader = Loader::ConcordanceLoader.for(filename_or_date)
         Services.logger.info "Loading with #{batch_loader.class} for #{filename_or_date}"
         # Allow batch loader subclass to truncate DB if loading full concordance
