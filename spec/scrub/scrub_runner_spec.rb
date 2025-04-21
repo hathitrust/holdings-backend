@@ -10,6 +10,7 @@ require "scrub/autoscrub"
 require "scrub/pre_load_backup"
 require "scrub/record_counter"
 require "scrub/scrub_runner"
+require "scrub/type_check_error"
 require "spec_helper"
 
 RSpec.describe Scrub::ScrubRunner do
@@ -91,6 +92,17 @@ RSpec.describe Scrub::ScrubRunner do
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
+    end
+    # This test acts as an integration test for Scrub::TypeChecker. Sort of.
+    it "raises on type mismatch" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      # Copy fixture to "dropbox" so there is a "new file" to "download",
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      # In this scenario we have already loaded a mix file,
+      # so TypeChecker should alert about the mismatch.
+      load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
+      expect { sr.run }.to raise_error(Scrub::TypeCheckError, /There is a mismatch in item types./)
     end
   end
 
