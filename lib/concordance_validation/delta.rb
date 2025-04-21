@@ -1,11 +1,29 @@
 # frozen_string_literal: true
 
+require "date"
 require "zlib"
 require "settings"
 
 module ConcordanceValidation
   # Performs a diff of two validated concordances
   class Delta
+    DIFF_FILE_BASE_TEMPLATE = "comm_diff_YYYYMMDD.txt"
+    def self.diffs_directory
+      File.join(Settings.concordance_path, "diffs")
+    end
+
+    def self.diff_file_base(date: Date.today)
+      DIFF_FILE_BASE_TEMPLATE.sub("YYYYMMDD", date.strftime("%Y-%m-%d"))
+    end
+
+    def self.adds_file(date: Date.today)
+      File.join(diffs_directory, diff_file_base(date: date) + ".adds")
+    end
+
+    def self.deletes_file(date: Date.today)
+      File.join(diffs_directory, diff_file_base(date: date) + ".deletes")
+    end
+
     def initialize(old_concordance, new_concordance)
       @old_concordance = old_concordance
       @new_concordance = new_concordance
@@ -31,15 +49,11 @@ module ConcordanceValidation
     end
 
     def adds_file
-      @adds_file ||= diff_out_path + ".adds"
+      @adds_file ||= self.class.adds_file
     end
 
     def deletes_file
-      @deletes_file ||= diff_out_path + ".deletes"
-    end
-
-    def diff_out_path
-      File.join(Settings.concordance_path, "diffs", "comm_diff_#{DateTime.now.strftime("%Y-%m-%d")}.txt")
+      @deletes_file ||= self.class.deletes_file
     end
   end
 end

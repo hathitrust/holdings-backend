@@ -1,4 +1,5 @@
 backup_dir: /tmp/pre_load_backup
+concordance_path: /tmp/concordance
 rclone_config_path: /usr/src/app/config/rclone.conf.test
 local_member_data: /tmp/local_member_data
 remote_member_data: /tmp/remote_member_data
