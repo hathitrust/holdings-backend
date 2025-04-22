@@ -132,8 +132,8 @@ RSpec.describe Workflows::Estimate do
 
       context "with four ocns and two items" do
         let(:ocns) { [1, 2, ht_allow.ocns, ht_deny.ocns].flatten }
-        let(:ht_allow) { build(:ht_item, rights: "pd") }
-        let(:ht_deny) { build(:ht_item, rights: "ic") }
+        let(:ht_allow) { build(:ht_item, rights: "pd", ocns: [3]) }
+        let(:ht_deny) { build(:ht_item, rights: "ic", ocns: [4]) }
         before(:each) { load_test_data(ht_allow, ht_deny) }
 
         it "searches for each ocn" do

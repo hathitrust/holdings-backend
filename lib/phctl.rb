@@ -113,7 +113,7 @@ module PHCTL
   end
 
   class Report < JobCommand
-    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--precomputed-frequency-table-dir /path/to/tables)", "Run a cost report. If neither --precomputed-frequency-table nor --frequency-table-dir is specified, generate a new frequency table."
+    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--working-directory /path/to/frequency/tables)", "Run a cost report given existing frequency tables. One of --frequency-table or --working-directory must be provided."
     option :organization, type: :string, default: nil
     option :target_cost, type: :numeric, default: nil
     option :frequency_table, type: :string, default: nil, desc: "The full path to a .json frequency table to use for the report."

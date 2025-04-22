@@ -90,7 +90,7 @@ module Workflows
     end
 
     def default_working_directory
-      work_base = File.join(Settings.cost_report_path, "work")
+      work_base = Settings.working_path
       FileUtils.mkdir_p(work_base)
       Dir.mktmpdir("mapreduce_", work_base)
     end
@@ -106,10 +106,8 @@ module Workflows
     def inline_reduce
       # In test, where sidekiq is not running, we do this
       # instead of relying on the on_success-hook.
-      if ENV["DATABASE_ENV"] == "test"
-        Services.logger.info("Running reduce step inline -- TEST ONLY")
-        Callback.new.on_success(:success, callback_params)
-      end
+      Services.logger.info("Running reduce step inline -- FOR TEST ONLY")
+      Callback.new.on_success(:success, callback_params)
     end
   end
 end

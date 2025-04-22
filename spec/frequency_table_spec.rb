@@ -209,8 +209,6 @@ RSpec.describe FrequencyTable do
         let(:holding_serial) do
           build(:holding,
             ocn: ht_serial.ocns.first,
-            enum_chron: "3",
-            n_enum: "3",
             organization: "not_a_collection")
         end
 

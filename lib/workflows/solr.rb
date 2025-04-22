@@ -20,7 +20,7 @@ module Workflows
         end
       end
 
-      # Opens the given output file and returns a proc which can be called
+      # Opens the given output file and yields a proc which can be called
       # to write a record to the file and to log progress using a Milemarker.
       #
       # The Milemarker's batch size is configured using the

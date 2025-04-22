@@ -104,7 +104,7 @@ RSpec.describe Workflows::OverlapReport do
         mock_solr_oclc_search(solr_response_for(ht, ht2))
       end
 
-      it "has a line for each ht_item in the holding organization rpt" do
+      it "has a line for each ht_item in the holding organization rpt, plus a header line" do
         workflow_for_org(h.organization).run
         lines = open_gz_report(h.organization).to_a
         expect(lines.size).to eq(3)
