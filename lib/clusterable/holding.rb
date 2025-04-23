@@ -110,12 +110,16 @@ module Clusterable
       end
     end
 
-    def self.with_ocns(ocns, cluster: nil)
+    def self.with_ocns(ocns, cluster: nil, organization: nil)
       return to_enum(__method__, ocns, cluster: cluster) unless block_given?
 
-      dataset = table.where(ocn: ocns.to_a)
+      dataset = table.where(ocn: ocns.to_a.map(&:to_s))
 
-      dataset.each do |row|
+      if organization
+        dataset = dataset.where(organization: organization)
+      end
+
+      paged_each(dataset) do |row|
         yield from_row(row, cluster: cluster)
       end
     end

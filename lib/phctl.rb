@@ -1,5 +1,6 @@
 require "thor"
 require "sidekiq_jobs"
+require "workflow_component"
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
@@ -114,42 +115,18 @@ module PHCTL
   end
 
   class Report < JobCommand
-    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--precomputed-frequency-table-dir /path/to/tables)", "Run a cost report. If neither --precomputed-frequency-table nor --frequency-table-dir is specified, generate a new frequency table."
+    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--working-directory /path/to/frequency/tables)", "Run a cost report given existing frequency tables. One of --frequency-table or --working-directory must be provided."
     option :organization, type: :string, default: nil
     option :target_cost, type: :numeric, default: nil
-    option :precomputed_frequency_table, type: :string, default: nil, desc: "The full path to a .json frequency table to use for the report."
-    option :precomputed_frequency_table_dir, type: :string, default: nil, desc: "A directory containing .json frequency tables to sum for this cost report."
+    option :frequency_table, type: :string, default: nil, desc: "The full path to a .json frequency table to use for the report."
+    option :working_directory, type: :string, default: nil, desc: "A directory containing .json frequency tables to sum for this cost report."
     def costreport
       run_common_job(Reports::CostReport, options)
-    end
-
-    desc "costreport-workflow --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
-    option :chunk_size, type: :numeric, default: 10000
-    option :ht_item_count, type: :numeric
-    option :ht_item_pd_count, type: :numeric
-    option :inline_callback_test, type: :boolean
-    def costreport_workflow
-      run_common_job(CostReportWorkflow, options)
-    end
-
-    desc "frequency-table SOLR_RECORDS OUTFILE", "Generate a frequency table from in-copyright items in solr records (newline-delimited JSON, with fields at least id, format, oclc, oclc_search, ht_json)"
-    def frequency_table(solr_records, output_file = solr_records + ".freqtable.json")
-      run_common_job(Reports::FrequencyTableFromSolr, options, solr_records, output_file)
-    end
-
-    desc "estimate OCN_FILE", "Run an estimate"
-    def estimate(ocn_file)
-      run_common_job(Reports::Estimate, options, ocn_file)
     end
 
     desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
     def member_counts(cost_rpt_freq_file, output_dir)
       run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
-    end
-
-    desc "overlap ORGANIZATON", "Run an overlap report"
-    def overlap(org = nil)
-      run_common_job(Reports::OverlapReport, options, org)
     end
 
     desc "eligible-commitments OCNS", "Find eligible commitments"
@@ -217,6 +194,72 @@ module PHCTL
     end
   end
 
+  class Workflow < JobCommand
+    class_option :records_per_job, type: :numeric, default: Settings.mapreduce.records_per_job
+    class_option :test_mode, type: :boolean, default: false
+
+    no_commands do
+      def component(...)
+        WorkflowComponent.new(...)
+      end
+
+      def run_workflow(components)
+        params = base_params.merge(components: components)
+        if parent_options[:inline]
+          Jobs::MapReduceWorkflow.perform_now(**params)
+        else
+          Jobs::MapReduceWorkflow.perform_async(**params)
+        end
+      end
+
+      def base_params
+        {
+          records_per_job: options[:records_per_job],
+          test_mode: options[:test_mode]
+        }
+      end
+    end
+
+    desc "costreport --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
+    option :ht_item_count, type: :numeric
+    option :ht_item_pd_count, type: :numeric
+    def costreport_workflow
+      components = {
+        data_source: component(Workflows::CostReport::DataSource),
+        mapper: component(Workflows::CostReport::Analyzer),
+        reducer: component(Reports::CostReport,
+          {
+            ht_item_count: options[:ht_item_count],
+            ht_item_pd_count: options[:ht_item_pd_count]
+          })
+      }
+
+      run_workflow(components)
+    end
+
+    desc "overlap ORGANIZATION", "Generate an overlap report for the given organization"
+    def overlap_workflow(org)
+      components = {
+        data_source: component(Workflows::OverlapReport::DataSource, {organization: org}),
+        mapper: component(Workflows::OverlapReport::Analyzer, {organization: org}),
+        reducer: component(Workflows::OverlapReport::Writer, {organization: org})
+      }
+
+      run_workflow(components)
+    end
+
+    desc "estimate OCN_FILE", "Run an estimate"
+    def estimate(ocn_file)
+      components = {
+        data_source: component(Workflows::Estimate::DataSource, {ocn_file: ocn_file}),
+        mapper: component(Workflows::Estimate::Analyzer),
+        reducer: component(Workflows::Estimate::Writer, {ocn_file: ocn_file})
+      }
+
+      run_workflow(components)
+    end
+  end
+
   class PHCTL < Thor
     # Run inline instead of with sidekiq
     class_option :inline, type: :boolean
@@ -264,5 +307,8 @@ module PHCTL
 
     desc "sp", "Shared print operations"
     subcommand "sp", SharedPrintOps
+
+    desc "workflow", "Parallelized workflows for generating reports"
+    subcommand "workflow", Workflow
   end
 end

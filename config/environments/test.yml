@@ -27,4 +27,4 @@ shared_print_update_report_path: <%= ENV["TEST_TMP"] %>/shared_print_update_repo
 sp_newly_ingested_report_path: <%= ENV["TEST_TMP"] %>/sp_newly_ingested_report
 slack_endpoint: http://slack.test/endpoint
 target_cost: 9999
-
+working_path: <%= ENV["TEST_TMP"] %>/work

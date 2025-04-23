@@ -16,7 +16,6 @@ RSpec.describe Reports::CostReport do
 
   let(:cr) { described_class.new(target_cost: 10) }
   let(:c) { build(:cluster) }
-  let(:c2) { build(:cluster) }
   let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: deny, rights: ic, collection_code: "PU") }
   let(:mpm) { build(:ht_item, :mpm, collection_code: "AEU", access: deny, rights: ic) }
   let(:ht_allow) { build(:ht_item, access: allow, rights: pd) }
@@ -124,40 +123,14 @@ RSpec.describe Reports::CostReport do
     end
 
     it "can use a frequency table file" do
-      cr = described_class.new(precomputed_frequency_table_file: fixture("freqtable.json"))
+      cr = described_class.new(frequency_table: fixture("freqtable.json"))
 
       expect(cr.frequency_table).to eq(FrequencyTable.new(data: {umich: {spm: {"1": 1}}}))
     end
 
     it "can sum a directory of frequency table files" do
-      cr = described_class.new(precomputed_frequency_table_dir: fixture("freqtables"))
+      cr = described_class.new(working_directory: fixture("freqtables"))
       expect(cr.frequency_table).to eq(FrequencyTable.new(data: File.read(fixture("summed_freqtable.json"))))
-    end
-
-    it "ignores PD items" do
-      pd_item = build(
-        :ht_item,
-        access: allow,
-        rights: pd,
-        enum_chron: "1",
-        n_enum: "1",
-        collection_code: "PU"
-      )
-      load_test_data(pd_item)
-      expect(cr.frequency_table.frequencies(organization: :upenn, format: :mpm)).to eq([])
-    end
-
-    it "counts OCN-less items" do
-      ocnless_item = build(
-        :ht_item,
-        :spm,
-        ocns: [],
-        access: "deny",
-        rights: "ic",
-        collection_code: "PU"
-      )
-      load_test_data ocnless_item
-      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
     end
   end
 
@@ -166,25 +139,6 @@ RSpec.describe Reports::CostReport do
       load_test_data(spm, mpm, ht_allow)
       cr.dump_frequency_table("freq.txt")
       expect(File).to exist(File.join(Settings.cost_report_freq_path, "freq.txt"))
-    end
-  end
-
-  describe "Non-member holdings" do
-    let(:non_member_holding) do
-      Services.ht_organizations.add_temp(
-        DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
-          weight: 1.0, status: false)
-      )
-      build(:holding,
-        ocn: spm.ocns.first,
-        organization: "non_member")
-    end
-
-    it "includes only member holdings" do
-      load_test_data(spm, holding, holding2, non_member_holding)
-      expect(cr.frequency_table.frequencies(organization: :umich, format: :spm)).to eq([frequency_2_1])
-      expect(cr.frequency_table.frequencies(organization: :upenn, format: :spm)).to eq([frequency_2_1])
-      expect(cr.frequency_table.keys).not_to include(:non_member)
     end
   end
 
@@ -260,134 +214,14 @@ RSpec.describe Reports::CostReport do
     end
   end
 
-  describe "Integration testing of spm/mpm/ser behavior" do
-    let(:cr) { described_class.new }
-
-    before(:each) do
-      Services.ht_organizations.add_temp(
-        DataSources::HTOrganization.new(inst_id: "different_cpc", country_code: "xx", weight: 1.0)
-      )
-    end
-
-    describe "multiple HTItem/Holding spms" do
-      let(:ht_copy) do
-        build(
-          :ht_item, :spm,
-          ocns: spm.ocns,
-          collection_code: spm.collection_code,
-          access: deny,
-          rights: ic
-        )
-      end
-      let(:spm_holding) do
-        build(:holding,
-          enum_chron: "",
-          organization: spm.billing_entity,
-          ocn: spm.ocns.first)
-      end
-
-      it "handles multiple HT copies of the same spm" do
-        load_test_data(spm, ht_copy)
-        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_2])
-      end
-
-      it "handles multiple copies of the same spm and holdings" do
-        load_test_data(spm, ht_copy, spm_holding)
-        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_2])
-      end
-
-      it "multiple holdings lead to one hshare" do
-        mpm_holding = spm_holding.clone
-        mpm_holding.uuid = SecureRandom.uuid
-        mpm_holding.n_enum = "1"
-        mpm_holding.mono_multi_serial = "mpm"
-        load_test_data(spm, spm_holding, mpm_holding)
-        expect(cr.frequency_table.frequencies(organization: spm.billing_entity, format: :spm)).to eq([frequency_1_1])
-      end
-
-      it "HtItem billing entity derived matches are independent of all others in the cluster" do
-        # two ht items, one upenn, one michigan
-        ht_copy.collection_code = "MIU"
-        load_test_data(spm, ht_copy)
-        expected_data = {upenn: {spm: {"1": 1}},
-                         umich: {spm: {"1": 1}}}
-        expect(cr.frequency_table).to eq(FrequencyTable.new(data: expected_data))
-      end
-    end
-
-    describe "MPM holding without enum chron" do
-      let(:mpm_wo_ec) { build(:holding, ocn: mpm.ocns.first, organization: "umich") }
-
-      it "assigns mpm shares to empty enum chron holdings" do
-        load_test_data(mpm, mpm_wo_ec)
-        expect(cr.frequency_table.frequencies(organization: mpm_wo_ec.organization, format: :mpm)).to eq([frequency_2_1])
-      end
-    end
-
-    describe "MPM holding with the wrong enum_chron" do
-      let(:mpm_wrong_ec) do
-        build(:holding,
-          ocn: mpm.ocns.first,
-          organization: "umich",
-          enum_chron: "2",
-          n_enum: "2")
-      end
-
-      it "gives mpm shares when enum_chron does not match anything" do
-        load_test_data(mpm, mpm_wrong_ec)
-        expect(cr.frequency_table.frequencies(organization: mpm_wrong_ec.organization, format: :mpm)).to eq([frequency_2_1])
-      end
-    end
-
-    describe "Serials" do
-      let(:ht_serial) do
-        build(:ht_item, :ser, access: deny, rights: ic)
-      end
-      let(:ht_serial2) do
-        build(
-          :ht_item, :ser,
-          ht_bib_key: ht_serial.ht_bib_key,
-          ocns: ht_serial.ocns,
-          billing_entity: "not_ht_serial.billing_entity",
-          access: deny,
-          rights: ic
-        )
-      end
-      let(:holding_serial) do
-        build(:holding,
-          ocn: ht_serial.ocns.first,
-          enum_chron: "3",
-          n_enum: "3",
-          organization: "not_a_collection")
-      end
-
-      before(:each) do
-        Services.ht_organizations.add_temp(
-          DataSources::HTOrganization.new(inst_id: "not_ht_serial.billing_entity",
-            country_code: "xx", weight: 1.0, status: 1)
-        )
-        Services.ht_organizations.add_temp(
-          DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
-            weight: 1.0, status: 1)
-        )
-      end
-
-      it "assigns all serials to the member and ht_item billing entities affect hshare" do
-        load_test_data(ht_serial, ht_serial2, holding_serial)
-        # ht_serial.billing_entity + holding_serial.org and
-        # ht_serial2.billing_entity + holding_serial.org
-        expect(cr.frequency_table.frequencies(organization: holding_serial.organization, format: :ser)).to eq([frequency_2_2])
-      end
-    end
-  end
-
   describe "putting it all together" do
     # 4 HT Items
     # - 1 serial with 2 holdings one of which is from the content provider
     # - 1 spm with 0 holdings
     # - 2 mpm with the same ocns with 1 holding
     # - 1 spm with access = allow
-    let(:cr) { Reports::CostReport.new(target_cost: 5) }
+    let(:ft) { FrequencyTable.new }
+    let(:cr) { Reports::CostReport.new(target_cost: 5, precomputed_frequency_table: ft) }
     let(:allow) { "allow" }
     let(:deny) { "deny" }
     let(:pd) { "pd" }
@@ -457,6 +291,8 @@ RSpec.describe Reports::CostReport do
       load_test_data(ht_serial, ht_spm, ht_mpm1, ht_mpm2, ht_spm_pd,
         holding_serial1, holding_serial2,
         holding_mpm, texas_mpm, umich_mpm)
+
+      [ht_serial, ht_spm, ht_mpm1, ht_mpm2].each { |item| ft.add_ht_item(item) }
     end
 
     it "computes the correct hscores" do

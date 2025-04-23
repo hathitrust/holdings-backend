@@ -1,0 +1,2 @@
+{ "id": "000000001", "format": [ "Book" ], "oclc": [ "2779601" ], "oclc_search": [ "2779601" ], "ht_json": "[{\"htid\":\"mdp.39015066356547\",\"newly_open\":null,\"ingest\":\"20250111\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.1\",\"dig_source\":\"google\"}]" }
+{ "id": "000485651", "format": [ "Book" ], "oclc": [ "23522913" ], "oclc_search": [ "23522913" ], "ht_json": "[{\"htid\":\"mdp.39015023531869\",\"newly_open\":null,\"ingest\":\"20250111\",\"rights\":[\"pdus\",null],\"collection_code\":\"miu\",\"dig_source\":\"google\"}]" }

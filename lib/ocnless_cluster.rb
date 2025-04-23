@@ -24,6 +24,11 @@ class OCNLessCluster
     @ocns ||= Set.new.freeze
   end
 
+  # Call to ensure we don't load ht items from the database
+  def no_db_load!
+    @ht_items ||= []
+  end
+
   def ht_items
     @ht_items ||= Clusterable::HtItem.with_bib_key(@bib_key)
   end

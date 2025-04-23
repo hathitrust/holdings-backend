@@ -16,3 +16,13 @@ replace_commitment_report_path: <%= ENV["REPLACE_COMMITMENT_REPORT_PATH"] %>
 shared_print_report_path: <%= ENV["SHARED_PRINT_REPORT_PATH"] %>
 shared_print_update_report_path: <%= ENV["SHARED_PRINT_UPDATE_REPORT_PATH"] %>
 target_cost: <%= ENV["TARGET_COST"] %>
+working_path: <%= ENV["WORKING_PATH"] %>
+solr_data_source:
+  milemarker_batch_size: 50000
+  solr_results_per_query: 5000
+  ocns_per_solr_query: 500
+solr_analyzer:
+  milemarker_batch_size: 1000
+  solr_batch_size: 100
+mapreduce:
+  records_per_job: 10000
