@@ -50,7 +50,6 @@ module Workflows
     # If organization is given, limits holdings loaded to that organization;
     # otherwise, loads all holdings.
     class Analyzer
-      # TODO address with organization in solr batch
       def records_from_file(input, organization: nil)
         return to_enum(__method__, input) unless block_given?
 
