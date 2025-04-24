@@ -91,11 +91,17 @@ module Workflows
         Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
           overlap.matching_holdings.each do |holding|
             holdings_matched << holding
-            report_record = Overlap::ReportRecord.new(organization: holding.organization,
-              ocn: holding.ocn, local_id: holding.local_id, item_type: holding.mono_multi_serial,
-              rights:     overlap.ht_item.rights, access:     overlap.ht_item.access,
-              catalog_id: overlap.ht_item.ht_bib_key, volume_id:  overlap.ht_item.item_id,
-              enum_chron: overlap.ht_item.enum_chron)
+            report_record = Overlap::ReportRecord.new(
+              organization: holding.organization,
+              ocn: holding.ocn,
+              local_id: holding.local_id,
+              item_type: holding.mono_multi_serial,
+              rights: overlap.ht_item.rights,
+              access: overlap.ht_item.access,
+              catalog_id: overlap.ht_item.ht_bib_key,
+              volume_id: overlap.ht_item.item_id,
+              enum_chron: overlap.ht_item.enum_chron
+            )
 
             write_record(report_record) unless records_written.include? report_record.to_s
             records_written << report_record.to_s

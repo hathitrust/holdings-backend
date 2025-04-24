@@ -33,11 +33,11 @@ RSpec.describe Overlap::SerialOverlap do
     end
 
     it "returns 1 if there is any holding match" do
-      expect(described_class.new(c, "umich", ht).copy_count).to eq(1)
+      expect(described_class.new("umich", ht).copy_count).to eq(1)
     end
 
     it "returns 1 if billing_entity matches" do
-      expect(described_class.new(c, "upenn", ht).copy_count).to eq(1)
+      expect(described_class.new("upenn", ht).copy_count).to eq(1)
     end
   end
 end

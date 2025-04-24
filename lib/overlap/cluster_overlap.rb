@@ -23,7 +23,7 @@ module Overlap
 
       @cluster.ht_items.each do |ht_item|
         @orgs.each do |org|
-          overlap = overlap_record(ht_item, org)
+          overlap = self.class.overlap_record(org, ht_item)
           if overlap.copy_count.nonzero?
             yield overlap
           end
@@ -31,16 +31,16 @@ module Overlap
       end
     end
 
-    def overlap_record(ht_item, org)
-      case @cluster.format
+    def self.overlap_record(org, ht_item)
+      case ht_item.cluster.format
       when "ser"
-        SerialOverlap.new(@cluster, org, ht_item)
+        SerialOverlap.new(org, ht_item)
       when "spm"
-        SinglePartOverlap.new(@cluster, org, ht_item)
+        SinglePartOverlap.new(org, ht_item)
       when "mpm"
-        MultiPartOverlap.new(@cluster, org, ht_item)
+        MultiPartOverlap.new(org, ht_item)
       when "ser/spm"
-        SinglePartOverlap.new(@cluster, org, ht_item)
+        SinglePartOverlap.new(org, ht_item)
       end
     end
   end

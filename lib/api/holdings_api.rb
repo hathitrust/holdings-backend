@@ -1,5 +1,5 @@
-require "cluster"
 require "clusterable/ht_item"
+require "overlap/cluster_overlap"
 require "services"
 require "sinatra"
 
@@ -11,51 +11,39 @@ class HoldingsAPI < Sinatra::Base
     "pong"
   end
 
-  # Answers the question: can organization access ht_id?
+  # Answers the question: can organization access item_id?
   get "/v1/item_access" do
-    # ArgumentError if missing organization / ht_id.
-    validate_params(params, ["organization", "ht_id"])
+    # ArgumentError if missing organization / item_id.
+    validate_params(params: params, required: ["organization", "item_id"])
 
     organization = params["organization"]
-    ht_id = params["ht_id"]
+    item_id = params["item_id"]
 
-    ht_item = Clusterable::HtItem.find(item_id: ht_id)
-    cluster = ht_item.cluster
+    ht_item = Clusterable::HtItem.find(item_id: item_id)
+    overlap_record = Overlap::ClusterOverlap.overlap_record(organization, ht_item)
 
     return_doc = {
-      "copy_count" => cluster.copy_counts[organization],
-      "format" => cluster.format,
+      "copy_count" => overlap_record.copy_count,
+      "format" => ht_item.cluster.format,
       "n_enum" => ht_item.n_enum,
       "ocns" => ht_item.ocns.sort
     }
     return_doc.to_json
   end
 
-  # Answers the question: which organization have holdings that match ht_id?
+  # Answers the question: which organization have holdings that match item_id?
   get "/v1/item_held_by" do
-    # ArgumentError if missing ht_id.
-    validate_params(params, ["ht_id"])
-    ht_id = params["ht_id"]
+    # ArgumentError if missing item_id.
+    validate_params(params: params, required: ["item_id"])
+    item_id = params["item_id"]
 
-    ht_item = Clusterable::HtItem.find(item_id: ht_id)
+    ht_item = Clusterable::HtItem.find(item_id: item_id)
     cluster = ht_item.cluster
 
     return_doc = {
       "organizations" => cluster.organizations_in_cluster
     }
     return_doc.to_json
-  end
-
-  def validate_params(params, to_validate)
-    argument_errors = []
-    to_validate.each do |param_name|
-      if !params.key?(param_name) || params[param_name].empty?
-        argument_errors << "missing param: #{param_name}"
-      end
-    end
-    if argument_errors.any?
-      raise ArgumentError, argument_errors.join("; ")
-    end
   end
 
   error ArgumentError do
@@ -72,5 +60,19 @@ class HoldingsAPI < Sinatra::Base
     Services.logger.error env["sinatra.error"].message
     status 404
     "Error"
+  end
+
+  private
+
+  def validate_params(params:, required:)
+    argument_errors = []
+    required.each do |param_name|
+      if !params.key?(param_name) || params[param_name].empty?
+        argument_errors << "missing required param: #{param_name}"
+      end
+    end
+    if argument_errors.any?
+      raise ArgumentError, argument_errors.join("; ")
+    end
   end
 end

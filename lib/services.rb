@@ -15,7 +15,6 @@ Services = Canister.new
 
 Services.register(:holdings_db) { DataSources::MariaDB.new("HOLDINGS_RW") }
 Services.register(:holdings_table) { Services.holdings_db[:holdings] }
-Services.register(:relational_overlap_table) { Services.holdings_db[:holdings_htitem_htmember] }
 
 Services.register(:ht_db) { DataSources::MariaDB.new("HT_RO") }
 Services.register(:hathifiles_table) { Services.ht_db[:hf] }
