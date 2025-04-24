@@ -17,7 +17,7 @@ module Scrub
   class MemberHoldingFile
     attr_reader :error_count
     # private perhaps?
-    attr_reader :col_map, :member_id, :filename, :filepath
+    attr_reader :col_map, :member_id, :filename, :filepath, :item_type
 
     SPEC_RX = {
       # A single regex for file name pass/fail.

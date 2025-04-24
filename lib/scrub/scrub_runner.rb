@@ -16,8 +16,10 @@ require "loader/holding_loader"
 require "scrub/autoscrub"
 require "scrub/chunker"
 require "scrub/malformed_file_error"
+require "scrub/member_holding_file"
 require "scrub/pre_load_backup"
 require "scrub/record_counter"
+require "scrub/type_checker"
 require "sidekiq_jobs"
 require "sidekiq/batch"
 require "utils/file_transfer"
@@ -46,6 +48,8 @@ module Scrub
       Services.logger.info "Running org #{organization}."
       new_files = check_new_files
       Services.logger.info "Found #{new_files.size} new files: #{new_files.join(", ")}."
+      check_new_types(new_files)
+
       new_files.each do |new_file|
         run_file(new_file)
       end
@@ -173,6 +177,18 @@ module Scrub
     end
 
     private
+
+    def check_new_types(files)
+      # Get the types of the files we are loading.
+      types = Set.new
+      files.each do |f|
+        member_holding_file = Scrub::MemberHoldingFile.new(f["Path"])
+        types << member_holding_file.item_type
+      end
+
+      # Alert & abort if the types are not a subset of types we have loaded for organization before.
+      Scrub::TypeChecker.new(organization: organization, new_types: types).validate
+    end
 
     def remote_dir
       DataSources::DirectoryLocator.for(:remote, organization).holdings_current
