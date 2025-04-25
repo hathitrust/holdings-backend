@@ -1,15 +1,13 @@
 # frozen_string_literal: true
 
-require "cluster"
-
 module Overlap
   # The most basic overlap record
   # Inherited by SinglePartOverlap, MultiPartOverlap, and SerialOverlap
   class Overlap
     attr_accessor :org, :ht_item, :cluster
 
-    def initialize(cluster, org, ht_item)
-      @cluster = cluster
+    def initialize(org, ht_item)
+      @cluster = ht_item.cluster
       @org = org
       @ht_item = ht_item
     end
@@ -27,7 +25,6 @@ module Overlap
 
     def to_hash
       {
-        lock_id: lock_id,
         volume_id: @ht_item.item_id,
         n_enum: @ht_item.n_enum,
         member_id: @org,
@@ -37,18 +34,6 @@ module Overlap
         lm_count: lm_count,
         access_count: access_count
       }
-    end
-
-    # Precomputed for the ETAS tables
-    def lock_id
-      case @cluster.format
-      when "mpm"
-        [@cluster.ocns.hash.to_s, @ht_item.n_enum].join(":")
-      when "spm"
-        @cluster.ocns.hash.to_s
-      when "ser", "ser/spm"
-        @ht_item.item_id
-      end
     end
   end
 end
