@@ -239,25 +239,23 @@ RSpec.describe "HoldingsApi" do
 
     it "given a record with ocns and items, returns holdings for all items in the record" do
       ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
-      ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2", 
-                  ocns: ht1.ocns, billing_entity: "umich")
+      ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2",
+        ocns: ht1.ocns, billing_entity: "umich")
 
       holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
       # solr record in the format traject should send it to us
-      solr_record_no_holdings = JSON.parse(solr_response_for(ht1,ht2))["response"]["docs"][0].to_json
-      require "debug"
-      debugger
+      solr_record_no_holdings = solr_docs_for(ht1, ht2)[0].to_json
 
-      post v1(url_template("record_held_by")), solr_record_no_holdings, 'Content-Type' => 'application/json'
+      post base_url + "/" + v1(url_template("record_held_by")), solr_record_no_holdings, "CONTENT_TYPE" => "application/json"
 
       response = JSON.parse(last_response.body)
 
-      ht1_response = response.find { |i| i["item_id"] = ht1.item_id }
-      ht2_response = response.find { |i| i["item_id"] = ht2.item_id }
+      ht1_response = response.find { |i| i["item_id"] == ht1.item_id }
+      ht2_response = response.find { |i| i["item_id"] == ht2.item_id }
 
-      expect(ht1_response["organizations"]).to contain_exactly("umich","upenn")
+      expect(ht1_response["organizations"]).to contain_exactly("umich", "upenn")
       expect(ht2_response["organizations"]).to contain_exactly("umich")
     end
   end
