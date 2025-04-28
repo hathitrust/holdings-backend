@@ -185,9 +185,7 @@ RSpec.describe "HoldingsApi" do
       ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
       ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
       holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
-      load_test_data(ht1)
-      load_test_data(ht2)
-      load_test_data(holding)
+      load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings matches on ht1 but not on ht2 (different enumchron)
       response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht1.item_id)))
@@ -199,9 +197,7 @@ RSpec.describe "HoldingsApi" do
       ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
       ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
       holding = build(:holding, enum_chron: "", ocn: ht1.ocns.first, organization: "upenn")
-      load_test_data(ht1)
-      load_test_data(ht2)
-      load_test_data(holding)
+      load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings (empty enumchron) matches on ht1 both ht2
       response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht1.item_id)))
@@ -213,17 +209,17 @@ RSpec.describe "HoldingsApi" do
 
   describe "v1/item_held_by" do
     it "returns an application error if the item_id does not match an ht_item" do
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1, organization: "umich")))
+      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
       expect(response["application_error"]).to eq "no matching data"
     end
     it "returns an array with the submitter if no organization has reported holdings matching ht_item" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1, organization: "umich")))
+      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
       expect(response["organizations"]).to eq ["umich"]
     end
     it "returns an array with the submitter if only submitter has reported holdings matching ht_item" do
       load_test_data(htitem_1, build(:holding, organization: "umich", ocn: 123))
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1, organization: "umich")))
+      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
       expect(response["organizations"]).to eq ["umich"]
     end
     it "returns an array with all organizations with holdings matching ht_item" do
@@ -234,6 +230,35 @@ RSpec.describe "HoldingsApi" do
       )
       response = parse_body(v1(url_template("item_held_by", item_id: item_id_1, organization: "umich")))
       expect(response["organizations"].sort).to eq ["smu", "umich"]
+    end
+  end
+
+  describe "v1/record_held_by" do
+    # not mocking solr here, but we do want the data in the same format
+    include_context "with mocked solr response"
+
+    it "given a record with ocns and items, returns holdings for all items in the record" do
+      ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
+      ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2", 
+                  ocns: ht1.ocns, billing_entity: "umich")
+
+      holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
+      load_test_data(ht1, ht2, holding)
+
+      # solr record in the format traject should send it to us
+      solr_record_no_holdings = JSON.parse(solr_response_for(ht1,ht2))["response"]["docs"][0].to_json
+      require "debug"
+      debugger
+
+      post v1(url_template("record_held_by")), solr_record_no_holdings, 'Content-Type' => 'application/json'
+
+      response = JSON.parse(last_response.body)
+
+      ht1_response = response.find { |i| i["item_id"] = ht1.item_id }
+      ht2_response = response.find { |i| i["item_id"] = ht2.item_id }
+
+      expect(ht1_response["organizations"]).to contain_exactly("umich","upenn")
+      expect(ht2_response["organizations"]).to contain_exactly("umich")
     end
   end
 end
