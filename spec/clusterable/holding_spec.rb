@@ -196,4 +196,31 @@ RSpec.describe Clusterable::Holding do
       expect(h.inspect).to match(h.organization)
     end
   end
+
+  describe "#brt_lm_access?" do
+    it "is true if holding has status:LM and/or condition:BRT" do
+      status_values = ["CH", "LM", "WD", nil]
+      condition_values = ["BRT", ""]
+      test_count = 0
+      true_count = 0
+      false_count = 0
+
+      status_values.each do |status|
+        condition_values.each do |condition|
+          holding = build(:holding, status: status, condition: condition)
+          test_count += 1
+          if condition == "BRT" || status == "LM"
+            true_count += 1
+            expect(holding.brt_lm_access?).to be true
+          else
+            false_count += 1
+            expect(holding.brt_lm_access?).to be false
+          end
+        end
+      end
+      expect(test_count).to eq 8
+      expect(true_count).to eq 5
+      expect(false_count).to eq 3
+    end
+  end
 end

@@ -227,5 +227,29 @@ RSpec.describe Cluster do
         expect(c.copy_counts["umich"]).to eq(0)
       end
     end
+
+    describe "#access_counts" do
+      it "counts, per organization, holdings with condition:BRT and/or status:LM, default 0" do
+        c = described_class.new(ocns: [ocn2])
+        expect(c.access_counts).to eq({"smu" => 0, "umich" => 0})
+      end
+
+      it "ignores holdings without BRT/LM" do
+        load_test_data(build(:ht_item, ocns: [ocn1, ocn2]))
+        c = described_class.new(ocns: [ocn2])
+        load_test_data(build(:holding, organization: "umich", ocn: ocn2, status: nil, condition: ""))
+        load_test_data(build(:holding, organization: "smu", ocn: ocn2, status: nil, condition: ""))
+        expect(c.access_counts).to eq({"smu" => 0, "umich" => 0})
+      end
+
+      it "counts holdings with BRT/LM" do
+        load_test_data(build(:ht_item, ocns: [ocn1, ocn2]))
+        c = described_class.new(ocns: [ocn2])
+        load_test_data(build(:holding, organization: "umich", ocn: ocn2, status: "LM", condition: ""))
+        load_test_data(build(:holding, organization: "smu", ocn: ocn2, status: nil, condition: "BRT"))
+        load_test_data(build(:holding, organization: "smu", ocn: ocn2, status: "LM", condition: "BRT"))
+        expect(c.access_counts).to eq({"smu" => 2, "umich" => 1})
+      end
+    end
   end
 end

@@ -29,32 +29,40 @@ RSpec.describe "HoldingsApi" do
   let(:slashy_ht_item_id) { "aeu.ark:/13960/t04x6jk58" }
   let(:slashy_ht_item) { build(:ht_item, :spm, item_id: slashy_ht_item_id, ocns: [ocn], billing_entity: "ualberta") }
 
+  def url_template(page, **kwargs)
+    params = []
+    version = 0
+
+    if kwargs.key?(:v)
+      version = kwargs.delete(:v)
+    end
+
+    kwargs.each do |k, v|
+      params << "#{k}=#{v}"
+    end
+
+    if params.any?
+      "v#{version}/#{page}?" + params.join("&")
+    else
+      "v#{version}/#{page}"
+    end
+  end
+
   def make_call(call)
     get "#{base_url}/#{call}"
   end
 
-  def url_template(page, **kwargs)
-    params = []
-    kwargs.each do |k, v|
-      params << "#{k}=#{v}"
-    end
-    "#{page}?" + params.join("&")
-  end
-
-  def v1(url)
-    "v1/" + url
-  end
-
-  def parse_body(call)
-    make_call(call)
-    # Useful debug that includes call and response:
-    # puts "#{call} ==> #{last_response.body}"
-    JSON.parse(last_response.body)
+  def parse_response(...)
+    url = url_template(...)
+    make_call(url)
+    response = last_response.body
+    # puts "#{url} ==> #{response}"
+    JSON.parse(response)
   end
 
   describe "/ping" do
     it "ping-pongs" do
-      make_call(v1("ping"))
+      make_call(url_template("ping", v: 1))
       expect(last_response.body).to eq "pong"
       expect(last_response.status).to eq 200
     end
@@ -70,19 +78,21 @@ RSpec.describe "HoldingsApi" do
   describe "missing arguments -> #404 & application_error message" do
     it "missing organization" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1)))
+      response = parse_response("item_access", v: 1, item_id: item_id_1)
       expect(response["application_error"]).to eq "missing required param: organization"
       expect(last_response.status).to eq 404
     end
+
     it "missing item_id" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access", organization: "umich")))
+      response = parse_response("item_access", v: 1, organization: "umich")
       expect(response["application_error"]).to eq "missing required param: item_id"
       expect(last_response.status).to eq 404
     end
+
     it "missing both" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access")))
+      response = parse_response("item_access", v: 1)
       expect(response["application_error"]).to eq "missing required param: organization; missing required param: item_id"
       expect(last_response.status).to eq 404
     end
@@ -90,31 +100,34 @@ RSpec.describe "HoldingsApi" do
 
   describe "/item_access" do
     it "returns an error message if there is no matching htitem" do
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["application_error"]).to eq "no matching data"
       expect(last_response.status).to eq 404
     end
+
     it "returns 0 if no holdings (and not depositor)" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "upenn")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "upenn")
       expect(response["ocns"]).to eq [ocn]
       expect(response["copy_count"]).to eq 0
     end
+
     it "handles ht_items with slashes" do
       load_test_data(slashy_ht_item)
-      call = v1(url_template("item_access", item_id: slashy_ht_item_id, organization: "umich"))
-      response = parse_body(call)
+      response = parse_response("item_access", v: 1, item_id: slashy_ht_item_id, organization: "umich")
       expect(response["copy_count"]).to eq 0
     end
+
     it "simplest positive case with 1 item, 1 ocn, 1 org, 1 holding" do
       load_test_data(
         htitem_1,
         build(:holding, organization: "umich", ocn: ocn)
       )
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["ocns"]).to eq [ocn]
       expect(response["copy_count"]).to eq 1
     end
+
     it "positive case with 1 item, 1 ocn, 1 org, 3 holdings" do
       load_test_data(
         htitem_1,
@@ -122,10 +135,11 @@ RSpec.describe "HoldingsApi" do
         build(:holding, organization: "umich", ocn: ocn),
         build(:holding, organization: "umich", ocn: ocn)
       )
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["ocns"]).to eq [ocn]
       expect(response["copy_count"]).to eq 3
     end
+
     it "positive case with 1 item, 1 ocn, 2 orgs, 3 holdings (split umich 1, smu 2)" do
       load_test_data(
         htitem_1,
@@ -134,22 +148,24 @@ RSpec.describe "HoldingsApi" do
         build(:holding, organization: "smu", ocn: ocn)
       )
       # umich, 1 holding
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["ocns"]).to eq [ocn]
       expect(response["copy_count"]).to eq 1
       # smu, 2 holdings
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "smu")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "smu")
       expect(response["ocns"]).to eq [ocn]
       expect(response["copy_count"]).to eq 2
     end
+
     it "concatenates the ocns to make a lock_id" do
       load_test_data(
         htitem_3,
         build(:holding, organization: "umich", ocn: ocn)
       )
-      response = parse_body(v1(url_template("item_access", item_id: item_id_3, organization: "smu")))
+      response = parse_response("item_access", v: 1, item_id: item_id_3, organization: "smu")
       expect(response["ocns"]).to eq [123, 456, 789]
     end
+
     it "gets the counts for holdings with ocns matching the item" do
       load_test_data(
         htitem_3,
@@ -158,29 +174,35 @@ RSpec.describe "HoldingsApi" do
         build(:holding, organization: "umich", ocn: 789),
         build(:holding, organization: "umich", ocn: 999999999, local_id: "not matching")
       )
-      response = parse_body(v1(url_template("item_access", item_id: item_id_3, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_3, organization: "umich")
       expect(response["copy_count"]).to eq 3
     end
+
     it "returns an empty n_enum for spm" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["n_enum"]).to eq ""
     end
+
     it "returns non-empty n_enum for mpm" do
       load_test_data(htitem_2)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_2, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_2, organization: "umich")
       expect(response["n_enum"]).to eq "1-5"
     end
+
     it "returns format:spm for an item in a spm cluster" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_1, organization: "umich")
       expect(response["format"]).to eq "spm"
     end
+
     it "returns format:mpm for an item in a mpm cluster" do
       load_test_data(htitem_2)
-      response = parse_body(v1(url_template("item_access", item_id: item_id_2, organization: "umich")))
+      response = parse_response("item_access", v: 1, item_id: item_id_2, organization: "umich")
       expect(response["format"]).to eq "mpm"
     end
+
+    # Brittle test?
     it "correctly identifies mpms as not held when not held" do
       ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
       ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
@@ -188,11 +210,12 @@ RSpec.describe "HoldingsApi" do
       load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings matches on ht1 but not on ht2 (different enumchron)
-      response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht1.item_id)))
+      response = parse_response("item_access", v: 1, organization: holding.organization, item_id: ht1.item_id)
       expect(response["copy_count"]).to eq 1
-      response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht2.item_id)))
+      response = parse_response("item_access", v: 1, organization: holding.organization, item_id: ht2.item_id)
       expect(response["copy_count"]).to eq 0
     end
+
     it "treats an empty holdings enum_chron as a wildcard, matches all" do
       ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
       ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
@@ -200,35 +223,38 @@ RSpec.describe "HoldingsApi" do
       load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings (empty enumchron) matches on ht1 both ht2
-      response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht1.item_id)))
+      response = parse_response("item_access", v: 1, organization: holding.organization, item_id: ht1.item_id)
       expect(response["copy_count"]).to eq 1
-      response = parse_body(v1(url_template("item_access", organization: holding.organization, item_id: ht2.item_id)))
+      response = parse_response("item_access", v: 1, organization: holding.organization, item_id: ht2.item_id)
       expect(response["copy_count"]).to eq 1
     end
   end
 
   describe "v1/item_held_by" do
     it "returns an application error if the item_id does not match an ht_item" do
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1)
       expect(response["application_error"]).to eq "no matching data"
     end
+
     it "returns an array with the submitter if no organization has reported holdings matching ht_item" do
       load_test_data(htitem_1)
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1)
       expect(response["organizations"]).to eq ["umich"]
     end
+
     it "returns an array with the submitter if only submitter has reported holdings matching ht_item" do
       load_test_data(htitem_1, build(:holding, organization: "umich", ocn: 123))
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1)))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1)
       expect(response["organizations"]).to eq ["umich"]
     end
+
     it "returns an array with all organizations with holdings matching ht_item" do
       load_test_data(
         htitem_1,
         build(:holding, organization: "umich", ocn: ocn),
         build(:holding, organization: "smu", ocn: ocn)
       )
-      response = parse_body(v1(url_template("item_held_by", item_id: item_id_1, organization: "umich")))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1)
       expect(response["organizations"].sort).to eq ["smu", "umich"]
     end
   end
@@ -238,17 +264,16 @@ RSpec.describe "HoldingsApi" do
     include_context "with mocked solr response"
 
     it "given a record with ocns and items, returns holdings for all items in the record" do
-      ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
-      ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2",
-        ocns: ht1.ocns, billing_entity: "umich")
-
-      holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
+      ocn = 123
+      ht1 = build(:ht_item, enum_chron: "v.1", bib_fmt: "BK", ocns: [ocn], billing_entity: "umich")
+      ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2", bib_fmt: "BK", ocns: [ocn], billing_entity: "umich")
+      holding = build(:holding, enum_chron: "v.1", ocn: ocn, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
       # solr record in the format traject should send it to us
       solr_record_no_holdings = solr_docs_for(ht1, ht2)[0].to_json
 
-      post base_url + "/" + v1(url_template("record_held_by")), solr_record_no_holdings, "CONTENT_TYPE" => "application/json"
+      post base_url + "/" + url_template("record_held_by", v: 1), solr_record_no_holdings, "CONTENT_TYPE" => "application/json"
 
       response = JSON.parse(last_response.body)
 
@@ -257,6 +282,68 @@ RSpec.describe "HoldingsApi" do
 
       expect(ht1_response["organizations"]).to contain_exactly("umich", "upenn")
       expect(ht2_response["organizations"]).to contain_exactly("umich")
+    end
+  end
+
+  describe "v1/item_held_by?constraint=brlm" do
+    it "returns an application error if given an invalid constraint" do
+      load_test_data(htitem_1)
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "foo")
+      expect(response["application_error"]).to eq "Invalid constraint."
+    end
+
+    it "reports nothing if there are no holdings" do
+      load_test_data(htitem_1)
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq []
+    end
+
+    it "reports nothing if all holdings are status:CH & condition:''" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "CH", condition: ""))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq []
+    end
+
+    it "reports nothing if all holdings are status:WD & condition:''" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "WD", condition: ""))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq []
+    end
+
+    it "reports the organizations with LM holdings" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "LM", condition: ""))
+      load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq ["a"]
+    end
+
+    it "reports the organizations with BRT holdings" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: nil, condition: "BRT"))
+      load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq ["a"]
+    end
+
+    it "reports the organizations with BRT+LM holdings" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "LM", condition: "BRT"))
+      load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq ["a"]
+    end
+
+    it "reports all the relevant organizations" do
+      load_test_data(htitem_1)
+      load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: nil, condition: "BRT"))
+      load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: "LM", condition: ""))
+      load_test_data(build(:holding, organization: "c", ocn: htitem_1.ocns.first, status: "LM", condition: "BRT"))
+      load_test_data(build(:holding, organization: "d", ocn: htitem_1.ocns.first, status: "CH", condition: "BRT"))
+      response = parse_response("item_held_by", v: 1, item_id: item_id_1, constraint: "brlm")
+      expect(response["organizations"]).to eq ["a", "b", "c", "d"]
     end
   end
 end
