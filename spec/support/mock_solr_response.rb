@@ -3,6 +3,28 @@ RSpec.shared_context "with mocked solr response" do
   # on its own record. This also doesn't account for any concordance info.
   # This isn't the complete response solr actually returns, but it
   # should include everything we use.
+  #
+
+  def solr_docs_for(*htitems)
+    htitems.group_by(&:ht_bib_key).map do |ht_bib_key, htitems|
+      record_ocns = htitems.collect(&:ocns).flatten.uniq.map(&:to_s)
+
+      {
+        "id" => ht_bib_key,
+        "format" => [(htitems.first.bib_fmt == "SE") ? "Serial" : "Book"],
+        "oclc" => record_ocns,
+        "oclc_search" => record_ocns,
+        "ht_json" => htitems.map do |htitem|
+          {
+            "htid" => htitem.item_id,
+            "rights" => [htitem.rights, nil],
+            "enumcron" => htitem.enum_chron,
+            "collection_code" => htitem.collection_code.downcase
+          }
+        end.to_json
+      }
+    end
+  end
 
   def solr_response_for(*htitems)
     {
@@ -10,20 +32,7 @@ RSpec.shared_context "with mocked solr response" do
       "response" => {
         "numFound" => htitems.count,
         "start" => 0,
-        "docs" => htitems.map do |htitem|
-          {
-            "id" => htitem.ht_bib_key,
-            "format" => (htitem.bib_fmt == "SE") ? "Serial" : "Book",
-            "oclc" => htitem.ocns.map(&:to_s),
-            "oclc_search" => htitem.ocns.map(&:to_s),
-            "ht_json" => [
-              "htid" => htitem.item_id,
-              "rights" => [htitem.rights, nil],
-              "enumcron" => htitem.enum_chron,
-              "collection_code" => htitem.collection_code.downcase
-            ].to_json
-          }
-        end
+        "docs" => solr_docs_for(*htitems)
       }
     }.to_json
   end

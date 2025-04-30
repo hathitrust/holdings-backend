@@ -2,6 +2,7 @@ require "clusterable/ht_item"
 require "overlap/cluster_overlap"
 require "services"
 require "sinatra"
+require "solr_record"
 
 class HoldingsAPI < Sinatra::Base
   set :show_exceptions, ENV["show_sinatra_exceptions"] || false
@@ -44,6 +45,34 @@ class HoldingsAPI < Sinatra::Base
       "organizations" => cluster.organizations_in_cluster
     }
     return_doc.to_json
+  end
+
+  # POST a solr record in JSON format with the id, oclc_search, and ht_json fields; returns:
+  #
+  # [
+  #   {
+  #     item_id: "test.id1",
+  #     organizations: ["org1", "org2", ...]
+  #   },
+  #   {
+  #     item_id: "test.id2",
+  #     organizations: ["org1", ...]
+  #   }
+  # ]
+  #
+  post "/v1/record_held_by" do
+    json = request.body.read
+    r = SolrRecord.from_json(json)
+
+    Overlap::ClusterOverlap
+      .new(r.cluster)
+      .group_by { |o| o.ht_item.item_id }
+      .map do |item_id, overlaps|
+        {
+          "item_id" => item_id,
+          "organizations" => overlaps.map(&:org)
+        }
+      end.to_json
   end
 
   error ArgumentError do
