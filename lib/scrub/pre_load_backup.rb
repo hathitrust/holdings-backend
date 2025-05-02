@@ -26,7 +26,7 @@ module Scrub
     def write_backup_file
       # Note that this writes an empty file if there are no matching records.
       File.open(backup_path, "w") do |backup_file|
-        records.order(:uuid).paged_each do |record|
+        records.order(:uuid).paged_each(strategy: :filter) do |record|
           backup_file.puts record.to_json
         end
       end
