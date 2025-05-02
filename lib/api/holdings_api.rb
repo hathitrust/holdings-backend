@@ -37,13 +37,21 @@ class HoldingsAPI < Sinatra::Base
     # ArgumentError if missing item_id.
     validate_params(params: params, required: ["item_id"])
     item_id = params["item_id"]
+    constraint = params["constraint"]
 
     ht_item = Clusterable::HtItem.find(item_id: item_id)
     cluster = ht_item.cluster
 
-    return_doc = {
-      "organizations" => cluster.organizations_in_cluster
-    }
+    organizations = case constraint
+    when nil
+      cluster.organizations_in_cluster
+    when "brlm"
+      cluster.access_counts.select { |org, count| count > 0 }.keys.sort
+    else
+      raise ArgumentError, "Invalid constraint."
+    end
+
+    return_doc = {"organizations" => organizations}
     return_doc.to_json
   end
 
