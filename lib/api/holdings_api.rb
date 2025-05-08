@@ -6,6 +6,9 @@ require "solr_record"
 
 class HoldingsAPI < Sinatra::Base
   set :show_exceptions, ENV["show_sinatra_exceptions"] || false
+  set :logging, true
+  set :dump_errors, false
+
   no_matching_data_error = {"application_error" => "no matching data"}.to_json
 
   get "/v1/ping" do
