@@ -31,6 +31,26 @@ CREATE TABLE `ht_collections` (
   PRIMARY KEY (`collection`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+DROP TABLE IF EXISTS `ht_institutions`;
+CREATE TABLE `ht_institutions` (
+  `inst_id` varchar(64) PRIMARY KEY NOT NULL,
+  `grin_instance` varchar(8) DEFAULT NULL,
+  `name` varchar(256) DEFAULT NULL,
+  `template` varchar(256) DEFAULT NULL,
+  `domain` varchar(32) DEFAULT NULL,
+  `us` tinyint(1) NOT NULL DEFAULT 0,
+  `mapto_inst_id` varchar(32) NOT NULL,
+  `mapto_name` varchar(256) DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 0,
+  `entityID` varchar(256) DEFAULT NULL,
+  `allowed_affiliations` text DEFAULT NULL,
+  `shib_authncontext_class` varchar(255) DEFAULT NULL,
+  `emergency_status` text DEFAULT NULL,
+  `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  KEY `ht_institutions_inst_id` (`inst_id`),
+  KEY `ht_institutions_mapto_inst_id` (`mapto_inst_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
 DROP TABLE IF EXISTS `holdings_htitem_htmember`;
 CREATE TABLE `holdings_htitem_htmember` (
   `lock_id` varchar(300) NOT NULL,
