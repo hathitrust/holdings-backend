@@ -26,10 +26,23 @@ RSpec.describe DataSources::HTOrganizations do
       expect(ht_organizations["example"].country_code).to eq("xx")
       expect(ht_organizations["example"].weight).to eq(3.5)
       expect(ht_organizations["example"].oclc_sym).to eq("ZZZ")
+      expect(ht_organizations["example"].mapto_inst_id).to be("example")
     end
 
     it "raises a KeyError when institution has no data" do
       expect { ht_organizations["nonexistent"] }.to raise_exception(KeyError)
+    end
+  end
+
+  describe "mapto" do
+    let(:mock_data) do
+      {
+        "mapfrom1" => DataSources::HTOrganization.new(inst_id: "mapfrom1", mapto_inst_id: "mapto"),
+        "mapfrom2" => DataSources::HTOrganization.new(inst_id: "mapfrom2", mapto_inst_id: "mapto")
+      }
+    end
+    it "returns all institution ids that map to the given one" do
+      expect(ht_organizations.mapto("mapto").map(&:inst_id)).to contain_exactly("mapfrom1", "mapfrom2")
     end
   end
 

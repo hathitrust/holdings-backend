@@ -5,9 +5,10 @@ require "services"
 module DataSources
   # Information about an individual HathiTrust institution
   class HTOrganization
-    attr_reader :inst_id, :country_code, :weight, :oclc_sym, :status
+    attr_reader :inst_id, :country_code, :weight, :oclc_sym, :status, :mapto_inst_id
 
-    def initialize(inst_id:, country_code: nil, weight: nil, oclc_sym: nil, status: true)
+    def initialize(inst_id:, country_code: nil, weight: nil,
+      oclc_sym: nil, status: true, mapto_inst_id: inst_id)
       @inst_id = inst_id
       raise ArgumentError, "Must have institution id" unless @inst_id
 
@@ -19,6 +20,7 @@ module DataSources
 
       @oclc_sym = oclc_sym
       @status = status
+      @mapto_inst_id = mapto_inst_id
     end
   end
 
@@ -48,11 +50,13 @@ module DataSources
 
     def initialize(organizations = load_from_db)
       @organizations = organizations
+      fill_mapto
     end
 
     def load_from_db
       Services.billing_members_table
-        .select(:inst_id, :country_code, :weight, :oclc_sym, :status)
+        .natural_join(:ht_institutions)
+        .select(:inst_id, :country_code, :weight, :oclc_sym, :status, :mapto_inst_id)
         .as_hash(:inst_id)
         .transform_values { |h| HTOrganization.new(**h) }
     end
@@ -71,12 +75,22 @@ module DataSources
       @organizations.select { |_k, org| org.status }
     end
 
+    def mapto(instid)
+      @mapto_organizations[instid]
+    end
+
     # Adds a temporary organization to the organization data cache for the lifetime of the
     # object; does not persist it to the database
     #
     # @param organization The HTOrganization to add
     def add_temp(organization)
       @organizations[organization.inst_id] = organization
+    end
+
+    private
+
+    def fill_mapto
+      @mapto_organizations = @organizations.values.group_by(&:mapto_inst_id)
     end
   end
 end
