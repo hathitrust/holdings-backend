@@ -22,16 +22,17 @@ class HoldingsAPI < Sinatra::Base
 
     organization = params["organization"]
     item_id = params["item_id"]
-
     ht_item = Clusterable::HtItem.find(item_id: item_id)
     overlap_record = Overlap::ClusterOverlap.overlap_record(organization, ht_item)
 
     return_doc = {
+      "brlm_count" => overlap_record.access_count,
       "copy_count" => overlap_record.copy_count,
       "format" => ht_item.cluster.format,
       "n_enum" => ht_item.n_enum,
       "ocns" => ht_item.ocns.sort
     }
+
     return_doc.to_json
   end
 
