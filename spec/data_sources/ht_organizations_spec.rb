@@ -106,5 +106,15 @@ RSpec.describe DataSources::HTOrganizations do
           raise_exception("Weight must be between 0 and 10")
       end
     end
+
+    describe "#maps?" do
+      it "is true if the org maps to other orgs" do
+        org1 = DataSources::HTOrganization.new(inst_id: "same", mapto_inst_id: "different")
+        expect(org1.maps?).to be true
+
+        org2 = DataSources::HTOrganization.new(inst_id: "same", mapto_inst_id: "same")
+        expect(org2.maps?).to be false
+      end
+    end
   end
 end

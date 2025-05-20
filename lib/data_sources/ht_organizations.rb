@@ -22,6 +22,12 @@ module DataSources
       @status = status
       @mapto_inst_id = mapto_inst_id
     end
+
+    # i.e. does this org map to other orgs (e.g. universityofcalifornia => [berkeley, ucla, ...])
+    def maps?
+      mapto_inst_id != inst_id
+    end
+
   end
 
   #
