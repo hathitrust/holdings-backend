@@ -288,6 +288,28 @@ RSpec.describe "HoldingsApi" do
       response = parse_response("item_access", **item_access_args)
       expect(response["brlm_count"]).to eq 2
     end
+
+    it "identifies items held by mapped-to institutions as held" do
+      # stanford has mapto_instid = stanford_mapped
+      # when we query for instid = stanford_mapped, we should get holdings for stanford
+      load_test_data(
+        htitem_1,
+        build(:holding, organization: "stanford", ocn: ocn)
+      )
+      response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
+      expect(response["copy_count"]).to eq 1
+
+      # ualberta is also mapped to stanford_mapped in spec/fixtures/organizations.rb
+      # so any ocns held by stanford and/or ualberta count towards stanford_mapped
+      load_test_data(build(:holding, organization: "ualberta", ocn: ocn))
+      response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
+      expect(response["copy_count"]).to eq 2
+
+      # umich is not mapped to stanford_mapped, so their holdings should not count
+      load_test_data(build(:holding, organization: "umich", ocn: ocn))
+      response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
+      expect(response["copy_count"]).to eq 2
+    end
   end
 
   describe "v1/item_held_by" do

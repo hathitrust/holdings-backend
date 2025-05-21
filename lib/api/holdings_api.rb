@@ -23,11 +23,17 @@ class HoldingsAPI < Sinatra::Base
     organization = params["organization"]
     item_id = params["item_id"]
     ht_item = Clusterable::HtItem.find(item_id: item_id)
-    overlap_record = Overlap::ClusterOverlap.overlap_record(organization, ht_item)
+
+    overlap_records = Services.ht_organizations.mapto(organization).map do |mapped_org|
+      Overlap::ClusterOverlap.overlap_record(mapped_org.inst_id, ht_item)
+    end
+
+    access_count = overlap_records.map(&:access_count).reduce(:+)
+    copy_count = overlap_records.map(&:copy_count).reduce(:+)
 
     return_doc = {
-      "brlm_count" => overlap_record.access_count,
-      "copy_count" => overlap_record.copy_count,
+      "brlm_count" => access_count,
+      "copy_count" => copy_count,
       "format" => ht_item.cluster.format,
       "n_enum" => ht_item.n_enum,
       "ocns" => ht_item.ocns.sort
