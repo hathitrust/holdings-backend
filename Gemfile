@@ -36,6 +36,7 @@ group :test do
   gem "rspec-sidekiq"
   gem "simplecov"
   gem "simplecov-lcov"
+  gem "timecop"
   gem "webmock"
 end
 
