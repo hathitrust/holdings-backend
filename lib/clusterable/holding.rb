@@ -102,6 +102,14 @@ module Clusterable
       dataset.order(:uuid).paged_each(strategy: :filter, &block)
     end
 
+    # ocn column in holdings is defined as int(11)
+    # max ocn is currently 10 digits
+    MAX_OCN_COLUMN_LENGTH = 11
+
+    def self.cleaned_stringified_ocns(ocns)
+      ocns.map(&:to_s).reject { |ocn| ocn.length > MAX_OCN_COLUMN_LENGTH }
+    end
+
     def self.all
       return to_enum(__method__) unless block_given?
 
@@ -113,13 +121,14 @@ module Clusterable
     def self.with_ocns(ocns, cluster: nil, organization: nil)
       return to_enum(__method__, ocns, cluster: cluster) unless block_given?
 
-      dataset = table.where(ocn: ocns.to_a.map(&:to_s))
+      cleaned_ocns = cleaned_stringified_ocns(ocns)
+      dataset = table.where(ocn: cleaned_ocns)
 
       if organization
         dataset = dataset.where(organization: organization)
       end
 
-      paged_each(dataset) do |row|
+      dataset.each do |row|
         yield from_row(row, cluster: cluster)
       end
     end
