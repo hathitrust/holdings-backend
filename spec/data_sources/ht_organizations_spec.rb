@@ -2,6 +2,7 @@
 
 require "spec_helper"
 require "data_sources/ht_organizations"
+require "timecop"
 
 RSpec.describe DataSources::HTOrganizations do
   let(:mock_data) do
@@ -105,6 +106,70 @@ RSpec.describe DataSources::HTOrganizations do
         expect { described_class.new(inst_id: "example", weight: -1) }.to \
           raise_exception("Weight must be between 0 and 10")
       end
+    end
+  end
+
+  describe "cache" do
+    it "refreshes ht_organizations" do
+      Services.ht_db[:ht_billing_members].where(inst_id: "foo").delete
+      Services.ht_db[:ht_institutions].where(inst_id: "foo").delete
+      Services.register(:ht_organizations) { DataSources::HTOrganizations.new }
+
+      expected_error = /No organization_info data for inst_id:foo/
+      # Expect to not see foo initially.
+      expect { Services.ht_organizations["foo"] }.to raise_error(KeyError, expected_error)
+
+      # Insert it directly into DB but expect to not see it in the cache.
+      Services.ht_db[:ht_billing_members].insert(
+        inst_id: "foo",
+        parent_inst_id: "foo",
+        weight: 1.00,
+        oclc_sym: "foo",
+        marc21_sym: "foo",
+        country_code: "fi",
+        status: true
+      )
+      Services.ht_db[:ht_institutions].insert(
+        inst_id: "foo",
+        grin_instance: nil,
+        name: nil,
+        template: nil,
+        domain: nil,
+        us: false,
+        mapto_inst_id: "foo",
+        mapto_name: nil,
+        enabled: false,
+        entityID: nil,
+        allowed_affiliations: nil,
+        shib_authncontext_class: nil,
+        emergency_status: nil
+      )
+
+      # Make sure we actually got them into the db.
+      expect(Services.ht_db[:ht_billing_members].where(inst_id: "foo").count).to eq 1
+      expect(Services.ht_db[:ht_institutions].where(inst_id: "foo").count).to eq 1
+
+      # Reload the Services cache and expect to see the new organization.
+      expect { Services.ht_organizations["foo"] }.not_to raise_error
+      expect(Services.ht_organizations["foo"]).to be_a DataSources::HTOrganization
+    ensure
+      Services.ht_db[:ht_billing_members].where(inst_id: "foo").delete
+      Services.ht_db[:ht_institutions].where(inst_id: "foo").delete
+    end
+
+    it "refreshes cache after an interval" do
+      ht_orgs = described_class.new
+      org = "emory"
+      original_weight = ht_orgs[org].weight
+      new_weight = original_weight * 2
+
+      Services.ht_db[:ht_billing_members].where(inst_id: org).update(weight: new_weight)
+      expect(ht_orgs[org].weight).to eq original_weight
+      Timecop.travel(Time.now + described_class::CACHE_MAX_AGE_SECONDS + 1) do
+        expect(ht_orgs[org].weight).to eq new_weight
+      end
+    ensure
+      Services.ht_db[:ht_billing_members].where(inst_id: org).update(weight: original_weight)
     end
   end
 end

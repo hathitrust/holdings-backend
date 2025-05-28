@@ -46,28 +46,17 @@ module DataSources
   #   htm["haverford"].weight
   #
   class HTOrganizations
+    CACHE_MAX_AGE_SECONDS = 3600
+
     attr_reader :organizations
 
-    def initialize(organizations = load_from_db)
-      @organizations = organizations
-      fill_mapto
-    end
-
-    def load_from_db
-      Services.billing_members_table
-        .natural_join(:ht_institutions)
-        .select(:inst_id, :country_code, :weight, :oclc_sym, :status, :mapto_inst_id)
-        .as_hash(:inst_id)
-        .transform_values { |h| HTOrganization.new(**h) }
+    def initialize(organizations = data_from_db)
+      load_data(organizations)
     end
 
     # Given a inst_id, returns a hash of data for that member.
     def [](inst_id)
-      if @organizations.key?(inst_id)
-        @organizations[inst_id]
-      else
-        raise KeyError, "No organization_info data for inst_id:#{inst_id}"
-      end
+      inst_info(inst_id: inst_id)
     end
 
     # A list of organizations that are actually members, i.e. status.true?
@@ -88,6 +77,35 @@ module DataSources
     end
 
     private
+
+    def data_from_db
+      Services.billing_members_table
+        .natural_join(:ht_institutions)
+        .select(:inst_id, :country_code, :weight, :oclc_sym, :status, :mapto_inst_id)
+        .as_hash(:inst_id)
+        .transform_values { |h| HTOrganization.new(**h) }
+    end
+
+    def load_data(organizations)
+      @organizations = organizations
+      fill_mapto
+      @cache_timestamp = Time.now.to_i
+    end
+
+    def inst_info(inst_id:, retry_it: true)
+      if Time.now.to_i - @cache_timestamp > CACHE_MAX_AGE_SECONDS
+        load_data(data_from_db)
+      end
+
+      if @organizations.key?(inst_id)
+        @organizations[inst_id]
+      elsif retry_it
+        load_data(data_from_db)
+        inst_info(inst_id: inst_id, retry_it: false)
+      else
+        raise KeyError, "No organization_info data for inst_id:#{inst_id}"
+      end
+    end
 
     def fill_mapto
       @mapto_organizations = @organizations.values.group_by(&:mapto_inst_id)
