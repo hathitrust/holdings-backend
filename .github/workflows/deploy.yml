@@ -8,9 +8,9 @@ on:
       environments:
         description: The environment to deploy to
         type: choice
-        default: testing
+        default: production
         options:
-          - testing
+          - production
 
 jobs:
   deploy:
@@ -22,8 +22,8 @@ jobs:
       - name: Deploy to ${{inputs.environments}}
         uses: hathitrust/github_actions/deploy@v1
         with:
-          image: ghcr.io/hathitrust/holdings-mariadb:${{ inputs.branch_hash || github.sha}}
-          file: environments/holdings-mariadb/${{inputs.environments}}/holdings-client-image.txt
+          image: ghcr.io/hathitrust/holdings:${{ inputs.branch_hash || github.sha}}
+          file: environments/holdings/${{inputs.environments}}/holdings-client-image.txt
           CONFIG_REPO_RW_APP_ID: ${{ vars.CONFIG_REPO_RW_APP_ID }}
           CONFIG_REPO_FULL_NAME: ${{ vars.CONFIG_REPO_FULL_NAME }}
           CONFIG_REPO_RW_KEY: ${{secrets.CONFIG_REPO_RW_KEY}}
