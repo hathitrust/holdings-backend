@@ -289,6 +289,23 @@ RSpec.describe "HoldingsApi" do
       expect(response["brlm_count"]).to eq 2
     end
 
+    it "currently_held indicates copy_count - (wd + lm)" do
+      load_test_data(htitem_1)
+      item_access_args = {item_id: item_id_1, organization: "umich"}
+
+      # Add a WD, see copy_count++, non_withdrawn_count==0
+      load_test_data(build(:holding, organization: "umich", ocn: ocn, status: "WD"))
+      response = parse_response("item_access", **item_access_args)
+      expect(response["copy_count"]).to eq 1
+      expect(response["currently_held_count"]).to eq 0
+
+      # Add a CH, see copy_count++ and non_withdrawn_count++
+      load_test_data(build(:holding, organization: "umich", ocn: ocn, status: "CH"))
+      response = parse_response("item_access", **item_access_args)
+      expect(response["copy_count"]).to eq 2
+      expect(response["currently_held_count"]).to eq 1
+    end
+
     it "identifies items held by mapped-to institutions as held" do
       # stanford has mapto_instid = stanford_mapped
       # when we query for instid = stanford_mapped, we should get holdings for stanford
