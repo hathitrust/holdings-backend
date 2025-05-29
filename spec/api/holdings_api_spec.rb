@@ -5,7 +5,7 @@ require "api/holdings_api"
 
 APP = Rack::Builder.parse_file("bin/api_config.ru")
 
-RSpec.describe "HoldingsApi" do
+RSpec.describe HoldingsAPI do
   include Rack::Test::Methods
   include_context "with tables for holdings"
 
@@ -100,6 +100,13 @@ RSpec.describe "HoldingsApi" do
   describe "v1/item_access" do
     it "returns an error message if there is no matching htitem" do
       response = parse_response("item_access", item_id: item_id_1, organization: "umich")
+      expect(response["application_error"]).to eq "no matching data"
+      expect(last_response.status).to eq 404
+    end
+
+    it "returns application error if item exists but org does not exist" do
+      load_test_data(htitem_1)
+      response = parse_response("item_access", item_id: item_id_1, organization: "does-not-exist")
       expect(response["application_error"]).to eq "no matching data"
       expect(last_response.status).to eq 404
     end

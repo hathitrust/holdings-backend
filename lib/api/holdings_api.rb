@@ -19,8 +19,7 @@ class HoldingsAPI < Sinatra::Base
   get "/v1/item_access" do
     # ArgumentError if missing organization / item_id.
     validate_params(params: params, required: ["organization", "item_id"])
-
-    organization = params["organization"]
+    organization = organization_exists?(params["organization"])
     item_id = params["item_id"]
     ht_item = Clusterable::HtItem.find(item_id: item_id)
 
@@ -125,5 +124,16 @@ class HoldingsAPI < Sinatra::Base
     if argument_errors.any?
       raise ArgumentError, argument_errors.join("; ")
     end
+  end
+
+  # Should be used in any route that takes an organization as an argument,
+  # to check that it is either an existing organization or a mapto.
+  def organization_exists?(organization)
+    if Services.ht_organizations.organizations.key?(organization) ||
+        !Services.ht_organizations.mapto(organization).nil?
+      return organization
+    end
+
+    raise ArgumentError, "no matching data"
   end
 end
