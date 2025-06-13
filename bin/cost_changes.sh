@@ -73,5 +73,10 @@ echo $hilites_file;
 prev_budget_report=`echo "$all_reports" | grep -Po '\S+costreport_20240801.tsv'`
 last_report=`echo "$all_reports" | awk '{print $NF}'`
 echo "Special diff between $prev_budget_report and $last_report to $out_dir/hilites_budget_diff_$ymd.tsv and $out_dir/hilites_budget_pct_diff_$ymd.tsv"
-perl ./bin/append_sheets.pl --f=0,-1 --header --op='-' $prev_budget_report $last_report | grep -P $keep_lines > "$out_dir/hilites_budget_diff_$ymd.tsv"
-perl ./bin/append_sheets.pl --f=0,-1 --header --op='%' $prev_budget_report $last_report | grep -P $keep_lines > "$out_dir/hilites_budget_pct_diff_$ymd.tsv"
+hilites_budget_diff="/tmp/hilites_budget_diff_$ymd.tsv"
+hilites_budget_diff_pct="/tmp/hilites_budget_pct_diff_$ymd.tsv"
+hilites_budget_diffs="$out_dir/hilites_budget_diffs_$ymd.tsv"
+perl ./bin/append_sheets.pl --f=0,-1 --header --op='-' $prev_budget_report $last_report | grep -P $keep_lines > "$hilites_budget_diff"
+perl ./bin/append_sheets.pl --f=0,-1 --header --op='%' $prev_budget_report $last_report | grep -P $keep_lines > "$hilites_budget_diff_pct"
+perl ./bin/append_sheets.pl --f=0,-1 --header $prev_budget_report $last_report $hilites_budget_diff $hilites_budget_diff_pct | grep -P $keep_lines > "$out_dir/hilites_budget_diffs_$ymd.tsv"
+rm "$hilites_budget_diff" "$hilites_budget_diff_pct"
