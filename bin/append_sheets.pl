@@ -103,8 +103,19 @@ foreach my $k (sort {$a<=>$b} keys %$files) {
 	$line_keys->{'_header'} = 1;
     }
     while (<F>) {
-	my $line = $_;
-	chomp $line;
+        my $line = $_;
+        chomp $line;
+
+        # Skip non-tabular lines.
+        if ($line !~ /$delim/) {
+            next;
+        }
+
+        # Don't include original header if we are supplying our own header.
+        if ($header && $line =~ /^member_id\t/) {
+            next;
+        }
+
 	my @cols = split($delim, $line);
 	# If --f, extract desired cols.
 	if (@$fields) {
@@ -117,7 +128,7 @@ foreach my $k (sort {$a<=>$b} keys %$files) {
 	$line_keys->{$line_key}    = 1;
 	if (!defined $file_cols->{$k} || @cols > $file_cols->{$k}) {
 	    $file_cols->{$k} = @cols;
-	}
+        }
     }
     # Store entire hash in file hash.
     $lines->{$files->{$k}} = $lines_in_file;
@@ -134,6 +145,7 @@ foreach my $k (sort {$a<=>$b} keys %$files) {
 	# Make sure each file has a row for each member in any row,
 	# that has as many cols as any row in that file should.
 	$h->{$m} ||= [($na) x $file_cols->{$k}];
+
 	if (@{$h->{$m}} < $file_cols->{$k}) {
 	    my $missing_vals = $file_cols->{$k} - @{$h->{$m}};
 	    push(@{$h->{$m}}, $na) for (1 .. $missing_vals);
