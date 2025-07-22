@@ -271,7 +271,7 @@ GEM
       rubocop-performance (~> 1.25.0)
     stream (0.5.5)
     stringio (3.1.7)
-    thor (1.3.2)
+    thor (1.4.0)
     tilt (2.6.0)
     timecop (0.9.10)
     trilogy (2.9.0)
