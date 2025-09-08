@@ -1,7 +1,7 @@
 #!/bin/bash
 
 bindir=$(dirname $(realpath $0))
-mariadb="mariadb -u $MARIADB_HOLDINGS_RW_USERNAME --password=$MARIADB_HOLDINGS_RW_PASSWORD -h $MARIADB_HOLDINGS_RW_HOST"
+mariadb="mariadb --skip-ssl -u $MARIADB_HOLDINGS_RW_USERNAME --password=$MARIADB_HOLDINGS_RW_PASSWORD -h $MARIADB_HOLDINGS_RW_HOST"
 database=$MARIADB_HOLDINGS_RW_DATABASE
 
 if [[ "$1" != "--force" ]]; then
