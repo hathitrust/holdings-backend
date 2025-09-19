@@ -24,7 +24,7 @@ class ConcordanceProcessing
       fout.puts [variant, c.canonical_ocn(variant)].join("\t")
       milemarker.increment_and_log_batch_line
       Thread.pass
-    rescue OCNCycleError, MultipleOCNError => e
+    rescue ConcordanceValidation::OCNCycleError, ConcordanceValidation::MultipleOCNError => e
       log.puts e
       log.flush
       next
