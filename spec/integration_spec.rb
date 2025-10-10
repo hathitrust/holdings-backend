@@ -64,23 +64,32 @@ RSpec.describe "phctl integration" do
   end
 
   describe "Concordance" do
+    let(:output) { "#{ENV["TEST_TMP"]}/concordance_output" }
+
+    def cleanup(output)
+      File.unlink(output) if File.exist?(output)
+      File.unlink("#{output}.log") if File.exist?("#{output}.log")
+    end
+
+    before(:each) { cleanup(output) }
+    after(:each) { cleanup(output) }
+
     it "Validate produces output and log" do
-      def cleanup(output)
-        File.unlink(output) if File.exist?(output)
-        File.unlink("#{output}.log") if File.exist?("#{output}.log")
-      end
+      phctl("concordance", "validate", fixture("concordance_sample.txt"), output)
+      expect(File.size(output)).to be > 0
+      expect(File).to exist("#{output}.log")
+    end
 
-      input = fixture("concordance_sample.txt")
-      output = "#{ENV["TEST_TMP"]}/concordance_output"
-      cleanup(output)
+    it "Validate runs to completion when there are cycles in the concordance" do
+      expect { phctl("concordance", "validate", fixture("concordance/raw/cycles.tsv"), output) }
+        .not_to raise_error
+      expect(File).to exist("#{output}.log")
+    end
 
-      begin
-        phctl("concordance", "validate", input, output)
-        expect(File.size(output)).to be > 0
-        expect(File).to exist("#{output}.log")
-      ensure
-        cleanup(output)
-      end
+    it "Validate runs to completion when there are multiple terminal OCNs in the concordance" do
+      expect { phctl("concordance", "validate", fixture("concordance/raw/multiple_terminal.tsv"), output) }
+        .not_to raise_error
+      expect(File).to exist("#{output}.log")
     end
 
     it "Delta produces adds and deletes" do
