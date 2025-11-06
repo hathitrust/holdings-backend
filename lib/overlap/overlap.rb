@@ -19,6 +19,18 @@ module Overlap
       end
     end
 
+    def copy_count
+      if deposited_only?
+        1
+      else
+        matching_count
+      end
+    end
+
+    def deposited_only?
+      matching_count.zero? && @ht_item.billing_entity == @org
+    end
+
     def matching_holdings
       @cluster.holdings_by_org[@org] || []
     end
@@ -32,8 +44,13 @@ module Overlap
         brt_count: brt_count,
         wd_count: wd_count,
         lm_count: lm_count,
-        access_count: access_count
+        access_count: access_count,
+        deposited_only: deposited_only?
       }
+    end
+
+    def matching_count
+      raise "unimplemented"
     end
   end
 end
