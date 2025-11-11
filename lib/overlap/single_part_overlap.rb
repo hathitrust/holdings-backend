@@ -5,6 +5,10 @@ require "overlap/overlap"
 module Overlap
   # Overlap record for items in SPM clusters
   class SinglePartOverlap < Overlap
+    def current_holding_count
+      @cluster.current_holding_counts[@org]
+    end
+
     def brt_count
       @cluster.brt_counts[@org]
     end

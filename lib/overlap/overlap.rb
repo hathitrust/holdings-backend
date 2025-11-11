@@ -13,7 +13,7 @@ module Overlap
     end
 
     # These methods should return zero in the most basic case
-    ["copy", "brt", "wd", "lm", "access"].each do |method|
+    ["current_holding", "brt", "wd", "lm", "access"].each do |method|
       define_method :"#{method}_count" do
         0
       end

@@ -5,6 +5,11 @@ require "overlap/overlap"
 module Overlap
   # Overlap record for items in MPM clusters
   class MultiPartOverlap < Overlap
+    def current_holding_count
+      # holding is assumed current if status is nil
+      matching_holdings.count { |h| h.status == "CH" || h.status.nil? }
+    end
+
     def brt_count
       matching_holdings.count { |h| h.condition == "BRT" }
     end

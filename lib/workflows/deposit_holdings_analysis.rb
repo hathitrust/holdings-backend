@@ -54,10 +54,7 @@ module Workflows
 
         return :not_held if overlap.deposited_only?
 
-        # duplicated from lib/api/holdings_api.rb - TODO move to Overlap
-        currently_held_count = overlap.copy_count - (overlap.lm_count + overlap.wd_count)
-
-        return :held if currently_held_count.positive?
+        return :held if overlap.current_holding_count.positive?
         return :lost_missing if overlap.lm_count.positive?
         return :withdrawn if overlap.wd_count.positive?
 
