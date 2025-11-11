@@ -29,6 +29,5 @@ module Overlap
     def matching_count
       @cluster.copy_counts[@org]
     end
-
   end
 end

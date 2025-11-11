@@ -25,7 +25,7 @@ module Workflows
       attr_reader :solr_records, :output_file
 
       def initialize(solr_records,
-                     output: solr_records + ".holdings_analysis.tsv")
+        output: solr_records + ".holdings_analysis.tsv")
         @solr_records = solr_records
         @output_file = output
       end
@@ -41,7 +41,7 @@ module Workflows
             record.ht_items.select(&:ic?).each do |htitem|
               status = analyze(htitem)
 
-              fh.puts("\t".join(htitem.item_id, htitem.billing_entity, status))
+              fh.puts([htitem.item_id, htitem.billing_entity, status].join("\t"))
             end
           end
         end
@@ -58,7 +58,56 @@ module Workflows
         return :lost_missing if overlap.lm_count.positive?
         return :withdrawn if overlap.wd_count.positive?
 
-        return :unknown
+        :unknown
+      end
+    end
+
+    # Merges output files from Analyzer together and outputs result
+    # TODO mostly duplicated from overlap report output; extract common stuff?
+    class Writer
+      def initialize(working_directory:)
+        @working_directory = working_directory
+        @report_path = Settings.overlap_reports_path
+        Dir.mkdir(@report_path) unless File.exist?(@report_path)
+      end
+
+      def run
+        gzip_report
+      end
+
+      def header
+        [
+          "item_id",
+          "billing_entity",
+          "holdings_status"
+        ].join("\t")
+      end
+
+      def report_filename
+        return @report_filename if @report_filename
+
+        @report_filename = "deposit_holdings_analysis_#{Date.today}.tsv.gz"
+      end
+
+      private
+
+      attr_reader :report_path, :working_directory
+
+      def report_gz_path
+        File.join(report_path, report_filename)
+      end
+
+      def gzip_report
+        Zlib::GzipWriter.open(report_gz_path) do |gz|
+          gz.puts(header)
+          Dir.glob(File.join(working_directory, "*.tsv")).each do |rpt|
+            File.open(rpt) do |file|
+              while (chunk = file.read(16 * 1024))
+                gz.write(chunk)
+              end
+            end
+          end
+        end
       end
     end
   end

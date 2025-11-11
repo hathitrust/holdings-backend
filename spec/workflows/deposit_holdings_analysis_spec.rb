@@ -1,119 +1,163 @@
+require "workflows/map_reduce"
 require "workflows/deposit_holdings_analysis"
 
-RSpec.describe Workflows::DepositHoldingsAnalysis::Analyzer do
-  include_context "with tables for holdings"
+RSpec.describe Workflows::DepositHoldingsAnalysis do
+  describe Workflows::DepositHoldingsAnalysis::Analyzer do
+    include_context "with tables for holdings"
 
-  describe "#analyze" do
+    describe "#analyze" do
+      let(:analyzer) { described_class.new("nonexistent.json") }
 
-    let(:analyzer) { described_class.new("nonexistent.json") }
-
-    def holding_for(ht_item, **kwargs)
-      build(:holding, 
-            organization: ht_item.billing_entity,
-            ocn: ht_item.ocns.first,
-            **kwargs)
-    end
-
-    context "serial" do
-      # serials don't have status or condition information, so we would only
-      # return held or not_held
-
-      let(:ht_item) { build(:ht_item, :ser) }
-
-      it "returns status held if depositing institution reports holding a title" do
-        load_test_data(ht_item, holding_for(ht_item))
-
-        expect(analyzer.analyze(ht_item)).to eq(:held)
+      def holding_for(ht_item, **kwargs)
+        build(:holding,
+          organization: ht_item.billing_entity,
+          ocn: ht_item.ocns.first,
+          **kwargs)
       end
 
-      it "returns status not held if depositing institution does not report holding a title" do
-        load_test_data(ht_item)
+      context "serial" do
+        # serials don't have status or condition information, so we would only
+        # return held or not_held
 
-        expect(analyzer.analyze(ht_item)).to eq(:not_held)
-      end
-    end
+        let(:ht_item) { build(:ht_item, :ser) }
 
-    context "multi-part monograph" do
-      let(:ht_item) { build(:ht_item, :mpm, enum_chron: "V.1") }
+        it "returns status held if depositing institution reports holding a title" do
+          load_test_data(ht_item, holding_for(ht_item))
 
-      it "returns status held if depositing institution reports holding a copy with the same enumchron" do
-        load_test_data(ht_item, holding_for(ht_item, enum_chron: "V.1"))
-
-        expect(analyzer.analyze(ht_item)).to eq(:held)
-      end
-
-      it "returns status held if depositing institution reports holding only copies with no enumchrons" do
-        load_test_data(ht_item, holding_for(ht_item))
-
-        expect(analyzer.analyze(ht_item)).to eq(:held)
-      end
-
-      it "returns status not held if depositing institution reports holding only copies with different enumchrons" do
-        load_test_data(ht_item, holding_for(ht_item, enum_chron: "volume 99"))
-
-        expect(analyzer.analyze(ht_item)).to eq(:not_held)
-      end
-
-      it "returns status not held if depositing institution does not report holding a title" do
-        load_test_data(ht_item)
-
-        expect(analyzer.analyze(ht_item)).to eq(:not_held)
-      end
-    end
-
-    context "single-part monograph" do
-
-      let(:ht_item) { build(:ht_item, :spm) }
-
-      it "returns status held if depositing institution reports holding a title" do
-        load_test_data(ht_item, holding_for(ht_item))
-
-        expect(analyzer.analyze(ht_item)).to eq(:held)
-      end
-
-      it "returns status not held if depositing institution does not report holding a title" do
-        load_test_data(ht_item)
-
-        expect(analyzer.analyze(ht_item)).to eq(:not_held)
-      end
-
-      it "returns status withdrawn if depositing institution only reports holding as withdrawn" do
-        holding = holding_for(ht_item, status: 'WD')
-        load_test_data(ht_item, holding)
-
-        if(analyzer.analyze(ht_item)) != :withdrawn
-          puts holding.inspect
-          puts ht_item.inspect
+          expect(analyzer.analyze(ht_item)).to eq(:held)
         end
 
-        expect(analyzer.analyze(ht_item)).to eq(:withdrawn)
+        it "returns status not held if depositing institution does not report holding a title" do
+          load_test_data(ht_item)
+
+          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+        end
       end
 
-      it "returns status held if depositing institution reports holding a withdrawn and a currently-held copy" do
-        load_test_data(ht_item, 
-                       holding_for(ht_item, status: 'WD'),
-                       holding_for(ht_item, status: 'CH'))
+      context "multi-part monograph" do
+        let(:ht_item) { build(:ht_item, :mpm, enum_chron: "V.1") }
 
-        expect(analyzer.analyze(ht_item)).to eq(:held)
+        it "returns status held if depositing institution reports holding a copy with the same enumchron" do
+          load_test_data(ht_item, holding_for(ht_item, enum_chron: "V.1"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:held)
+        end
+
+        it "returns status held if depositing institution reports holding only copies with no enumchrons" do
+          load_test_data(ht_item, holding_for(ht_item))
+
+          expect(analyzer.analyze(ht_item)).to eq(:held)
+        end
+
+        it "returns status not held if depositing institution reports holding only copies with different enumchrons" do
+          load_test_data(ht_item, holding_for(ht_item, enum_chron: "volume 99"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+        end
+
+        it "returns status not held if depositing institution does not report holding a title" do
+          load_test_data(ht_item)
+
+          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+        end
       end
 
-      it "returns status lost_missing if depositing institution only reports holding a lost or missing copy" do
-        load_test_data(ht_item, 
-                       holding_for(ht_item, status: 'LM'))
+      context "single-part monograph" do
+        let(:ht_item) { build(:ht_item, :spm) }
 
-        expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
+        it "returns status not_held if the item doesn't have an OCLC number" do
+          load_test_data(build(:ht_item, :spm, ocns: []))
+
+          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+        end
+
+        it "returns status held if depositing institution reports holding a title" do
+          load_test_data(ht_item, holding_for(ht_item))
+
+          expect(analyzer.analyze(ht_item)).to eq(:held)
+        end
+
+        it "returns status not held if depositing institution does not report holding a title" do
+          load_test_data(ht_item)
+
+          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+        end
+
+        it "returns status withdrawn if depositing institution only reports holding as withdrawn" do
+          holding = holding_for(ht_item, status: "WD")
+          load_test_data(ht_item, holding)
+
+          expect(analyzer.analyze(ht_item)).to eq(:withdrawn)
+        end
+
+        it "returns status held if depositing institution reports holding a withdrawn and a currently-held copy" do
+          load_test_data(ht_item,
+            holding_for(ht_item, status: "WD"),
+            holding_for(ht_item, status: "CH"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:held)
+        end
+
+        it "returns status lost_missing if depositing institution only reports holding a lost or missing copy" do
+          load_test_data(ht_item,
+            holding_for(ht_item, status: "LM"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
+        end
+
+        it "returns status lost_missing if the depositing institution reports holding a withdrawn and a lost/missing copy" do
+          # maybe more useful to know that it's LM than that there are also
+          # withdrawn copies?
+
+          load_test_data(ht_item,
+            holding_for(ht_item, status: "LM"),
+            holding_for(ht_item, status: "WD"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
+        end
       end
+    end
+  end
 
-      it "returns status lost_missing if the depositing institution reports holding a withdrawn and a lost/missing copy" do
-        # maybe more useful to know that it's LM than that there are also
-        # withdrawn copies?
-        
-        load_test_data(ht_item, 
-                       holding_for(ht_item, status: 'LM'),
-                       holding_for(ht_item, status: 'WD'))
+  describe "integration test with Workflow::MapReduce" do
+    include_context "with tables for holdings"
+    include_context "with mocked solr response"
 
-        expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
-      end
+    let(:workflow) do
+      components = {
+        data_source: WorkflowComponent.new(
+          Workflows::DepositHoldingsAnalysis::DataSource
+        ),
+        mapper: WorkflowComponent.new(
+          Workflows::DepositHoldingsAnalysis::Analyzer
+        ),
+        reducer: WorkflowComponent.new(
+          Workflows::DepositHoldingsAnalysis::Writer
+        )
+      }
+      Workflows::MapReduce.new(test_mode: true, components: components)
+    end
+
+    it "includes data for held and not-held in-copyright items" do
+      current_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.1")
+      withdrawn_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.2", status: "WD")
+
+      load_test_data(current_holding, withdrawn_holding)
+
+      workflow.run
+
+      output = Zlib::GzipReader.open(Dir.glob("#{ENV["TEST_TMP"]}/overlap_reports/deposit_holdings_analysis_*.tsv.gz").first)
+
+      lines = output.to_a
+      # header line + one record for each IC item in solr fixture
+      expect(lines.count).to eq(12)
+      expect(lines[0]).to eq("item_id\tbilling_entity\tholdings_status\n")
+      # ocn 2779601 v.1
+      expect(lines).to include("mdp.39015066356547\tumich\theld\n")
+      # ocn 2779601 v.2
+      expect(lines).to include("mdp.39015066356406\tumich\twithdrawn\n")
+      # ocn 2779601 v.5
+      expect(lines).to include("mdp.39015018415946\tumich\tnot_held\n")
     end
   end
 end

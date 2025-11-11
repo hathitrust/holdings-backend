@@ -137,7 +137,7 @@ RSpec.describe Overlap::MultiPartOverlap do
 
   describe "deposited_only?" do
     it "returns false if the depositing member reports holding it" do
-      htitem_with_enumchron.collection_code = 'MIU'
+      htitem_with_enumchron.collection_code = "MIU"
       holding_with_enumchron.save
       mpo = described_class.new(holding_with_enumchron.organization, htitem_with_enumchron)
       expect(htitem_with_enumchron.billing_entity).to eq(holding_with_enumchron.organization)
@@ -146,9 +146,9 @@ RSpec.describe Overlap::MultiPartOverlap do
 
     it "returns true if the member deposited it but didn't report holding it" do
       mpo = described_class.new("upenn", htitem_with_enumchron)
-      expect(htitem_with_enumchron.billing_entity).to eq('upenn')
+      expect(htitem_with_enumchron.billing_entity).to eq("upenn")
       expect(htitem_with_enumchron.billing_entity).not_to eq(holding_with_enumchron.organization)
-      expect(mpo.deposited_only?).to be true 
+      expect(mpo.deposited_only?).to be true
     end
 
     it "returns false if the member holds it but didn't deposit it" do
@@ -159,9 +159,9 @@ RSpec.describe Overlap::MultiPartOverlap do
     end
 
     it "returns false if the member has a non-matching holding" do
-      nmh = create(:holding, organization: "upenn", 
-                   ocn: htitem_with_enumchron.ocns.first, 
-                   n_enum: "not matched")
+      nmh = create(:holding, organization: "upenn",
+        ocn: htitem_with_enumchron.ocns.first,
+        n_enum: "not matched")
       mpo = described_class.new(nmh.organization, htitem_with_enumchron)
       expect(mpo.deposited_only?).to be(false)
     end

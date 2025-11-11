@@ -129,8 +129,8 @@ class Cluster
 
   def current_holding_counts
     @ch_counts ||= holdings_by_org
-      .transform_values do
-        |hs| hs.select do |holding| 
+      .transform_values do |hs|
+        hs.select do |holding|
           # holding is assumed current if status is nil
           holding.status == "CH" || holding.status.nil?
         end.size
