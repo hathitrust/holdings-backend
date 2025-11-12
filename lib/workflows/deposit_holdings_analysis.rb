@@ -50,10 +50,11 @@ module Workflows
       end
 
       def analyze(ht_item)
+        return :no_ocn if ht_item.ocns.empty?
+
         overlap = Overlap::ClusterOverlap.overlap_record(ht_item.billing_entity, ht_item)
 
         return :not_held if overlap.deposited_only?
-
         return :held if overlap.current_holding_count.positive?
         return :lost_missing if overlap.lm_count.positive?
         return :withdrawn if overlap.wd_count.positive?

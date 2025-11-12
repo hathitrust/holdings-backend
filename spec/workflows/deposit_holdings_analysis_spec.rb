@@ -65,10 +65,11 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
       context "single-part monograph" do
         let(:ht_item) { build(:ht_item, :spm) }
 
-        it "returns status not_held if the item doesn't have an OCLC number" do
-          load_test_data(build(:ht_item, :spm, ocns: []))
+        it "returns status no_ocn if the item doesn't have an OCLC number" do
+          no_ocn_item = build(:ht_item, :spm, ocns: [])
+          load_test_data(no_ocn_item)
 
-          expect(analyzer.analyze(ht_item)).to eq(:not_held)
+          expect(analyzer.analyze(no_ocn_item)).to eq(:no_ocn)
         end
 
         it "returns status held if depositing institution reports holding a title" do
