@@ -5,15 +5,9 @@ require "overlap/overlap"
 module Overlap
   # Overlap record for items in MPM clusters
   class MultiPartOverlap < Overlap
-    def copy_count
-      cc = matching_holdings.count
-      if cc.zero? &&
-          (@ht_item.billing_entity == @org ||
-           @cluster.organizations_with_holdings_but_no_matches.include?(@org))
-        1
-      else
-        cc
-      end
+    def current_holding_count
+      # holding is assumed current if status is nil
+      matching_holdings.count { |h| h.status == "CH" || h.status.nil? }
     end
 
     def brt_count
@@ -37,6 +31,10 @@ module Overlap
       @matching_holdings ||= @cluster.holdings_by_org[@org]
         &.select { |h| h.n_enum == @ht_item.n_enum || h.n_enum.nil? || h.n_enum == "" }
       @matching_holdings ||= []
+    end
+
+    def matching_count
+      matching_holdings.count
     end
   end
 end

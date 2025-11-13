@@ -29,9 +29,7 @@ class HoldingsAPI < Sinatra::Base
 
     access_count = overlap_records.map(&:access_count).reduce(:+)
     copy_count = overlap_records.map(&:copy_count).reduce(:+)
-    withdrawn_count = overlap_records.map(&:wd_count).reduce(:+)
-    lost_missing_count = overlap_records.map(&:lm_count).reduce(:+)
-    currently_held_count = copy_count - (lost_missing_count + withdrawn_count)
+    currently_held_count = overlap_records.map(&:current_holding_count).reduce(:+)
 
     return_doc = {
       "brlm_count" => access_count,

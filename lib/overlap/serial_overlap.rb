@@ -6,13 +6,13 @@ require "overlap/overlap"
 module Overlap
   # Overlap record for items in Serial clusters
   class SerialOverlap < Overlap
-    def copy_count
-      cc = @cluster.copy_counts[@org]
-      if !cc.zero? || @ht_item.billing_entity == @org
-        1
-      else
-        0
-      end
+    def matching_count
+      @cluster.copy_counts[@org].clamp(0..1)
+    end
+
+    # serials don't have withdrawn/lost/missing/etc
+    def current_holding_count
+      matching_count
     end
   end
 end

@@ -13,10 +13,22 @@ module Overlap
     end
 
     # These methods should return zero in the most basic case
-    ["copy", "brt", "wd", "lm", "access"].each do |method|
+    ["current_holding", "brt", "wd", "lm", "access"].each do |method|
       define_method :"#{method}_count" do
         0
       end
+    end
+
+    def copy_count
+      if deposited_only?
+        1
+      else
+        matching_count
+      end
+    end
+
+    def deposited_only?
+      matching_count.zero? && @ht_item.billing_entity == @org
     end
 
     def matching_holdings
@@ -32,8 +44,13 @@ module Overlap
         brt_count: brt_count,
         wd_count: wd_count,
         lm_count: lm_count,
-        access_count: access_count
+        access_count: access_count,
+        deposited_only: deposited_only?
       }
+    end
+
+    def matching_count
+      raise "unimplemented"
     end
   end
 end

@@ -40,4 +40,20 @@ RSpec.describe Overlap::SerialOverlap do
       expect(described_class.new("upenn", ht).copy_count).to eq(1)
     end
   end
+
+  describe "#deposited_only?" do
+    it "returns false if the member reports holding it" do
+      ser = described_class.new(h.organization, ht)
+      expect(ser.deposited_only?).to be false
+    end
+
+    it "returns true if the member deposited it but didn't report holding it" do
+      ht.billing_entity = "different_org"
+      expect(described_class.new("different_org", ht).deposited_only?).to be true
+    end
+
+    it "returns false if the member holds it but didn't deposit it" do
+      expect(described_class.new("smu", ht).deposited_only?).to be false
+    end
+  end
 end

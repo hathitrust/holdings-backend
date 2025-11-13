@@ -127,6 +127,18 @@ class Cluster
     end.keys
   end
 
+  def current_holding_counts
+    @ch_counts ||= holdings_by_org
+      .transform_values do |hs|
+        hs.select do |holding|
+          # holding is assumed current if status is nil
+          holding.status == "CH" || holding.status.nil?
+        end.size
+      end
+    @ch_counts.default = 0
+    @ch_counts
+  end
+
   # These counts will be incorrect if set prior to holdings/ht_items changes
   def copy_counts
     @copy_counts ||= holdings.group_by(&:organization).transform_values(&:size)

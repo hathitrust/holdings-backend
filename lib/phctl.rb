@@ -258,6 +258,17 @@ module PHCTL
 
       run_workflow(components)
     end
+
+    desc "deposit_holdings_analysis", "Analyze holdings from contributors of deposited items"
+    def deposit_holdings_analysis
+      components = {
+        data_source: component(Workflows::DepositHoldingsAnalysis::DataSource),
+        mapper: component(Workflows::DepositHoldingsAnalysis::Analyzer),
+        reducer: component(Workflows::DepositHoldingsAnalysis::Writer)
+      }
+
+      run_workflow(components)
+    end
   end
 
   class PHCTL < Thor
