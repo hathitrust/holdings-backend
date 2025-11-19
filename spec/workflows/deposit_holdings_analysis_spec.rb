@@ -117,6 +117,27 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
           expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
         end
       end
+
+      describe "mapped holdings" do
+        # both stanford and ualberta map to stanford_mapped
+        # ht_item deposited by ualberta
+        # ualberta doesn't report holding; stanford does
+
+        let(:ht_item) { build(:ht_item, :spm, billing_entity: "ualberta") }
+        let(:holding) { holding_for(ht_item, status: "CH", organization: "stanford") }
+
+        before(:each) { load_test_data(ht_item, holding) }
+
+        it "analyze_mapped has status held" do
+          expect(analyzer.analyze_mapped(ht_item, "stanford_mapped")).to eq(:held)
+        end
+
+        it "includes both mapped & non-mapped info" do
+          expect(analyzer.report_for(ht_item)).to eq(
+            [ht_item.item_id, "ualberta", :not_held, "stanford_mapped", :held]
+          )
+        end
+      end
     end
   end
 
@@ -152,13 +173,13 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
       lines = output.to_a
       # header line + one record for each IC item in solr fixture
       expect(lines.count).to eq(12)
-      expect(lines[0]).to eq("item_id\tbilling_entity\tholdings_status\n")
+      expect(lines[0]).to eq("item_id\tbilling_entity\tholdings_status\tmapto_inst_id\tmapped_holdings_status\n")
       # ocn 2779601 v.1
-      expect(lines).to include("mdp.39015066356547\tumich\theld\n")
+      expect(lines).to include("mdp.39015066356547\tumich\theld\tumich\theld\n")
       # ocn 2779601 v.2
-      expect(lines).to include("mdp.39015066356406\tumich\twithdrawn\n")
+      expect(lines).to include("mdp.39015066356406\tumich\twithdrawn\tumich\twithdrawn\n")
       # ocn 2779601 v.5
-      expect(lines).to include("mdp.39015018415946\tumich\tnot_held\n")
+      expect(lines).to include("mdp.39015018415946\tumich\tnot_held\tumich\tnot_held\n")
     end
   end
 end

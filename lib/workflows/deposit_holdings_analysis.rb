@@ -38,10 +38,8 @@ module Workflows
 
         File.open(output_file, "w") do |fh|
           records_from_file(solr_records).each do |record|
-            record.ht_items.select(&:ic?).each do |htitem|
-              status = analyze(htitem)
-
-              fh.puts([htitem.item_id, htitem.billing_entity, status].join("\t"))
+            record.ht_items.select(&:ic?).each do |ht_item|
+              fh.puts(report_for(ht_item).join("\t"))
             end
           end
         end
@@ -49,15 +47,49 @@ module Workflows
         log.info("done w analysis, writing to #{output_file}")
       end
 
+      def report_for(ht_item)
+        status = analyze(ht_item)
+        inst_id = ht_item.billing_entity
+        mapto_inst_id = Services.ht_organizations[inst_id].mapto_inst_id
+        mapped_status = analyze_mapped(ht_item, mapto_inst_id)
+
+        [
+          ht_item.item_id,
+          ht_item.billing_entity,
+          status,
+          mapto_inst_id,
+          mapped_status
+        ]
+      end
+
       def analyze(ht_item)
+        overlap_status(ht_item, [ht_item.billing_entity])
+      end
+
+      def analyze_mapped(ht_item, mapto_inst_id)
+        # Find all the inst ids that map to the same inst id as the billing entity
+        mapto_instids = Services.ht_organizations.mapto(mapto_inst_id).map(&:inst_id)
+
+        overlap_status(ht_item, mapto_instids)
+      end
+
+      private
+
+      def overlap_status(ht_item, orgs)
         return :no_ocn if ht_item.ocns.empty?
 
-        overlap = Overlap::ClusterOverlap.overlap_record(ht_item.billing_entity, ht_item)
+        analyze_overlap_records(
+                                orgs.map do |mapped_org|
+                                  Overlap::ClusterOverlap.overlap_record(mapped_org, ht_item)
+                                end
+                              )
+      end
 
-        return :not_held if overlap.deposited_only?
-        return :held if overlap.current_holding_count.positive?
-        return :lost_missing if overlap.lm_count.positive?
-        return :withdrawn if overlap.wd_count.positive?
+      def analyze_overlap_records(overlap_records)
+        return :not_held if overlap_records.map(&:matching_count).all?(&:zero?)
+        return :held if overlap_records.sum(&:current_holding_count).positive?
+        return :lost_missing if overlap_records.sum(&:lm_count).positive?
+        return :withdrawn if overlap_records.sum(&:wd_count).positive?
 
         :unknown
       end
@@ -80,7 +112,9 @@ module Workflows
         [
           "item_id",
           "billing_entity",
-          "holdings_status"
+          "holdings_status",
+          "mapto_inst_id",
+          "mapped_holdings_status"
         ].join("\t")
       end
 
