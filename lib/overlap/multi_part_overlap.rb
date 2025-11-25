@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require "overlap/overlap"
 
 module Overlap
@@ -29,12 +27,28 @@ module Overlap
 
     def matching_holdings
       @matching_holdings ||= @cluster.holdings_by_org[@org]
-        &.select { |h| h.n_enum == @ht_item.n_enum || h.n_enum.nil? || h.n_enum == "" }
+        &.select do |h|
+          matching_enum?(h) || empty_enum?(h) || no_matches_for_holding_org?(h)
+        end
       @matching_holdings ||= []
     end
 
     def matching_count
       matching_holdings.count
+    end
+
+    private
+
+    def matching_enum?(holding)
+      holding.n_enum == @ht_item.n_enum
+    end
+
+    def empty_enum?(holding)
+      holding.n_enum.nil? || holding.n_enum == ""
+    end
+
+    def no_matches_for_holding_org?(holding)
+      @cluster.organizations_with_holdings_but_no_matches.include?(holding.organization)
     end
   end
 end

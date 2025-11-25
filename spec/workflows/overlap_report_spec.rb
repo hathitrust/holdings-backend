@@ -94,8 +94,8 @@ RSpec.describe Workflows::OverlapReport do
     end
 
     context "with two holdings and htitems" do
-      let(:h) { build(:holding, organization: "umich") }
-      let(:h2) { build(:holding, organization: "ualberta") }
+      let(:h) { build(:holding, ocn: 1, organization: "umich") }
+      let(:h2) { build(:holding, ocn: 2, organization: "ualberta") }
       let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
       let(:ht2) { build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd") }
 
@@ -126,21 +126,12 @@ RSpec.describe Workflows::OverlapReport do
       end
 
       it "has records for holdings that don't match HTItems" do
-        # holding has enumchron V.1
-        no_match = build(:holding, mono_multi_serial: "mpm", enum_chron: "V.1")
-        # ht item has enumchron V.2 but same OCN -- shouldn't match holding
-        ht_item = build(:ht_item, bib_fmt: "BK", ocns: [no_match.ocn], enum_chron: "V.2")
-
-        load_test_data(no_match, ht_item)
-
-        mock_solr_oclc_search(solr_response_for(ht_item))
-
-        # both are on the same catalog record but won't match
-        workflow_for_org(no_match.organization).run
-        recs = open_gz_report(no_match.organization).to_a
-        expected_rec = [no_match.ocn, no_match.local_id, no_match.mono_multi_serial,
-          "", "", "", "", ""].join("\t")
-        expect(recs.find { |r| r.match?(/^#{no_match.ocn}/) }).to eq(expected_rec + "\n")
+        # should include the ualberta holding even though it doesn't match any ht items
+        workflow_for_org("ualberta").run
+        recs = open_gz_report("ualberta").to_a
+        expected_rec = ["2", h2.local_id, h2.mono_multi_serial,
+          "", "", "", "", ""].join("\t") + "\n"
+        expect(recs).to include(expected_rec)
       end
     end
 

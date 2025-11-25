@@ -10,7 +10,14 @@ RSpec.describe Overlap::MultiPartOverlap do
     build(:ht_item,
       :mpm,
       enum_chron: "1",
-      n_enum: "1",
+      collection_code: "PU")
+  end
+
+  let(:htitem_with_enumchron_vol3) do
+    build(:ht_item,
+      :mpm,
+      ocns: ocns,
+      enum_chron: "3",
       collection_code: "PU")
   end
 
@@ -20,7 +27,6 @@ RSpec.describe Overlap::MultiPartOverlap do
     build(:ht_item,
       :mpm,
       enum_chron: "",
-      n_enum: "",
       ocns: ocns,
       collection_code: "PU")
   end
@@ -31,15 +37,14 @@ RSpec.describe Overlap::MultiPartOverlap do
     build(:holding,
       ocn: ocns.first,
       organization: "umich",
-      enum_chron: "1",
-      n_enum: "1")
+      enum_chron: "1")
   end
 
   let(:holding_lost_missing) do
     build(:holding,
       ocn: ocns.first,
       organization: holding_with_enumchron.organization,
-      n_enum: "1",
+      enum_chron: "1",
       status: "LM")
   end
 
@@ -47,13 +52,13 @@ RSpec.describe Overlap::MultiPartOverlap do
     build(:holding,
       ocn: ocns.first,
       organization: holding_with_enumchron.organization,
-      n_enum: "1",
+      enum_chron: "1",
       condition: "BRT",
       status: "WD")
   end
 
   before(:each) do
-    insert_htitem(htitem_with_enumchron)
+    load_test_data(htitem_with_enumchron, htitem_with_enumchron_vol3)
   end
 
   describe "#matching_holdings" do
@@ -95,10 +100,33 @@ RSpec.describe Overlap::MultiPartOverlap do
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
-    it "does not find holdings with the wrong enum" do
-      holding_wrong_enumchron = create(:holding, ocn: c.ocns.first, enum_chron: "2", n_enum: "2")
-      overlap = described_class.new(holding_wrong_enumchron.organization, htitem_with_enumchron)
-      expect(overlap.matching_holdings).to be_a(Enumerable)
+    it "finds all org holdings if none of the enums match" do
+      # ht has 1 and 3
+      # smu reports 1863 and 1865
+      # we ask: does smu hold 1? it does.
+      #
+      #
+      # the assumption in this case is that the depositor cataloged them
+      # differently from the institution reported holdings, so we assume they
+      # hold them all.
+
+      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "1863")
+      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "1865")
+
+      overlap = described_class.new("smu", htitem_with_enumchron)
+      expect(overlap.matching_holdings.count).to eq(2)
+    end
+
+    it "does not report a match when a holding matches some other item on the record" do
+      # ht has 1 and 3
+      # smu reports v.3 and v.5
+      # we ask: does smu hold 1? it should not.
+
+      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "v.3")
+      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "v.5")
+
+      overlap = described_class.new("smu", htitem_with_enumchron)
+
       expect(overlap.matching_holdings.count).to eq(0)
     end
 

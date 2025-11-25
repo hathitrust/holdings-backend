@@ -193,15 +193,21 @@ RSpec.describe FrequencyTable do
       end
 
       context "with Serials" do
+        # umich deposited one htitem,
+        # upenn deposited the other,
+        # smu reports holds the serial
+        #
+        # smu should be considered to hold both
+        # umich and upenn each hold only their own item
         let(:ht_serial) do
-          build(:ht_item, :ser, access: "deny", rights: "ic")
+          build(:ht_item, :ser, access: "deny", rights: "ic", billing_entity: "umich")
         end
         let(:ht_serial2) do
           build(
             :ht_item, :ser,
             ht_bib_key: ht_serial.ht_bib_key,
             ocns: ht_serial.ocns,
-            billing_entity: "not_ht_serial.billing_entity",
+            billing_entity: "upenn",
             access: "deny",
             rights: "ic"
           )
@@ -209,26 +215,14 @@ RSpec.describe FrequencyTable do
         let(:holding_serial) do
           build(:holding,
             ocn: ht_serial.ocns.first,
-            organization: "not_a_collection")
-        end
-
-        before(:each) do
-          Services.ht_organizations.add_temp(
-            DataSources::HTOrganization.new(inst_id: "not_ht_serial.billing_entity",
-              country_code: "xx", weight: 1.0, status: 1)
-          )
-          Services.ht_organizations.add_temp(
-            DataSources::HTOrganization.new(inst_id: "not_a_collection", country_code: "xx",
-              weight: 1.0, status: 1)
-          )
+            organization: "smu")
         end
 
         it "assigns all serials to the member and ht_item billing entities affect hshare" do
           load_test_data(ht_serial, ht_serial2, holding_serial)
           [ht_serial, ht_serial2].each { |item| ft.add_ht_item(item) }
-          # ht_serial.billing_entity + holding_serial.org and
-          # ht_serial2.billing_entity + holding_serial.org
-          expect(ft.frequencies(organization: holding_serial.organization, format: :ser)).to eq([frequency_2_2])
+          # umich + smu hold ht_serial, and upenn + smu hold ht_serial2
+          expect(ft.frequencies(organization: "smu", format: :ser)).to eq([frequency_2_2])
         end
       end
     end
