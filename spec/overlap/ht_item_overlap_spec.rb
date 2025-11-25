@@ -51,6 +51,8 @@ RSpec.describe Overlap::HtItemOverlap do
     describe "#organizations_with_holdings" do
       it "only returns the contributor" do
         ocnless_spm = build(:ht_item, :spm, ocns: [], collection_code: "PU")
+        load_test_data(ocnless_spm)
+
         overlap = described_class.new(ocnless_spm)
         expect(overlap.organizations_with_holdings).to eq(["upenn"])
       end

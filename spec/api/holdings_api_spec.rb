@@ -337,6 +337,13 @@ RSpec.describe HoldingsAPI do
   end
 
   describe "v1/item_held_by" do
+    it "returns the depositor only for an ocnless item" do
+      ocnless = build(:ht_item, ocns: [])
+      load_test_data(ocnless)
+      response = parse_response("item_held_by", item_id: ocnless.item_id)
+      expect(response["organizations"]).to contain_exactly(ocnless.billing_entity)
+    end
+
     context "spm" do
       it "returns an application error if the item_id does not match an ht_item" do
         response = parse_response("item_held_by", item_id: item_id_1)
@@ -370,21 +377,26 @@ RSpec.describe HoldingsAPI do
       it "reports only those organizations that match the mpm" do
         load_test_data(
           htitem_2,
+          build(:ht_item, :mpm, ocns: ocn2, enum_chron: "6"),
           build(:holding, organization: "umich", ocn: ocn, enum_chron: "1-5"),
           build(:holding, organization: "stanford", ocn: ocn, enum_chron: ""),
-          build(:holding, organization: "smu", ocn: ocn, enum_chron: "99")
+          build(:holding, organization: "smu", ocn: ocn, enum_chron: "1922-1927"),
+          build(:holding, organization: "ualberta", ocn: ocn, enum_chron: "6")
         )
         response = parse_response("item_held_by", item_id: item_id_2)
 
         # should include
         #  * umich (because enumchron matches),
         #  * upenn (because they deposited the item)
-        #  * stanford (because none of their holdings had enumchron matches, so we consider that all do)
+        #  * stanford (because their holdings didn't have enumchron, so are considered to match)
+        #  * smu (none of their holdings had enumchron matches, so we consider
+        #  that all do; we assume they were cataloged differently so match
+        #  generously)
         #
         # should NOT include
-        #  * smu (because their enumchron doesn't match)
+        #  * ualberta (matches a different item enumchron)
         #  * anybody else
-        expect(response["organizations"]).to contain_exactly("stanford", "umich", "upenn")
+        expect(response["organizations"]).to contain_exactly("stanford", "umich", "upenn", "smu")
       end
     end
   end

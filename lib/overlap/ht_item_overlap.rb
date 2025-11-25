@@ -17,16 +17,7 @@ module Overlap
 
     # Find all organization with holdings that match the given ht_item
     def organizations_with_holdings
-      if @cluster.format != "mpm"
-        # all orgs with a holding hold every spm or ser in cluster
-        (@cluster.org_enums.keys + [@ht_item.billing_entity]).uniq
-      else
-
-        # ht_items match on enum and holdings without enum
-        (@cluster.holding_enum_orgs[""] +
-         @cluster.holding_enum_orgs[@ht_item.n_enum] +
-         @cluster.organizations_with_holdings_but_no_matches + [@ht_item.billing_entity]).uniq
-      end
+      ClusterOverlap.new(@cluster).for_item(@ht_item).map(&:org)
     end
 
     # Find all *members* with holdings that match the given ht_item
