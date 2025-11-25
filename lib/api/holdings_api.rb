@@ -53,16 +53,20 @@ class HoldingsAPI < Sinatra::Base
     ht_item = Clusterable::HtItem.find(item_id: item_id)
     cluster = ht_item.cluster
 
-    organizations = case constraint
+    overlaps = Overlap::ClusterOverlap.new(cluster).for_item(ht_item)
+
+    relevant_overlaps = case constraint
     when nil
-      cluster.organizations_in_cluster
+      overlaps
+      # cluster.organizations_in_cluster
     when "brlm"
-      cluster.access_counts.select { |org, count| count > 0 }.keys.sort
+      overlaps.select { |o| o.access_count > 0 }
+    #      cluster.access_counts.select { |org, count| count > 0 }.keys.sort
     else
       raise ArgumentError, "Invalid constraint."
     end
 
-    return_doc = {"organizations" => organizations}
+    return_doc = {"organizations" => relevant_overlaps.map(&:org)}
     return_doc.to_json
   end
 
