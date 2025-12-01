@@ -7,6 +7,7 @@ APP = Rack::Builder.parse_file("bin/api_config.ru")
 
 RSpec.describe HoldingsAPI do
   include Rack::Test::Methods
+
   include_context "with tables for holdings"
 
   let(:app) { APP }
