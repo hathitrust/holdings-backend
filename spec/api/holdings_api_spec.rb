@@ -21,7 +21,7 @@ RSpec.describe HoldingsAPI do
   let(:ocn2) { [123, 456] }
   let(:enum_chron) { "v.1-5 (1901-1905)" }
   let(:n_enum) { "1-5" }
-  let(:htitem_2) { build(:ht_item, :mpm, item_id: item_id_2, ocns: ocn2, enum_chron: enum_chron) }
+  let(:htitem_2) { build(:ht_item, :mpm, item_id: item_id_2, ocns: ocn2, enum_chron: enum_chron, billing_entity: "upenn") }
 
   # ht_item 3 is an spm with 3 ocns
   let(:item_id_3) { "test.123456789" }
@@ -114,7 +114,7 @@ RSpec.describe HoldingsAPI do
     it "returns 0 if no holdings (and not depositor)" do
       load_test_data(htitem_1)
       response = parse_response("item_access", item_id: item_id_1, organization: "upenn")
-      expect(response["ocns"]).to eq [ocn]
+      expect(response["ocns"]).to contain_exactly(ocn)
       expect(response["copy_count"]).to eq 0
     end
 
@@ -130,7 +130,7 @@ RSpec.describe HoldingsAPI do
         build(:holding, organization: "umich", ocn: ocn)
       )
       response = parse_response("item_access", item_id: item_id_1, organization: "umich")
-      expect(response["ocns"]).to eq [ocn]
+      expect(response["ocns"]).to contain_exactly(ocn)
       expect(response["copy_count"]).to eq 1
     end
 
@@ -142,7 +142,7 @@ RSpec.describe HoldingsAPI do
         build(:holding, organization: "umich", ocn: ocn)
       )
       response = parse_response("item_access", item_id: item_id_1, organization: "umich")
-      expect(response["ocns"]).to eq [ocn]
+      expect(response["ocns"]).to contain_exactly(ocn)
       expect(response["copy_count"]).to eq 3
     end
 
@@ -155,11 +155,11 @@ RSpec.describe HoldingsAPI do
       )
       # umich, 1 holding
       response = parse_response("item_access", item_id: item_id_1, organization: "umich")
-      expect(response["ocns"]).to eq [ocn]
+      expect(response["ocns"]).to contain_exactly(ocn)
       expect(response["copy_count"]).to eq 1
       # smu, 2 holdings
       response = parse_response("item_access", item_id: item_id_1, organization: "smu")
-      expect(response["ocns"]).to eq [ocn]
+      expect(response["ocns"]).to contain_exactly(ocn)
       expect(response["copy_count"]).to eq 2
     end
 
@@ -169,7 +169,7 @@ RSpec.describe HoldingsAPI do
         build(:holding, organization: "umich", ocn: ocn)
       )
       response = parse_response("item_access", item_id: item_id_3, organization: "smu")
-      expect(response["ocns"]).to eq [123, 456, 789]
+      expect(response["ocns"]).to contain_exactly(123, 456, 789)
     end
 
     it "gets the counts for holdings with ocns matching the item" do
@@ -337,31 +337,67 @@ RSpec.describe HoldingsAPI do
   end
 
   describe "v1/item_held_by" do
-    it "returns an application error if the item_id does not match an ht_item" do
-      response = parse_response("item_held_by", item_id: item_id_1)
-      expect(response["application_error"]).to eq "no matching data"
+    it "returns the depositor only for an ocnless item" do
+      ocnless = build(:ht_item, ocns: [])
+      load_test_data(ocnless)
+      response = parse_response("item_held_by", item_id: ocnless.item_id)
+      expect(response["organizations"]).to contain_exactly(ocnless.billing_entity)
     end
 
-    it "returns an array with the submitter if no organization has reported holdings matching ht_item" do
-      load_test_data(htitem_1)
-      response = parse_response("item_held_by", item_id: item_id_1)
-      expect(response["organizations"]).to eq ["umich"]
+    context "spm" do
+      it "returns an application error if the item_id does not match an ht_item" do
+        response = parse_response("item_held_by", item_id: item_id_1)
+        expect(response["application_error"]).to eq "no matching data"
+      end
+
+      it "returns an array with the submitter if no organization has reported holdings matching ht_item" do
+        load_test_data(htitem_1)
+        response = parse_response("item_held_by", item_id: item_id_1)
+        expect(response["organizations"]).to contain_exactly("umich")
+      end
+
+      it "returns an array with the submitter if only submitter has reported holdings matching ht_item" do
+        load_test_data(htitem_1, build(:holding, organization: "umich", ocn: 123))
+        response = parse_response("item_held_by", item_id: item_id_1)
+        expect(response["organizations"]).to contain_exactly("umich")
+      end
+
+      it "returns an array with all organizations with holdings matching ht_item" do
+        load_test_data(
+          htitem_1,
+          build(:holding, organization: "umich", ocn: ocn),
+          build(:holding, organization: "smu", ocn: ocn)
+        )
+        response = parse_response("item_held_by", item_id: item_id_1)
+        expect(response["organizations"]).to contain_exactly("smu", "umich")
+      end
     end
 
-    it "returns an array with the submitter if only submitter has reported holdings matching ht_item" do
-      load_test_data(htitem_1, build(:holding, organization: "umich", ocn: 123))
-      response = parse_response("item_held_by", item_id: item_id_1)
-      expect(response["organizations"]).to eq ["umich"]
-    end
+    context "mpm" do
+      it "reports only those organizations that match the mpm" do
+        load_test_data(
+          htitem_2,
+          build(:ht_item, :mpm, ocns: ocn2, enum_chron: "6"),
+          build(:holding, organization: "umich", ocn: ocn, enum_chron: "1-5"),
+          build(:holding, organization: "stanford", ocn: ocn, enum_chron: ""),
+          build(:holding, organization: "smu", ocn: ocn, enum_chron: "1922-1927"),
+          build(:holding, organization: "ualberta", ocn: ocn, enum_chron: "6")
+        )
+        response = parse_response("item_held_by", item_id: item_id_2)
 
-    it "returns an array with all organizations with holdings matching ht_item" do
-      load_test_data(
-        htitem_1,
-        build(:holding, organization: "umich", ocn: ocn),
-        build(:holding, organization: "smu", ocn: ocn)
-      )
-      response = parse_response("item_held_by", item_id: item_id_1)
-      expect(response["organizations"].sort).to eq ["smu", "umich"]
+        # should include
+        #  * umich (because enumchron matches),
+        #  * upenn (because they deposited the item)
+        #  * stanford (because their holdings didn't have enumchron, so are considered to match)
+        #  * smu (none of their holdings had enumchron matches, so we consider
+        #  that all do; we assume they were cataloged differently so match
+        #  generously)
+        #
+        # should NOT include
+        #  * ualberta (matches a different item enumchron)
+        #  * anybody else
+        expect(response["organizations"]).to contain_exactly("stanford", "umich", "upenn", "smu")
+      end
     end
   end
 
@@ -401,21 +437,21 @@ RSpec.describe HoldingsAPI do
     it "reports nothing if there are no holdings" do
       load_test_data(htitem_1)
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq []
+      expect(response["organizations"]).to be_empty
     end
 
     it "reports nothing if all holdings are status:CH & condition:''" do
       load_test_data(htitem_1)
       load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "CH", condition: ""))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq []
+      expect(response["organizations"]).to be_empty
     end
 
     it "reports nothing if all holdings are status:WD & condition:''" do
       load_test_data(htitem_1)
       load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "WD", condition: ""))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq []
+      expect(response["organizations"]).to be_empty
     end
 
     it "reports the organizations with LM holdings" do
@@ -423,7 +459,7 @@ RSpec.describe HoldingsAPI do
       load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "LM", condition: ""))
       load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq ["a"]
+      expect(response["organizations"]).to contain_exactly("a")
     end
 
     it "reports the organizations with BRT holdings" do
@@ -431,7 +467,7 @@ RSpec.describe HoldingsAPI do
       load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: nil, condition: "BRT"))
       load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq ["a"]
+      expect(response["organizations"]).to contain_exactly("a")
     end
 
     it "reports the organizations with BRT+LM holdings" do
@@ -439,7 +475,7 @@ RSpec.describe HoldingsAPI do
       load_test_data(build(:holding, organization: "a", ocn: htitem_1.ocns.first, status: "LM", condition: "BRT"))
       load_test_data(build(:holding, organization: "b", ocn: htitem_1.ocns.first, status: nil, condition: ""))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq ["a"]
+      expect(response["organizations"]).to contain_exactly("a")
     end
 
     it "reports all the relevant organizations" do
@@ -449,7 +485,7 @@ RSpec.describe HoldingsAPI do
       load_test_data(build(:holding, organization: "c", ocn: htitem_1.ocns.first, status: "LM", condition: "BRT"))
       load_test_data(build(:holding, organization: "d", ocn: htitem_1.ocns.first, status: "CH", condition: "BRT"))
       response = parse_response("item_held_by", item_id: item_id_1, constraint: "brlm")
-      expect(response["organizations"]).to eq ["a", "b", "c", "d"]
+      expect(response["organizations"]).to contain_exactly("a", "b", "c", "d")
     end
   end
 end

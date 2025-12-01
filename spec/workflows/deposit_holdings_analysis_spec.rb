@@ -49,8 +49,21 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
 
-        it "returns status not held if depositing institution reports holding only copies with different enumchrons" do
-          load_test_data(ht_item, holding_for(ht_item, enum_chron: "volume 99"))
+        it "returns status held if depositing institution reports holding only copies with different enumchrons" do
+          # see multi_part_overlap_spec.rb - case of finding all org holdings
+          # if none of the enums match
+
+          # TODO: may want to specifically analyze this case separately
+          load_test_data(ht_item, holding_for(ht_item, enum_chron: "volume
+99"))
+
+          expect(analyzer.analyze(ht_item)).to eq(:held)
+        end
+
+        it "returns status not held if depositing institution reports holding a copy with enumchron that matches a different item" do
+          load_test_data(ht_item,
+            build(:ht_item, :mpm, ocns: ht_item.ocns, enum_chron: "v.3"),
+            holding_for(ht_item, enum_chron: "v.3"))
 
           expect(analyzer.analyze(ht_item)).to eq(:not_held)
         end
