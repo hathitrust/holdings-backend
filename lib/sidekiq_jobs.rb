@@ -85,6 +85,7 @@ module Jobs
 
   class Common
     include Sidekiq::Job
+
     def perform(klass, options = {}, *)
       Object.const_get(klass).new(*, **Jobs.symbolize_keys(options)).run
     end
@@ -120,6 +121,7 @@ module Jobs
   module Load
     class Commitments
       include Sidekiq::Job
+
       def perform(filename)
         Services.logger.info "Loading Shared Print Commitments: #{filename}"
         Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.for(filename))
@@ -129,6 +131,7 @@ module Jobs
 
     class Concordance
       include Sidekiq::Job
+
       def perform(filename_or_date)
         batch_loader = Loader::ConcordanceLoader.for(filename_or_date)
         Services.logger.info "Loading with #{batch_loader.class} for #{filename_or_date}"
@@ -146,6 +149,7 @@ module Jobs
 
     class Holdings
       include Sidekiq::Job
+
       def perform(filename)
         Services.logger.info "Adding Print Holdings from #{filename}."
         Loader::FileLoader.new(batch_loader: Loader::HoldingLoader.for(filename))
@@ -158,6 +162,7 @@ module Jobs
   module Concordance
     class Validate
       include Sidekiq::Job
+
       def perform(infile, outfile)
         ConcordanceProcessing.new.validate(infile, outfile)
       end
@@ -165,6 +170,7 @@ module Jobs
 
     class Delta
       include Sidekiq::Job
+
       def perform(old, new)
         ConcordanceProcessing.new.delta(old, new)
       end
@@ -174,6 +180,7 @@ module Jobs
   module Backup
     class Holdings
       include Sidekiq::Job
+
       def perform(organization, mono_multi_serial)
         Services.logger.info "Starting backup job for #{organization}:#{mono_multi_serial}"
         backup_obj = Scrub::PreLoadBackup.new(
@@ -189,6 +196,7 @@ module Jobs
   module SharedPrintOps
     class Deprecate
       include Sidekiq::Job
+
       def perform(verbose, infiles)
         SharedPrint::Deprecator.new(verbose: verbose).run(infiles)
       end

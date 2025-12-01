@@ -22,7 +22,7 @@ module Scrub
     SPEC_RX = {
       # A single regex for file name pass/fail.
       FILENAME: /^
-      [a-z\-]+               # member_id
+      [a-z-]+               # member_id
       _(mix|mon|spm|mpm|ser) # item_type
       _(full|partial)        # update_type
       _\d{8}                 # date_str (loosest possible YYYYMMDD check)
@@ -35,7 +35,7 @@ module Scrub
       FILENAME_PART_DELIM: /[_.]/,
 
       # If filename fail, further regexes to discover why.
-      MEMBER_ID: /^[a-z_\-]+$/,
+      MEMBER_ID: /^[a-z_-]+$/,
       ITEM_TYPE: /^(mix|mon|spm|mpm|ser)$/,
       ITEM_TYPE_CONTEXT: /_(mix|mon|spm|mpm|ser)_/,
       UPDATE_TYPE: /^(full|partial)$/,
