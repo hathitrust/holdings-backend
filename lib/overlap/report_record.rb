@@ -13,7 +13,7 @@ module Overlap
     attr_reader :organization, :ocn, :local_id, :item_type, :rights, :access,
       :catalog_id, :volume_id, :enum_chron
 
-    def initialize(holding: nil, overlap: nil, ht_item: overlap&.ht_item)
+    def initialize(holding: nil, ht_item: nil)
       @organization = holding.organization
       @ocn = holding.ocn
       @local_id = holding.local_id
@@ -51,6 +51,21 @@ module Overlap
         access = "allow"
       end
       access
+    end
+
+    def self.header_fields
+      ["oclc",
+        "local_id",
+        "item_type",
+        "rights",
+        "access",
+        "catalog_id",
+        "volume_id",
+        "enum_chron"]
+    end
+
+    def self.header
+      header_fields.join("\t")
     end
   end
 end
