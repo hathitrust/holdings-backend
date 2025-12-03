@@ -335,6 +335,16 @@ RSpec.describe HoldingsAPI do
       response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
       expect(response["copy_count"]).to eq 2
     end
+
+    it "identifies deposited items as deposited even if not held" do
+      load_test_data(htitem_1)
+
+      response = parse_response("item_access", organization: "umich", item_id: htitem_1.item_id)
+      expect(response["deposited"]).to eq 1
+
+      response = parse_response("item_access", organization: "upenn", item_id: htitem_1.item_id)
+      expect(response["deposited"]).to eq 0
+    end
   end
 
   describe "v1/item_held_by" do

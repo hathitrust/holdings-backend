@@ -30,11 +30,13 @@ class HoldingsAPI < Sinatra::Base
     access_count = overlap_records.map(&:access_count).reduce(:+)
     copy_count = overlap_records.map(&:copy_count).reduce(:+)
     currently_held_count = overlap_records.map(&:current_holding_count).reduce(:+)
+    deposited = (ht_item.billing_entity == billing_entity(organization)) ? 1 : 0
 
     return_doc = {
       "brlm_count" => access_count,
       "copy_count" => copy_count,
       "currently_held_count" => currently_held_count,
+      "deposited" => deposited,
       "format" => ht_item.cluster.format,
       "n_enum" => ht_item.n_enum,
       "ocns" => ht_item.ocns.sort
@@ -135,5 +137,14 @@ class HoldingsAPI < Sinatra::Base
     end
 
     raise ArgumentError, "no matching data"
+  end
+
+  # @param String organization code
+  # @return String mapto organization code which may be the same as the input
+  def billing_entity(organization)
+    if Services.ht_organizations.mapto(organization)
+      return organization
+    end
+    Services.ht_organizations.organizations[organization].mapto_inst_id
   end
 end
