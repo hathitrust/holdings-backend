@@ -4,16 +4,10 @@ require "spec_helper"
 require "overlap/report_record"
 
 RSpec.describe Overlap::ReportRecord do
+  let(:holding) { build(:holding, mono_multi_serial: "spm") }
+  let(:ht_item) { build(:ht_item, :spm, rights: "ic") }
   let(:eo) do
-    described_class.new(organization: "umich",
-      ocn: rand(1_000_000),
-      local_id: rand(1_000_000).to_s,
-      item_type: "spm",
-      rights: "ic",
-      access: "deny",
-      catalog_id: rand(1_000_000),
-      volume_id: rand(1_000_000).to_s,
-      enum_chron: "V.1")
+    described_class.new(holding: holding, ht_item: ht_item)
   end
 
   describe "#initialize" do
@@ -30,11 +24,11 @@ RSpec.describe Overlap::ReportRecord do
     end
 
     it "has an access" do
-      expect(["deny", "allow"].include?(eo.access)).to be true
+      expect(eo.access).to eq("deny")
     end
 
     it "has a rights" do
-      expect(["pd", "ic", "und"].include?(eo.rights)).to be true
+      expect(eo.rights).to eq("ic")
     end
 
     it "has a catalog_id" do
@@ -72,7 +66,7 @@ RSpec.describe Overlap::ReportRecord do
     it "creates a report record in order: ocn, local_id, item_type, rights, access, catalog_id,
          volume_id, enum_chron" do
            record = "#{eo.ocn}\t#{eo.local_id}\tspm\tic\tdeny" \
-             "\t#{eo.catalog_id}\t#{eo.volume_id}\tV.1"
+             "\t#{eo.catalog_id}\t#{eo.volume_id}\t"
            expect(eo.to_s).to eq(record)
          end
   end

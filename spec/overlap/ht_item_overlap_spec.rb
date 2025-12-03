@@ -48,31 +48,31 @@ RSpec.describe Overlap::HtItemOverlap do
   # this adds the given item and holdings to cluster c
 
   context "with an ocn-less spm" do
-    describe "#organizations_with_holdings" do
+    describe "#matching_orgs" do
       it "only returns the contributor" do
         ocnless_spm = build(:ht_item, :spm, ocns: [], collection_code: "PU")
         load_test_data(ocnless_spm)
 
         overlap = described_class.new(ocnless_spm)
-        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+        expect(overlap.matching_orgs).to eq(["upenn"])
       end
     end
   end
 
   context "with an ocn-less mpm" do
-    describe "#organizations_with_holdings" do
+    describe "#matching_orgs" do
       it "only returns the contributor" do
         ocnless_mpm = build(:ht_item, :mpm, ocns: [], collection_code: "PU")
         load_test_data(ocnless_mpm)
 
         overlap = described_class.new(ocnless_mpm)
-        expect(overlap.organizations_with_holdings).to eq(["upenn"])
+        expect(overlap.matching_orgs).to eq(["upenn"])
       end
     end
   end
 
   context "with an spm cluster and spm holdings" do
-    describe "#organizations_with_holdings" do
+    describe "#matching_orgs" do
       before(:each) do
         load_test_data(spm, spm_holding1, spm_holding2, spm_holding3)
       end
@@ -80,15 +80,15 @@ RSpec.describe Overlap::HtItemOverlap do
       it "returns all organizations that overlap with an item" do
         overlap = described_class.new(c.ht_items.first)
         # billing_entity: upenn, holdings: smu, umich, non_matching: stanford
-        expect(overlap.organizations_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(4)
       end
 
       it "only returns unique organizations" do
         # i.e. if we add another holding for an org that already holds,
-        # organizations_with_holdings.count should stay the same
+        # matching_orgs.count should stay the same
         overlap = described_class.new(c.ht_items.first)
         expect(c.holdings.count).to eq(3)
-        expect(overlap.organizations_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(4)
         # add 1 more holding to a member that already holds
         create(
           :holding,
@@ -97,17 +97,17 @@ RSpec.describe Overlap::HtItemOverlap do
           organization: "smu"
         )
         c.invalidate_cache
-        # Number of holdings goes up, overlap.organizations_with_holdings.count does not
+        # Number of holdings goes up, overlap.matching_orgs.count does not
         expect(c.holdings.count).to eq(4)
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(4)
       end
     end
 
-    describe "members_with_holdings" do
+    describe "matching_members" do
       # Add a fake non-member with a holding,
-      # and see that it is included in overlap.organizations_with_holdings,
-      # but excluded from overlap.members_with_holdings.
+      # and see that it is included in overlap.matching_orgs,
+      # but excluded from overlap.matching_members.
       let(:non_member_holding) do
         Services.ht_organizations.add_temp(
           DataSources::HTOrganization.new(
@@ -132,8 +132,8 @@ RSpec.describe Overlap::HtItemOverlap do
 
         overlap = described_class.new(c.ht_items.first)
         # billing_entity: ualberta, holdings: smu, umich, excluded: non_member, non_matching: stanford
-        expect(overlap.organizations_with_holdings.count).to eq(5)
-        expect(overlap.members_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(5)
+        expect(overlap.matching_members.count).to eq(4)
       end
     end
   end
@@ -168,7 +168,7 @@ RSpec.describe Overlap::HtItemOverlap do
         n_enum: "2")
     end
 
-    describe "#organizations_with_holdings" do
+    describe "#matching_orgs" do
       before(:each) do
         load_test_data(mpm, mpm_holding1, mpm_holding2, mpm_non_match_holding)
       end
@@ -176,12 +176,12 @@ RSpec.describe Overlap::HtItemOverlap do
       it "returns all organizations that overlap with an item" do
         overlap = described_class.new(c.ht_items.first)
         # billing_entity: upenn, holdings: smu, umich, non_matching: stanford
-        expect(overlap.organizations_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(4)
       end
 
       it "member should match mpm if none of their holdings match" do
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings).to include("stanford")
+        expect(overlap.matching_orgs).to include("stanford")
       end
 
       it "does not include non-matching organizations that match something else" do
@@ -193,7 +193,7 @@ RSpec.describe Overlap::HtItemOverlap do
         load_test_data(mpm2)
         overlap = described_class.new(mpm2)
         expect(overlap.ht_item.n_enum).to eq("2")
-        expect(overlap.organizations_with_holdings).not_to include("umich")
+        expect(overlap.matching_orgs).not_to include("umich")
       end
 
       it "only returns unique organizations" do
@@ -208,7 +208,7 @@ RSpec.describe Overlap::HtItemOverlap do
         load_test_data(holding)
         expect(CalculateFormat.new(c).cluster_format).to eq("mpm")
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings.count).to eq(4)
+        expect(overlap.matching_orgs.count).to eq(4)
       end
 
       it "matches if holding enum is ''" do
@@ -220,7 +220,7 @@ RSpec.describe Overlap::HtItemOverlap do
 
         load_test_data(empty_holding)
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings).to include("umich")
+        expect(overlap.matching_orgs).to include("umich")
       end
 
       it "matches if holding enum is '', but chron exists" do
@@ -232,7 +232,7 @@ RSpec.describe Overlap::HtItemOverlap do
           n_chron: "Aug")
         load_test_data(almost_empty_holding)
         overlap = described_class.new(c.ht_items.first)
-        expect(overlap.organizations_with_holdings).to include("umich")
+        expect(overlap.matching_orgs).to include("umich")
       end
 
       it "does not match if ht item enum is ''" do
@@ -243,7 +243,7 @@ RSpec.describe Overlap::HtItemOverlap do
           n_enum: "")
         load_test_data(empty_mpm)
         overlap = described_class.new(empty_mpm)
-        expect(overlap.organizations_with_holdings).to eq([mpm_non_match_holding.organization,
+        expect(overlap.matching_orgs).to eq([mpm_non_match_holding.organization,
           empty_mpm.billing_entity])
       end
     end
