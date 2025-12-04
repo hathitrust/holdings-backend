@@ -329,11 +329,50 @@ RSpec.describe HoldingsAPI do
       load_test_data(build(:holding, organization: "ualberta", ocn: ocn))
       response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
       expect(response["copy_count"]).to eq 2
+      # Can also query by ualberta and stanford and get the same result
+      response = parse_response("item_access", organization: "ualberta", item_id: htitem_1.item_id)
+      expect(response["copy_count"]).to eq 2
+      response = parse_response("item_access", organization: "stanford", item_id: htitem_1.item_id)
+      expect(response["copy_count"]).to eq 2
 
       # umich is not mapped to stanford_mapped, so their holdings should not count
       load_test_data(build(:holding, organization: "umich", ocn: ocn))
       response = parse_response("item_access", organization: "stanford_mapped", item_id: htitem_1.item_id)
       expect(response["copy_count"]).to eq 2
+    end
+
+    describe "deposited flag" do
+      # both stanford and ualberta map to stanford_mapped
+      # ht_item deposited by ualberta
+      # ualberta reports deposited=1
+      # stanford reports deposited=1
+      # everyone else reports deposited=0
+
+      let(:ht_item) { build(:ht_item, :spm, item_id: item_id_1, billing_entity: "ualberta", ocns: [ocn]) }
+      let(:holding) { build(:holding, ocn: ocn, status: "CH", organization: "stanford") }
+      let(:holding2) { build(:holding, ocn: ocn, status: "CH", organization: "umich") }
+
+      before(:each) { load_test_data(ht_item, holding, holding2) }
+
+      it "returns 1 for depositor" do
+        response = parse_response("item_access", organization: "ualberta", item_id: ht_item.item_id)
+        expect(response["deposited"]).to eq 1
+      end
+
+      it "returns 1 for org with same mapto" do
+        response = parse_response("item_access", organization: "stanford", item_id: ht_item.item_id)
+        expect(response["deposited"]).to eq 1
+      end
+
+      it "returns 1 for mapto org" do
+        response = parse_response("item_access", organization: "stanford", item_id: ht_item.item_id)
+        expect(response["deposited"]).to eq 1
+      end
+
+      it "returns 0 for different org" do
+        response = parse_response("item_access", organization: "umich", item_id: ht_item.item_id)
+        expect(response["deposited"]).to eq 0
+      end
     end
   end
 
