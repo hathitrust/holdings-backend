@@ -156,6 +156,14 @@ RSpec.describe Workflows::OverlapReport do
           lines = open_gz_report(h.organization).to_a.map(&:strip).map { |x| x.split("\t") }
           expect(lines[1..2].map(&:last)).to contain_exactly("1", "2")
         end
+
+        it "handles holdings with no overlap" do
+          load_test_data(build(:holding, ocn: 3, organization: "umich"))
+          workflow.run
+          # header + two lines for htitem maching holding "h" plus one line for
+          # non-match loaded above
+          expect(open_gz_report(h.organization).to_a.size).to eq(4)
+        end
       end
     end
 
