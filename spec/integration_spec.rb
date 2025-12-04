@@ -145,6 +145,12 @@ RSpec.describe "phctl integration" do
       expect(File.size("#{ENV["TEST_TMP"]}/overlap_report_remote/umich-hathitrust-member-data/analysis/overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end
 
+    it "Overlap with matching members counts produces output" do
+      phctl(*%w[workflow overlap umich --test-mode --matching-members-count])
+
+      expect(File.size("#{ENV["TEST_TMP"]}/overlap_report_remote/umich-hathitrust-member-data/analysis/overlap_umich_#{Date.today}.tsv.gz")).to be > 0
+    end
+
     it "deposit holdings analysis produces output" do
       phctl(*%w[workflow deposit_holdings_analysis --test-mode])
 

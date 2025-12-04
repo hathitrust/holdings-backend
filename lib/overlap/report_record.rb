@@ -10,23 +10,22 @@ module Overlap
   # - volume_id
   # - enum_chron
   class ReportRecord
-    attr_accessor :organization, :ocn, :local_id, :item_type, :rights, :access,
+    attr_reader :organization, :ocn, :local_id, :item_type, :rights, :access,
       :catalog_id, :volume_id, :enum_chron
 
-    def initialize(organization:, ocn:, local_id:, item_type: "", rights: "", access: "",
-      catalog_id: "", volume_id: "", enum_chron: "")
-      @organization = organization
-      @ocn = ocn
-      @local_id = local_id
-      @item_type = item_type || ""
-      @rights = rights || ""
-      @access = convert_access(rights, access, organization) || ""
-      @catalog_id = catalog_id || ""
-      @volume_id = volume_id || ""
-      @enum_chron = enum_chron || ""
+    def initialize(holding: nil, ht_item: nil)
+      @organization = holding.organization
+      @ocn = holding.ocn
+      @local_id = holding.local_id
+      @item_type = holding&.mono_multi_serial
+      @rights = ht_item&.rights || ""
+      @access = convert_access(rights, ht_item&.access, organization) || ""
+      @catalog_id = ht_item&.ht_bib_key || ""
+      @volume_id = ht_item&.item_id || ""
+      @enum_chron = ht_item&.enum_chron || ""
     end
 
-    def to_s
+    def fields
       [ocn,
         local_id,
         item_type,
@@ -34,7 +33,11 @@ module Overlap
         access,
         catalog_id,
         volume_id,
-        enum_chron].join("\t")
+        enum_chron]
+    end
+
+    def to_s
+      fields.join("\t")
     end
 
     # Handles access allow/deny for non-us organizations
@@ -48,6 +51,21 @@ module Overlap
         access = "allow"
       end
       access
+    end
+
+    def self.header_fields
+      ["oclc",
+        "local_id",
+        "item_type",
+        "rights",
+        "access",
+        "catalog_id",
+        "volume_id",
+        "enum_chron"]
+    end
+
+    def self.header
+      header_fields.join("\t")
     end
   end
 end

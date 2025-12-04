@@ -13,9 +13,18 @@ module Workflows
   #
   # Jobs are run on files containing the given records_per_job lines (default 10,000)
   class MapReduce
+    def self.to_class(maybe_class)
+      case maybe_class
+      when Class
+        maybe_class
+      else
+        Object.const_get(maybe_class.to_s)
+      end
+    end
+
     class Callback
       def on_success(_status, options)
-        reducer = Object.const_get(options["component_class"])
+        reducer = MapReduce.to_class(options["component_class"])
         reducer_params = Jobs.symbolize(options["params"])
         reducer.new(**reducer_params).run
 

@@ -237,12 +237,18 @@ module PHCTL
       run_workflow(components)
     end
 
-    desc "overlap ORGANIZATION", "Generate an overlap report for the given organization"
+    desc "overlap ORGANIZATION [--matching-members-count]", "Generate an overlap report for the given organization"
+    option :matching_members_count, type: :boolean, desc: "Include count of HT members that report holdings for each item"
     def overlap_workflow(org)
+      params = {organization: org}
+      if options[:matching_members_count]
+        params[:report_record_class] = Overlap::ReportRecord::MatchingMembersCount
+      end
+
       components = {
-        data_source: component(Workflows::OverlapReport::DataSource, {organization: org}),
-        mapper: component(Workflows::OverlapReport::Analyzer, {organization: org}),
-        reducer: component(Workflows::OverlapReport::Writer, {organization: org})
+        data_source: component(Workflows::OverlapReport::DataSource, params),
+        mapper: component(Workflows::OverlapReport::Analyzer, params),
+        reducer: component(Workflows::OverlapReport::Writer, params)
       }
 
       run_workflow(components)

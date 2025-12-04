@@ -75,29 +75,34 @@ RSpec.describe Workflows::OverlapReport do
     include_context "with tables for holdings"
     include_context "with mocked solr response"
 
-    def workflow_for_org(org)
+    def workflow_component(component, org, **kwargs)
+      WorkflowComponent.new(
+        Object.const_get("Workflows::OverlapReport::#{component}"),
+        kwargs.merge({organization: org})
+      )
+    end
+
+    def workflow_for_org(org, **kwargs)
       components = {
-        data_source: WorkflowComponent.new(
-          Workflows::OverlapReport::DataSource,
-          {organization: org}
-        ),
-        mapper: WorkflowComponent.new(
-          Workflows::OverlapReport::Analyzer,
-          {organization: org}
-        ),
-        reducer: WorkflowComponent.new(
-          Workflows::OverlapReport::Writer,
-          {organization: org}
-        )
+        data_source: workflow_component("DataSource", org, **kwargs),
+        mapper: workflow_component("Analyzer", org, **kwargs),
+        reducer: workflow_component("Writer", org, **kwargs)
       }
       Workflows::MapReduce.new(test_mode: true, components: components)
     end
 
     context "with two holdings and htitems" do
       let(:h) { build(:holding, ocn: 1, organization: "umich") }
+      # no items with this OCN, so ualberta should have no overlap
       let(:h2) { build(:holding, ocn: 2, organization: "ualberta") }
-      let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny") }
-      let(:ht2) { build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd") }
+      # one item deposited by umich, held by umich
+      let(:ht) { build(:ht_item, ocns: [h.ocn], access: "deny", billing_entity: "umich") }
+      # another item with the same ocn; public domain, held by umich & upenn
+      # (depositor holding doesn't flow through to other items on the record)
+      let(:ht2) {
+        build(:ht_item, ocns: [h.ocn], access: "allow", rights: "pd",
+          billing_entity: "upenn")
+      }
 
       before(:each) do
         load_test_data(h, h2, ht, ht2)
@@ -133,6 +138,25 @@ RSpec.describe Workflows::OverlapReport do
           "", "", "", "", ""].join("\t") + "\n"
         expect(recs).to include(expected_rec)
       end
+
+      context "using ReportRecord::MatchingMembersCount" do
+        let(:workflow) do
+          workflow_for_org(h.organization, report_record_class: Overlap::ReportRecord::MatchingMembersCount)
+        end
+
+        it "has 9 columns in the report" do
+          workflow.run
+          lines = open_gz_report(h.organization).to_a.map { |x| x.split("\t") }
+          expect(lines.map(&:size)).to all(be == 9)
+        end
+
+        it "reports that one organization holds one item & two organizations hold the other" do
+          workflow.run
+          # last column in each report should be 2
+          lines = open_gz_report(h.organization).to_a.map(&:strip).map { |x| x.split("\t") }
+          expect(lines[1..2].map(&:last)).to contain_exactly("1", "2")
+        end
+      end
     end
 
     context "with two holdings with the same local id but different enumchron" do
@@ -141,6 +165,7 @@ RSpec.describe Workflows::OverlapReport do
         build(:holding, mono_multi_serial: "mpm", ocn: h1.ocn,
           organization: h1.organization, local_id: h1.local_id, enum_chron: "V.2")
       end
+      let(:workflow) { workflow_for_org(h1.organization) }
 
       before(:each) do
         load_test_data(h1, h2)
@@ -148,7 +173,7 @@ RSpec.describe Workflows::OverlapReport do
 
       it "writes only 1 no-match record" do
         mock_solr_oclc_search(solr_response_for)
-        workflow_for_org(h1.organization).run
+        workflow.run
         expect(open_gz_report(h1.organization).count)
           .to eq(2)
       end
@@ -157,7 +182,7 @@ RSpec.describe Workflows::OverlapReport do
         ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "SE", enum_chron: "V.3")
         load_test_data(ht)
         mock_solr_oclc_search(solr_response_for(ht))
-        workflow_for_org(h1.organization).run
+        workflow.run
         recs = open_gz_report(h1.organization).to_a
         expect(recs.count).to eq(2)
         expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,
@@ -169,7 +194,7 @@ RSpec.describe Workflows::OverlapReport do
         ht = build(:ht_item, ocns: [h1.ocn], bib_fmt: "BK", enum_chron: "V.2")
         load_test_data(ht)
         mock_solr_oclc_search(solr_response_for(ht))
-        workflow_for_org(h1.organization).run
+        workflow.run
         recs = open_gz_report(h1.organization).to_a
         expect(recs.count).to eq(2)
         expect(recs.last.chomp).to eq([h1.ocn, h1.local_id, h1.mono_multi_serial, ht.rights,

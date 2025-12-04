@@ -3,6 +3,7 @@
 require "services"
 require "overlap/cluster_overlap"
 require "overlap/report_record"
+require "overlap/report_record_matching_members_count"
 require "workflows/solr"
 
 module Workflows
@@ -11,7 +12,9 @@ module Workflows
       attr_reader :organization
 
       def initialize(organization:,
-        ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query)
+        ocns_per_solr_query: Settings.solr_data_source.ocns_per_solr_query,
+        # unused, for parity with other workflow components
+        report_record_class: nil)
         @organization = organization
         @solr_records_seen = Set.new
         @ocns_per_solr_query = ocns_per_solr_query
@@ -58,11 +61,12 @@ module Workflows
 
     # Analyzes batches of solr records and computes overlap
     class Analyzer < Workflows::Solr::Analyzer
-      attr_reader :input, :organization
+      attr_reader :input, :organization, :report_record_class
 
-      def initialize(input, organization:)
+      def initialize(input, organization:, report_record_class: Overlap::ReportRecord)
         @input = input
         @organization = organization
+        @report_record_class = MapReduce.to_class(report_record_class)
       end
 
       def run
@@ -91,17 +95,7 @@ module Workflows
         Overlap::ClusterOverlap.new(cluster, organization).each do |overlap|
           overlap.matching_holdings.each do |holding|
             holdings_matched << holding
-            report_record = Overlap::ReportRecord.new(
-              organization: holding.organization,
-              ocn: holding.ocn,
-              local_id: holding.local_id,
-              item_type: holding.mono_multi_serial,
-              rights: overlap.ht_item.rights,
-              access: overlap.ht_item.access,
-              catalog_id: overlap.ht_item.ht_bib_key,
-              volume_id: overlap.ht_item.item_id,
-              enum_chron: overlap.ht_item.enum_chron
-            )
+            report_record = report_record_class.new(holding: holding, ht_item: overlap.ht_item)
 
             write_record(report_record) unless records_written.include? report_record.to_s
             records_written << report_record.to_s
@@ -113,10 +107,7 @@ module Workflows
       def write_records_for_unmatched_holdings(cluster, holdings_matched)
         records_written = Set.new
         missed_holdings(cluster, holdings_matched).each do |holding|
-          report_record = Overlap::ReportRecord.new(organization: holding.organization,
-            ocn: holding.ocn,
-            local_id: holding.local_id,
-            item_type: holding.mono_multi_serial)
+          report_record = report_record_class.new(holding: holding)
           next if records_written.include? report_record.to_s
 
           records_written << report_record.to_s
@@ -142,10 +133,11 @@ module Workflows
 
     # Merges output files from Analyzer together and uploads to dropbox
     class Writer
-      def initialize(organization:, working_directory:)
+      def initialize(organization:, working_directory:, report_record_class: Overlap::ReportRecord)
         @organization = organization
         @working_directory = working_directory
         @local_report_path = Settings.local_report_path || "local_reports"
+        @report_record_class = MapReduce.to_class(report_record_class)
         Dir.mkdir(@local_report_path) unless File.exist?(@local_report_path)
         # persistent storage
         @persistent_report_path = Settings.overlap_reports_path
@@ -161,14 +153,7 @@ module Workflows
       end
 
       def header
-        ["oclc",
-          "local_id",
-          "item_type",
-          "rights",
-          "access",
-          "catalog_id",
-          "volume_id",
-          "enum_chron"].join("\t")
+        report_record_class.header
       end
 
       def report_filename
@@ -180,7 +165,7 @@ module Workflows
 
       private
 
-      attr_reader :local_report_path, :persistent_report_path, :remote_report_path, :organization, :working_directory
+      attr_reader :local_report_path, :persistent_report_path, :remote_report_path, :organization, :working_directory, :report_record_class
 
       def report_gz_path
         File.join(local_report_path, report_filename)
