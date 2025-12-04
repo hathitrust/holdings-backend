@@ -19,7 +19,12 @@ class HoldingsAPI < Sinatra::Base
   get "/v1/item_access" do
     # ArgumentError if missing organization / item_id.
     validate_params(params: params, required: ["organization", "item_id"])
-    organization = organization_exists?(params["organization"])
+    # ArgumentError if nonexistent organization.
+    check_organization_exists(params["organization"])
+
+    # The `map` below does not work unless we internally translate
+    # the organization to its `mapto_inst_id`
+    organization = mapto_inst_id params["organization"]
     item_id = params["item_id"]
     ht_item = Clusterable::HtItem.find(item_id: item_id)
 
@@ -30,7 +35,7 @@ class HoldingsAPI < Sinatra::Base
     access_count = overlap_records.map(&:access_count).reduce(:+)
     copy_count = overlap_records.map(&:copy_count).reduce(:+)
     currently_held_count = overlap_records.map(&:current_holding_count).reduce(:+)
-    deposited = (ht_item.billing_entity == billing_entity(organization)) ? 1 : 0
+    deposited = (mapto_inst_id(ht_item.billing_entity) == organization) ? 1 : 0
 
     return_doc = {
       "brlm_count" => access_count,
@@ -130,10 +135,10 @@ class HoldingsAPI < Sinatra::Base
 
   # Should be used in any route that takes an organization as an argument,
   # to check that it is either an existing organization or a mapto.
-  def organization_exists?(organization)
+  def check_organization_exists(organization)
     if Services.ht_organizations.organizations.key?(organization) ||
         !Services.ht_organizations.mapto(organization).nil?
-      return organization
+      return
     end
 
     raise ArgumentError, "no matching data"
@@ -141,7 +146,7 @@ class HoldingsAPI < Sinatra::Base
 
   # @param String organization code
   # @return String mapto organization code which may be the same as the input
-  def billing_entity(organization)
+  def mapto_inst_id(organization)
     if Services.ht_organizations.mapto(organization)
       return organization
     end
