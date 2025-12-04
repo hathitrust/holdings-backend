@@ -8,7 +8,12 @@ module Overlap
 
     def initialize(holding: nil, ht_item: nil)
       super
-      @matching_members_count = HtItemOverlap.new(ht_item).matching_members.count
+
+      @matching_members_count = if ht_item
+        HtItemOverlap.new(ht_item).matching_members.count
+      else
+        ""
+      end
     end
 
     def fields
