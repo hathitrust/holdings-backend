@@ -32,14 +32,15 @@ require "utils/line_counter"
 module Scrub
   # Scrubs and loads any new org-uploaded files.
   class ScrubRunner
-    attr_reader :force, :file_transfer, :organization, :force_holding_loader_cleanup_test
+    attr_reader :force, :file_transfer, :organization, :force_holding_loader_cleanup_test, :type_check
 
     def initialize(organization, options = {})
       @organization = organization
       # @force: force loading a file even if it exceeds diff limit
-      @force = options["force"] || false
+      @force = options.fetch("force", false)
       # @force_holding_loader_cleanup_test: only set to true in testing.
-      @force_holding_loader_cleanup_test = options["force_holding_loader_cleanup_test"] || false
+      @force_holding_loader_cleanup_test = options.fetch("force_holding_loader_cleanup_test", false)
+      @type_check = options.fetch("type_check", true)
       @file_transfer = Utils::FileTransfer.new
       validate
     end
@@ -48,7 +49,7 @@ module Scrub
       Services.logger.info "Running org #{organization}."
       new_files = check_new_files
       Services.logger.info "Found #{new_files.size} new files: #{new_files.join(", ")}."
-      check_new_types(new_files)
+      check_new_types(new_files) if type_check
 
       new_files.each do |new_file|
         run_file(new_file)
