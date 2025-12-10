@@ -300,8 +300,9 @@ module PHCTL
 
     desc "scrub ORG", "Download ORG's new files from DropBox and load them"
     # Only set force_holding_loader_cleanup_test to true in testing.
-    option :force_holding_loader_cleanup_test, type: :boolean, default: false
-    option :force, type: :boolean, default: false
+    option :force_holding_loader_cleanup_test, type: :boolean, default: false, desc: "For testing only"
+    option :force, type: :boolean, default: false, desc: "Load holdings despite > 5% difference in count from previous holdings"
+    option :type_check, type: :boolean, default: true, desc: "Check whether holdings match previous loaded types."
     def scrub(org)
       Scrub::ScrubRunner.new(org, options).run
     end

@@ -104,6 +104,23 @@ RSpec.describe Scrub::ScrubRunner do
       load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
       expect { sr.run }.to raise_error(Scrub::TypeCheckError, /There is a mismatch in item types./)
     end
+
+    context "with type_check false" do
+      # might use this flag if data was partially loaded, or we need to do
+      # something manually
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false}) }
+
+      it "loads additional data when some is already loaded" do
+        remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+        remote_d.ensure!
+        # Copy fixture to "dropbox" so there is a "new file" to "download",
+        FileUtils.cp(fixture_file, remote_d.holdings_current)
+        # In this scenario we have loaded (only) a ser file and now need to
+        # load a mon, so we want to load it anyway despite the type mismatch
+        load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
+        expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
+      end
+    end
   end
 
   describe "#run_file" do
