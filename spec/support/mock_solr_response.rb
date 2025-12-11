@@ -37,7 +37,15 @@ RSpec.shared_context "with mocked solr response" do
     }.to_json
   end
 
+  def mock_solr_rights_search(body, filter: /ht_rightscode:.*/)
+    mock_solr_search_filtered(body, filter)
+  end
+
   def mock_solr_oclc_search(body, filter: /oclc_search:\([\d ]*\)/)
+    mock_solr_search_filtered(body, filter)
+  end
+
+  def mock_solr_search_filtered(body, filter)
     stub_request(:get, ->(uri) {
       uri.path == "/solr/catalog/select" &&
       uri.query_values.fetch("fq", nil).match?(filter)
@@ -49,7 +57,10 @@ RSpec.shared_context "with mocked solr response" do
   end
 
   before(:each) do
-    stub_request(:get, "http://localhost:8983/solr/catalog/select?cursorMark=*&fl=ht_json,id,oclc,oclc_search,title,format&fq=ht_rightscode:(ic%20op%20und%20nobody%20pd-pvt)&q=*:*&rows=5000&sort=id%20asc&wt=json")
+    # default filter query for most cases in holdings
+    filter_query = "ht_rightscode:(ic%20op%20und%20nobody%20pd-pvt)"
+
+    stub_request(:get, "http://localhost:8983/solr/catalog/select?cursorMark=*&fl=ht_json,id,oclc,oclc_search,title,format&fq=#{filter_query}&q=*:*&rows=5000&sort=id%20asc&wt=json")
       .to_return(status: 200,
         body: File.open(fixture("solr_response.json")),
         headers: {
