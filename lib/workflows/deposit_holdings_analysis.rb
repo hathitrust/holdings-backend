@@ -16,7 +16,7 @@ module Workflows
       end
 
       def filters
-        ic_rights = Clusterable::HtItem::IC_RIGHTS_CODES.join(" ")
+        ic_rights = (Clusterable::HtItem::IC_RIGHTS_CODES + ["icus"]).join(" ")
         ["ht_rightscode:(#{ic_rights})"]
       end
     end
@@ -38,7 +38,7 @@ module Workflows
 
         File.open(output_file, "w") do |fh|
           records_from_file(solr_records).each do |record|
-            record.ht_items.select(&:ic?).each do |ht_item|
+            record.ht_items.select { |item| item.ic? || item.rights == "icus" }.each do |ht_item|
               fh.puts(report_for(ht_item).join("\t"))
             end
           end
@@ -55,6 +55,7 @@ module Workflows
 
         [
           ht_item.item_id,
+          ht_item.rights,
           ht_item.billing_entity,
           status,
           mapto_inst_id,
@@ -111,6 +112,7 @@ module Workflows
       def header
         [
           "item_id",
+          "rights",
           "billing_entity",
           "holdings_status",
           "mapto_inst_id",

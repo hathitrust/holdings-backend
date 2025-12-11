@@ -136,7 +136,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         # ht_item deposited by ualberta
         # ualberta doesn't report holding; stanford does
 
-        let(:ht_item) { build(:ht_item, :spm, billing_entity: "ualberta") }
+        let(:ht_item) { build(:ht_item, :spm, rights: "ic", billing_entity: "ualberta") }
         let(:holding) { holding_for(ht_item, status: "CH", organization: "stanford") }
 
         before(:each) { load_test_data(ht_item, holding) }
@@ -147,7 +147,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
 
         it "includes both mapped & non-mapped info" do
           expect(analyzer.report_for(ht_item)).to eq(
-            [ht_item.item_id, "ualberta", :not_held, "stanford_mapped", :held]
+            [ht_item.item_id, "ic", "ualberta", :not_held, "stanford_mapped", :held]
           )
         end
       end
@@ -157,6 +157,9 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
   describe "integration test with Workflow::MapReduce" do
     include_context "with tables for holdings"
     include_context "with mocked solr response"
+    before(:each) do
+      mock_solr_rights_search(File.open(fixture("solr_response_plus_icus.json")))
+    end
 
     let(:workflow) do
       components = {
@@ -173,7 +176,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
       Workflows::MapReduce.new(test_mode: true, components: components)
     end
 
-    it "includes data for held and not-held in-copyright items" do
+    it "includes data for held and not-held in-copyright and icus items" do
       current_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.1")
       withdrawn_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.2", status: "WD")
 
@@ -186,13 +189,13 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
       lines = output.to_a
       # header line + one record for each IC item in solr fixture
       expect(lines.count).to eq(12)
-      expect(lines[0]).to eq("item_id\tbilling_entity\tholdings_status\tmapto_inst_id\tmapped_holdings_status\n")
+      expect(lines[0]).to eq("item_id\trights\tbilling_entity\tholdings_status\tmapto_inst_id\tmapped_holdings_status\n")
       # ocn 2779601 v.1
-      expect(lines).to include("mdp.39015066356547\tumich\theld\tumich\theld\n")
+      expect(lines).to include("mdp.39015066356547\ticus\tumich\theld\tumich\theld\n")
       # ocn 2779601 v.2
-      expect(lines).to include("mdp.39015066356406\tumich\twithdrawn\tumich\twithdrawn\n")
+      expect(lines).to include("mdp.39015066356406\tic\tumich\twithdrawn\tumich\twithdrawn\n")
       # ocn 2779601 v.5
-      expect(lines).to include("mdp.39015018415946\tumich\tnot_held\tumich\tnot_held\n")
+      expect(lines).to include("mdp.39015018415946\tic\tumich\tnot_held\tumich\tnot_held\n")
     end
   end
 end

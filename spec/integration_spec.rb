@@ -109,8 +109,6 @@ RSpec.describe "phctl integration" do
     end
   end
 
-  # SharedPrintOps - integration tests are in the respective SharedPrint class
-
   describe "Report" do
     include_context "with mocked solr response"
     include_context "with complete data for one cluster"
@@ -151,10 +149,16 @@ RSpec.describe "phctl integration" do
       expect(File.size("#{ENV["TEST_TMP"]}/overlap_report_remote/umich-hathitrust-member-data/analysis/overlap_umich_#{Date.today}.tsv.gz")).to be > 0
     end
 
-    it "deposit holdings analysis produces output" do
-      phctl(*%w[workflow deposit_holdings_analysis --test-mode])
+    context "with mocked solr rights search" do
+      before(:each) do
+        mock_solr_rights_search(File.open(fixture("solr_response.json")))
+      end
 
-      expect(File.size("#{ENV["TEST_TMP"]}/overlap_reports/deposit_holdings_analysis_#{Date.today}.tsv.gz")).to be > 0
+      it "deposit holdings analysis produces output" do
+        phctl(*%w[workflow deposit_holdings_analysis --test-mode])
+
+        expect(File.size("#{ENV["TEST_TMP"]}/overlap_reports/deposit_holdings_analysis_#{Date.today}.tsv.gz")).to be > 0
+      end
     end
 
     xcontext "shared print reports" do

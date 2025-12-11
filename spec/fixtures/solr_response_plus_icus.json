@@ -1,0 +1,131 @@
+{
+  "responseHeader": {
+    "status": 0,
+    "QTime": 283,
+    "params": {
+      "q": "*:*",
+      "fl": "ht_json,id,oclc,oclc_search,title,format",
+      "cursorMark": "*",
+      "fq": "ht_rightscode:(ic op und nobody pd-pvt icus)",
+      "sort": "id asc",
+      "rows": "5",
+      "wt": "json"
+    }
+  },
+  "response": {
+    "numFound": 5,
+    "start": 0,
+    "docs": [
+      {
+        "id": "000000001",
+        "format": [
+          "Book"
+        ],
+        "oclc": [
+          "2779601"
+        ],
+        "oclc_search": [
+          "2779601"
+        ],
+        "title": [
+          "Slovenské vyst̕ahovalectvo"
+        ],
+        "ht_json": "[{\"htid\":\"mdp.39015066356547\",\"newly_open\":null,\"ingest\":\"20250111\",\"rights\":[\"icus\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.1\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015066356406\",\"newly_open\":null,\"ingest\":\"20250104\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.2\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015066356695\",\"newly_open\":null,\"ingest\":\"20250111\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.3\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015066356554\",\"newly_open\":null,\"ingest\":\"20250104\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.4\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015018415946\",\"newly_open\":null,\"ingest\":\"20250104\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.5\",\"dig_source\":\"google\"}]"
+      },
+      {
+        "id": "000000002",
+        "format": [
+          "Book"
+        ],
+        "oclc": [
+          "17404493"
+        ],
+        "oclc_search": [
+          "23536349",
+          "17404493",
+          "215443231"
+        ],
+        "title": [
+          "Burangir na hombang : disusun oleh Ch. St. Tinggibarani Perkasa Alam [dan] Dra. Rukiyah Siregar"
+        ],
+        "ht_json": "[{\"htid\":\"mdp.39015033913115\",\"newly_open\":null,\"ingest\":\"20250113\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enum_pubdate\":\"1981\",\"enum_pubdate_range\":\"1980-1989\",\"dig_source\":\"google\"}]"
+      },
+      {
+        "id": "000000003",
+        "format": [
+          "Book",
+          "Conference"
+        ],
+        "oclc": [
+          "60561774"
+        ],
+        "oclc_search": [
+          "60561774"
+        ],
+        "title": [
+          "Stadtverwaltung im Nationalsozialismus : systemstabilisierende Dimensionen kommunaler Herrschaft"
+        ],
+        "ht_json": "[{\"htid\":\"mdp.39015061455294\",\"newly_open\":null,\"ingest\":\"20250113\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enum_pubdate\":\"2005\",\"enum_pubdate_range\":\"2000-2009\",\"dig_source\":\"google\"}]"
+      },
+      {
+        "id": "000000005",
+        "format": [
+          "Book"
+        ],
+        "oclc": [
+          "75"
+        ],
+        "oclc_search": [
+          "977175550",
+          "75",
+          "1086690347",
+          "1168346006"
+        ],
+        "title": [
+          "Free vibrations of circular cylindrical shells"
+        ],
+        "ht_json": "[{\"htid\":\"mdp.39015000995467\",\"newly_open\":null,\"ingest\":\"20250108\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enum_pubdate\":\"1969\",\"enum_pubdate_range\":\"1960-1969\",\"dig_source\":\"google\"}]"
+      },
+      {
+        "id": "000000008",
+        "format": [
+          "Book"
+        ],
+        "oclc": [
+          "241"
+        ],
+        "oclc_search": [
+          "4475945",
+          "241",
+          "10059715",
+          "970880313",
+          "1029395025",
+          "1039051505",
+          "1039363300",
+          "1127485913",
+          "1141220151",
+          "1201941336",
+          "1230275795",
+          "1244556442",
+          "1253458777",
+          "1261386847",
+          "1263981346",
+          "1266169027",
+          "1290260870",
+          "1294043675",
+          "1296608713",
+          "1296907722",
+          "1310284822",
+          "1313954170",
+          "1322679451",
+          "1428424208"
+        ],
+        "title": [
+          "The making of black America; essays in Negro life & history"
+        ],
+        "ht_json": "[{\"htid\":\"mdp.39015002382565\",\"newly_open\":null,\"ingest\":\"20250114\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.1\",\"enum_pubdate\":\"1969\",\"enum_pubdate_range\":\"1960-1969\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015027252942\",\"newly_open\":null,\"ingest\":\"20250114\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.1\",\"enum_pubdate\":\"1969\",\"enum_pubdate_range\":\"1960-1969\",\"dig_source\":\"google\"},{\"htid\":\"mdp.39015002379926\",\"newly_open\":null,\"ingest\":\"20250114\",\"rights\":[\"ic\",null],\"collection_code\":\"miu\",\"enumcron\":\"v.2\",\"enum_pubdate\":\"1969\",\"enum_pubdate_range\":\"1960-1969\",\"dig_source\":\"google\"}]"
+      }
+    ]
+  },
+  "nextCursorMark": "*"
+}
