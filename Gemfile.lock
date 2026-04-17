@@ -307,7 +307,7 @@ GEM
       crack (>= 0.3.2)
       hashdiff (>= 0.4.0, < 2.0.0)
     wisper (2.0.1)
-    yard (0.9.38)
+    yard (0.9.42)
     zeitwerk (2.7.5)
     zinzout (0.1.1)
 
