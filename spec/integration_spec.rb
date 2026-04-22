@@ -251,6 +251,8 @@ RSpec.describe "phctl integration" do
   end
 
   describe "Scrub" do
+    after { Settings.slack_webhook_url = nil }
+
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.
       local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
@@ -266,6 +268,24 @@ RSpec.describe "phctl integration" do
       expect { phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force]) }.to change { Clusterable::Holding.table.count }.by(6)
       expect(File.exist?(logfile)).to be true
       expect(File.exist?(local_d)).to be true
+    end
+
+    it "posts a Slack notification on successful load" do
+      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+      FileUtils.mkdir_p(remote_d)
+      FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
+
+      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
+      Settings.slack_webhook_url = webhook_url
+      slack_stub = stub_request(:post, webhook_url).to_return(status: 200)
+
+      phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force])
+
+      expect(slack_stub).to have_been_requested
+      expect(
+        a_request(:post, webhook_url)
+          .with(body: a_string_including("umich").and(a_string_including("mon")))
+      ).to have_been_made
     end
   end
 end

@@ -3,6 +3,7 @@
 require "loader/loaded_file"
 require "scrub/pre_load_backup"
 require "utils/file_transfer"
+require "utils/slack_notifier"
 
 module Loader
   # Constructs batches of Holdings from incoming file data
@@ -91,6 +92,20 @@ module Loader
         organization: options["organization"],
         mono_multi_serial: options["mono_multi_serial"]
       )
+
+      # Count only newly loaded records (delete_flag=0); must run before delete_marked! clears the old ones.
+      new_count = Services.holdings_db[:holdings]
+        .where(organization: options["organization"],
+               mono_multi_serial: options["mono_multi_serial"],
+               delete_flag: 0)
+        .count
+
+      Utils::SlackNotifier.post(
+        "Holdings load complete for *#{options["organization"]}* " \
+        "(`#{options["mono_multi_serial"]}`) — " \
+        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records removed."
+      )
+
       if pre_load_backup.marked_count > 0
         Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
         pre_load_backup.delete_marked!
