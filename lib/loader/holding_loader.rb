@@ -94,10 +94,10 @@ module Loader
       )
 
       # Count only newly loaded records (delete_flag=0); must run before delete_marked! clears the old ones.
-      new_count = Services.holdings_db[:holdings]
+      new_count = Clusterable::Holding.table
         .where(organization: options["organization"],
-               mono_multi_serial: options["mono_multi_serial"],
-               delete_flag: 0)
+          mono_multi_serial: options["mono_multi_serial"],
+          delete_flag: 0)
         .count
 
       Utils::SlackNotifier.post(

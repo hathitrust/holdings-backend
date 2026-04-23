@@ -251,8 +251,6 @@ RSpec.describe "phctl integration" do
   end
 
   describe "Scrub" do
-    after { Settings.slack_webhook_url = nil }
-
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.
       local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
@@ -270,22 +268,26 @@ RSpec.describe "phctl integration" do
       expect(File.exist?(local_d)).to be true
     end
 
-    it "posts a Slack notification on successful load" do
-      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
-      FileUtils.mkdir_p(remote_d)
-      FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
+    context "Slack notification" do
+      let(:webhook_url) { "https://hooks.slack.com/services/TEST/WEBHOOK" }
+      # Direct Settings assignment works here because SlackNotifier.post reads
+      # Settings.slack_webhook_url at call time (keyword default), not at load time.
+      before { Settings.slack_webhook_url = webhook_url }
+      after { Settings.slack_webhook_url = nil }
 
-      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
-      Settings.slack_webhook_url = webhook_url
-      slack_stub = stub_request(:post, webhook_url).to_return(status: 200)
+      it "posts a Slack notification on successful load" do
+        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+        FileUtils.mkdir_p(remote_d)
+        FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
+        stub_request(:post, webhook_url).to_return(status: 200)
 
-      phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force])
+        phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force])
 
-      expect(slack_stub).to have_been_requested
-      expect(
-        a_request(:post, webhook_url)
-          .with(body: a_string_including("umich").and(a_string_including("mon")))
-      ).to have_been_made
+        expect(
+          a_request(:post, webhook_url)
+            .with(body: a_string_including("umich").and(a_string_including("mon")))
+        ).to have_been_made
+      end
     end
   end
 end
