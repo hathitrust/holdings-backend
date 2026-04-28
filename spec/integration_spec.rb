@@ -285,7 +285,9 @@ RSpec.describe "phctl integration" do
 
         expect(
           a_request(:post, webhook_url)
-            .with(body: a_string_including("umich").and(a_string_including("mon")))
+            .with(body: a_string_including("umich")
+              .and(a_string_including("mon"))
+              .and(a_string_including("6 records loaded")))
         ).to have_been_made
       end
     end
