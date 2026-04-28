@@ -93,12 +93,13 @@ module Loader
         mono_multi_serial: options["mono_multi_serial"]
       )
 
-      # Count only newly loaded records (delete_flag=0); must run before delete_marked! clears the old ones.
-      new_count = Clusterable::Holding.table
+      # Count newly loaded records by subtracting old (delete_flag=1) from total;
+      # must run before delete_marked! clears the old ones.
+      total_count = Clusterable::Holding.table
         .where(organization: options["organization"],
-          mono_multi_serial: options["mono_multi_serial"],
-          delete_flag: 0)
+          mono_multi_serial: options["mono_multi_serial"])
         .count
+      new_count = total_count - pre_load_backup.marked_count
 
       Utils::SlackNotifier.post(
         "Holdings load complete for *#{options["organization"]}* " \
