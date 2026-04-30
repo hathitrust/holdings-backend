@@ -24,6 +24,7 @@ require "sidekiq_jobs"
 require "sidekiq/batch"
 require "utils/file_transfer"
 require "utils/line_counter"
+require "utils/slack_notifier"
 
 # Example:
 # runner = Scrub::ScrubRunner.new(ORG)
@@ -49,7 +50,16 @@ module Scrub
       Services.logger.info "Running org #{organization}."
       new_files = check_new_files
       Services.logger.info "Found #{new_files.size} new files: #{new_files.join(", ")}."
-      check_new_types(new_files) if type_check
+      if type_check
+        begin
+          check_new_types(new_files)
+        rescue Scrub::TypeCheckError => err
+          Utils::SlackNotifier.post(
+            "Holdings scrub rejected for *#{organization}* — #{err.message}"
+          )
+          raise
+        end
+      end
 
       new_files.each do |new_file|
         run_file(new_file)
@@ -83,6 +93,15 @@ module Scrub
       Services.logger.error err
       Services.scrub_logger.error "Unexpected error. Please contact HathiTrust."
       Services.scrub_logger.error err.message
+
+      # MalformedFileError message already contains the filename and diff details; other errors need err.class for triage.
+      slack_msg = if err.is_a?(MalformedFileError)
+        "Holdings scrub rejected for *#{organization}* — #{err.message}"
+      else
+        "Holdings scrub failed for *#{organization}* — " \
+        "`#{member_submitted_file["Name"]}` (#{err.class}): #{err.message}"
+      end
+      Utils::SlackNotifier.post(slack_msg)
 
       # Do things Loader::HoldingLoader::Cleanup normally does
       FileUtils.rm(downloaded_file)

@@ -11,6 +11,7 @@ require "scrub/pre_load_backup"
 require "scrub/record_counter"
 require "scrub/scrub_runner"
 require "scrub/type_check_error"
+require "utils/slack_notifier"
 require "spec_helper"
 
 RSpec.describe Scrub::ScrubRunner do
@@ -105,6 +106,24 @@ RSpec.describe Scrub::ScrubRunner do
       expect { sr.run }.to raise_error(Scrub::TypeCheckError, /There is a mismatch in item types./)
     end
 
+    it "posts a Slack notification on type check rejection" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
+
+      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
+      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
+      stub = stub_request(:post, webhook_url)
+        .with(body: a_string_including("umich")
+          .and(a_string_including("rejected"))
+          .and(a_string_including("mismatch")))
+        .to_return(status: 200)
+
+      expect { sr.run }.to raise_error(Scrub::TypeCheckError)
+      expect(stub).to have_been_requested.once
+    end
+
     context "with type_check false" do
       # might use this flag if data was partially loaded, or we need to do
       # something manually
@@ -182,6 +201,50 @@ RSpec.describe Scrub::ScrubRunner do
       sr.run_file(remote_file)
       expect(File.exist?(preloader.backup_path)).to be true
       expect(Utils::LineCounter.new(preloader.backup_path).count_lines).to eq 6
+    end
+
+    it "posts a 'rejected' Slack notification on diff limit rejection" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      remote_file = sr.check_new_files.first
+
+      FileUtils.mkdir_p("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/")
+      File.open("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/umich_mon_1.ndj", "w") do |file|
+        1.upto(20) { |i| file.puts i }
+      end
+
+      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
+      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
+      stub = stub_request(:post, webhook_url)
+        .with(body: a_string_including("rejected")
+          .and(a_string_including("umich"))
+          .and(a_string_including("Diff too big")))
+        .to_return(status: 200)
+
+      sr.run_file(remote_file)
+      expect(stub).to have_been_requested.once
+    end
+
+    it "posts a 'failed' Slack notification with error class on unexpected error" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      remote_file = sr.check_new_files.first
+
+      allow_any_instance_of(Scrub::RecordCounter).to receive(:acceptable_diff?).and_raise(RuntimeError, "disk full")
+
+      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
+      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
+      stub = stub_request(:post, webhook_url)
+        .with(body: a_string_including("failed")
+          .and(a_string_including("umich"))
+          .and(a_string_including("RuntimeError"))
+          .and(a_string_including("disk full")))
+        .to_return(status: 200)
+
+      sr.run_file(remote_file)
+      expect(stub).to have_been_requested.once
     end
   end
 end
