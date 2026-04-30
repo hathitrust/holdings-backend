@@ -1,7 +1,4 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
@@ -12,15 +9,15 @@
     },
     {
       "type": "ruby_lsp",
-      "name": "Debug test",
+      "name": "Debug current spec",
       "request": "launch",
-      "program": "ruby -Itest ${relativeFile}"
-    },
-    {
-      "type": "ruby_lsp",
-      "name": "Debug rspec test",
-      "request": "launch",
-      "program": "rspec ${relativeFile}"
+      "program": "rspec ${relativeFile}",
+      "env": {
+        "DATABASE_ENV": "test",
+        "MARIADB_HOLDINGS_RW_DATABASE": "holdings_test",
+        "MARIADB_HT_RO_DATABASE": "holdings_test",
+        "MARIADB_HATHIFILES_RW_DATABASE": "holdings_test"
+      }
     },
     {
       "type": "ruby_lsp",

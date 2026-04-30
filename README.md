@@ -54,3 +54,11 @@ concordance, and running various reports.
 Setting the `DEBUG` environment variable will log more information in reporting about individual data elements as they are processed.
 
 Setting `LOG_SQL` will log each statement run against the database.
+
+## IDE debugging (VS Code)
+
+Requires the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) extension.
+
+Open the `holdings-backend/` directory in VS Code. Use the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and run `Dev Containers: Reopen in Container`. The dev container installs gems automatically and starts ruby-lsp.
+
+To debug a spec, open the file, set a breakpoint, and run `Debug current spec` from the Run and Debug panel. You can also add `debugger` anywhere in application code to pause there when a spec calls into it.
