@@ -16,6 +16,7 @@ require "spec_helper"
 
 RSpec.describe Scrub::ScrubRunner do
   include_context "with tables for holdings"
+  include_context "with mocked slack API endpoint"
 
   let(:org1) { "umich" }
   # Only set force_holding_loader_cleanup_test to true in testing.
@@ -112,13 +113,9 @@ RSpec.describe Scrub::ScrubRunner do
       FileUtils.cp(fixture_file, remote_d.holdings_current)
       load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
 
-      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
-      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
-      stub = stub_request(:post, webhook_url)
-        .with(body: a_string_including("umich")
-          .and(a_string_including("rejected"))
-          .and(a_string_including("mismatch")))
-        .to_return(status: 200)
+      stub = stub_slack_webhook(a_string_including("umich")
+        .and(a_string_including("rejected"))
+        .and(a_string_including("mismatch")))
 
       expect { sr.run }.to raise_error(Scrub::TypeCheckError)
       expect(stub).to have_been_requested.once
@@ -214,13 +211,9 @@ RSpec.describe Scrub::ScrubRunner do
         1.upto(20) { |i| file.puts i }
       end
 
-      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
-      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
-      stub = stub_request(:post, webhook_url)
-        .with(body: a_string_including("rejected")
-          .and(a_string_including("umich"))
-          .and(a_string_including("Diff too big")))
-        .to_return(status: 200)
+      stub = stub_slack_webhook(a_string_including("rejected")
+        .and(a_string_including("umich"))
+        .and(a_string_including("Diff too big")))
 
       sr.run_file(remote_file)
       expect(stub).to have_been_requested.once
@@ -234,14 +227,10 @@ RSpec.describe Scrub::ScrubRunner do
 
       allow_any_instance_of(Scrub::RecordCounter).to receive(:acceptable_diff?).and_raise(RuntimeError, "disk full")
 
-      webhook_url = "https://hooks.slack.com/services/TEST/WEBHOOK"
-      allow(Settings).to receive(:slack_webhook_url).and_return(webhook_url)
-      stub = stub_request(:post, webhook_url)
-        .with(body: a_string_including("failed")
-          .and(a_string_including("umich"))
-          .and(a_string_including("RuntimeError"))
-          .and(a_string_including("disk full")))
-        .to_return(status: 200)
+      stub = stub_slack_webhook(a_string_including("failed")
+        .and(a_string_including("umich"))
+        .and(a_string_including("RuntimeError"))
+        .and(a_string_including("disk full")))
 
       sr.run_file(remote_file)
       expect(stub).to have_been_requested.once

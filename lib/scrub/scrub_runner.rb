@@ -95,6 +95,7 @@ module Scrub
       Services.scrub_logger.error err.message
 
       # MalformedFileError message already contains the filename and diff details; other errors need err.class for triage.
+      # TODO: Consider adding err.class to MalformedFileError's Slack message for consistency with other error types.
       slack_msg = if err.is_a?(MalformedFileError)
         "Holdings scrub rejected for *#{organization}* — #{err.message}"
       else
