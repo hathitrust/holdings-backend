@@ -32,8 +32,8 @@ RSpec.describe Clusterable::Holding do
       expect(described_class.cleaned_stringified_ocns(["123", 456])).to contain_exactly("123", "456")
     end
 
-    it "rejects ocns > 2**31 - 1" do
-      expect(described_class.cleaned_stringified_ocns([123, 2147483648])).to contain_exactly("123")
+    it "rejects ocns > 2**31 - 1 (2147483647)" do
+      expect(described_class.cleaned_stringified_ocns([123, 2147483647, 2147483648])).to contain_exactly("123", "2147483647")
     end
   end
 
