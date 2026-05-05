@@ -23,6 +23,20 @@ RSpec.describe Clusterable::Holding do
     expect(holding.n_enum_chron).to eq("")
   end
 
+  describe "#cleaned_stringified_ocns" do
+    it "converts to string" do
+      expect(described_class.cleaned_stringified_ocns([123])).to contain_exactly("123")
+    end
+
+    it "accepts a mix of strings and ints" do
+      expect(described_class.cleaned_stringified_ocns(["123", 456])).to contain_exactly("123", "456")
+    end
+
+    it "rejects ocns > 2**31 - 1 (2147483647)" do
+      expect(described_class.cleaned_stringified_ocns([123, 2147483647, 2147483648])).to contain_exactly("123", "2147483647")
+    end
+  end
+
   describe "#batch_add" do
     include_context "with tables for holdings"
 

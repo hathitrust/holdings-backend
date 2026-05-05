@@ -102,12 +102,14 @@ module Clusterable
       dataset.order(:uuid).paged_each(strategy: :filter, &block)
     end
 
-    # ocn column in holdings is defined as int(11)
-    # max ocn is currently 10 digits
-    MAX_OCN_COLUMN_LENGTH = 11
-
     def self.cleaned_stringified_ocns(ocns)
-      ocns.map(&:to_s).reject { |ocn| ocn.length > MAX_OCN_COLUMN_LENGTH }
+      # currently defined as int
+      @table_max_ocn ||= Services.holdings_db.schema("holdings").to_h[:ocn][:max_value]
+
+      ocns
+        .map(&:to_i)
+        .reject { |ocn| ocn > @table_max_ocn }
+        .map(&:to_s)
     end
 
     def self.all
