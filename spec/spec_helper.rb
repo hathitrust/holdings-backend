@@ -27,6 +27,7 @@ require "fixtures/organizations"
 require_relative "support/cluster_fixture_data"
 require_relative "support/holdings_tables"
 require_relative "support/mock_solr_response"
+require_relative "support/mock_slack_webhook"
 
 SimpleCov::Formatter::LcovFormatter.config do |c|
   c.report_with_single_file = true

@@ -269,26 +269,39 @@ RSpec.describe "phctl integration" do
     end
 
     context "Slack notification" do
-      let(:webhook_url) { "https://hooks.slack.com/services/TEST/WEBHOOK" }
-      # Direct Settings assignment works here because SlackNotifier.post reads
-      # Settings.slack_webhook_url at call time (keyword default), not at load time.
-      before { Settings.slack_webhook_url = webhook_url }
-      after { Settings.slack_webhook_url = nil }
+      include_context "with mocked slack API endpoint"
 
       it "posts a Slack notification on successful load" do
         remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
         FileUtils.mkdir_p(remote_d)
         FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
-        stub_request(:post, webhook_url).to_return(status: 200)
+
+        stub = stub_slack_webhook(a_string_including("umich")
+          .and(a_string_including("mon"))
+          .and(a_string_including("6 records loaded")))
 
         phctl(*%w[scrub umich --force_holding_loader_cleanup_test --force])
 
-        expect(
-          a_request(:post, webhook_url)
-            .with(body: a_string_including("umich")
-              .and(a_string_including("mon"))
-              .and(a_string_including("6 records loaded")))
-        ).to have_been_made
+        expect(stub).to have_been_requested.once
+      end
+
+      it "posts a Slack notification when a file is rejected by the diff check" do
+        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+        FileUtils.mkdir_p(remote_d)
+        FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
+
+        loaded_d = "#{ENV["TEST_TMP"]}/scrub_data/umich/loaded"
+        FileUtils.mkdir_p(loaded_d)
+        File.open(File.join(loaded_d, "umich_mon_1.ndj"), "w") { |f| 20.times { |i| f.puts i } }
+
+        stub = stub_slack_webhook(a_string_including("umich")
+          .and(a_string_including("rejected"))
+          .and(a_string_including("Diff too big"))
+          .and(a_string_including("umich_mon_full_20220101.tsv"))
+          .and(a_string_including("Line diff too great")))
+        phctl(*%w[scrub umich])
+
+        expect(stub).to have_been_requested.once
       end
     end
   end
