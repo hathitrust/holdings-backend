@@ -151,6 +151,13 @@ module Workflows
             "#{num_items_ic} (#{pct_items_ic.round(1)}%) are in copyright."
           ].join("\n")
         end
+
+        Utils::SlackNotifier.post(
+          "Estimate complete for *#{File.basename(ocn_file)}* — " \
+          "#{num_ocns_matched}/#{total_ocns} OCNs matched, " \
+          "#{num_items_ic} IC items, " \
+          "estimated cost *$#{sprintf("%0.2f", total_estimated_ic_cost)}*."
+        )
       end
 
       def pct_ocns_matched
