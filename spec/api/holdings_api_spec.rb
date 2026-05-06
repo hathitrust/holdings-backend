@@ -209,10 +209,9 @@ RSpec.describe HoldingsAPI do
       expect(response["format"]).to eq "mpm"
     end
 
-    # Brittle test?
     it "correctly identifies mpms as not held when not held" do
-      ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
-      ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
+      ht1 = build(:ht_item, :mpm, enum_chron: "v.1", billing_entity: "umich")
+      ht2 = build(:ht_item, :mpm, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
       holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
