@@ -273,17 +273,17 @@ RSpec.describe Reports::CostReport do
         rights: pd
       )
     end
-    let(:holding_serial1) { build(:holding, ocn: ht_serial.ocns.first, organization: "umich") }
-    let(:holding_serial2) { build(:holding, ocn: ht_serial.ocns.first, organization: "utexas") }
+    let(:holding_serial1) { build(:holding, mono_multi_serial: "ser", ocn: ht_serial.ocns.first, organization: "umich") }
+    let(:holding_serial2) { build(:holding, mono_multi_serial: "ser", ocn: ht_serial.ocns.first, organization: "utexas") }
     let(:serial) { build(:serial, ocns: ht_serial.ocns, record_id: ht_serial.ht_bib_key) }
     let(:holding_mpm) do
-      build(:holding, ocn: ht_mpm1.ocns.first, organization: "smu", enum_chron: "", n_enum: "")
+      build(:holding, mono_multi_serial: "mpm", ocn: ht_mpm1.ocns.first, organization: "smu", enum_chron: "", n_enum: "")
     end
     let(:texas_mpm) do
-      build(:holding, ocn: ht_mpm1.ocns.first, organization: "utexas", enum_chron: "1", n_enum: "1")
+      build(:holding, mono_multi_serial: "mpm", ocn: ht_mpm1.ocns.first, organization: "utexas", enum_chron: "1", n_enum: "1")
     end
     let(:umich_mpm) do
-      build(:holding, ocn: ht_mpm1.ocns.first, organization: "umich", enum_chron: "", n_enum: "")
+      build(:holding, mono_multi_serial: "mpm", ocn: ht_mpm1.ocns.first, organization: "umich", enum_chron: "", n_enum: "")
     end
 
     before(:each) do
