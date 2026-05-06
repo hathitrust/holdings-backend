@@ -85,6 +85,20 @@ RSpec.describe Scrub::ScrubRunner do
       FileUtils.touch(File.join(remote_d.holdings_current, "b.tsv"))
       expect(sr.check_new_files.first["Name"]).to eq "b.tsv"
     end
+
+    it "ignores subdirectories in the remote current-year holdings directory" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      # Create subdirectory in the current year's holdings directory.
+      ignore_dir = File.join(remote_d.holdings_current, "xml")
+      FileUtils.mkdir_p(ignore_dir)
+      # It's invisible to ScrubRunner
+      expect(
+        sr.check_new_files.select { |file| file["Name"] == "xml" }
+      ).to be_empty
+      # Clean up
+      FileUtils.rm_rf(ignore_dir)
+    end
   end
 
   describe "#run" do

@@ -173,6 +173,8 @@ module Scrub
       remote_files.each do |f|
         # Possibly filtering other files here.
         next if f["Name"].end_with?(".log")
+        # Ignore subdirectories. We may stash e.g., XML originals in a subdirectory
+        next if f["IsDir"]
         if old_files.select { |oldf| f["Name"] == oldf["Name"] }.empty?
           new_files << f
         end
