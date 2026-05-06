@@ -38,13 +38,13 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         let(:ht_item) { build(:ht_item, :mpm, enum_chron: "V.1") }
 
         it "returns status held if depositing institution reports holding a copy with the same enumchron" do
-          load_test_data(ht_item, holding_for(ht_item, enum_chron: "V.1"))
+          load_test_data(ht_item, holding_for(ht_item, mono_multi_serial: "mpm", enum_chron: "V.1"))
 
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
 
         it "returns status held if depositing institution reports holding only copies with no enumchrons" do
-          load_test_data(ht_item, holding_for(ht_item))
+          load_test_data(ht_item, holding_for(ht_item, mono_multi_serial: "mpm"))
 
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
@@ -54,8 +54,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
           # if none of the enums match
 
           # TODO: may want to specifically analyze this case separately
-          load_test_data(ht_item, holding_for(ht_item, enum_chron: "volume
-99"))
+          load_test_data(ht_item, holding_for(ht_item, mono_multi_serial: "mpm", enum_chron: "volume 99"))
 
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
@@ -63,7 +62,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         it "returns status not held if depositing institution reports holding a copy with enumchron that matches a different item" do
           load_test_data(ht_item,
             build(:ht_item, :mpm, ocns: ht_item.ocns, enum_chron: "v.3"),
-            holding_for(ht_item, enum_chron: "v.3"))
+            holding_for(ht_item, mono_multi_serial: "mpm", enum_chron: "v.3"))
 
           expect(analyzer.analyze(ht_item)).to eq(:not_held)
         end
@@ -86,7 +85,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         end
 
         it "returns status held if depositing institution reports holding a title" do
-          load_test_data(ht_item, holding_for(ht_item))
+          load_test_data(ht_item, holding_for(ht_item, mono_multi_serial: "spm"))
 
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
@@ -98,7 +97,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         end
 
         it "returns status withdrawn if depositing institution only reports holding as withdrawn" do
-          holding = holding_for(ht_item, status: "WD")
+          holding = holding_for(ht_item, mono_multi_serial: "spm", status: "WD")
           load_test_data(ht_item, holding)
 
           expect(analyzer.analyze(ht_item)).to eq(:withdrawn)
@@ -106,15 +105,15 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
 
         it "returns status held if depositing institution reports holding a withdrawn and a currently-held copy" do
           load_test_data(ht_item,
-            holding_for(ht_item, status: "WD"),
-            holding_for(ht_item, status: "CH"))
+            holding_for(ht_item, mono_multi_serial: "spm", status: "WD"),
+            holding_for(ht_item, mono_multi_serial: "spm", status: "CH"))
 
           expect(analyzer.analyze(ht_item)).to eq(:held)
         end
 
         it "returns status lost_missing if depositing institution only reports holding a lost or missing copy" do
           load_test_data(ht_item,
-            holding_for(ht_item, status: "LM"))
+            holding_for(ht_item, mono_multi_serial: "spm", status: "LM"))
 
           expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
         end
@@ -124,8 +123,8 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
           # withdrawn copies?
 
           load_test_data(ht_item,
-            holding_for(ht_item, status: "LM"),
-            holding_for(ht_item, status: "WD"))
+            holding_for(ht_item, mono_multi_serial: "spm", status: "LM"),
+            holding_for(ht_item, mono_multi_serial: "spm", status: "WD"))
 
           expect(analyzer.analyze(ht_item)).to eq(:lost_missing)
         end
@@ -137,7 +136,7 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
         # ualberta doesn't report holding; stanford does
 
         let(:ht_item) { build(:ht_item, :spm, rights: "ic", billing_entity: "ualberta") }
-        let(:holding) { holding_for(ht_item, status: "CH", organization: "stanford") }
+        let(:holding) { holding_for(ht_item, mono_multi_serial: "spm", status: "CH", organization: "stanford") }
 
         before(:each) { load_test_data(ht_item, holding) }
 
@@ -177,8 +176,8 @@ RSpec.describe Workflows::DepositHoldingsAnalysis do
     end
 
     it "includes data for held and not-held in-copyright and icus items" do
-      current_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.1")
-      withdrawn_holding = build(:holding, organization: "umich", ocn: "2779601", enum_chron: "v.2", status: "WD")
+      current_holding = build(:holding, mono_multi_serial: "mpm", organization: "umich", ocn: "2779601", enum_chron: "v.1")
+      withdrawn_holding = build(:holding, mono_multi_serial: "mpm", organization: "umich", ocn: "2779601", enum_chron: "v.2", status: "WD")
 
       load_test_data(current_holding, withdrawn_holding)
 

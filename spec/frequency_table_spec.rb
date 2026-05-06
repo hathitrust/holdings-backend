@@ -128,6 +128,7 @@ RSpec.describe FrequencyTable do
         end
         let(:spm_holding) do
           build(:holding,
+            mono_multi_serial: "spm",
             enum_chron: "",
             organization: spm.billing_entity,
             ocn: spm.ocns.first)
@@ -167,7 +168,7 @@ RSpec.describe FrequencyTable do
       end
 
       context "with MPM holding without enum chron" do
-        let(:mpm_wo_ec) { build(:holding, ocn: mpm.ocns.first, organization: "umich") }
+        let(:mpm_wo_ec) { build(:holding, mono_multi_serial: "mpm", ocn: mpm.ocns.first, organization: "umich") }
 
         it "assigns mpm shares to empty enum chron holdings" do
           load_test_data(mpm, mpm_wo_ec)
@@ -179,6 +180,7 @@ RSpec.describe FrequencyTable do
       context "with MPM holding with the wrong enum_chron" do
         let(:mpm_wrong_ec) do
           build(:holding,
+            mono_multi_serial: "mpm",
             ocn: mpm.ocns.first,
             organization: "umich",
             enum_chron: "2",
@@ -214,6 +216,7 @@ RSpec.describe FrequencyTable do
         end
         let(:holding_serial) do
           build(:holding,
+            mono_multi_serial: "ser",
             ocn: ht_serial.ocns.first,
             organization: "smu")
         end

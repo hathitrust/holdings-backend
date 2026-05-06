@@ -35,6 +35,7 @@ RSpec.describe Overlap::MultiPartOverlap do
 
   let(:holding_with_enumchron) do
     build(:holding,
+      mono_multi_serial: "mpm",
       ocn: ocns.first,
       organization: "umich",
       enum_chron: "1")
@@ -42,6 +43,7 @@ RSpec.describe Overlap::MultiPartOverlap do
 
   let(:holding_lost_missing) do
     build(:holding,
+      mono_multi_serial: "mpm",
       ocn: ocns.first,
       organization: holding_with_enumchron.organization,
       enum_chron: "1",
@@ -50,6 +52,7 @@ RSpec.describe Overlap::MultiPartOverlap do
 
   let(:holding_brittle_withdrawn) do
     build(:holding,
+      mono_multi_serial: "mpm",
       ocn: ocns.first,
       organization: holding_with_enumchron.organization,
       enum_chron: "1",
@@ -70,14 +73,14 @@ RSpec.describe Overlap::MultiPartOverlap do
     end
 
     it "finds holdings with no enum" do
-      holding_without_enumchron = create(:holding, ocn: c.ocns.first, enum_chron: "", n_enum: "")
+      holding_without_enumchron = create(:holding, mono_multi_serial: "mpm", ocn: c.ocns.first, enum_chron: "", n_enum: "")
       overlap = described_class.new(holding_without_enumchron.organization, htitem_with_enumchron)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
     end
 
     it "finds holdings with nil enum" do
-      holding_nil_enumchron = create(:holding, ocn: c.ocns.first, enum_chron: "", n_enum: nil)
+      holding_nil_enumchron = create(:holding, mono_multi_serial: "mpm", ocn: c.ocns.first, enum_chron: "", n_enum: nil)
       overlap = described_class.new(holding_nil_enumchron.organization, htitem_with_enumchron)
       expect(overlap.matching_holdings).to be_a(Enumerable)
       expect(overlap.matching_holdings.count).to eq(1)
@@ -110,8 +113,8 @@ RSpec.describe Overlap::MultiPartOverlap do
       # differently from the institution reported holdings, so we assume they
       # hold them all.
 
-      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "1863")
-      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "1865")
+      create(:holding, mono_multi_serial: "mpm", organization: "smu", ocn: c.ocns.first, enum_chron: "1863")
+      create(:holding, mono_multi_serial: "mpm", organization: "smu", ocn: c.ocns.first, enum_chron: "1865")
 
       overlap = described_class.new("smu", htitem_with_enumchron)
       expect(overlap.matching_holdings.count).to eq(2)
@@ -122,8 +125,8 @@ RSpec.describe Overlap::MultiPartOverlap do
       # smu reports v.3 and v.5
       # we ask: does smu hold 1? it should not.
 
-      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "v.3")
-      create(:holding, organization: "smu", ocn: c.ocns.first, enum_chron: "v.5")
+      create(:holding, mono_multi_serial: "mpm", organization: "smu", ocn: c.ocns.first, enum_chron: "v.3")
+      create(:holding, mono_multi_serial: "mpm", organization: "smu", ocn: c.ocns.first, enum_chron: "v.5")
 
       overlap = described_class.new("smu", htitem_with_enumchron)
 
@@ -157,7 +160,7 @@ RSpec.describe Overlap::MultiPartOverlap do
     end
 
     it "returns 1 copy if org has a non-matching holding" do
-      nmh = create(:holding, ocn: htitem_with_enumchron.ocns.first, n_enum: "not matched")
+      nmh = create(:holding, mono_multi_serial: "mpm", ocn: htitem_with_enumchron.ocns.first, n_enum: "not matched")
       mpo = described_class.new(nmh.organization, htitem_with_enumchron)
       expect(mpo.copy_count).to be(1)
     end
@@ -187,7 +190,9 @@ RSpec.describe Overlap::MultiPartOverlap do
     end
 
     it "returns false if the member has a non-matching holding" do
-      nmh = create(:holding, organization: "upenn",
+      nmh = create(:holding,
+        mono_multi_serial: "mpm",
+        organization: "upenn",
         ocn: htitem_with_enumchron.ocns.first,
         n_enum: "not matched")
       mpo = described_class.new(nmh.organization, htitem_with_enumchron)

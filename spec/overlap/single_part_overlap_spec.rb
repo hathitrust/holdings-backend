@@ -13,14 +13,15 @@ RSpec.describe Overlap::SinglePartOverlap do
       ocns: ht.ocns,
       collection_code: "MIU")
   end
-  let(:h) { build(:holding, ocn: ht.ocns.first, organization: "umich", status: "LM") }
+  let(:h) { build(:holding, mono_multi_serial: "spm", ocn: ht.ocns.first, organization: "umich", status: "LM") }
   let(:h2) do
     build(:holding,
+      mono_multi_serial: "spm",
       ocn: c.ocns.first,
       organization: "umich",
       condition: "BRT")
   end
-  let(:h3) { build(:holding, ocn: ht.ocns.first, organization: "smu") }
+  let(:h3) { build(:holding, mono_multi_serial: "spm", ocn: ht.ocns.first, organization: "smu") }
 
   before(:each) do
     load_test_data(ht, h, h2, h3)

@@ -209,11 +209,10 @@ RSpec.describe HoldingsAPI do
       expect(response["format"]).to eq "mpm"
     end
 
-    # Brittle test?
     it "correctly identifies mpms as not held when not held" do
-      ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
-      ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
-      holding = build(:holding, enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
+      ht1 = build(:ht_item, :mpm, enum_chron: "v.1", billing_entity: "umich")
+      ht2 = build(:ht_item, :mpm, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
+      holding = build(:holding, mono_multi_serial: "mpm", enum_chron: "v.1", ocn: ht1.ocns.first, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings matches on ht1 but not on ht2 (different enumchron)
@@ -224,9 +223,9 @@ RSpec.describe HoldingsAPI do
     end
 
     it "treats an empty holdings enum_chron as a wildcard, matches all" do
-      ht1 = build(:ht_item, enum_chron: "v.1", billing_entity: "umich")
-      ht2 = build(:ht_item, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
-      holding = build(:holding, enum_chron: "", ocn: ht1.ocns.first, organization: "upenn")
+      ht1 = build(:ht_item, :mpm, enum_chron: "v.1", billing_entity: "umich")
+      ht2 = build(:ht_item, :mpm, enum_chron: "v.2", ocns: ht1.ocns, billing_entity: "umich")
+      holding = build(:holding, mono_multi_serial: "mpm", enum_chron: "", ocn: ht1.ocns.first, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
       # as set up above, upenn's holdings (empty enumchron) matches on ht1 both ht2
@@ -418,10 +417,10 @@ RSpec.describe HoldingsAPI do
         load_test_data(
           htitem_2,
           build(:ht_item, :mpm, ocns: ocn2, enum_chron: "6"),
-          build(:holding, organization: "umich", ocn: ocn, enum_chron: "1-5"),
-          build(:holding, organization: "stanford", ocn: ocn, enum_chron: ""),
-          build(:holding, organization: "smu", ocn: ocn, enum_chron: "1922-1927"),
-          build(:holding, organization: "ualberta", ocn: ocn, enum_chron: "6")
+          build(:holding, mono_multi_serial: "mpm", organization: "umich", ocn: ocn, enum_chron: "1-5"),
+          build(:holding, mono_multi_serial: "mpm", organization: "stanford", ocn: ocn, enum_chron: ""),
+          build(:holding, mono_multi_serial: "mpm", organization: "smu", ocn: ocn, enum_chron: "1922-1927"),
+          build(:holding, mono_multi_serial: "mpm", organization: "ualberta", ocn: ocn, enum_chron: "6")
         )
         response = parse_response("item_held_by", item_id: item_id_2)
 
@@ -449,7 +448,7 @@ RSpec.describe HoldingsAPI do
       ocn = 123
       ht1 = build(:ht_item, enum_chron: "v.1", bib_fmt: "BK", ocns: [ocn], billing_entity: "umich")
       ht2 = build(:ht_item, ht_bib_key: ht1.ht_bib_key, enum_chron: "v.2", bib_fmt: "BK", ocns: [ocn], billing_entity: "umich")
-      holding = build(:holding, enum_chron: "v.1", ocn: ocn, organization: "upenn")
+      holding = build(:holding, mono_multi_serial: "mpm", enum_chron: "v.1", ocn: ocn, organization: "upenn")
       load_test_data(ht1, ht2, holding)
 
       # solr record in the format traject should send it to us

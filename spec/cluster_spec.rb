@@ -144,9 +144,9 @@ RSpec.describe Cluster do
   end
 
   describe "Precomputed fields" do
-    let(:h1) { build(:holding, ocn: ocn1, enum_chron: "1", organization: "umich") }
-    let(:h2) { build(:holding, ocn: ocn1, enum_chron: "2", organization: "umich") }
-    let(:ht1) { build(:ht_item, ocns: [ocn1], enum_chron: "3", collection_code: "MIU") }
+    let(:h1) { build(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "1", organization: "umich") }
+    let(:h2) { build(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "2", organization: "umich") }
+    let(:ht1) { build(:ht_item, :mpm, ocns: [ocn1], enum_chron: "3", collection_code: "MIU") }
     let(:cluster) { Cluster.new(ocns: [ocn1]) }
 
     before(:each) do
@@ -183,22 +183,22 @@ RSpec.describe Cluster do
 
     describe "#organizations_with_holdings_but_no_matches" do
       it "is a list of orgs in the cluster that don't match anything" do
-        create(:holding, ocn: ocn1, enum_chron: "4", organization: "ualberta")
+        create(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "4", organization: "ualberta")
         expect(cluster.organizations_with_holdings_but_no_matches).to include("ualberta")
       end
 
       it "does not include orgs that do have a match" do
-        matching_holding = create(:holding, ocn: ocn1, enum_chron: "3")
+        matching_holding = create(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "3")
         expect(cluster.organizations_with_holdings_but_no_matches).not_to \
           include(matching_holding.organization)
       end
 
       it "DOES NOT include orgs that only have a billing entity match" do
-        ht2 = build(:ht_item, ocns: [ocn1], enum_chron: "5", collection_code: "AEU")
+        ht2 = build(:ht_item, :mpm, ocns: [ocn1], enum_chron: "5", collection_code: "AEU")
         insert_htitem(ht2)
         expect(cluster.organizations_with_holdings_but_no_matches).not_to include("ualberta")
         # but does if they have a non-matching holding
-        create(:holding, ocn: ocn1, enum_chron: "6", organization: "ualberta")
+        create(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "6", organization: "ualberta")
         cluster.invalidate_cache
         expect(cluster.organizations_with_holdings_but_no_matches).to include("ualberta")
       end
