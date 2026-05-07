@@ -3,6 +3,7 @@
 require "overlap/ht_item_overlap"
 require "frequency_table"
 require "services"
+require "utils/slack_notifier"
 
 # In Aug 2023 we decided that items with rights:icus should behave as if
 # they were access:allow (PD, everybody pay), instead of the traditional
@@ -52,6 +53,14 @@ module Reports
       ymd = Time.new.strftime("%F")
       dump_frequency_table("frequency_#{ymd}.json")
       logger.info "Done"
+
+      Utils::SlackNotifier.post(
+        "Cost report complete — " \
+        "*#{ht_item_count}* volumes, " \
+        "target cost *$#{sprintf("%0.2f", target_cost)}*, " \
+        "cost per volume *$#{sprintf("%0.4f", cost_per_volume)}*, " \
+        "written to *#{File.basename(output_filename)}*."
+      )
     end
 
     def initialize(organization: nil,
