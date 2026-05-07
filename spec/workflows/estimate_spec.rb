@@ -71,6 +71,20 @@ RSpec.describe Workflows::Estimate do
           1 (50.0%) are in copyright.
         EOT
       end
+
+      context "Slack notification" do
+        include_context "with mocked slack API endpoint"
+
+        it "posts a notification with the estimate results" do
+          stub = stub_slack_webhook(a_string_including("Estimate complete")
+            .and(a_string_including("ocnfile.txt"))
+            .and(a_string_including("2/4 OCNs matched"))
+            .and(a_string_including("1 IC items"))
+            .and(a_string_including("$5.00")))
+          described_class.new(working_directory: ENV["TEST_TMP"], ocn_file: ocn_file).run
+          expect(stub).to have_been_requested.once
+        end
+      end
     end
   end
 
