@@ -4,6 +4,7 @@ require "services"
 require "overlap/cluster_overlap"
 require "overlap/report_record"
 require "overlap/report_record_matching_members_count"
+require "utils/slack_notifier"
 require "workflows/solr"
 
 module Workflows
@@ -150,6 +151,7 @@ module Workflows
         gzip_report
         FileUtils.cp(report_gz_path, persistent_report_path)
         system(*rclone_move(report_gz_path, organization))
+        Utils::SlackNotifier.post("Overlap report complete for *#{organization}* — #{report_filename}")
       end
 
       def header
