@@ -69,6 +69,19 @@ RSpec.describe Workflows::OverlapReport do
 
       expect(open_gz_report("smu").to_a).to eq([writer.header + "\n"])
     end
+
+    context "Slack notification" do
+      include_context "with mocked slack API endpoint"
+
+      it "posts a notification when the report is complete" do
+        writer = writer_for_org("umich")
+        stub = stub_slack_webhook(a_string_including("Overlap report complete")
+          .and(a_string_including("umich"))
+          .and(a_string_including(writer.report_filename)))
+        writer.run
+        expect(stub).to have_been_requested.once
+      end
+    end
   end
 
   describe "integration test with Workflow::MapReduce" do
