@@ -11,30 +11,6 @@ RSpec.describe "phctl integration" do
   include_context "with tables for holdings"
 
   describe "load" do
-    xdescribe "commitments" do
-      it "loads json file" do
-        expect { phctl("load", "commitments", fixture("sp_commitment.ndj")) }
-          .to change { cluster_count(:commitments) }.by(1)
-      end
-
-      it "loads tsv file with policies" do
-        expect { phctl("load", "commitments", fixture("sp_commitment_policies.tsv")) }
-          .to change { cluster_count(:commitments) }.by(3)
-      end
-
-      it "loads tsv file with phase 3 commitments" do
-        # Setup, need populated clusters to load commitments
-        [2, 3].each do |ocn|
-          cluster_tap_save(
-            build(:ht_item, ocns: [ocn]),
-            build(:holding, ocn: ocn, organization: "umich")
-          )
-        end
-        expect { phctl("sp", "phase3load", fixture("phase_3_commitments.tsv")) }
-          .to change { cluster_count(:commitments) }.by(2)
-      end
-    end
-
     it "Holdings loads holdings" do
       expect { phctl("load", "holdings", fixture("umich_fake_testdata.ndj")) }
         .to change { Clusterable::Holding.table.count }.by(10)
@@ -158,51 +134,6 @@ RSpec.describe "phctl integration" do
         phctl(*%w[workflow deposit_holdings_analysis --test-mode])
 
         expect(File.size("#{ENV["TEST_TMP"]}/overlap_reports/deposit_holdings_analysis_#{Date.today}.tsv.gz")).to be > 0
-      end
-    end
-
-    xcontext "shared print reports" do
-      it "EligibleCommitments produces output" do
-        phctl(*%w[report eligible-commitments 1])
-
-        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/eligible_commitments_*").first))
-          .to match(/^organization/)
-      end
-
-      it "UncommittedHoldings produces output" do
-        phctl(*%w[report uncommitted-holdings --organization umich])
-
-        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/uncommitted_holdings_umich_*").first))
-          .to match(/^organization/)
-      end
-
-      it "RareUncommittedCounts produces output" do
-        phctl(*%w[report rare-uncommitted-counts --max-h 1])
-
-        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/shared_print_reports/rare_uncommitted_counts_*").first))
-          .to match(/^number of holding libraries/)
-      end
-
-      it "OCLCRegistration produces output" do
-        phctl(*%w[report oclc-registration umich])
-        expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/oclc_registration_umich_*").first))
-          .to match(/^local_oclc/)
-      end
-
-      it "SharedPrintNewlyIngested produces output" do
-        phctl(*%w[report shared-print-newly-ingested --start_date=2021-01-01 --ht_item_ids_file=spec/fixtures/shared_print_newly_ingested_ht_items.tsv --inline])
-        snir = "sp_newly_ingested_report"
-        glob = Dir.glob("#{ENV["TEST_TMP"]}/#{snir}/#{snir}_*").first
-        rpt_out = File.read(glob)
-        expect(rpt_out).to match(/contributor/)
-      end
-
-      it "SharedPrintPhaseCount produces output" do
-        cluster_tap_save build(:commitment, phase: 0)
-        phctl(*%w[report shared-print-phase-count --phase 0])
-        glob = Dir.glob("#{ENV["TEST_TMP"]}/local_reports/sp_phase0_count/sp_phase0_count_*").first
-        lines = File.read(glob).split("\n")
-        expect(lines.count).to eq 2 # 1 header, 1 body
       end
     end
   end

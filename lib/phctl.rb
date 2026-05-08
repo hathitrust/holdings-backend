@@ -67,29 +67,6 @@ module PHCTL
     end
   end
 
-  class SharedPrintOps < JobCommand
-    desc "update INFILE", "Update commitments based on provided records"
-    def update(infile)
-      run_common_job(SharedPrint::Updater, options, infile)
-    end
-
-    desc "replace INFILE", "Replace commitments based on provided records"
-    def replace(infile)
-      run_common_job(SharedPrint::Replacer, options, infile)
-    end
-
-    desc "deprecate INFILE", "Deprecate commitments based on provided records"
-    option :verbose, type: :boolean, default: false
-    def deprecate(*infile)
-      run_job(Jobs::SharedPrintOps::Deprecate, options[:verbose], [*infile])
-    end
-
-    desc "phase3load INFILE", "Load Phase 3 commitments, if valid, from file"
-    def phase3load(infile)
-      run_common_job(SharedPrint::Phase3Validator, options, infile)
-    end
-  end
-
   class Backup < JobCommand
     desc "holdings --organization ORG --mono_multi_serial LIST", "Back up holdings for organization"
     option :organization, type: :string
@@ -129,68 +106,9 @@ module PHCTL
       run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
     end
 
-    desc "eligible-commitments OCNS", "Find eligible commitments"
-    def eligible_commitments(*ocns)
-      # TODO rename report class
-      run_common_job(Reports::CommitmentReplacements, options, ocns)
-    end
-
-    desc "uncommitted-holdings", "Find holdings without commitments"
-    option :all, type: :boolean, default: false
-    option :verbose, type: :boolean, default: false
-    option :organization, type: :array, default: []
-    option :ocn, type: :array, default: []
-    option :noop, type: :boolean, default: false
-    def uncommitted_holdings
-      options[:ocn] = options[:ocn].map(&:to_i)
-      run_common_job(Reports::UncommittedHoldings, options)
-    end
-
-    # E.g. phctl report rare-uncommitted-counts --max_sp_h 2 --max_h 1
-    desc "rare-uncommitted-counts", "Get counts of rare holdings"
-    option :max_h, type: :numeric, default: nil
-    option :max_sp_h, type: :numeric, default: nil
-    option :non_sp_h_count, type: :numeric, default: nil
-    option :commitment_count, type: :numeric, default: 0
-    option :organization, type: :string, default: nil
-    def rare_uncommitted_counts
-      # TODO rename command or report class
-      run_common_job(Reports::RareUncommitted, options)
-    end
-
-    desc "oclc-registration ORGANIZATION", "Output all commitments for ORG in OCLC Registration format"
-    def oclc_registration(organization)
-      run_common_job(Reports::OCLCRegistration, options, organization)
-    end
-
-    desc "phase3-oclc-registration ORGANIZATION", "Output all phase 3 commitments for ORG in OCLC Registration format"
-    def phase3_oclc_registration(organization)
-      run_common_job(Reports::Phase3OCLCRegistration, options, organization)
-    end
-
     desc "holdings-by-date", "List the last time an org submitted holdings, grouped by org and mono_multi_serial"
     def holdings_by_date
       run_common_job(Reports::HoldingsByDateReport, options)
-    end
-
-    desc "shared-print-newly-ingested (--start_date=x) (--ht_item_ids_file=y)",
-      "Get list of volumes ingested since DATE, for SP purposes"
-    option :start_date, type: :string, default: nil
-    option :ht_item_ids_file, type: :string, default: nil
-    def shared_print_newly_ingested
-      run_common_job(Reports::SharedPrintNewlyIngested, options)
-    end
-
-    desc "shared-print-phase-count (--phase=x)",
-      "Get tally of commitments per organization in the given phase"
-    option :phase, type: :numeric, default: nil
-    def shared_print_phase_count
-      run_common_job(Reports::SharedPrintPhaseCount, options)
-    end
-
-    desc "weeding-decision ORGANIZATION", "Generate a report to help ORG decide what to weed"
-    def weeding_decision(organization)
-      run_common_job(Reports::WeedingDecision, options, organization)
     end
   end
 
@@ -322,9 +240,6 @@ module PHCTL
 
     desc "concordance", "Validate or validate and compute deltas"
     subcommand "concordance", Concordance
-
-    desc "sp", "Shared print operations"
-    subcommand "sp", SharedPrintOps
 
     desc "workflow", "Parallelized workflows for generating reports"
     subcommand "workflow", Workflow

@@ -2,7 +2,6 @@
 
 require "clusterable/holding"
 require "clusterable/ht_item"
-require "clusterable/commitment"
 require "clusterable/ocn_resolution"
 require "calculate_format"
 require "cluster_error"
