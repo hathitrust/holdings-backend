@@ -2,6 +2,8 @@
 
 require "spec_helper"
 require "reports/cost_report"
+require "utils/slack_notifier"
+require "timecop"
 require "data_sources/ht_organizations"
 require "frequency_table"
 
@@ -120,6 +122,27 @@ RSpec.describe Reports::CostReport do
 
       # only one item loaded from upenn -- upenn pays for everything
       expect(cr.total_cost_for_member("upenn")).to eq Settings.target_cost
+    end
+
+    describe "#run slack notification" do
+      include_context "with mocked slack API endpoint"
+
+      it "posts a slack notification when the cost report completes" do
+        ft = FrequencyTable.new
+        load_test_data(spm)
+        ft.add_ht_item(spm)
+        # 1 volume, target cost $10 => cost per volume $10.0000
+        cr = described_class.new(target_cost: 10, precomputed_frequency_table: ft)
+
+        Timecop.freeze(Time.new(2025, 1, 15)) do
+          stub = stub_slack_webhook(
+            a_string_including("Cost report complete — *1* volumes, target cost *$10.00*, cost per volume *$10.0000*, written to *costreport_20250115.tsv*")
+          )
+
+          cr.run
+          expect(stub).to have_been_requested.once
+        end
+      end
     end
 
     it "can use a frequency table file" do
