@@ -147,7 +147,7 @@ def fixture(filename)
 end
 
 # This does not work. We now use CLusterable::Holding.count for scrub_runner_spec.rb
-# For commitments and ht_items we recommend a `count` method on the appropriate class.
+# For ht_items we recommend a `count` method on the appropriate class.
 def cluster_count(field)
   Cluster.each.map { |c| c.public_send(field).count }.reduce(0, :+)
 end

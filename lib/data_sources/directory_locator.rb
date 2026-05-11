@@ -59,11 +59,6 @@ module DataSources
       File.join(holdings, @year)
     end
 
-    # The shared print directory (not divided into years like holdings are)
-    def shared_print
-      File.join(base, "shared print")
-    end
-
     # This is where HT uploads reports and such for the member to access.
     def analysis
       File.join(base, "analysis")
@@ -73,7 +68,6 @@ module DataSources
     def ensure!
       @ft ||= Utils::FileTransfer.new
       @ft.mkdir_p(holdings_current)
-      @ft.mkdir_p(shared_print)
       @ft.mkdir_p(analysis)
     end
   end

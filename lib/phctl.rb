@@ -27,11 +27,6 @@ module PHCTL
   end
 
   class Load < JobCommand
-    desc "commitments FILENAME", "Add shared print commitments"
-    def commitments(filename)
-      run_job(Jobs::Load::Commitments, filename)
-    end
-
     desc "ht-items FILENAME", "Add HT Items"
     def ht_items(filename)
       run_job(Jobs::Load::HtItems, filename)
@@ -42,11 +37,6 @@ module PHCTL
     desc "concordance FILENAME_OR_DATE", "Load concordance deltas if argument is YYYYMMDD, or a full concordance file"
     def concordance(filename_or_date)
       run_job(Jobs::Load::Concordance, filename_or_date)
-    end
-
-    desc "cluster-file FILENAME", "Add a whole file of clusters in JSON format."
-    def cluster_file(filename)
-      run_job(Jobs::Load::ClusterFile, filename)
     end
 
     desc "holdings FILENAME", "Loads scrubbed holdings."

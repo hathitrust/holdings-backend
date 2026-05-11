@@ -69,11 +69,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     end
 
     context "common job" do
-      # need some data or it gets upset
-      before(:each) do
-        PHCTL::PHCTL.start(["load", "cluster_file", "--inline", fixture("cluster_2503661.json")])
-      end
-
       it "does not queue a sidekiq job" do
         expect { PHCTL::PHCTL.start(["report", "costreport", "--inline"]) }
           .not_to change(Jobs::Common.jobs, :size)

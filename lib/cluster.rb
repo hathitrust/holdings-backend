@@ -10,7 +10,6 @@ require "cluster_error"
 # - ocns
 # - holdings
 # - htitems
-# - commitments
 class Cluster
   attr_reader :ocns
   # can use if deserializing
@@ -59,10 +58,6 @@ class Cluster
 
   def ht_item(item_id)
     Clusterable::HtItem.find(item_id: item_id, ocns: ocns, cluster: self)
-  end
-
-  def commitments
-    []
   end
 
   def holdings
@@ -178,6 +173,6 @@ class Cluster
   end
 
   def empty?
-    ht_items.empty? && ocn_resolutions.empty? && holdings.empty? && commitments.empty?
+    ht_items.empty? && ocn_resolutions.empty? && holdings.empty?
   end
 end

@@ -52,7 +52,6 @@ HathiTrust requires print holdings information from partner institutions in orde
 
 * Support analysis of the overlap of institutions' print holdings with digital holdings in HathiTrust. These calculations are used to generate annual member fees.
 * Facilitate collaborative collection development and management operations.
-* Support the HathiTrust Shared Print Program.
 * Enable access via the Emergency Temporary Access Service.
 
 Files should be uploaded to the Dropbox folder for your institution, under:
@@ -277,7 +276,6 @@ Required for: all item types
 Used for:
 
 * Tracking updated holdings submissions over time.
-* Matching Shared Print Commitments to specific Print Holdings records.
 * Communicating/reporting back to you about specific Print Holdings records.
 
 Requirements:
@@ -291,7 +289,7 @@ Optional for: files with item type spm, mpm & mon.
 
 Used for:
 
-* Determining eligibility for inclusion in the HathiTrust Shared Print Program.
+* Determining eligibility for this item for various HathiTrust services such as resource sharing
 
 Status values accepted:
 
@@ -313,7 +311,7 @@ Optional for: files with item type spm, mpm & mon.
 
 Used for:
 
-* Determining eligibility for inclusion in the HathiTrust Shared Print Program.
+* Determining eligibility for this item for various HathiTrust services such as resource sharing
 
 Condition values accepted:
 
@@ -394,8 +392,7 @@ Optional for: all files.
 
 Used for:
 
-* Collection analysis, in conjunction with HathiTrust's U.S. Federal Government
-Documents Program and the HathiTrust Shared Print Program
+* Collection analysis
 
 Govdoc values accepted:
 
