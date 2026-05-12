@@ -133,7 +133,7 @@ class HTRecord
   end
 
   def condition
-    @condition ||= itm("c")
+    @condition ||= map_condition(itm("c"))
   end
 
   def item_type
@@ -196,6 +196,15 @@ class HTRecord
       "s" => "ser",
       "m" => "mon"
     }[item_type] || "mix"
+  end
+
+  def map_condition(condition)
+    {
+      "BRITTLE" => "BRT",
+      "DAMAGED" => "BRT",
+      "DETERIORATING" => "BRT",
+      "FRAGILE" => "BRT"
+    }[condition] || ""
   end
 
   def map_status(status)
