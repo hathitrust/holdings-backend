@@ -210,8 +210,9 @@ class HTRecord
   def map_status(status)
     unless item_type == "ser"
       {
-        "MISSING" => "LM",
-        "LOST_LOAN" => "LM"
+        "LOST_ILL" => "LM",
+        "LOST_LOAN" => "LM",
+        "MISSING" => "LM"
       }[status] || "CH"
     end
   end

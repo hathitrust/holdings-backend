@@ -42,6 +42,7 @@ end
 
 RSpec.describe HTRecord do
   let(:marc_record) { MARC::Record.new }
+  let(:serial) { MARC::Record.new.tap { |r| r.leader[7] = "s" } }
 
   describe "#initialize" do
     it "returns an HTRecord" do
@@ -65,6 +66,50 @@ RSpec.describe HTRecord do
     it "raises if there is no ITM datafield" do
       expect {
         described_class.new(marc_record).condition
+      }.to raise_error(StandardError)
+    end
+  end
+
+  describe "#status" do
+    context "with a serial" do
+      ["LOST_ILL", "LOST_LOAN", "MISSING"].each do |status|
+        it "returns `nil` for status #{status}" do
+          serial << MARC::DataField.new("ITM", " ", " ", ["k", status])
+          expect(described_class.new(serial).status).to eq(nil)
+        end
+      end
+
+      it "returns `nil` for missing ITM|k value" do
+        serial << MARC::DataField.new("ITM", " ", " ")
+        expect(described_class.new(serial).status).to eq(nil)
+      end
+    end
+
+    context "with a monograph" do
+      ["LOST_ILL", "LOST_LOAN", "MISSING"].each do |status|
+        it "returns `LM` for status #{status}" do
+          marc_record << MARC::DataField.new("ITM", " ", " ", ["k", status])
+          expect(described_class.new(marc_record).status).to eq("LM")
+        end
+      end
+
+      # Sample attested Alma Process Status values that don't translate to lost/missing.
+      ["ACQ", "CLAIM_RETURNED_LOAN", "ILL", "LOAN"].each do |status|
+        it "returns `CH` for non-lost/missing status #{status}" do
+          marc_record << MARC::DataField.new("ITM", " ", " ", ["k", status])
+          expect(described_class.new(marc_record).status).to eq("CH")
+        end
+      end
+
+      it "returns `CH` for missing ITM|k value" do
+        marc_record << MARC::DataField.new("ITM", " ", " ")
+        expect(described_class.new(marc_record).status).to eq("CH")
+      end
+    end
+
+    it "raises if there is no ITM datafield" do
+      expect {
+        described_class.new(marc_record).status
       }.to raise_error(StandardError)
     end
   end
