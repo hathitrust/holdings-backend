@@ -2,7 +2,6 @@
 
 require "clusterable/holding"
 require "clusterable/ht_item"
-require "clusterable/commitment"
 require "clusterable/ocn_resolution"
 require "calculate_format"
 require "cluster_error"
@@ -11,7 +10,6 @@ require "cluster_error"
 # - ocns
 # - holdings
 # - htitems
-# - commitments
 class OCNLessCluster
   attr_reader :id
   attr_writer :ht_items
@@ -31,10 +29,6 @@ class OCNLessCluster
 
   def ht_items
     @ht_items ||= Clusterable::HtItem.with_bib_key(@bib_key)
-  end
-
-  def commitments
-    []
   end
 
   def holdings

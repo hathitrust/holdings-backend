@@ -2,7 +2,6 @@ RSpec.shared_context "with complete data for one cluster" do
   include_context "with tables for holdings"
   include_context "with mocked solr response"
 
-  # Data from spec/fixtures/cluster_2503661.json, without commitments
   before(:each) do
     # solr response with this record
     mock_solr_oclc_search(File.open(fixture("record_008638629.json")))

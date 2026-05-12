@@ -118,5 +118,3 @@ end
 generate_holdings
 generate_htitems
 generate_ocn_resolutions
-
-# to do: commitments

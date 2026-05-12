@@ -5,25 +5,11 @@ require "ex_libris_holdings_xml_parser"
 require "loader/concordance_loader"
 require "loader/file_loader"
 require "loader/holding_loader"
-require "loader/shared_print_loader"
-require "reports/commitment_replacements"
 require "reports/cost_report"
-require "reports/dynamic"
 require "reports/holdings_by_date_report"
 require "reports/member_counts"
-require "reports/oclc_registration"
-require "reports/phase3_oclc_registration"
-require "reports/rare_uncommitted"
-require "reports/shared_print_newly_ingested"
-require "reports/shared_print_phase_count"
-require "reports/uncommitted_holdings"
-require "reports/weeding_decision"
 require "scrub/pre_load_backup"
 require "scrub/scrub_runner"
-require "shared_print/deprecator"
-require "shared_print/phase_3_validator"
-require "shared_print/replacer"
-require "shared_print/updater"
 require "workflow_component"
 require "workflows/cost_report"
 require "workflows/deposit_holdings_analysis"
@@ -119,16 +105,6 @@ module Jobs
   end
 
   module Load
-    class Commitments
-      include Sidekiq::Job
-
-      def perform(filename)
-        Services.logger.info "Loading Shared Print Commitments: #{filename}"
-        Loader::FileLoader.new(batch_loader: Loader::SharedPrintLoader.for(filename))
-          .load(filename, filehandle: Loader::SharedPrintLoader.filehandle_for(filename))
-      end
-    end
-
     class Concordance
       include Sidekiq::Job
 
@@ -189,16 +165,6 @@ module Jobs
         )
         backup_obj.write_backup_file
         Services.logger.info "Wrote backup file for #{organization}:#{mono_multi_serial} to #{backup_obj.backup_path}"
-      end
-    end
-  end
-
-  module SharedPrintOps
-    class Deprecate
-      include Sidekiq::Job
-
-      def perform(verbose, infiles)
-        SharedPrint::Deprecator.new(verbose: verbose).run(infiles)
       end
     end
   end
