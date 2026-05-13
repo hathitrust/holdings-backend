@@ -73,15 +73,15 @@ RSpec.describe HTRecord do
   describe "#status" do
     context "with a serial" do
       ["LOST_ILL", "LOST_LOAN", "MISSING"].each do |status|
-        it "returns `nil` for status #{status}" do
+        it "returns empty string for status #{status}" do
           serial << MARC::DataField.new("ITM", " ", " ", ["k", status])
-          expect(described_class.new(serial).status).to eq(nil)
+          expect(described_class.new(serial).status).to eq("")
         end
       end
 
-      it "returns `nil` for missing ITM|k value" do
+      it "returns empty string for missing ITM|k value" do
         serial << MARC::DataField.new("ITM", " ", " ")
-        expect(described_class.new(serial).status).to eq(nil)
+        expect(described_class.new(serial).status).to eq("")
       end
     end
 
