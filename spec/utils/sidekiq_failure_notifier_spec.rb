@@ -9,7 +9,7 @@ RSpec.describe Utils::SidekiqFailureNotifier do
   let(:error) { RuntimeError.new("disk full") }
 
   describe "NOTIFY_AT_RETRY_COUNT" do
-    it "is 1 (triggers on the 3rd failure)" do
+    it "is 1 (triggers on the 3rd failure and beyond)" do
       expect(described_class::NOTIFY_AT_RETRY_COUNT).to eq 1
     end
   end
@@ -38,45 +38,35 @@ RSpec.describe Utils::SidekiqFailureNotifier do
     end
   end
 
-  describe "Middleware" do
-    subject(:middleware) { described_class::Middleware.new }
-
-    def run_middleware(job, &blk)
-      middleware.call(nil, job, "default", &blk)
-    rescue RuntimeError
-      # expected re-raise
-    end
-
-    it "always re-raises the exception" do
-      job = {"class" => "Jobs::Common", "retry_count" => 1}
-      expect {
-        middleware.call(nil, job, "default") { raise error }
-      }.to raise_error(RuntimeError, "disk full")
+  describe ".on_error" do
+    def run_handler(job)
+      described_class.on_error(error, {job: job})
     end
 
     it "does not post to Slack on 1st attempt (retry_count nil)" do
-      run_middleware({"class" => "Jobs::Common", "retry_count" => nil}) { raise error }
+      run_handler({"class" => "Jobs::Common", "retry_count" => nil})
       expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
     end
 
     it "does not post to Slack on 2nd attempt (retry_count 0)" do
-      run_middleware({"class" => "Jobs::Common", "retry_count" => 0}) { raise error }
+      run_handler({"class" => "Jobs::Common", "retry_count" => 0})
       expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
     end
 
-    it "posts to Slack exactly once on 3rd attempt (retry_count 1)" do
+    it "posts to Slack on 3rd attempt (retry_count 1)" do
       stub = stub_request(:post, alerts_webhook_url).to_return(status: 200)
-      run_middleware({"class" => "Jobs::Common", "retry_count" => 1}) { raise error }
+      run_handler({"class" => "Jobs::Common", "retry_count" => 1})
       expect(stub).to have_been_requested.once
     end
 
-    it "does not post to Slack on subsequent retries (retry_count 2+)" do
-      run_middleware({"class" => "Jobs::Common", "retry_count" => 2}) { raise error }
-      expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
+    it "posts to Slack on subsequent retries (retry_count 2+)" do
+      stub = stub_request(:post, alerts_webhook_url).to_return(status: 200)
+      run_handler({"class" => "Jobs::Common", "retry_count" => 2})
+      expect(stub).to have_been_requested.once
     end
 
-    it "does not post to Slack when the job succeeds" do
-      middleware.call(nil, {"class" => "Jobs::Common", "retry_count" => 1}, "default") { nil }
+    it "does not post to Slack when ctx has no job" do
+      described_class.on_error(error, {})
       expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
     end
 
@@ -89,7 +79,7 @@ RSpec.describe Utils::SidekiqFailureNotifier do
       end
 
       it "makes no HTTP request" do
-        run_middleware({"class" => "Jobs::Common", "retry_count" => 1}) { raise error }
+        run_handler({"class" => "Jobs::Common", "retry_count" => 1})
         expect(a_request(:any, //)).not_to have_been_made
       end
     end

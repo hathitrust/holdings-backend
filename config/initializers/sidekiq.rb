@@ -22,9 +22,7 @@ end
 Sidekiq.configure_server do |config|
   config.redis = Services.redis_config
 
-  config.server_middleware do |chain|
-    chain.add Utils::SidekiqFailureNotifier::Middleware
-  end
+  config.error_handlers << Utils::SidekiqFailureNotifier.method(:on_error)
 
   config.death_handlers << lambda { |job, exception|
     Utils::SlackNotifier.post(
