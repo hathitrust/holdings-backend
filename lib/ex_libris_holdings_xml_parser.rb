@@ -133,7 +133,7 @@ class HTRecord
   end
 
   def condition
-    @condition ||= itm("c")
+    @condition ||= map_condition(itm("c"))
   end
 
   def item_type
@@ -198,12 +198,22 @@ class HTRecord
     }[item_type] || "mix"
   end
 
+  def map_condition(condition)
+    {
+      "BRITTLE" => "BRT",
+      "DAMAGED" => "BRT",
+      "DETERIORATING" => "BRT",
+      "FRAGILE" => "BRT"
+    }[condition] || ""
+  end
+
   def map_status(status)
-    unless item_type == "ser"
-      {
-        "MISSING" => "LM",
-        "LOST_LOAN" => "LM"
-      }[status] || "CH"
-    end
+    return "" if item_type == "ser"
+
+    {
+      "LOST_ILL" => "LM",
+      "LOST_LOAN" => "LM",
+      "MISSING" => "LM"
+    }[status] || "CH"
   end
 end
