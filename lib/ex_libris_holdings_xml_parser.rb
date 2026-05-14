@@ -93,6 +93,7 @@ class HTRecord
   end
 
   # Should use the same order as HTRecord.header_tsv
+  # TODO: is this used anywhere?
   def to_tsv
     [item_type, oclc, local_id, status, condition, enum_chron, issn, govdoc]
       .join("\t").delete("\n")
@@ -154,6 +155,7 @@ class HTRecord
     @status ||= map_status(itm("k"))
   end
 
+  # TODO: return empty string for non-serials and serials lacking 022|a?
   def issn
     if item_type == "ser"
       if @marc_record.fields("022").any?
