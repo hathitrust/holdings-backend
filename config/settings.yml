@@ -15,6 +15,7 @@ rclone_config_path: <%= ENV["RCLONE_CONFIG_PATH"] %>
 target_cost: <%= ENV["TARGET_COST"] %>
 working_path: <%= ENV["WORKING_PATH"] %>
 slack_webhook_url: <%= ENV["SLACK_WEBHOOK_URL"] %>
+slack_alerts_webhook_url: <%= ENV["SLACK_ALERTS_WEBHOOK_URL"] %>
 solr_data_source:
   milemarker_batch_size: 50000
   solr_results_per_query: 5000

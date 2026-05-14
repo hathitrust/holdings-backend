@@ -1,5 +1,6 @@
 require "sidekiq"
 require "services"
+require "utils/sidekiq_failure_notifier"
 
 # Add anything here you need for sidekiq initialization
 
@@ -20,6 +21,15 @@ end
 
 Sidekiq.configure_server do |config|
   config.redis = Services.redis_config
+
+  config.error_handlers << Utils::SidekiqFailureNotifier.method(:on_error)
+
+  config.death_handlers << lambda { |job, exception|
+    Utils::SlackNotifier.post(
+      Utils::SidekiqFailureNotifier.death_message(job, exception),
+      url: Utils::SidekiqFailureNotifier.alerts_url
+    )
+  }
 end
 
 Sidekiq.configure_client do |config|
