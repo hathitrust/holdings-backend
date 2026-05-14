@@ -49,7 +49,7 @@ RSpec.describe ExLibrisHoldingsXmlParser do
           </record>
         </collection>
       XML
-      File.write(bogus_mon, bogus_xml, mode: 'w+')
+      File.write(bogus_mon, bogus_xml, mode: "w+")
       parser = described_class.new(
         organization: organization,
         files: [bogus_mon, input_ser],
@@ -59,7 +59,7 @@ RSpec.describe ExLibrisHoldingsXmlParser do
         parser.run
       }.to output(
         match(/unexpected item type/)
-        .and match(/missing 035a/)
+        .and(match(/missing 035a/))
       ).to_stderr
     end
   end
@@ -87,7 +87,7 @@ RSpec.describe HTRecord do
       monograph << MARC::DataField.new(
         "ITM",
         " ",
-        " ", 
+        " ",
         ["a", "volume"],
         ["b", "issue"],
         ["c", "BRITTLE"],
@@ -107,7 +107,7 @@ RSpec.describe HTRecord do
       monograph << MARC::DataField.new(
         "ITM",
         " ",
-        " ", 
+        " ",
         ["a", "volume"],
         ["b", "issue"],
         ["c", "BRITTLE"],
@@ -293,7 +293,7 @@ RSpec.describe HTRecord do
   end
 
   # Just a wrapper around #is_us_govdoc? returning "0" or "1"
-  # Could be combined with the `#is_us_govdoc?` tests 
+  # Could be combined with the `#is_us_govdoc?` tests
   describe "#govdoc" do
     it "returns 1 for US fed doc" do
       marc_record << MARC::ControlField.new("008", us_govdoc_008)
@@ -304,7 +304,7 @@ RSpec.describe HTRecord do
       marc_record << MARC::ControlField.new("008", us_non_govdoc_008)
       expect(described_class.new(marc_record).govdoc).to eq("0")
     end
-    
+
     it "returns 0 for non-US fed doc" do
       marc_record << MARC::ControlField.new("008", non_us_govdoc_008)
       expect(described_class.new(marc_record).govdoc).to eq("0")
@@ -327,7 +327,7 @@ RSpec.describe HTRecord do
       marc_record << MARC::ControlField.new("008", us_non_govdoc_008)
       expect(described_class.new(marc_record).is_us_govdoc?).to eq(false)
     end
-    
+
     it "rejects non-US fed doc" do
       marc_record << MARC::ControlField.new("008", non_us_govdoc_008)
       expect(described_class.new(marc_record).is_us_govdoc?).to eq(false)
@@ -346,12 +346,11 @@ RSpec.describe HTRecord do
         expect(described_class.new(marc_record).is_us?(code)).to eq(true)
       end
     end
-    
+
     it "rejects non-US codes" do
       ["enk", "quc", "xx#"].each do |code|
         expect(described_class.new(marc_record).is_us?(code)).to eq(false)
       end
     end
-    
   end
 end
