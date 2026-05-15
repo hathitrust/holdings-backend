@@ -79,27 +79,6 @@ RSpec.describe HTRecord do
     end
   end
 
-  # See TODO note -- may not be used
-  describe "#to_tsv" do
-    it "serializes a generic record to TSV" do
-      monograph << MARC::ControlField.new("008", us_non_govdoc_008)
-      monograph << MARC::DataField.new("035", " ", " ", ["a", "OCLC"])
-      monograph << MARC::DataField.new(
-        "ITM",
-        " ",
-        " ",
-        ["a", "volume"],
-        ["b", "issue"],
-        ["c", "BRITTLE"],
-        ["d", "LOCAL_ID"],
-        ["k", "MISSING"],
-        ["i", "year"],
-        ["j", "month"]
-      )
-      expect(described_class.new(monograph).to_tsv).to eq("mon\tOCLC\tLOCAL_ID\tLM\tBRT\tvolume,issue,year,month\t\t0")
-    end
-  end
-
   describe "#to_mon_tsv" do
     it "serializes a serial record to TSV" do
       monograph << MARC::ControlField.new("008", us_non_govdoc_008)
