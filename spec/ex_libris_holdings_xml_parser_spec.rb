@@ -166,14 +166,14 @@ RSpec.describe HTRecord do
     context "with a serial" do
       it "takes its value from the 001" do
         serial << MARC::ControlField.new("001", "001")
-        serial << MARC::DataField.new("ITM", " ", " ", ["d", "ITM|d"])
+        serial << MARC::DataField.new("ITM", " ", " ", ["d", "ITM|d"]) # red herring
         expect(described_class.new(serial).local_id).to eq("001")
       end
     end
 
     context "with a non-serial" do
       it "takes its value from ITM|d" do
-        marc_record << MARC::ControlField.new("001", "001")
+        marc_record << MARC::ControlField.new("001", "001") # red herring
         marc_record << MARC::DataField.new("ITM", " ", " ", ["d", "ITM|d"])
         expect(described_class.new(marc_record).local_id).to eq("ITM|d")
       end
@@ -230,14 +230,19 @@ RSpec.describe HTRecord do
 
   describe "#issn" do
     context "with a monograph" do
-      it "returns `nil`" do
-        expect(described_class.new(monograph).issn).to eq(nil)
+      it "returns empty string" do
+        expect(described_class.new(monograph).issn).to eq("")
       end
     end
 
     context "with a serial" do
-      it "returns empty array if no 022|a given" do
-        expect(described_class.new(serial).issn).to eq([])
+      it "returns empty string if no 022|a given" do
+        expect(described_class.new(serial).issn).to eq("")
+      end
+
+      it "returns empty string if 022 is given without subfield a" do
+        serial << MARC::DataField.new("022", " ", " ", ["y", "0046-2254"])
+        expect(described_class.new(serial).issn).to eq("")
       end
 
       it "returns value from 022|a" do

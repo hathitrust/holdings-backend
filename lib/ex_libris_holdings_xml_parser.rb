@@ -155,14 +155,11 @@ class HTRecord
     @status ||= map_status(itm("k"))
   end
 
-  # TODO: return empty string for non-serials and serials lacking 022|a?
   def issn
-    if item_type == "ser"
-      if @marc_record.fields("022").any?
-        @marc_record["022"]["a"]
-      else
-        []
-      end
+    if item_type == "ser" && @marc_record.fields("022").any?
+      @marc_record["022"]["a"] || ""
+    else
+      ""
     end
   end
 
