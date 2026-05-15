@@ -40,6 +40,8 @@ RSpec.describe ExLibrisHoldingsXmlParser do
 
     it "prints errors" do
       bogus_mon = File.join(ENV["TEST_TMP"], "bogus_mon.xml")
+      # The empty <record>s will trigger two combined "unexpected item type" errors.
+      # The third record will trigger a single "missing 035a error.
       bogus_xml = <<~XML
         <collection>
           <record></record>
