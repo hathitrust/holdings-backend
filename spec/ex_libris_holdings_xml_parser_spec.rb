@@ -82,7 +82,7 @@ RSpec.describe HTRecord do
   end
 
   describe "#to_mon_tsv" do
-    it "serializes a serial record to TSV" do
+    it "serializes a monograph record to TSV" do
       monograph << MARC::ControlField.new("008", us_non_govdoc_008)
       monograph << MARC::DataField.new("035", " ", " ", ["a", "OCLC"])
       monograph << MARC::DataField.new(
