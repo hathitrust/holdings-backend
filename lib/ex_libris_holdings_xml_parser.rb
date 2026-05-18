@@ -92,12 +92,6 @@ class HTRecord
     @marc_record = marc_record # ... a Marc::Record!
   end
 
-  # Should use the same order as HTRecord.header_tsv
-  def to_tsv
-    [item_type, oclc, local_id, status, condition, enum_chron, issn, govdoc]
-      .join("\t").delete("\n")
-  end
-
   def to_mon_tsv
     [oclc, local_id, status, condition, enum_chron, govdoc]
       .join("\t").delete("\n")
@@ -155,12 +149,10 @@ class HTRecord
   end
 
   def issn
-    if item_type == "ser"
-      if @marc_record.fields("022").any?
-        @marc_record["022"]["a"]
-      else
-        []
-      end
+    if item_type == "ser" && @marc_record.fields("022").any?
+      @marc_record["022"]["a"] || ""
+    else
+      ""
     end
   end
 
