@@ -73,7 +73,8 @@ RSpec.describe Workflows::MapReduce do
         mapper: WorkflowComponent.new(TestMapper, mapper_params),
         reducer: WorkflowComponent.new(TestReducer)
       },
-      test_mode: true
+      test_mode: true,
+      cleanup: false
     )
   end
 
@@ -148,7 +149,8 @@ RSpec.describe Workflows::MapReduce do
           data_source: WorkflowComponent.new(TestDataSource),
           mapper: WorkflowComponent.new(TestMapper),
           reducer: WorkflowComponent.new(TestReducer)
-        }
+        },
+        cleanup: true # the default
       )
     end
 
@@ -162,9 +164,7 @@ RSpec.describe Workflows::MapReduce do
       expect(File.read(output).strip).to eq(TestDataSource::RECORD_COUNT.to_s)
     end
 
-    # See CostReportWorkflow::Callback -- deleting the intermediate files is currently
-    # not enabled, but we may re-enable that in the future. Re-enable this test at that time.
-    xit "cleans up when cost report completes" do
+    it "cleans up when cost report completes" do
       workflow.run
       expect(File.exist?(@tmpdir)).to be false
     end

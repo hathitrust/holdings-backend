@@ -28,9 +28,12 @@ module Workflows
         reducer_params = Jobs.symbolize(options["params"])
         reducer.new(**reducer_params).run
 
-        # Don't delete intermediate files for now to aid in debugging.
-        # In the future: consider removing by default, but disabling that if a debug flag is present.
-        # FileUtils.remove_entry(options["working_directory"])
+        if options["cleanup"]
+          wd = options["params"]["working_directory"]
+          if wd && File.directory?(wd)
+            FileUtils.remove_entry(wd)
+          end
+        end
       end
     end
 
@@ -40,7 +43,8 @@ module Workflows
       components: {},
       # for testing only; assumes running inline; runs the reduce step
       # immediately
-      test_mode: false
+      test_mode: false,
+      cleanup: true
     )
       if components.keys.to_set != COMPONENT_TYPES
         raise ArgumentError, "Components must be all of #{COMPONENT_TYPES}"
@@ -49,6 +53,7 @@ module Workflows
       @records_per_job = records_per_job
       @inline = false
       @working_directory = working_directory
+      @cleanup = cleanup
       @test_mode = test_mode
 
       yield self if block_given?
@@ -63,7 +68,7 @@ module Workflows
 
     private
 
-    attr_reader :components, :records_per_job, :working_directory, :test_mode
+    attr_reader :cleanup, :components, :records_per_job, :working_directory, :test_mode
 
     COMPONENT_TYPES = [:data_source, :mapper, :reducer].to_set
 
@@ -78,7 +83,8 @@ module Workflows
         component_class: reducer.component_class,
         params: reducer.params.merge(
           working_directory: working_directory
-        )
+        ),
+        cleanup: cleanup
       })
     end
 
