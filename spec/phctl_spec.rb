@@ -49,6 +49,14 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
         .to eq(["Reports::CostReport",
           {"frequency_table" => "/path/to/freqtable.json"}])
     end
+
+    it "accepts item and pd counts" do
+      PHCTL::PHCTL.start(["report", "costreport", "--ht_item_count", "2", "--ht_item_pd_count", "1"])
+
+      expect(Jobs::Common.jobs[0]["args"])
+        .to eq(["Reports::CostReport",
+          {"ht_item_count" => 2, "ht_item_pd_count" => 1}])
+    end
   end
 
   xdescribe "running inline" do
