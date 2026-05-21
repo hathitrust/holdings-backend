@@ -105,6 +105,7 @@ module PHCTL
   class Workflow < JobCommand
     class_option :records_per_job, type: :numeric, default: Settings.mapreduce.records_per_job
     class_option :test_mode, type: :boolean, default: false
+    class_option :cleanup, type: :boolean, default: true, desc: "remove intermediate files in work directory on completion"
 
     no_commands do
       def component(...)
@@ -123,6 +124,7 @@ module PHCTL
       def base_params
         {
           records_per_job: options[:records_per_job],
+          cleanup: options[:cleanup],
           test_mode: options[:test_mode]
         }
       end
