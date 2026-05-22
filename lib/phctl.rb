@@ -82,11 +82,13 @@ module PHCTL
   end
 
   class Report < JobCommand
-    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--working-directory /path/to/frequency/tables)", "Run a cost report given existing frequency tables. One of --frequency-table or --working-directory must be provided."
+    desc "costreport (--organization ORG) (--target_cost COST) (--frequency-table /path/to/table.json) (--working-directory /path/to/frequency/tables) (--ht-item-count NUM) (--ht-item-pd-count NUM)", "Run a cost report given existing frequency tables. One of --frequency-table or --working-directory must be provided."
     option :organization, type: :string, default: nil
     option :target_cost, type: :numeric, default: nil
     option :frequency_table, type: :string, default: nil, desc: "The full path to a .json frequency table to use for the report."
     option :working_directory, type: :string, default: nil, desc: "A directory containing .json frequency tables to sum for this cost report."
+    option :ht_item_count, type: :numeric, default: nil
+    option :ht_item_pd_count, type: :numeric, default: nil
     def costreport
       run_common_job(Reports::CostReport, options)
     end
