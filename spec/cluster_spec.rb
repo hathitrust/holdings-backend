@@ -199,7 +199,9 @@ RSpec.describe Cluster do
         expect(cluster.organizations_with_holdings_but_no_matches).not_to include("ualberta")
         # but does if they have a non-matching holding
         create(:holding, mono_multi_serial: "mpm", ocn: ocn1, enum_chron: "6", organization: "ualberta")
-        cluster.invalidate_cache
+
+        # reload cluster
+        cluster = Cluster.for_ocns([ocn1])
         expect(cluster.organizations_with_holdings_but_no_matches).to include("ualberta")
       end
     end
@@ -217,14 +219,6 @@ RSpec.describe Cluster do
         c = described_class.new(ocns: [ocn2])
         expect(c.copy_counts["umich"]).to eq(2)
         expect(c.copy_counts["smu"]).to eq(1)
-      end
-
-      xit "cached counts should be invalidated when holdings/ht_items are changed" do
-        c = described_class.new(ocns: [ocn2])
-        expect(c.copy_counts["umich"]).to eq(2)
-        c.holdings.map(&:delete)
-        expect(c.holdings.size).to eq(0)
-        expect(c.copy_counts["umich"]).to eq(0)
       end
     end
 

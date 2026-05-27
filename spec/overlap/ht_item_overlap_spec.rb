@@ -86,6 +86,7 @@ RSpec.describe Overlap::HtItemOverlap do
       it "only returns unique organizations" do
         # i.e. if we add another holding for an org that already holds,
         # matching_orgs.count should stay the same
+        ocns = c.ocns
         overlap = described_class.new(c.ht_items.first)
         expect(c.holdings.count).to eq(3)
         expect(overlap.matching_orgs.count).to eq(4)
@@ -96,7 +97,9 @@ RSpec.describe Overlap::HtItemOverlap do
           ocn: c.ocns.first,
           organization: "smu"
         )
-        c.invalidate_cache
+        
+        # reload cluster
+        c = Cluster.for_ocns(ocns)
         # Number of holdings goes up, overlap.matching_orgs.count does not
         expect(c.holdings.count).to eq(4)
         overlap = described_class.new(c.ht_items.first)
