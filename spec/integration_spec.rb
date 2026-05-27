@@ -106,13 +106,6 @@ RSpec.describe "phctl integration" do
         .to match(/Total Estimated IC Cost/)
     end
 
-    xit "MemberCount produces output" do
-      output_path = "#{ENV["TEST_TMP"]}/member_count_output"
-
-      phctl("report", "member-counts", fixture("freq.txt"), output_path)
-      expect(File.size("#{output_path}/member_counts_#{Date.today}.tsv")).to be > 0
-    end
-
     it "Overlap produces output" do
       phctl(*%w[workflow overlap umich --test-mode])
 

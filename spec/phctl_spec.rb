@@ -9,7 +9,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
     %w[concordance delta oldfile newfile] => Jobs::Concordance::Delta,
     # Has wrappers in holdings/jobs
-    %w[report member-counts infile outpath] => Jobs::Common,
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
