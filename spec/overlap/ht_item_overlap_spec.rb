@@ -97,7 +97,7 @@ RSpec.describe Overlap::HtItemOverlap do
           ocn: c.ocns.first,
           organization: "smu"
         )
-        
+
         # reload cluster
         c = Cluster.for_ocns(ocns)
         # Number of holdings goes up, overlap.matching_orgs.count does not
