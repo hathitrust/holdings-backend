@@ -45,6 +45,7 @@ module Overlap
         wd_count: wd_count,
         lm_count: lm_count,
         access_count: access_count,
+        current_holding_count: current_holding_count,
         deposited_only: deposited_only?
       }
     end
