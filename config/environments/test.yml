@@ -9,7 +9,6 @@ etas_overlap_batch_size: 50
 overlap_reports_path: <%= ENV["TEST_TMP"] %>/overlap_reports
 overlap_reports_remote_path: <%= ENV["TEST_TMP"] %>/overlap_report_remote
 hathifile_path: <%= ENV["TEST_TMP"] %>/hathifiles
-loading_flag_path: <%= ENV["TEST_TMP"] %>/loading_flag
 local_member_data: <%= ENV["TEST_TMP"] %>/local_member_data
 local_report_path: <%= ENV["TEST_TMP"] %>/local_reports
 oclc_collection_id_map_path: spec/fixtures/oclc_collection_id_map.tsv

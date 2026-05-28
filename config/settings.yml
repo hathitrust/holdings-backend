@@ -8,7 +8,6 @@ etas_overlap_batch_size: <%= ENV["ETAS_OVERLAP_BATCH_SIZE"] %>
 overlap_reports_path: <%= ENV["OVERLAP_REPORTS_PATH"] %>
 overlap_reports_remote_path: <%= ENV["OVERLAP_REPORTS_REMOTE_PATH"] %>
 hathifile_path: <%= ENV["HATHIFILE_PATH"] %>
-loading_flag_path: <%= ENV["LOADING_FLAG_PATH"] %>
 local_report_path: <%= ENV["LOCAL_REPORT_PATH"] %>
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
 rclone_config_path: <%= ENV["RCLONE_CONFIG_PATH"] %>
