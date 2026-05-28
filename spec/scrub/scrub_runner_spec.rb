@@ -10,6 +10,7 @@ require "scrub/autoscrub"
 require "scrub/pre_load_backup"
 require "scrub/record_counter"
 require "scrub/scrub_runner"
+require "scrub/malformed_header_error"
 require "scrub/type_check_error"
 require "utils/slack_notifier"
 require "spec_helper"
@@ -150,6 +151,27 @@ RSpec.describe Scrub::ScrubRunner do
         load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
         expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
       end
+    end
+  end
+
+  describe "#scrub_file" do
+    it "downloads and scrubs a specific file without loading" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      out_files = nil
+      expect { out_files = sr.scrub_file(fixture_file_name) }.not_to change { Clusterable::Holding.count }
+      expect(out_files).not_to be_empty
+      expect(out_files.all? { |f| File.exist?(f) }).to be true
+      # File should still appear as new since the local cache was not touched
+      expect(sr.check_new_files.map { |f| f["Name"] }).to include(fixture_file_name)
+    end
+
+    it "raises on a malformed file" do
+      remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+      remote_d.ensure!
+      FileUtils.cp(fixture("umich_mon_full_20220101_headerfail.tsv"), remote_d.holdings_current)
+      expect { sr.scrub_file("umich_mon_full_20220101_headerfail.tsv") }.to raise_error(Scrub::MalFormedHeaderError)
     end
   end
 

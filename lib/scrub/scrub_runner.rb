@@ -66,6 +66,17 @@ module Scrub
       end
     end
 
+    def scrub_file(filename)
+      Dir.mktmpdir do |tmp_dir|
+        remote_file = File.join(remote_dir, filename)
+        file_transfer.download(remote_file, tmp_dir)
+        downloaded_file = File.join(tmp_dir, File.basename(filename))
+        scrubber = Scrub::AutoScrub.new(downloaded_file, force)
+        scrubber.run
+        scrubber.out_files
+      end
+    end
+
     def run_file(member_submitted_file)
       Services.logger.info "Running member_submitted_file #{member_submitted_file}"
       downloaded_file = download_to_work_dir(member_submitted_file)
