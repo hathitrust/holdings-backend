@@ -92,16 +92,6 @@ module PHCTL
     def costreport
       run_common_job(Reports::CostReport, options)
     end
-
-    desc "member-counts COST_RPT_FREQ_FILE OUTPUT_DIR", "Calculate member counts"
-    def member_counts(cost_rpt_freq_file, output_dir)
-      run_common_job(Reports::MemberCounts, options, cost_rpt_freq_file, output_dir)
-    end
-
-    desc "holdings-by-date", "List the last time an org submitted holdings, grouped by org and mono_multi_serial"
-    def holdings_by_date
-      run_common_job(Reports::HoldingsByDateReport, options)
-    end
   end
 
   class Workflow < JobCommand

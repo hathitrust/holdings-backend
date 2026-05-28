@@ -69,24 +69,6 @@ class Cluster
     @holdings << holding
   end
 
-  # invalidate memoized attributes after adding items elsewhere
-  def invalidate_cache
-    @holdings = nil
-    @ocn_resolutions = nil
-    @ht_items = nil
-    @format = nil
-    @organizations_in_cluster = nil
-    @item_enums = nil
-    @holding_enum_orgs = nil
-    @org_enums = nil
-    @organizations_with_holdings_but_no_matches = nil
-    @copy_counts = nil
-    @brt_counts = nil
-    @wd_counts = nil
-    @lm_counts = nil
-    @holdings_by_org = nil
-  end
-
   def format
     @format ||= CalculateFormat.new(self).cluster_format
   end

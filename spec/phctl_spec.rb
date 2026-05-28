@@ -9,7 +9,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[concordance validate infile outfile] => Jobs::Concordance::Validate,
     %w[concordance delta oldfile newfile] => Jobs::Concordance::Delta,
     # Has wrappers in holdings/jobs
-    %w[report member-counts infile outpath] => Jobs::Common,
     %w[report costreport] => Jobs::Common,
     %w[report costreport --organization
       someinst --target-cost 123456] => Jobs::Common,
@@ -59,31 +58,31 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     end
   end
 
-  xdescribe "running inline" do
-    before(:each) do
-      Cluster.each(&:delete)
-    end
+  describe "running inline" do
+    include_context "with tables for holdings"
 
-    context "load ht_items" do
+    context "load holdings" do
+      let(:args) { ["load", "holdings", "--inline", fixture("umich_spm_2025-10-20-testdata.ndj")] }
       it "does not queue a sidekiq job" do
-        expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
-          .not_to change(Jobs::Load::HtItems.jobs, :size)
+        expect { PHCTL::PHCTL.start(args) }
+          .not_to change(Jobs::Load::Holdings.jobs, :size)
       end
 
-      it "does the thing" do
-        expect { PHCTL::PHCTL.start(["load", "ht_items", "--inline", fixture("hathifile_sample.txt")]) }
-          .to change { cluster_count(:ht_items) }.by(5)
+      it "loads holdings from the given file" do
+        expect { PHCTL::PHCTL.start(args) }
+          .to change { Clusterable::Holding.count }.by(5)
       end
     end
 
     context "common job" do
+      let(:args) { ["report", "costreport", "--inline", "--frequency-table", fixture("freqtable.json")] }
       it "does not queue a sidekiq job" do
-        expect { PHCTL::PHCTL.start(["report", "costreport", "--inline"]) }
+        expect { PHCTL::PHCTL.start(args) }
           .not_to change(Jobs::Common.jobs, :size)
       end
 
-      it "does the thing" do
-        PHCTL::PHCTL.start(["report", "costreport", "--inline"])
+      it "generates a cost report" do
+        PHCTL::PHCTL.start(args)
         year = Time.new.year.to_s
         expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first))
           .to match(/Target cost: 9999/)

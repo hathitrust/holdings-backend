@@ -86,4 +86,23 @@ RSpec.describe Overlap::SinglePartOverlap do
       expect(described_class.new("smu", ht).deposited_only?).to be false
     end
   end
+
+  describe "#to_hash" do
+    it "returns a hash with counts" do
+      overlap_hash = described_class.new(h.organization, ht).to_hash
+      expect(overlap_hash).to eq(volume_id: ht.item_id,
+        member_id: h.organization,
+        n_enum: "",
+        # Counts are overridden by subclasses
+        copy_count: 2,
+        brt_count: 1,
+        wd_count: 0,
+        lm_count: 1,
+        # number of holdings with brittle or lost/missing
+        access_count: 2,
+        # not withdrawn/lost/missing
+        current_holding_count: 1,
+        deposited_only: false)
+    end
+  end
 end

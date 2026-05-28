@@ -3,7 +3,6 @@
 require "settings"
 
 require "canister"
-require "file_mutex"
 require "logger"
 require "push_metrics"
 require "data_sources/mariadb"
@@ -36,8 +35,6 @@ Services.register(:scrub_logger) do
 end
 
 Services.register(:scrub_stats) { {} }
-
-Services.register(:loading_flag) { FileMutex.new(Settings.loading_flag_path) }
 
 Services.register(:prometheus_registry) { Prometheus::Client.registry }
 Services.register(:pushgateway) { Prometheus::Client::Push.new(job: File.basename($PROGRAM_NAME), gateway: Settings.pushgateway) }
