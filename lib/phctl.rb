@@ -1,4 +1,6 @@
 require "thor"
+
+require "ex_libris_holdings"
 require "sidekiq_jobs"
 require "workflow_component"
 
@@ -215,6 +217,11 @@ module PHCTL
     rescue => err
       warn err.message
       exit 1
+    end
+
+    desc "convert-xml ORG", "Download ORG's Alma XML holdings, convert to TSV, and upload"
+    def convert_xml(org)
+      ExLibrisHoldings.new(organization: org).run
     end
 
     # report

@@ -182,8 +182,11 @@ module Scrub
       # Include in new_files only those remote_files whose name is not in old_files.
       new_files = []
       remote_files.each do |f|
-        # Possibly filtering other files here.
+        # Ignore logs we upload
         next if f["Name"].end_with?(".log")
+        # Ignore Alma XML, see `ExLibridHoldings` class
+        next if f["Name"].end_with?(".xml")
+        next if f["Name"].end_with?(".tar.gz")
         # Ignore subdirectories. We may stash e.g., XML originals in a subdirectory
         next if f["IsDir"]
         if old_files.select { |oldf| f["Name"] == oldf["Name"] }.empty?

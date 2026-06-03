@@ -85,6 +85,13 @@ RSpec.describe Scrub::ScrubRunner do
       # When there is a remote file not in local
       FileUtils.touch(File.join(remote_d.holdings_current, "b.tsv"))
       expect(sr.check_new_files.first["Name"]).to eq "b.tsv"
+
+      # When there are files that need to be ignored
+      FileUtils.touch(File.join(remote_d.holdings_current, "b.log"))
+      FileUtils.touch(File.join(remote_d.holdings_current, "c.xml"))
+      FileUtils.touch(File.join(remote_d.holdings_current, "d.tar.gz"))
+      expect(sr.check_new_files.first["Name"]).to eq "b.tsv"
+      expect(sr.check_new_files.count).to eq(1)
     end
 
     it "ignores subdirectories in the remote current-year holdings directory" do
