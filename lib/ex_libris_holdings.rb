@@ -74,7 +74,7 @@ class ExLibrisHoldings
 
   # Upload the converted tsv files to remote directory
   def upload(file:)
-    Utils::FileTransfer.new.upload(file, remote_directory)
+    file_transfer.upload(file, remote_directory)
   end
 
   # XML files, either text or .tar.gz
