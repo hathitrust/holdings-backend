@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "securerandom"
-
 require "data_sources/directory_locator"
 require "ex_libris_holdings_xml_parser"
 require "utils/file_transfer"
@@ -28,6 +26,7 @@ class ExLibrisHoldings
     @organization = organization
     @remote_directory = remote_directory || DataSources::DirectoryLocator.for(:remote, organization).holdings_current
     @file_transfer = Utils::FileTransfer.new
+    @seq = 0
   end
 
   def run
@@ -123,12 +122,12 @@ class ExLibrisHoldings
     # The XML parser doesn't care if there are intermingled `mon` and `ser` records --
     # it takes care of the partitioning. We could name the extracted files "a" and "b",
     # but for semi-transparency try to choose a name with a guess as to contents (mon vs ser),
-    # and with random characters to keep the second file from clobbering the first.
+    # and with sequence number to keep the second file from clobbering the first.
     mon_ser = file_list.first.match?(/ser/) ? "ser" : "mon"
-    random_suffix = SecureRandom.urlsafe_base64(8)
+    seq_suffix = sprintf("%08d", @seq += 1)
     output = File.join(
       local_directory,
-      "#{organization}_#{mon_ser}_#{random_suffix}.xml"
+      "#{organization}_#{mon_ser}_#{seq_suffix}.xml"
     )
     cmd = "tar -xzf #{file} '#{file_list.first}' -O > #{output}"
     Services.logger.info(cmd)
