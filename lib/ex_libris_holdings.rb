@@ -80,19 +80,21 @@ class ExLibrisHoldings
   # XML files, either text or .tar.gz
   # Returns an Array of lsjson Hashes
   def candidates
+    return @candidates if @candidates
+
     # Return new (as in not in old) files
     remote_files = file_transfer.lsjson(remote_directory)
     # Include in new_files only those remote_files whose name is not in old_files.
-    new_files = []
+    @candidates = []
     remote_files.each do |f|
       # Ignore subdirectories no matter what they're named
       next if f["IsDir"]
       if f["Name"].end_with?(".tar.gz", ".xml")
-        new_files << f
+        @candidates << f
       end
     end
 
-    new_files
+    @candidates
   end
 
   # Downloads candidate (given as lsjson hash) to temporary location.

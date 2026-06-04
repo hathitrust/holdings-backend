@@ -68,20 +68,18 @@ RSpec.describe ExLibrisHoldings do
   end
 
   describe "#candidates" do
-    it "needs remote dir to exist" do
-      # Remote does not exist, raise
+    it "raises if remote dir does not exist" do
       expect {
         described_class.new(organization: organization, remote_directory: "test").candidates
       }.to raise_error Utils::FileTransferError
-
-      # Remote exist, OK.
-      expect { holdings.candidates }.to_not raise_error
     end
 
-    it "lists applicable files in the remote dir" do
+    it "returns empty array when no applicable files in the remote dir" do
       # When there are no files:
       expect(holdings.candidates).to eq []
+    end
 
+    it "returns .tar.gz and .xml files" do
       # When there are various remote files to choose from:
       FileUtils.touch(File.join(remote_directory, "a.tsv"))
       FileUtils.touch(File.join(remote_directory, "b.xml"))
