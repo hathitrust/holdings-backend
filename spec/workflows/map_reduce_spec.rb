@@ -48,6 +48,10 @@ class TestReducer
       f.puts(output)
     end
   end
+
+  def notify
+    FileUtils.touch("#{ENV["TEST_TMP"]}/mapreduce_notified")
+  end
 end
 
 RSpec.describe Workflows::MapReduce do
@@ -167,6 +171,33 @@ RSpec.describe Workflows::MapReduce do
     it "cleans up when cost report completes" do
       workflow.run
       expect(File.exist?(@tmpdir)).to be false
+    end
+
+    context "notify behavior" do
+      before { FileUtils.rm_f("#{ENV["TEST_TMP"]}/mapreduce_notified") }
+
+      it "calls notify after the workflow completes" do
+        workflow.run
+        expect(File.exist?("#{ENV["TEST_TMP"]}/mapreduce_notified")).to be true
+      end
+
+      it "calls notify and does not raise when cleanup fails" do
+        rescue_wd = Dir.mktmpdir("test-rescue")
+        allow(FileUtils).to receive(:remove_entry).and_call_original
+        allow(FileUtils).to receive(:remove_entry).with(rescue_wd).and_raise(Errno::ENOTEMPTY)
+
+        expect {
+          Workflows::MapReduce::Callback.new.on_success(:success, {
+            "component_class" => "TestReducer",
+            "params" => {"working_directory" => rescue_wd},
+            "cleanup" => true
+          })
+        }.not_to raise_error
+
+        expect(File.exist?("#{ENV["TEST_TMP"]}/mapreduce_notified")).to be true
+      ensure
+        FileUtils.rm_rf(rescue_wd)
+      end
     end
   end
 end

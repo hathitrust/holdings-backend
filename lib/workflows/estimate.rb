@@ -152,6 +152,9 @@ module Workflows
           ].join("\n")
         end
 
+      end
+
+      def notify
         Utils::SlackNotifier.post(
           "Estimate complete for *#{File.basename(ocn_file)}* — " \
           "#{num_ocns_matched}/#{total_ocns} OCNs matched, " \

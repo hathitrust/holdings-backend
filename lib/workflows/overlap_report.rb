@@ -151,6 +151,9 @@ module Workflows
         gzip_report
         FileUtils.cp(report_gz_path, persistent_report_path)
         system(*rclone_move(report_gz_path, organization))
+      end
+
+      def notify
         Utils::SlackNotifier.post("Overlap report complete for *#{organization}* — #{report_filename}")
       end
 

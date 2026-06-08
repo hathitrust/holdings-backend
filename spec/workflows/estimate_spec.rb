@@ -81,7 +81,9 @@ RSpec.describe Workflows::Estimate do
             .and(a_string_including("2/4 OCNs matched"))
             .and(a_string_including("1 IC items"))
             .and(a_string_including("$5.00")))
-          described_class.new(working_directory: ENV["TEST_TMP"], ocn_file: ocn_file).run
+          writer = described_class.new(working_directory: ENV["TEST_TMP"], ocn_file: ocn_file)
+          writer.run
+          writer.notify
           expect(stub).to have_been_requested.once
         end
       end

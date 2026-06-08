@@ -26,14 +26,21 @@ module Workflows
       def on_success(_status, options)
         reducer = MapReduce.to_class(options["component_class"])
         reducer_params = Jobs.symbolize(options["params"])
-        reducer.new(**reducer_params).run
+        instance = reducer.new(**reducer_params)
+        instance.run
 
         if options["cleanup"]
           wd = options["params"]["working_directory"]
           if wd && File.directory?(wd)
-            FileUtils.remove_entry(wd)
+            begin
+              FileUtils.remove_entry(wd)
+            rescue SystemCallError => e
+              Services.logger.warn("Could not remove working directory #{wd}: #{e.message}")
+            end
           end
         end
+
+        instance.notify if instance.respond_to?(:notify)
       end
     end
 
