@@ -184,7 +184,7 @@ module Scrub
       remote_files.each do |f|
         # Ignore logs we upload
         next if f["Name"].end_with?(".log")
-        # Ignore Alma XML, see `ExLibridHoldings` class
+        # Ignore Alma XML, see `ExLibrisHoldings` class
         next if f["Name"].end_with?(".xml")
         next if f["Name"].end_with?(".tar.gz")
         # Ignore subdirectories. We may stash e.g., XML originals in a subdirectory
