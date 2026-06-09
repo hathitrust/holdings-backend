@@ -1,7 +1,7 @@
 require "services"
 require "sidekiq"
+require "alma_holdings_xml_parser"
 require "concordance_processing"
-require "ex_libris_holdings_xml_parser"
 require "loader/concordance_loader"
 require "loader/file_loader"
 require "loader/holding_loader"

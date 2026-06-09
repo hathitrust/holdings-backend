@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
 require "data_sources/directory_locator"
-require "ex_libris_holdings_xml_parser"
+require "alma_holdings_xml_parser"
 require "utils/file_transfer"
 require "utils/tar"
 
-# This class semi-automates the conversion of Ex Libris/Alma holdings XML to TSV
+# This class semi-automates the conversion of Alma holdings XML to TSV
 # If this runs successfully, can kick off a subsequent `phctl scrub ...`
 # The code:
 # - Downloads .xml (not attested) and .tar.gz (attested) files from the member's Dropbox to temp location
 # - Extracts and renames the downloaded files
-# - Passes the extracted files to `ExLibrisHoldingsXmlParser`
+# - Passes the extracted files to `AlmaHoldingsXmlParser`
 # - Uploads the resulting TSV files back up to the member's Dropbox
 #
 # See the `phctl convert-xml` command.
 # It is intended to be run in the foreground (no Sidekiq)
 #
 # Example:
-#   `ExLibrisHoldings.new(organization: "umich").run`
+#   `AlmaHoldings.new(organization: "umich").run`
 
-class ExLibrisHoldings
+class AlmaHoldings
   attr_reader :file_transfer, :organization, :remote_directory
 
   # remote_directory is for testing/debugging
@@ -43,7 +43,7 @@ class ExLibrisHoldings
       downloaded_file = download(file_h: candidate)
       xml_files << extract(path: downloaded_file)
     end
-    parser = ExLibrisHoldingsXmlParser.new(
+    parser = AlmaHoldingsXmlParser.new(
       organization: organization,
       files: xml_files,
       output_dir: local_directory
@@ -138,6 +138,6 @@ class ExLibrisHoldings
   end
 
   def local_directory
-    @local_directory ||= Dir.mktmpdir("exlibris_")
+    @local_directory ||= Dir.mktmpdir("alma")
   end
 end

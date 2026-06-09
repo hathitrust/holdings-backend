@@ -1,14 +1,14 @@
 require "spec_helper"
-require "ex_libris_holdings"
+require "alma_holdings"
 require "marc"
 
-RSpec.describe ExLibrisHoldings do
+RSpec.describe AlmaHoldings do
   let(:remote_directory) { ENV["TEST_TMP"] }
   let(:organization) { "umich" }
   let(:holdings) { described_class.new(organization: organization, remote_directory: remote_directory) }
 
   describe "#initialize" do
-    it "returns an ExLibrisHoldings" do
+    it "returns #{described_class}" do
       expect(described_class.new(organization: organization)).to be_a described_class
     end
 

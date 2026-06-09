@@ -1,8 +1,8 @@
 require "spec_helper"
-require "ex_libris_holdings_xml_parser"
+require "alma_holdings_xml_parser"
 require "marc"
 
-RSpec.describe ExLibrisHoldingsXmlParser do
+RSpec.describe AlmaHoldingsXmlParser do
   let(:organization) { "umich" }
   let(:input_mon) { fixture("exlibris_mon_in.xml") }
   let(:input_ser) { fixture("exlibris_ser_in.xml") }
@@ -18,7 +18,7 @@ RSpec.describe ExLibrisHoldingsXmlParser do
   }
 
   describe "#initialize" do
-    it "returns an ExLibrisHoldingsXmlParser" do
+    it "returns #{described_class}" do
       parser = described_class.new(organization: organization, files: inputs)
       expect(parser).to be_a described_class
     end
