@@ -103,13 +103,13 @@ RSpec.describe ExLibrisHoldings do
     it "passes XML file unchanged" do
       xml_file = File.join(holdings.local_directory, "b.xml")
       FileUtils.touch(xml_file)
-      expect(holdings.extract(file: xml_file)).to eq(xml_file)
+      expect(holdings.extract(path: xml_file)).to eq(xml_file)
     end
 
     it "extracts a .tar.gz file" do
       xml_file = fixture("exlibris_ser_in.tar.gz")
       FileUtils.cp(xml_file, holdings.local_directory)
-      expect(holdings.extract(file: xml_file)).to match(/umich_ser_.+?\.xml/)
+      expect(holdings.extract(path: xml_file)).to match(/umich_ser_.+?\.xml/)
     end
 
     it "raises if more than one file in the archive" do
@@ -118,7 +118,7 @@ RSpec.describe ExLibrisHoldings do
       # Without --absolute-names tar emits "Removing leading `/'..." noise
       system("tar -czPf #{gz} #{fixture("exlibris_ser_in.xml")} #{fixture("exlibris_mon_in.xml")}")
       expect {
-        holdings.extract(file: gz)
+        holdings.extract(path: gz)
       }.to raise_error(/unexpected contents/)
     end
   end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "open3"
+
 require "data_sources/directory_locator"
 require "ex_libris_holdings_xml_parser"
 require "utils/file_transfer"
@@ -40,7 +42,7 @@ class ExLibrisHoldings
     candidates.each do |candidate|
       Services.logger.info "downloading XML #{candidate}"
       downloaded_file = download(file_h: candidate)
-      xml_files << extract(file: downloaded_file)
+      xml_files << extract(path: downloaded_file)
     end
     parser = ExLibrisHoldingsXmlParser.new(
       organization: organization,
@@ -108,13 +110,13 @@ class ExLibrisHoldings
 
   # Extracts a single XML file from a .tar.gz submission and returns its path.
   # If the input is an XML file, just return its path.
-  def extract(file:)
-    return file if file.end_with?(".xml")
+  def extract(path:)
+    return path if path.end_with?(".xml")
 
     # List the files in the archive. There better be only one.
-    file_list = `tar -tzPf #{file}`.split("\n")
+    file_list = list_tar(tar_path: path)
     if file_list.count != 1
-      raise "unexpected contents for #{file}: #{file_list}"
+      raise "unexpected contents for #{path}: #{file_list}"
     end
 
     # Avoid silly edge cases trying to find the correct name for the extracted XML files.
@@ -129,13 +131,61 @@ class ExLibrisHoldings
       local_directory,
       "#{organization}_#{mon_ser}_#{seq_suffix}.xml"
     )
-    cmd = "tar -xzf #{file} '#{file_list.first}' -O > #{output}"
-    Services.logger.info(cmd)
-    system(cmd, exception: true)
+
+    Services.logger.info("extract_tar(tar_path: #{path}, file_name: #{file_list.first}, destination_path: #{output})")
+    extract_tar(tar_path: path, file_name: file_list.first, destination_path: output)
     output
   end
 
   def local_directory
     @local_directory ||= Dir.mktmpdir("exlibris_")
+  end
+
+  private
+
+  TAR_EXE_PATH = "/usr/bin/tar"
+
+  # List the files in a .tar.gz file
+  def list_tar(tar_path:)
+    stdout, stderr, status = Open3.capture3(TAR_EXE_PATH, "-tzPf", tar_path)
+    if !status.success?
+      raise "could not list contents of tar file #{tar_path}: status #{status}: stderr #{stderr}"
+    end
+
+    stdout.split("\n")
+  end
+
+  # Extract named file `file_name` from the .tar.gz archive at `tar_path`
+  # to a new file at `destination_path`.
+  # Uses the path to `tar` explicitly to bypass shell expansion
+  # since `file_name` is tainted.
+  def extract_tar(tar_path:, file_name:, destination_path:)
+    status = nil
+    stderr_s = ""
+
+    File.open(destination_path, "w") do |destination_file|
+      Open3.popen3(TAR_EXE_PATH, "-xzf", tar_path, file_name, "-O") do |stdin, stdout, stderr, wait_thr|
+        stdin.close
+        err_reader = Thread.new {
+          stderr.read
+        }
+        out_reader = Thread.new {
+          loop do
+            bytes = stdout.readpartial(4096)
+            destination_file.print bytes
+            destination_file.flush
+          rescue EOFError
+            break
+          end
+        }
+        stderr_s = err_reader.value
+        out_reader.join
+        status = wait_thr.value
+      end
+    end
+
+    if !status.success? || File.size(destination_path).zero?
+      raise "could not extract #{file_name} from #{tar_path} to #{destination_path}: status #{status}: stderr #{stderr_s}"
+    end
   end
 end
