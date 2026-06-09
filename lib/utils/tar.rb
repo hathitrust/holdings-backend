@@ -19,7 +19,7 @@ module Utils
 
     # List the files in a .tar.gz file
     def list
-      stdout, stderr, status = Open3.capture3(TAR_EXE_PATH, "-tzPf", path)
+      stdout, stderr, status = Open3.capture3(TAR_EXE_PATH, "-tzf", path)
       if !status.success?
         raise "could not list contents of tar file #{path}: status #{status}: stderr #{stderr}"
       end
@@ -35,7 +35,7 @@ module Utils
       stderr_s = ""
 
       File.open(destination_path, "w") do |destination_file|
-        Open3.popen3(TAR_EXE_PATH, "-xzf", path, file_name, "-O") do |stdin, stdout, stderr, wait_thr|
+        Open3.popen3(TAR_EXE_PATH, "-xzf", path, file_name, "--to-stdout") do |stdin, stdout, stderr, wait_thr|
           stdin.close
           err_reader = Thread.new {
             stderr.read

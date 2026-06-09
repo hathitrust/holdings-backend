@@ -78,7 +78,7 @@ RSpec.describe Utils::Tar do
 
       # Now try it the naive way...
       cmd = "tar -xzf #{evil_archive} '#{file_list.first}' -O > #{destination}"
-      system(cmd)
+      _out_err, _status = Open3.capture2e(cmd)
       expect(File.exist?("critical_data")).to eq(false)
     end
   end
