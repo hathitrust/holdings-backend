@@ -148,6 +148,9 @@ module Workflows
       end
 
       def run
+        if Dir.glob(File.join(working_directory, "*.overlap.tsv")).empty?
+          raise "No overlap report files found in #{working_directory}"
+        end
         gzip_report
         FileUtils.cp(report_gz_path, persistent_report_path)
         system(*rclone_move(report_gz_path, organization))

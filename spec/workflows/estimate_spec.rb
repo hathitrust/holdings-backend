@@ -25,6 +25,13 @@ RSpec.describe Workflows::Estimate do
       end
     end
 
+    it "raises when no estimate files exist in working directory" do
+      Dir.mktmpdir do |tmpdir|
+        writer = described_class.new(working_directory: tmpdir, ocn_file: "/nonexistent/ocnfile.txt")
+        expect { writer.run }.to raise_error(RuntimeError, /No estimate files found/)
+      end
+    end
+
     context "with sample data" do
       # the file name is used to construct the output file, but it shouldn't be
       # read in this step

@@ -11,6 +11,17 @@ RSpec.describe Workflows::OverlapReport do
       described_class.new(organization: org, working_directory: ENV["TEST_TMP"])
     end
 
+    before(:each) do
+      FileUtils.touch(File.join(ENV["TEST_TMP"], "records_00000.overlap.tsv"))
+    end
+
+    it "raises when no overlap files exist in working directory" do
+      Dir.mktmpdir do |tmpdir|
+        writer = described_class.new(organization: "umich", working_directory: tmpdir)
+        expect { writer.run }.to raise_error(RuntimeError, /No overlap report files found/)
+      end
+    end
+
     describe "#initialize" do
       it "makes directories if they don't exist" do
         expect(File).not_to exist(Settings.overlap_reports_path)

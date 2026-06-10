@@ -136,6 +136,9 @@ module Workflows
       end
 
       def run(output_filename = report_file(ocn_file))
+        if Dir.glob(File.join(working_directory, "*.estimate.json")).empty?
+          raise "No estimate files found in #{working_directory}"
+        end
         Services.logger.info "Target Cost: #{cost_report.target_cost}"
         Services.logger.info "Cost per volume: #{cost_report.cost_per_volume}"
 
@@ -151,7 +154,6 @@ module Workflows
             "#{num_items_ic} (#{pct_items_ic.round(1)}%) are in copyright."
           ].join("\n")
         end
-
       end
 
       def notify
