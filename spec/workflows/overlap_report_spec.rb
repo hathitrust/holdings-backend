@@ -11,6 +11,17 @@ RSpec.describe Workflows::OverlapReport do
       described_class.new(organization: org, working_directory: ENV["TEST_TMP"])
     end
 
+    before(:each) do
+      FileUtils.touch(File.join(ENV["TEST_TMP"], "records_00000.overlap.tsv"))
+    end
+
+    it "raises when no overlap files exist in working directory" do
+      Dir.mktmpdir do |tmpdir|
+        writer = described_class.new(organization: "umich", working_directory: tmpdir)
+        expect { writer.run }.to raise_error(RuntimeError, /No overlap report files found/)
+      end
+    end
+
     describe "#initialize" do
       it "makes directories if they don't exist" do
         expect(File).not_to exist(Settings.overlap_reports_path)
@@ -73,12 +84,19 @@ RSpec.describe Workflows::OverlapReport do
     context "Slack notification" do
       include_context "with mocked slack API endpoint"
 
+      it "does not post to Slack during run" do
+        stub = stub_slack_webhook(anything)
+        writer_for_org("umich").run
+        expect(stub).not_to have_been_requested
+      end
+
       it "posts a notification when the report is complete" do
         writer = writer_for_org("umich")
         stub = stub_slack_webhook(a_string_including("Overlap report complete")
           .and(a_string_including("umich"))
           .and(a_string_including(writer.report_filename)))
         writer.run
+        writer.notify
         expect(stub).to have_been_requested.once
       end
     end
@@ -150,6 +168,17 @@ RSpec.describe Workflows::OverlapReport do
         expected_rec = ["2", h2.local_id, h2.mono_multi_serial,
           "", "", "", "", ""].join("\t") + "\n"
         expect(recs).to include(expected_rec)
+      end
+
+      context "Slack notification" do
+        include_context "with mocked slack API endpoint"
+
+        it "posts a notification after the full workflow completes" do
+          stub = stub_slack_webhook(a_string_including("Overlap report complete")
+            .and(a_string_including(h.organization)))
+          workflow_for_org(h.organization).run
+          expect(stub).to have_been_requested.once
+        end
       end
 
       context "using ReportRecord::MatchingMembersCount" do
