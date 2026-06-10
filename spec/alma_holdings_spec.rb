@@ -62,6 +62,8 @@ RSpec.describe AlmaHoldings do
       local_file = File.join(holdings.local_directory, "umich_mon.tsv")
       remote_file = File.join(holdings.remote_directory, "umich_mon.tsv")
       FileUtils.touch(local_file)
+      # Make sure remote file is not hanging around already
+      expect(File.exist?(remote_file)).to eq(false)
       holdings.upload(path: local_file)
       expect(File.exist?(remote_file)).to eq(true)
     end
