@@ -55,7 +55,7 @@ class AlmaHoldings
     Services.logger.info "parser outputs: #{parser.output_files}"
     parsed_files.each_key do |key|
       Services.logger.info "uploading TSV #{parsed_files[key].path} to remote dir #{remote_directory}"
-      upload(file: parsed_files[key].path)
+      upload(path: parsed_files[key].path)
     end
     Services.logger.info "cleaning up local directory #{local_directory}"
   rescue => err
@@ -72,9 +72,9 @@ class AlmaHoldings
     @local_directory = nil
   end
 
-  # Upload the converted tsv files to remote directory
-  def upload(file:)
-    file_transfer.upload(file, remote_directory)
+  # Upload a converted tsv file at `path` to remote directory
+  def upload(path:)
+    file_transfer.upload(path, remote_directory)
   end
 
   # XML files, either text or .tar.gz

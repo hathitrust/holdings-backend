@@ -60,9 +60,9 @@ RSpec.describe AlmaHoldings do
   describe "#upload" do
     it "copies a file from the local directory to the remote" do
       local_file = File.join(holdings.local_directory, "umich_mon.tsv")
-      remote_file = File.join(holdings.local_directory, "umich_mon.tsv")
+      remote_file = File.join(holdings.remote_directory, "umich_mon.tsv")
       FileUtils.touch(local_file)
-      holdings.upload(file: local_file)
+      holdings.upload(path: local_file)
       expect(File.exist?(remote_file)).to eq(true)
     end
   end
