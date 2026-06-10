@@ -1,4 +1,6 @@
 require "thor"
+
+require "alma_holdings"
 require "sidekiq_jobs"
 require "workflow_component"
 
@@ -71,13 +73,13 @@ module PHCTL
 
   class Parse < JobCommand
     desc "parse-holdings-xml --organization ORG --files LIST (--output-dir PATH)",
-      "Parse ExLibris holdings xml files from ORG"
+      "Parse Alma holdings xml files from ORG"
     option :organization, type: :string
     option :files, type: :array
     option :output_dir, type: :string, default: nil
 
     def parse_holdings_xml
-      run_common_job(ExLibrisHoldingsXmlParser, options)
+      run_common_job(AlmaHoldingsXmlParser, options)
     end
   end
 
@@ -215,6 +217,11 @@ module PHCTL
     rescue => err
       warn err.message
       exit 1
+    end
+
+    desc "convert-xml ORG", "Download ORG's Alma XML holdings, convert to TSV, and upload"
+    def convert_xml(org)
+      AlmaHoldings.new(organization: org).run
     end
 
     # report

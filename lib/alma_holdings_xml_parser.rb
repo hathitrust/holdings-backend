@@ -1,7 +1,7 @@
 require "marc"
 require "date"
 
-# Takes marc-xml files from exlibris and parses them into .tsv files
+# Takes marc-xml files from Alma and parses them into .tsv files
 # that can be loaded into the HathiTrust print holdings db.
 # Example:
 #   bash phctl.sh parse parse-holdings-xml --organization foo --files /tmp/*.xml --output-dir /tmp --inline
@@ -9,7 +9,7 @@ require "date"
 # We are expecting each record to have the ControlFields 001 and 008
 # and the DataFields 035 and ITM.
 
-class ExLibrisHoldingsXmlParser
+class AlmaHoldingsXmlParser
   attr_reader :organization, :files, :output_dir, :output_files, :record_count, :errors
 
   def initialize(organization:, files:, output_dir: Settings.local_report_path)
