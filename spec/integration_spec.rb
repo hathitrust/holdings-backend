@@ -90,12 +90,26 @@ RSpec.describe "phctl integration" do
     include_context "with complete data for one cluster"
 
     it "cost report workflow produces output" do
-      # item counts match what we have in the mock solr response
-      phctl(*%w[workflow costreport --ht-item-count 16 --ht-item-pd-count 5 --test-mode])
+      # item counts match what we specify
+      phctl(*%w[workflow costreport --ht-item-count 999 --ht-item-pd-count 123 --test-mode])
       year = Time.new.year.to_s
 
       costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
-      expect(costreport).to match(/Num volumes: 16/)
+      expect(costreport).to match(/Num volumes: 999/)
+      expect(costreport).to match(/Num pd volumes: 123/)
+    end
+
+    it "cost report workflow produces output without given item count or pd count" do
+      # we start with one pd item from "with complete data for one cluster"; add some more:
+      8.times { insert_htitem(build(:ht_item, rights: "ic")) }
+      4.times { insert_htitem(build(:ht_item, rights: "pd")) }
+
+      phctl(*%w[workflow costreport --test-mode])
+      year = Time.new.year.to_s
+
+      costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
+      # item counts match what we put in hathifiles table
+      expect(costreport).to match(/Num volumes: 13/)
       expect(costreport).to match(/Num pd volumes: 5/)
     end
 

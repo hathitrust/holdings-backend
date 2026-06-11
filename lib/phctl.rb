@@ -124,17 +124,29 @@ module PHCTL
       end
     end
 
-    desc "costreport --ht-item-count NUM --ht-item-pd-count NUM (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
+    desc "costreport [--ht-item-count NUM --ht-item-pd-count NUM] (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
     option :ht_item_count, type: :numeric
     option :ht_item_pd_count, type: :numeric
     def costreport_workflow
+      ht_item_count = options[:ht_item_count]
+      ht_item_pd_count = options[:ht_item_pd_count]
+
+      if !ht_item_count || !ht_item_pd_count
+        Services.logger.info("Getting item counts...")
+
+        ht_item_count = Clusterable::HtItem.count
+        Services.logger.info("Num volumes: #{ht_item_count}")
+        ht_item_pd_count = Clusterable::HtItem.pd_count
+        Services.logger.info("Num pd volumes: #{ht_item_pd_count}")
+      end
+
       components = {
         data_source: component(Workflows::CostReport::DataSource),
         mapper: component(Workflows::CostReport::Analyzer),
         reducer: component(Reports::CostReport,
           {
-            ht_item_count: options[:ht_item_count],
-            ht_item_pd_count: options[:ht_item_pd_count]
+            ht_item_count: ht_item_count,
+            ht_item_pd_count: ht_item_pd_count
           })
       }
 
