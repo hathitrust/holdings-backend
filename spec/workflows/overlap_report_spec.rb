@@ -84,6 +84,25 @@ RSpec.describe Workflows::OverlapReport do
     context "Slack notification" do
       include_context "with mocked slack API endpoint"
 
+      context "when overlap_reports_remote_path_url is not configured" do
+        around do |example|
+          old_url = Settings.overlap_reports_remote_path_url
+          Settings.overlap_reports_remote_path_url = nil
+          example.run
+          Settings.overlap_reports_remote_path_url = old_url
+        end
+
+        it "omits the dropbox link from the Slack notification" do
+          writer = writer_for_org("umich")
+          writer.run
+          writer.notify
+          expect(WebMock).to have_requested(:post, webhook_url)
+            .with(body: a_string_including("Overlap report complete"))
+          expect(WebMock).not_to have_requested(:post, webhook_url)
+            .with(body: a_string_including("dropbox.com"))
+        end
+      end
+
       it "does not post to Slack during run" do
         stub = stub_slack_webhook(anything)
         writer_for_org("umich").run
@@ -94,7 +113,9 @@ RSpec.describe Workflows::OverlapReport do
         writer = writer_for_org("umich")
         stub = stub_slack_webhook(a_string_including("Overlap report complete")
           .and(a_string_including("umich"))
-          .and(a_string_including(writer.report_filename)))
+          .and(a_string_including(writer.report_filename))
+          .and(a_string_including("dropbox.com"))
+          .and(a_string_including("umich-hathitrust-member-data/analysis")))
         writer.run
         writer.notify
         expect(stub).to have_been_requested.once
@@ -175,7 +196,8 @@ RSpec.describe Workflows::OverlapReport do
 
         it "posts a notification after the full workflow completes" do
           stub = stub_slack_webhook(a_string_including("Overlap report complete")
-            .and(a_string_including(h.organization)))
+            .and(a_string_including(h.organization))
+            .and(a_string_including("dropbox.com")))
           workflow_for_org(h.organization).run
           expect(stub).to have_been_requested.once
         end

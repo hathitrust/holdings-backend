@@ -157,7 +157,9 @@ module Workflows
       end
 
       def notify
-        Utils::SlackNotifier.post("Overlap report complete for *#{organization}* — #{report_filename}")
+        message = "Overlap report complete for *#{organization}* — #{report_filename}"
+        message += "\n#{dropbox_url}" if Settings.overlap_reports_remote_path_url
+        Utils::SlackNotifier.post(message)
       end
 
       def header
@@ -190,6 +192,10 @@ module Workflows
             end
           end
         end
+      end
+
+      def dropbox_url
+        "#{Settings.overlap_reports_remote_path_url}/#{organization}-hathitrust-member-data/analysis/#{report_filename}"
       end
 
       def rclone_move(file, org)

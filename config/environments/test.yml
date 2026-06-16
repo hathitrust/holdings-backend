@@ -8,6 +8,7 @@ estimates_path: <%= ENV["TEST_TMP"] %>/estimates
 etas_overlap_batch_size: 50
 overlap_reports_path: <%= ENV["TEST_TMP"] %>/overlap_reports
 overlap_reports_remote_path: <%= ENV["TEST_TMP"] %>/overlap_report_remote
+overlap_reports_remote_path_url: https://www.dropbox.com/home/test
 hathifile_path: <%= ENV["TEST_TMP"] %>/hathifiles
 local_member_data: <%= ENV["TEST_TMP"] %>/local_member_data
 local_report_path: <%= ENV["TEST_TMP"] %>/local_reports

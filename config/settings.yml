@@ -7,6 +7,7 @@ estimates_path: <%= ENV["ESTIMATES_PATH"] %>
 etas_overlap_batch_size: <%= ENV["ETAS_OVERLAP_BATCH_SIZE"] %>
 overlap_reports_path: <%= ENV["OVERLAP_REPORTS_PATH"] %>
 overlap_reports_remote_path: <%= ENV["OVERLAP_REPORTS_REMOTE_PATH"] %>
+overlap_reports_remote_path_url: <%= ENV["OVERLAP_REPORTS_REMOTE_PATH_URL"] %>
 hathifile_path: <%= ENV["HATHIFILE_PATH"] %>
 local_report_path: <%= ENV["LOCAL_REPORT_PATH"] %>
 pushgateway: <%= ENV["PUSHGATEWAY"] %>
