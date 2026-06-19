@@ -23,6 +23,16 @@ module Clusterable
       table.count
     end
 
+    def self.count_for_organization(org)
+      table.where(organization: org).count
+    end
+
+    def self.format_counts(org)
+      table.where(organization: org)
+        .group_and_count(:mono_multi_serial)
+        .order(:mono_multi_serial)
+    end
+
     def cluster
       @cluster ||= Cluster.for_ocns([ocn])
     end

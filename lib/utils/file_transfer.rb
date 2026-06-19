@@ -47,6 +47,12 @@ module Utils
       raise Utils::FileTransferError, "Could not ls #{remote_dir}... #{err}"
     end
 
+    def cat(remote_path, &block)
+      result = IO.popen(["rclone", "--config", Settings.rclone_config_path, "cat", remote_path], &block)
+      raise Utils::FileTransferError, "rclone cat failed for #{remote_path}" unless $?.success?
+      result
+    end
+
     private
 
     def make_call(sys_call)

@@ -1,7 +1,9 @@
 require "thor"
 
 require "alma_holdings"
+require "clusterable/holding"
 require "sidekiq_jobs"
+require "utils/file_transfer"
 require "workflow_component"
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
@@ -193,6 +195,54 @@ module PHCTL
     end
   end
 
+  class Holdings < JobCommand
+    desc "count ORGANIZATION", "Count holdings currently loaded in the database for ORGANIZATION"
+    def count(org)
+      puts Clusterable::Holding.count_for_organization(org)
+    end
+
+    desc "file-count REMOTE_PATH", "Count lines in a remote holdings file via rclone"
+    def file_count(remote_path)
+      puts Utils::FileTransfer.new.cat(remote_path, &:count)
+    end
+
+    desc "file-sample REMOTE_PATH", "Print first N lines of a remote holdings file"
+    option :lines, type: :numeric, default: 50
+    def file_sample(remote_path)
+      Utils::FileTransfer.new.cat(remote_path) do |io|
+        io.each_line.first(options[:lines]).each { |line| print line }
+      end
+    end
+
+    desc "dir-counts REMOTE_DIR", "Count lines in each .tsv file in a remote directory"
+    def dir_counts(remote_dir)
+      ft = Utils::FileTransfer.new
+      tsv_files = ft.lsjson(remote_dir)
+        .reject { |f| f["IsDir"] }
+        .select { |f| f["Name"].end_with?(".tsv") }
+        .sort_by { |f| f["Name"] }
+      total = 0
+      tsv_files.each do |f|
+        count = ft.cat("#{remote_dir}/#{f["Path"]}", &:count)
+        puts "#{f["Name"]}: #{count}"
+        total += count
+      end
+      puts "Total: #{total}"
+    end
+
+    desc "format-counts ORGANIZATION", "Show holdings breakdown by format (mono_multi_serial) for ORGANIZATION"
+    def format_counts(org)
+      rows = Clusterable::Holding.format_counts(org)
+      puts "#{org} holdings by format:"
+      total = 0
+      rows.each do |row|
+        puts "  #{row[:mono_multi_serial]}:  #{row[:count]}"
+        total += row[:count]
+      end
+      puts "Total: #{total}"
+    end
+  end
+
   class PHCTL < Thor
     # Run inline instead of with sidekiq
     class_option :inline, type: :boolean
@@ -254,5 +304,8 @@ module PHCTL
 
     desc "workflow", "Parallelized workflows for generating reports"
     subcommand "workflow", Workflow
+
+    desc "holdings SUBCOMMAND", "Pre-flight inspection of holdings"
+    subcommand "holdings", Holdings
   end
 end

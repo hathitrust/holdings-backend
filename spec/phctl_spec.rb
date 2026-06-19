@@ -58,6 +58,158 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     end
   end
 
+  describe "holdings" do
+    let(:ft) { instance_double(Utils::FileTransfer) }
+
+    before { allow(Utils::FileTransfer).to receive(:new).and_return(ft) }
+
+    describe "count" do
+      it "prints the holding count for an organization" do
+        allow(Clusterable::Holding).to receive(:count_for_organization).with("umich").and_return(42)
+        expect { PHCTL::PHCTL.start(["holdings", "count", "umich"]) }
+          .to output("42\n").to_stdout
+      end
+    end
+
+    describe "file-count" do
+      it "prints the line count of a remote file" do
+        allow(ft).to receive(:cat)
+          .with("dropbox:some/file.tsv")
+          .and_yield(StringIO.new("line1\nline2\nline3\n"))
+        expect { PHCTL::PHCTL.start(["holdings", "file-count", "dropbox:some/file.tsv"]) }
+          .to output("3\n").to_stdout
+      end
+    end
+
+    describe "dir-counts" do
+      it "counts lines in each tsv file, skipping non-tsv files" do
+        files = [
+          {"Name" => "umich_mon_2025.tsv", "Path" => "umich_mon_2025.tsv", "IsDir" => false},
+          {"Name" => "umich_ser_2025.tsv", "Path" => "umich_ser_2025.tsv", "IsDir" => false},
+          {"Name" => "umich_mon_2025.log", "Path" => "umich_mon_2025.log", "IsDir" => false}
+        ]
+        allow(ft).to receive(:lsjson).with("dropbox:some/dir").and_return(files)
+        allow(ft).to receive(:cat).with("dropbox:some/dir/umich_mon_2025.tsv").and_yield(StringIO.new("a\nb\nc\n"))
+        allow(ft).to receive(:cat).with("dropbox:some/dir/umich_ser_2025.tsv").and_yield(StringIO.new("x\ny\n"))
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", "dropbox:some/dir"]) }
+          .to output("umich_mon_2025.tsv: 3\numich_ser_2025.tsv: 2\nTotal: 5\n").to_stdout
+      end
+
+      it "skips subdirectory entries" do
+        files = [
+          {"Name" => "umich_mon_2025.tsv", "Path" => "umich_mon_2025.tsv", "IsDir" => false},
+          {"Name" => "archive", "Path" => "archive", "IsDir" => true}
+        ]
+        allow(ft).to receive(:lsjson).with("dropbox:some/dir").and_return(files)
+        allow(ft).to receive(:cat).with("dropbox:some/dir/umich_mon_2025.tsv").and_yield(StringIO.new("a\nb\n"))
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", "dropbox:some/dir"]) }
+          .to output("umich_mon_2025.tsv: 2\nTotal: 2\n").to_stdout
+      end
+
+      it "prints only a total when no tsv files are present" do
+        files = [
+          {"Name" => "umich_mon_2025.log", "Path" => "umich_mon_2025.log", "IsDir" => false}
+        ]
+        allow(ft).to receive(:lsjson).with("dropbox:some/dir").and_return(files)
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", "dropbox:some/dir"]) }
+          .to output("Total: 0\n").to_stdout
+      end
+    end
+
+    describe "format-counts" do
+      it "prints the format breakdown for an organization" do
+        rows = [
+          {mono_multi_serial: "spm", count: 1000},
+          {mono_multi_serial: "ser", count: 500}
+        ]
+        allow(Clusterable::Holding).to receive(:format_counts).with("umich").and_return(rows)
+        expect { PHCTL::PHCTL.start(["holdings", "format-counts", "umich"]) }
+          .to output("umich holdings by format:\n  spm:  1000\n  ser:  500\nTotal: 1500\n").to_stdout
+      end
+    end
+
+    describe "file-sample" do
+      it "prints the first N lines of a remote file" do
+        content = (1..100).map { |i| "line#{i}\n" }.join
+        allow(ft).to receive(:cat)
+          .with("dropbox:some/file.tsv")
+          .and_yield(StringIO.new(content))
+        expect { PHCTL::PHCTL.start(["holdings", "file-sample", "dropbox:some/file.tsv", "--lines", "3"]) }
+          .to output("line1\nline2\nline3\n").to_stdout
+      end
+    end
+  end
+
+  describe "holdings rclone commands (integration)" do
+    let(:test_dir) { "#{ENV["TEST_TMP"]}/holdings_rclone_test" }
+
+    before do
+      FileUtils.touch Settings.rclone_config_path
+      FileUtils.rm_rf(test_dir)
+      FileUtils.mkdir_p(test_dir)
+    end
+
+    describe "file-count" do
+      it "counts lines in a local file" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", "line1\nline2\nline3\n")
+        expect { PHCTL::PHCTL.start(["holdings", "file-count", "#{test_dir}/umich_mon_2025.tsv"]) }
+          .to output("3\n").to_stdout
+      end
+    end
+
+    describe "file-sample" do
+      it "prints the first N lines" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", (1..100).map { |i| "line#{i}\n" }.join)
+        expect { PHCTL::PHCTL.start(["holdings", "file-sample", "#{test_dir}/umich_mon_2025.tsv", "--lines", "3"]) }
+          .to output("line1\nline2\nline3\n").to_stdout
+      end
+
+      it "prints all lines when file is shorter than --lines" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", "only\ntwo\n")
+        expect { PHCTL::PHCTL.start(["holdings", "file-sample", "#{test_dir}/umich_mon_2025.tsv", "--lines", "50"]) }
+          .to output("only\ntwo\n").to_stdout
+      end
+    end
+
+    describe "dir-counts" do
+      it "counts lines in each tsv file, skipping non-tsv files" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", "a\nb\nc\n")
+        File.write("#{test_dir}/umich_ser_2025.tsv", "x\ny\n")
+        File.write("#{test_dir}/umich_mon_2025.log", "ignored\n")
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", test_dir]) }
+          .to output("umich_mon_2025.tsv: 3\numich_ser_2025.tsv: 2\nTotal: 5\n").to_stdout
+      end
+
+      it "skips subdirectory entries" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", "a\nb\n")
+        FileUtils.mkdir_p("#{test_dir}/archive")
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", test_dir]) }
+          .to output("umich_mon_2025.tsv: 2\nTotal: 2\n").to_stdout
+      end
+
+      it "prints only a total when no tsv files are present" do
+        File.write("#{test_dir}/umich_mon_2025.log", "ignored\n")
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", test_dir]) }
+          .to output("Total: 0\n").to_stdout
+      end
+
+      it "does not count tsv files in nested directories" do
+        File.write("#{test_dir}/umich_mon_2025.tsv", "a\nb\n")
+        FileUtils.mkdir_p("#{test_dir}/subdir")
+        File.write("#{test_dir}/subdir/umich_ser_2025.tsv", "x\ny\nz\n")
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", test_dir]) }
+          .to output("umich_mon_2025.tsv: 2\nTotal: 2\n").to_stdout
+      end
+
+      it "outputs files sorted alphabetically" do
+        File.write("#{test_dir}/umich_zzz.tsv", "z\n")
+        File.write("#{test_dir}/umich_aaa.tsv", "a\nb\n")
+        expect { PHCTL::PHCTL.start(["holdings", "dir-counts", test_dir]) }
+          .to output("umich_aaa.tsv: 2\numich_zzz.tsv: 1\nTotal: 3\n").to_stdout
+      end
+    end
+  end
+
   describe "running inline" do
     include_context "with tables for holdings"
 
