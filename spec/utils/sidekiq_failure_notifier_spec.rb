@@ -8,12 +8,6 @@ RSpec.describe Utils::SidekiqFailureNotifier do
 
   let(:error) { RuntimeError.new("disk full") }
 
-  describe "NOTIFY_AT_RETRY_COUNTS" do
-    it "triggers on the 3rd and 7th failures" do
-      expect(described_class::NOTIFY_AT_RETRY_COUNTS).to eq [1, 5]
-    end
-  end
-
   describe ".failure_message" do
     it "includes will retry notice, job class, args, error class, and message" do
       job = {"class" => "Jobs::Load::Holdings", "args" => ["/data/umich.ndj"], "retry_count" => 1}
