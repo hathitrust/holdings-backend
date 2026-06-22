@@ -4,6 +4,7 @@ require "alma_holdings"
 require "clusterable/holding"
 require "sidekiq_jobs"
 require "utils/file_transfer"
+require "utils/holdings_preflight"
 require "workflow_component"
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
@@ -196,9 +197,12 @@ module PHCTL
   end
 
   class Holdings < JobCommand
-    desc "count ORGANIZATION", "Count holdings currently loaded in the database for ORGANIZATION"
+    desc "count ORGANIZATION", "Show holdings in the database for ORGANIZATION, broken down by format"
     def count(org)
-      puts Clusterable::Holding.count_for_organization(org)
+      result = Utils::HoldingsPreflight.new.format_counts(org)
+      puts "#{org} holdings by format:"
+      result[:counts].each { |r| puts "  #{r[:format]}:  #{r[:count]}" }
+      puts "Total: #{result[:total]}"
     end
 
     desc "file-count REMOTE_PATH", "Count lines in a remote holdings file via rclone"
@@ -216,30 +220,9 @@ module PHCTL
 
     desc "dir-counts REMOTE_DIR", "Count lines in each .tsv file in a remote directory"
     def dir_counts(remote_dir)
-      ft = Utils::FileTransfer.new
-      tsv_files = ft.lsjson(remote_dir)
-        .reject { |f| f["IsDir"] }
-        .select { |f| f["Name"].end_with?(".tsv") }
-        .sort_by { |f| f["Name"] }
-      total = 0
-      tsv_files.each do |f|
-        count = ft.cat("#{remote_dir}/#{f["Path"]}", &:count)
-        puts "#{f["Name"]}: #{count}"
-        total += count
-      end
-      puts "Total: #{total}"
-    end
-
-    desc "format-counts ORGANIZATION", "Show holdings breakdown by format (mono_multi_serial) for ORGANIZATION"
-    def format_counts(org)
-      rows = Clusterable::Holding.format_counts(org)
-      puts "#{org} holdings by format:"
-      total = 0
-      rows.each do |row|
-        puts "  #{row[:mono_multi_serial]}:  #{row[:count]}"
-        total += row[:count]
-      end
-      puts "Total: #{total}"
+      result = Utils::HoldingsPreflight.new.dir_counts(remote_dir)
+      result[:counts].each { |r| puts "#{r[:name]}: #{r[:count]}" }
+      puts "Total: #{result[:total]}"
     end
   end
 

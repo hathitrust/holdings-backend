@@ -64,10 +64,14 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     before { allow(Utils::FileTransfer).to receive(:new).and_return(ft) }
 
     describe "count" do
-      it "prints the holding count for an organization" do
-        allow(Clusterable::Holding).to receive(:count_for_organization).with("umich").and_return(42)
+      it "prints the format breakdown and total for an organization" do
+        rows = [
+          {mono_multi_serial: "spm", count: 1000},
+          {mono_multi_serial: "ser", count: 500}
+        ]
+        allow(Clusterable::Holding).to receive(:format_counts).with("umich").and_return(rows)
         expect { PHCTL::PHCTL.start(["holdings", "count", "umich"]) }
-          .to output("42\n").to_stdout
+          .to output("umich holdings by format:\n  spm:  1000\n  ser:  500\nTotal: 1500\n").to_stdout
       end
     end
 
@@ -113,18 +117,6 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
         allow(ft).to receive(:lsjson).with("dropbox:some/dir").and_return(files)
         expect { PHCTL::PHCTL.start(["holdings", "dir-counts", "dropbox:some/dir"]) }
           .to output("Total: 0\n").to_stdout
-      end
-    end
-
-    describe "format-counts" do
-      it "prints the format breakdown for an organization" do
-        rows = [
-          {mono_multi_serial: "spm", count: 1000},
-          {mono_multi_serial: "ser", count: 500}
-        ]
-        allow(Clusterable::Holding).to receive(:format_counts).with("umich").and_return(rows)
-        expect { PHCTL::PHCTL.start(["holdings", "format-counts", "umich"]) }
-          .to output("umich holdings by format:\n  spm:  1000\n  ser:  500\nTotal: 1500\n").to_stdout
       end
     end
 
