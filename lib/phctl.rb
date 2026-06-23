@@ -1,7 +1,10 @@
 require "thor"
 
 require "alma_holdings"
+require "clusterable/holding"
 require "sidekiq_jobs"
+require "utils/file_transfer"
+require "utils/holdings_preflight"
 require "workflow_component"
 
 $LOAD_PATH.unshift(File.dirname(__FILE__))
@@ -193,6 +196,36 @@ module PHCTL
     end
   end
 
+  class Holdings < JobCommand
+    desc "count ORGANIZATION", "Show holdings in the database for ORGANIZATION, broken down by format"
+    def count(org)
+      result = Utils::HoldingsPreflight.new.format_counts(org)
+      puts "#{org} holdings by format:"
+      result[:counts].each { |r| puts "  #{r[:format]}:  #{r[:count]}" }
+      puts "Total: #{result[:total]}"
+    end
+
+    desc "file-count REMOTE_PATH", "Count lines in a remote holdings file via rclone"
+    def file_count(remote_path)
+      puts Utils::FileTransfer.new.cat(remote_path, &:count)
+    end
+
+    desc "file-sample REMOTE_PATH", "Print first N lines of a remote holdings file"
+    option :lines, type: :numeric, default: 50
+    def file_sample(remote_path)
+      Utils::FileTransfer.new.cat(remote_path) do |io|
+        io.each_line.first(options[:lines]).each { |line| print line }
+      end
+    end
+
+    desc "dir-counts REMOTE_DIR", "Count lines in each .tsv file in a remote directory"
+    def dir_counts(remote_dir)
+      result = Utils::HoldingsPreflight.new.dir_counts(remote_dir)
+      result[:counts].each { |r| puts "#{r[:name]}: #{r[:count]}" }
+      puts "Total: #{result[:total]}"
+    end
+  end
+
   class PHCTL < Thor
     # Run inline instead of with sidekiq
     class_option :inline, type: :boolean
@@ -254,5 +287,8 @@ module PHCTL
 
     desc "workflow", "Parallelized workflows for generating reports"
     subcommand "workflow", Workflow
+
+    desc "holdings SUBCOMMAND", "Pre-flight inspection of holdings"
+    subcommand "holdings", Holdings
   end
 end

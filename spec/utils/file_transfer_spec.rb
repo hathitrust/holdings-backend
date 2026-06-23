@@ -95,6 +95,18 @@ RSpec.describe Utils::FileTransfer do
     end
   end
 
+  describe "#cat" do
+    it "streams file content to the block" do
+      File.write(local_file_path, "line1\nline2\nline3\n")
+      result = ft.cat(local_file_path, &:count)
+      expect(result).to eq 3
+    end
+
+    it "raises if the file does not exist" do
+      expect { ft.cat(missing_file, &:count) }.to raise_error Utils::FileTransferError
+    end
+  end
+
   describe "#download" do
     it "puts a file in the expected location" do
       expect(File.exist?("#{local_dir}/#{remote_file_name}")).to be false
