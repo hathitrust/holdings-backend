@@ -174,6 +174,8 @@ RSpec.describe Scrub::ScrubRunner do
         # In this scenario we have loaded (only) a ser file and now need to
         # load a mon, so we want to load it anyway despite the type mismatch
         load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
+        # We expect a notification about the file deletion
+        stub = stub_slack_webhook(a_string_including("Holdings deletion"))
         # allow_delete allows the existing ser to be deleted.
         expect { sr.run }.to change { Clusterable::Holding.count }.by(5)
         # The ser entry was backed up prior to deletion
@@ -182,6 +184,7 @@ RSpec.describe Scrub::ScrubRunner do
             Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: "ser").backup_path
           )
         ).to eq(true)
+        expect(stub).to have_been_requested.once
       end
     end
   end

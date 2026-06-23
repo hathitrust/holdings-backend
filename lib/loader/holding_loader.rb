@@ -93,6 +93,12 @@ module Loader
         mono_multi_serial: options["mono_multi_serial"]
       )
 
+      post_notification(options: options, pre_load_backup: pre_load_backup)
+      delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
+      Services.logger.info "cleanup done"
+    end
+
+    def post_notification(options:, pre_load_backup:, operation: "Holdings load")
       # Count newly loaded records by subtracting old (delete_flag=1) from total;
       # must run before delete_marked! clears the old ones.
       total_count = Clusterable::Holding.table
@@ -102,24 +108,23 @@ module Loader
       new_count = total_count - pre_load_backup.marked_count
 
       Utils::SlackNotifier.post(
-        "Holdings load complete for *#{options["organization"]}* " \
+        "#{operation} complete for *#{options["organization"]}* " \
         "(`#{options["mono_multi_serial"]}`) — " \
         "#{new_count} records loaded, #{pre_load_backup.marked_count} old records removed."
       )
+    end
 
+    def delete_old_holdings!(options:, pre_load_backup:)
       if pre_load_backup.marked_count > 0
         Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
         pre_load_backup.delete_marked!
       end
-
-      Services.logger.info "cleanup done"
     end
   end
 
-  # FIXME: make subclass of `HoldingLoader::Cleanup` to fix Slack/DB SPOT violations
   # A class that cleans up by deleting holdings of type that has not been replaced.
   # e.g. when mon and ser are replaced by mix, there are no files to postprocess, just database deletion
-  class HoldingLoader::DeletionCleanup
+  class HoldingLoader::DeletionCleanup < HoldingLoader::Cleanup
     def on_success(_status, options)
       # Check if there are records marked for deletion, delete if so.
       pre_load_backup = Scrub::PreLoadBackup.new(
@@ -127,24 +132,8 @@ module Loader
         mono_multi_serial: options["mono_multi_serial"]
       )
 
-      # Count newly loaded records by subtracting old (delete_flag=1) from total;
-      # must run before delete_marked! clears the old ones.
-      total_count = Clusterable::Holding.table
-        .where(organization: options["organization"],
-          mono_multi_serial: options["mono_multi_serial"])
-        .count
-      new_count = total_count - pre_load_backup.marked_count
-
-      Utils::SlackNotifier.post(
-        "Holdings deletion complete for *#{options["organization"]}* " \
-        "(`#{options["mono_multi_serial"]}`) — " \
-        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records removed."
-      )
-
-      if pre_load_backup.marked_count > 0
-        Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
-        pre_load_backup.delete_marked!
-      end
+      post_notification(operation: "Holdings deletion", options: options, pre_load_backup: pre_load_backup)
+      delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
 
       Services.logger.info "cleanup done"
     end
