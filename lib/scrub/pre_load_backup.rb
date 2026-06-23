@@ -37,7 +37,7 @@ module Scrub
     end
 
     # Delete in 10k chunks ordered by primary key.
-    # TODO: would we benefit from an index on delete_flag?
+    # TODO: would we benefit from an index on delete_flag and mono_multi_serial?
     def delete_marked!
       loop do
         count = records.where(delete_flag: 1)
