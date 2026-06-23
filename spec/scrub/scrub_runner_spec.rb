@@ -154,9 +154,34 @@ RSpec.describe Scrub::ScrubRunner do
         # Copy fixture to "dropbox" so there is a "new file" to "download",
         FileUtils.cp(fixture_file, remote_d.holdings_current)
         # In this scenario we have loaded (only) a ser file and now need to
-        # load a mon, so we want to load it anyway despite the type mismatch
+        # load a mon, so we want to load it anyway despite the type mismatch,
+        # and we want to keep existing ser holdings (allow_delete is false by default)
         load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
         expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
+      end
+    end
+
+    context "with type_check false and allow_delete true" do
+      # When an old type is superseded it needs to be backed up and deleted without
+      # a corresponding new file for that type.
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false, "allow_delete" => true}) }
+
+      it "loads additional data and deletes the old" do
+        remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+        remote_d.ensure!
+        # Copy fixture to "dropbox" so there is a "new file" to "download",
+        FileUtils.cp(fixture_file, remote_d.holdings_current)
+        # In this scenario we have loaded (only) a ser file and now need to
+        # load a mon, so we want to load it anyway despite the type mismatch
+        load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
+        # allow_delete allows the existing ser to be deleted.
+        expect { sr.run }.to change { Clusterable::Holding.count }.by(5)
+        # The ser entry was backed up prior to deletion
+        expect(
+          File.exist?(
+            Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: "ser").backup_path
+          )
+        ).to eq(true)
       end
     end
   end

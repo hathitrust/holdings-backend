@@ -131,6 +131,14 @@ module Jobs
         Services.logger.info "Finished Adding Print Holdings from #{filename}."
       end
     end
+
+    class HoldingsDeletion
+      include Sidekiq::Job
+
+      def perform
+        Services.logger.info "HoldingsDeletion do-nothing job doing nothing..."
+      end
+    end
   end
 
   module Concordance

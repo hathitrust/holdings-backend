@@ -12,6 +12,12 @@ module Scrub
       @old_types = old_types.any? ? old_types : get_old_types
     end
 
+    # Types that are currently loaded but not represented in the new holdings.
+    # These can be backed up and marked for deletion without being replaced.
+    def deleted_types
+      old_types - new_types.to_a
+    end
+
     def validate
       # If there are no old types, we'll allow loading any new type(s).
       return if old_types.empty?

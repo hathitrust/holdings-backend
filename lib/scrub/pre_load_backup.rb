@@ -36,8 +36,17 @@ module Scrub
       records.update(delete_flag: 1)
     end
 
+    # Delete in 10k chunks ordered by primary key.
+    # TODO: would we benefit from an index on delete_flag?
     def delete_marked!
-      records.where(delete_flag: 1).delete
+      loop do
+        count = records.where(delete_flag: 1)
+          .order(:uuid)
+          .limit(10_000)
+          .delete
+        break if count.zero?
+        sleep(0.5)
+      end
     end
 
     def backup_path

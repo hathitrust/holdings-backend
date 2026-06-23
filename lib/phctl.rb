@@ -252,6 +252,7 @@ module PHCTL
     option :force_holding_loader_cleanup_test, type: :boolean, default: false, desc: "For testing only"
     option :force, type: :boolean, default: false, desc: "Load holdings despite > 5% difference in count from previous holdings"
     option :type_check, type: :boolean, default: true, desc: "Check whether holdings match previous loaded types."
+    option :allow_delete, type: :boolean, default: false, desc: "If type_check=false, allow unrepresented types to be backed up and deleted."
     def scrub(org)
       Scrub::ScrubRunner.new(org, options).run
     end
