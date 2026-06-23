@@ -8,12 +8,6 @@ RSpec.describe Utils::SidekiqFailureNotifier do
 
   let(:error) { RuntimeError.new("disk full") }
 
-  describe "NOTIFY_AT_RETRY_COUNT" do
-    it "is 1 (triggers on the 3rd failure and beyond)" do
-      expect(described_class::NOTIFY_AT_RETRY_COUNT).to eq 1
-    end
-  end
-
   describe ".failure_message" do
     it "includes will retry notice, job class, args, error class, and message" do
       job = {"class" => "Jobs::Load::Holdings", "args" => ["/data/umich.ndj"], "retry_count" => 1}
@@ -59,10 +53,20 @@ RSpec.describe Utils::SidekiqFailureNotifier do
       expect(stub).to have_been_requested.once
     end
 
-    it "posts to Slack on subsequent retries (retry_count 2+)" do
-      stub = stub_request(:post, alerts_webhook_url).to_return(status: 200)
+    it "does not post to Slack on retries between the two thresholds (retry_count 2)" do
       run_handler({"class" => "Jobs::Common", "retry_count" => 2})
+      expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
+    end
+
+    it "posts to Slack on 7th attempt (retry_count 5)" do
+      stub = stub_request(:post, alerts_webhook_url).to_return(status: 200)
+      run_handler({"class" => "Jobs::Common", "retry_count" => 5})
       expect(stub).to have_been_requested.once
+    end
+
+    it "does not post to Slack on retries after the second threshold (retry_count 6+)" do
+      run_handler({"class" => "Jobs::Common", "retry_count" => 6})
+      expect(a_request(:post, alerts_webhook_url)).not_to have_been_made
     end
 
     it "does not post to Slack when ctx has no job" do
