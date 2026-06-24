@@ -37,7 +37,7 @@ module Scrub
     end
 
     # Delete in 10k chunks ordered by primary key.
-    # TODO: would we benefit from an index on delete_flag and mono_multi_serial?
+    # See `sql/000_schema.sql` -- all WHERE and ORDER are primary or indexed.
     def delete_marked!
       loop do
         count = records.where(delete_flag: 1)
