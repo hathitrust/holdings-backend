@@ -117,7 +117,12 @@ module Loader
     def delete_old_holdings!(options:, pre_load_backup:)
       if pre_load_backup.marked_count > 0
         Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
+        # Get elapsed time to see how we're doing with large deletes
+        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         pre_load_backup.delete_marked!
+        end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        elapsed = Time.at(end_time - start_time).strftime("%H:%M:%S.%3N")
+        Services.logger.info "elapsed time #{elapsed} for #{options["organization"]}/#{options["mono_multi_serial"]}"
       end
     end
   end
