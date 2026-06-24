@@ -1,4 +1,5 @@
 require "json"
+require "services"
 
 # Use this class in the following context:
 # You want to load a new monographs file from Test U.
@@ -16,6 +17,7 @@ require "json"
 module Scrub
   class PreLoadBackup
     attr_reader :organization, :mono_multi_serial
+    DELETE_BATCH_SIZE = 10_000
 
     def initialize(organization:, mono_multi_serial:)
       @organization = organization
@@ -38,14 +40,19 @@ module Scrub
 
     # Delete in 10k chunks ordered by primary key.
     # See `sql/000_schema.sql` -- all WHERE and ORDER are primary or indexed.
+    # Does not do limit(N).delete in light of a comment from the author of Sequel:
+    # https://stackoverflow.com/questions/38360484/sequel-ignoring-limit#comment64179700_38377263
     def delete_marked!
       loop do
-        count = records.where(delete_flag: 1)
+        uuids = records.where(delete_flag: 1)
           .order(:uuid)
-          .limit(10_000)
+          .limit(DELETE_BATCH_SIZE)
+          .select(:uuid)
+        break if uuids.empty?
+
+        Services.holdings_db[:holdings]
+          .where(uuid: uuids)
           .delete
-        break if count.zero?
-        sleep(0.5)
       end
     end
 
