@@ -121,7 +121,7 @@ module Loader
         start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
         pre_load_backup.delete_marked!
         end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        elapsed = Time.at(end_time - start_time).strftime("%H:%M:%S.%3N")
+        elapsed = Time.at(end_time - start_time).utc.strftime("%H:%M:%S.%3N")
         Services.logger.info "elapsed time #{elapsed} for #{options["organization"]}/#{options["mono_multi_serial"]}"
       end
     end
@@ -137,9 +137,8 @@ module Loader
         mono_multi_serial: options["mono_multi_serial"]
       )
 
-      post_notification(operation: "Holdings deletion", options: options, pre_load_backup: pre_load_backup)
+      post_notification(options: options, pre_load_backup: pre_load_backup, operation: "Holdings deletion")
       delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
-
       Services.logger.info "cleanup done"
     end
   end

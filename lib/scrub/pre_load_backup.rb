@@ -50,9 +50,7 @@ module Scrub
           .select(:uuid)
         break if uuids.empty?
 
-        Services.holdings_db[:holdings]
-          .where(uuid: uuids)
-          .delete
+        records.where(uuid: uuids).delete
       end
     end
 
