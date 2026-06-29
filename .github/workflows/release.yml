@@ -47,19 +47,33 @@ jobs:
           REPO: ${{ github.repository }}
           HEAD_SHA: ${{ github.sha }}
         run: |
-          TEST_RUN=$(gh run list \
-            --repo "$REPO" \
-            --workflow=tests.yml \
-            --branch=main \
-            --limit=5 \
-            --json headSha,status,conclusion \
-            | jq -r --arg sha "$HEAD_SHA" \
-              '[.[] | select(.headSha == $sha)] | .[0] | "\(.status)/\(.conclusion // "pending")"')
-          case "$TEST_RUN" in
-            "completed/success") echo "Tests passed for $HEAD_SHA ✓" ;;
-            "completed/"*) echo "Tests did not pass for $HEAD_SHA ($TEST_RUN)"; exit 1 ;;
-            *) echo "No completed test run found for $HEAD_SHA — wait for tests to pass first"; exit 1 ;;
-          esac
+          MAX_TRIES=10
+          WAIT_TIME=60
+          i=1
+          while true; do
+            TEST_RUN=$(gh run list \
+              --repo "$REPO" \
+              --workflow=tests.yml \
+              --branch=main \
+              --limit=10 \
+              --json headSha,status,conclusion \
+              | jq -r --arg sha "$HEAD_SHA" \
+                '[.[] | select(.headSha == $sha)] | .[0] | "\(.status)/\(.conclusion // "pending")"')
+            case "$TEST_RUN" in
+              "completed/success") echo "Tests passed for $HEAD_SHA ✓"; break ;;
+              "completed/"*) echo "Tests did not pass for $HEAD_SHA ($TEST_RUN)"; exit 1 ;;
+              *)
+                if [ "$i" -lt "$MAX_TRIES" ]; then
+                  echo "No completed test run found for $HEAD_SHA (try $i/$MAX_TRIES) — waiting ${WAIT_TIME}s"
+                  sleep "$WAIT_TIME"
+                  i=$((i+1))
+                else
+                  echo "No completed test run found for $HEAD_SHA after $MAX_TRIES tries — giving up"
+                  exit 1
+                fi
+                ;;
+            esac
+          done
 
       - name: Compute new tag
         id: compute
@@ -106,13 +120,21 @@ jobs:
 
   build:
     needs: [compute-tag, tag]
-    uses: ./.github/workflows/build.yml
-    with:
-      img_tag: ${{ needs.compute-tag.outputs.new_tag }}
-      ref: main
-      push_latest: ${{ inputs.push_latest }}
-      platforms: linux/amd64
-      rebuild: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Build Image
+        uses: hathitrust/github_actions/build@v1
+        with:
+          image: ghcr.io/hathitrust/holdings
+          img_tag: ${{ needs.compute-tag.outputs.new_tag }}
+          tag: main
+          push_latest: ${{ inputs.push_latest }}
+          registry_token: ${{ github.token }}
+          rebuild: false
+          platforms: linux/amd64
 
   scan-image:
     needs: [compute-tag, build]
@@ -149,9 +171,16 @@ jobs:
   deploy:
     if: ${{ !inputs.skip_deploy }}
     needs: [compute-tag, create-release]
-    uses: ./.github/workflows/deploy.yml
-    with:
-      branch_hash: ${{ needs.compute-tag.outputs.new_tag }}
-      environments: production
-    secrets:
-      CONFIG_REPO_RW_KEY: ${{ secrets.CONFIG_REPO_RW_KEY }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Deploy to production
+        uses: hathitrust/github_actions/deploy@v1
+        with:
+          image: ghcr.io/hathitrust/holdings:${{ needs.compute-tag.outputs.new_tag }}
+          file: environments/holdings/production/holdings-client-image.txt
+          CONFIG_REPO_RW_APP_ID: ${{ vars.CONFIG_REPO_RW_APP_ID }}
+          CONFIG_REPO_FULL_NAME: ${{ vars.CONFIG_REPO_FULL_NAME }}
+          CONFIG_REPO_RW_KEY: ${{ secrets.CONFIG_REPO_RW_KEY }}

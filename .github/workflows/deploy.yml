@@ -11,16 +11,6 @@ on:
         default: production
         options:
           - production
-  workflow_call:
-    inputs:
-      branch_hash:
-        type: string
-      environments:
-        type: string
-        default: production
-    secrets:
-      CONFIG_REPO_RW_KEY:
-        required: true
 
 jobs:
   deploy:

@@ -25,22 +25,6 @@ on:
                 description: Rebuild this image?
                 type: boolean
                 default: false
-    workflow_call:
-        inputs:
-            img_tag:
-                type: string
-            ref:
-                type: string
-                default: main
-            push_latest:
-                type: boolean
-                default: false
-            platforms:
-                type: string
-                default: linux/amd64
-            rebuild:
-                type: boolean
-                default: false
 
 jobs:
     build-image:
