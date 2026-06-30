@@ -22,11 +22,16 @@ RSpec.describe Scrub::ScrubRunner do
   let(:org1) { "umich" }
   # Only set force_holding_loader_cleanup_test to true in testing.
   let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true}) }
-  let(:fixture_file_name) { "umich_mon_full_20220101.tsv" }
-  let(:fixture_file) { fixture(fixture_file_name) }
+  let(:mon_fixture_file_name) { "umich_mon_full_20220101.tsv" }
+  let(:mon_fixture_file) { fixture(mon_fixture_file_name) }
+  # `ser` and `mix` are for change of format tests.
+  let(:ser_fixture_file_name) { "umich_ser_full_20220101.tsv" }
+  let(:ser_fixture_file) { fixture(ser_fixture_file_name) }
+  let(:mix_fixture_file_name) { "umich_mix_full_20220101.tsv" }
+  let(:mix_fixture_file) { fixture(mix_fixture_file_name) }
 
   def count_loaded_files
-    Services.holdings_db[:holdings_loaded_files].where(filename: fixture_file_name).count
+    Services.holdings_db[:holdings_loaded_files].where(filename: mon_fixture_file_name).count
   end
 
   before(:each) do
@@ -114,7 +119,7 @@ RSpec.describe Scrub::ScrubRunner do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
     end
     # This test acts as an integration test for Scrub::TypeChecker. Sort of.
@@ -122,7 +127,7 @@ RSpec.describe Scrub::ScrubRunner do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       # In this scenario we have already loaded a mix file,
       # so TypeChecker should alert about the mismatch.
       load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
@@ -132,7 +137,7 @@ RSpec.describe Scrub::ScrubRunner do
     it "posts a Slack notification on type check rejection" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       load_test_data(build(:holding, organization: org1, mono_multi_serial: "mix"))
 
       stub = stub_slack_webhook(a_string_including("umich")
@@ -143,48 +148,97 @@ RSpec.describe Scrub::ScrubRunner do
       expect(stub).to have_been_requested.once
     end
 
-    context "with type_check false" do
-      # might use this flag if data was partially loaded, or we need to do
-      # something manually
-      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false}) }
+    context "with format change spm/mpm/ser -> mon/ser" do
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false, "allow_delete" => true}) }
 
-      it "loads additional data when some is already loaded" do
+      it "deletes `spm` and `mpm` data after backing it up" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
         remote_d.ensure!
-        # Copy fixture to "dropbox" so there is a "new file" to "download",
-        FileUtils.cp(fixture_file, remote_d.holdings_current)
-        # In this scenario we have loaded (only) a ser file and now need to
-        # load a mon, so we want to load it anyway despite the type mismatch,
-        # and we want to keep existing ser holdings (allow_delete is false by default)
-        load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
-        expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
+        # Copy fixtures to "dropbox" so there is a "new file" to "download",
+        FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
+        FileUtils.cp(ser_fixture_file, remote_d.holdings_current)
+        # Load 6 each spm, mpm, and ser
+        records = []
+        6.times do
+          records << build(:holding, organization: org1, mono_multi_serial: "spm")
+          records << build(:holding, organization: org1, mono_multi_serial: "mpm")
+          records << build(:holding, organization: org1, mono_multi_serial: "ser")
+        end
+        load_test_data(*records)
+        # We expect a notification about the file deletion
+        stub = stub_slack_webhook(a_string_including("Holdings deletion"))
+        # Scrub will load 6 each mon, ser for a net decrement of 6.
+        expect { sr.run }.to change { Clusterable::Holding.count }.by(-6)
+        # No spm or mpm remain
+        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "mpm").count).to eq(0)
+        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "spm").count).to eq(0)
+        # All data was backed up
+        ["spm", "mpm", "ser"].each do |type|
+          expect(
+            File.exist?(
+              Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: type).backup_path
+            )
+          ).to eq(true)
+        end
+        # One Slack notification for each of spm and mpm
+        expect(stub).to have_been_requested.twice
       end
     end
 
-    context "with type_check false and allow_delete true" do
-      # When an old type is superseded it needs to be backed up and deleted without
-      # a corresponding new file for that type.
+    context "with format change mon/ser -> mix" do
       let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false, "allow_delete" => true}) }
 
-      it "loads additional data and deletes the old" do
+      it "deletes `mon` and `ser` data after backing it up" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
         remote_d.ensure!
         # Copy fixture to "dropbox" so there is a "new file" to "download",
-        FileUtils.cp(fixture_file, remote_d.holdings_current)
-        # In this scenario we have loaded (only) a ser file and now need to
-        # load a mon, so we want to load it anyway despite the type mismatch
-        load_test_data(build(:holding, organization: org1, mono_multi_serial: "ser"))
-        # We expect a notification about the file deletion
+        FileUtils.cp(mix_fixture_file, remote_d.holdings_current)
+        # Load 6 each mon and ser
+        records = []
+        6.times do
+          records << build(:holding, organization: org1, mono_multi_serial: "mon")
+          records << build(:holding, organization: org1, mono_multi_serial: "ser")
+        end
+        load_test_data(*records)
+        # We expect notifications about the file deletion
         stub = stub_slack_webhook(a_string_including("Holdings deletion"))
-        # allow_delete allows the existing ser to be deleted.
-        expect { sr.run }.to change { Clusterable::Holding.count }.by(5)
-        # The ser entry was backed up prior to deletion
-        expect(
-          File.exist?(
-            Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: "ser").backup_path
-          )
-        ).to eq(true)
-        expect(stub).to have_been_requested.once
+        # Scrub will load 6 `mix` for a net decrement of 6.
+        expect { sr.run }.to change { Clusterable::Holding.count }.by(-6)
+        # No mon or ser remain
+        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "mon").count).to eq(0)
+        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "ser").count).to eq(0)
+        # All data was backed up
+        ["mon", "ser"].each do |type|
+          expect(
+            File.exist?(
+              Scrub::PreLoadBackup.new(organization: org1, mono_multi_serial: type).backup_path
+            )
+          ).to eq(true)
+        end
+        # One Slack notification for each of mon and ser
+        expect(stub).to have_been_requested.twice
+      end
+    end
+
+    context "adding mon to existing ser by not passing --allow-delete" do
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false}) }
+
+      it "loads mon without deleting ser xxx" do
+        remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
+        remote_d.ensure!
+        # Copy fixture to "dropbox" so there is a "new file" to "download",
+        FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
+        # Load 6 ser
+        records = []
+        6.times do
+          records << build(:holding, organization: org1, mono_multi_serial: "ser")
+        end
+        load_test_data(*records)
+        # Scrub loads 6 `mon` for a net increment of 6.
+        expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
+        # mon and ser remain
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "mon").count).to eq(6)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "ser").count).to eq(6)
       end
     end
   end
@@ -193,13 +247,13 @@ RSpec.describe Scrub::ScrubRunner do
     it "downloads and scrubs a specific file without loading" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       out_files = nil
-      expect { out_files = sr.scrub_file(fixture_file_name) }.not_to change { Clusterable::Holding.count }
+      expect { out_files = sr.scrub_file(mon_fixture_file_name) }.not_to change { Clusterable::Holding.count }
       expect(out_files).not_to be_empty
       expect(out_files.all? { |f| File.exist?(f) }).to be true
       # File should still appear as new since the local cache was not touched
-      expect(sr.check_new_files.map { |f| f["Name"] }).to include(fixture_file_name)
+      expect(sr.check_new_files.map { |f| f["Name"] }).to include(mon_fixture_file_name)
     end
 
     it "raises on a malformed file" do
@@ -215,20 +269,20 @@ RSpec.describe Scrub::ScrubRunner do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
       expect { sr.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
       # Expect log file to end up in the remote dir
       log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
-      # expect to see a row in holdings_loaded_files with filename=fixture_file_name
+      # expect to see a row in holdings_loaded_files with filename=mon_fixture_file_name
       expect(count_loaded_files).to eq(1)
     end
     it "will refuse a file if it breaks Settings.scrub_line_count_diff_max" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
       # Copy fixture to "dropbox" so there is a "new file" to "download",
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
 
       FileUtils.mkdir_p("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/")
@@ -248,7 +302,7 @@ RSpec.describe Scrub::ScrubRunner do
         {"force" => true, "force_holding_loader_cleanup_test" => true}
       )
       expect { sr_force.run_file(remote_file) }.to change { Clusterable::Holding.count }.by(6)
-      # expect to see a row in holdings_loaded_files with filename=fixture_file_name
+      # expect to see a row in holdings_loaded_files with filename=mon_fixture_file_name
       expect(count_loaded_files).to eq(1)
     end
     it "will generate a backup file when overwriting holdings" do
@@ -274,7 +328,7 @@ RSpec.describe Scrub::ScrubRunner do
     it "posts a 'rejected' Slack notification on diff limit rejection" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
 
       FileUtils.mkdir_p("#{ENV["TEST_TMP"]}/scrub_data/#{org1}/loaded/")
@@ -293,7 +347,7 @@ RSpec.describe Scrub::ScrubRunner do
     it "posts a 'failed' Slack notification with error class on unexpected error" do
       remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
       remote_d.ensure!
-      FileUtils.cp(fixture_file, remote_d.holdings_current)
+      FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       remote_file = sr.check_new_files.first
 
       allow_any_instance_of(Scrub::RecordCounter).to receive(:acceptable_diff?).and_raise(RuntimeError, "disk full")
