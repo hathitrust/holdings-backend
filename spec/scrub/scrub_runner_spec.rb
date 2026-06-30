@@ -223,7 +223,7 @@ RSpec.describe Scrub::ScrubRunner do
     context "adding mon to existing ser by not passing --allow-delete" do
       let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false}) }
 
-      it "loads mon without deleting ser xxx" do
+      it "loads mon without deleting ser" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
         remote_d.ensure!
         # Copy fixture to "dropbox" so there is a "new file" to "download",
