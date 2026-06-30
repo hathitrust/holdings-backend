@@ -265,11 +265,7 @@ module Scrub
 
     # Get the types of the files we are loading.
     def new_types(files)
-      Set.new.tap do |types|
-        files.each do |f|
-          types << Scrub::MemberHoldingFile.new(f["Path"]).item_type
-        end
-      end
+      files.map { |file| Scrub::MemberHoldingFile.new(file["Path"]).item_type }.to_set
     end
 
     def remote_dir
