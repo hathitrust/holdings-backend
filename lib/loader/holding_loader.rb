@@ -95,7 +95,7 @@ module Loader
 
       post_notification(options: options, pre_load_backup: pre_load_backup)
       delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
-      Services.logger.info "cleanup done"
+      Services.logger.info "cleanup done for #{options["organization"]}/#{options["mono_multi_serial"]}"
     end
 
     def post_notification(options:, pre_load_backup:, operation: "Holdings load")
@@ -116,13 +116,8 @@ module Loader
 
     def delete_old_holdings!(options:, pre_load_backup:)
       if pre_load_backup.marked_count > 0
-        Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
-        # Get elapsed time to see how we're doing with large deletes
-        start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        Services.logger.info "deleting old records for #{options["organization"]}/#{options["mono_multi_serial"]}"
         pre_load_backup.delete_marked!
-        end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-        elapsed = Time.at(end_time - start_time).utc.strftime("%H:%M:%S.%3N")
-        Services.logger.info "elapsed time #{elapsed} for #{options["organization"]}/#{options["mono_multi_serial"]}"
       end
     end
   end
@@ -139,7 +134,7 @@ module Loader
 
       post_notification(options: options, pre_load_backup: pre_load_backup, operation: "Holdings deletion")
       delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
-      Services.logger.info "cleanup done"
+      Services.logger.info "cleanup done for #{options["organization"]}/#{options["mono_multi_serial"]}"
     end
   end
 end
