@@ -109,20 +109,7 @@ module Scrub
         "organization" => organization,
         "mono_multi_serial" => type
       }
-      batch = Sidekiq::Batch.new
-      batch.description = "Holdings deletion for #{organization}'s deleted #{type}"
-      batch.on(:success, Loader::HoldingLoader::DeletionCleanup, cleanup_data)
-
-      batch.jobs do
-        Services.logger.info "Queueing nonexistent chunk"
-        Jobs::Load::HoldingsDeletion.perform_async
-      end
-      # In test, where sidekiq is not running, we do this
-      # instead of relying on the on_success-hook.
-      if force_holding_loader_cleanup_test
-        Services.logger.info "Forcing Loader::HoldingLoader::DeletionCleanup, TEST ONLY!"
-        Loader::HoldingLoader::DeletionCleanup.new.on_success(:success, cleanup_data)
-      end
+      Jobs::Load::HoldingsDeletion.perform_async(cleanup_data)
     end
 
     def run_file(member_submitted_file)

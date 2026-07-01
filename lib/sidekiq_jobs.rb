@@ -135,8 +135,9 @@ module Jobs
     class HoldingsDeletion
       include Sidekiq::Job
 
-      def perform
-        Services.logger.info "HoldingsDeletion do-nothing job doing nothing..."
+      def perform(cleanup_data)
+        Services.logger.info "HoldingsDeletion calling DeletionCleanup with #{cleanup_data}"
+        Loader::HoldingLoader::DeletionCleanup.new.on_success(:success, cleanup_data)
       end
     end
   end
