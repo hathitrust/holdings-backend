@@ -170,8 +170,11 @@ RSpec.describe Scrub::ScrubRunner do
         # Scrub will load 6 each mon, ser for a net decrement of 6.
         expect { sr.run }.to change { Clusterable::Holding.count }.by(-6)
         # No spm or mpm remain
-        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "mpm").count).to eq(0)
-        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "spm").count).to eq(0)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "mpm").count).to eq(0)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "spm").count).to eq(0)
+        # Now we have 6 mon and 6 ser
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "mon").count).to eq(6)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "ser").count).to eq(6)
         # All data was backed up
         ["spm", "mpm", "ser"].each do |type|
           expect(
@@ -205,8 +208,10 @@ RSpec.describe Scrub::ScrubRunner do
         # Scrub will load 6 `mix` for a net decrement of 6.
         expect { sr.run }.to change { Clusterable::Holding.count }.by(-6)
         # No mon or ser remain
-        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "mon").count).to eq(0)
-        expect(Clusterable::Holding.format_counts(org1).where(mono_multi_serial: "ser").count).to eq(0)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "mon").count).to eq(0)
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "ser").count).to eq(0)
+        # Now we have 6 mix
+        expect(Clusterable::Holding.table.where(organization: org1, mono_multi_serial: "mix").count).to eq(6)
         # All data was backed up
         ["mon", "ser"].each do |type|
           expect(
