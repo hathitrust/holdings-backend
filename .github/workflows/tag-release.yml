@@ -6,6 +6,9 @@ on:
 
 jobs:
   tag-release:
+    # release.yml builds images tagged with the version directly, so the SHA-tagged
+    # image this job expects won't exist. Skip when the release was created by automation.
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: hathitrust/github_actions/tag-release@v1
