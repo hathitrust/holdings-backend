@@ -40,6 +40,32 @@ RSpec.describe Scrub::ScrubRunner do
     FileUtils.mkdir_p(Settings.remote_member_data)
   end
 
+  describe ".new" do
+    it "raises on nil organization" do
+      expect {
+        described_class.new(nil)
+      }.to raise_error(/@organization/)
+    end
+
+    it "raises on unknown force parameter" do
+      expect {
+        described_class.new(org1, {"force" => "bogus"})
+      }.to raise_error(/@force/)
+    end
+
+    it "raises on unknown force_holding_loader_cleanup_test parameter" do
+      expect {
+        described_class.new(org1, {"force_holding_loader_cleanup_test" => "bogus"})
+      }.to raise_error(/@force_holding_loader_cleanup_test/)
+    end
+
+    it "raises on unknown type_check parameter" do
+      expect {
+        described_class.new(org1, {"type_check" => true})
+      }.to raise_error(/@type_check/)
+    end
+  end
+
   describe "#check_old_files" do
     it "create the local directory if if does not exist" do
       local_d = DataSources::DirectoryLocator.new(Settings.local_member_data, org1)
@@ -149,7 +175,7 @@ RSpec.describe Scrub::ScrubRunner do
     end
 
     context "with format change spm/mpm/ser -> mon/ser" do
-      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false, "allow_delete" => true}) }
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => "delete"}) }
 
       it "deletes `spm` and `mpm` data after backing it up" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
@@ -189,7 +215,7 @@ RSpec.describe Scrub::ScrubRunner do
     end
 
     context "with format change mon/ser -> mix" do
-      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false, "allow_delete" => true}) }
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => "delete"}) }
 
       it "deletes `mon` and `ser` data after backing it up" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)
@@ -225,8 +251,8 @@ RSpec.describe Scrub::ScrubRunner do
       end
     end
 
-    context "adding mon to existing ser by not passing --allow-delete" do
-      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => false}) }
+    context "adding mon to existing ser with --type-check=append" do
+      let(:sr) { described_class.new(org1, {"force_holding_loader_cleanup_test" => true, "type_check" => "append"}) }
 
       it "loads mon without deleting ser" do
         remote_d = DataSources::DirectoryLocator.new(Settings.remote_member_data, org1)

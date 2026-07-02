@@ -41,11 +41,7 @@ module Scrub
       @force = options.fetch("force", false)
       # @force_holding_loader_cleanup_test: only set to true in testing.
       @force_holding_loader_cleanup_test = options.fetch("force_holding_loader_cleanup_test", false)
-      @type_check = options.fetch("type_check", true)
-      # If type_check is false, backup and delete any types not represented in the new files.
-      # This should be set to true when loading a format change (spm/mpm/ser -> mon/ser)
-      # but should be set to false if reloading a failed file when others succeeded.
-      @allow_delete = options.fetch("allow_delete", false)
+      @type_check = options.fetch("type_check", "check")
       @file_transfer = Utils::FileTransfer.new
       validate
     end
@@ -60,7 +56,7 @@ module Scrub
         organization: organization,
         new_types: new_types(new_files)
       )
-      if type_check
+      if type_check == "check"
         # Only allow loading of previously seen types, or when nothing is currently loaded
         begin
           type_checker.validate
@@ -70,7 +66,7 @@ module Scrub
           )
           raise
         end
-      elsif @allow_delete
+      elsif type_check == "delete"
         deleted_types = type_checker.deleted_types
       end
 
@@ -284,6 +280,9 @@ module Scrub
       end
       unless [true, false].include?(force_holding_loader_cleanup_test)
         raise "Need @force_holding_loader_cleanup_test to be true/false"
+      end
+      unless ["check", "delete", "append"].include?(type_check)
+        raise "Need @type_check to be one of check/delete/append"
       end
     end
   end
