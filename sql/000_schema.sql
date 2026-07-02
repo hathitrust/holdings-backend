@@ -81,24 +81,31 @@ CREATE TABLE `holdings_loaded_files` (
 
 DROP TABLE IF EXISTS `holdings`;
 CREATE TABLE `holdings` (
-  `ocn`          int(11) NOT NULL,
+  `ocn` int(11) NOT NULL,
   `organization` varchar(64) NOT NULL,
-  `local_id`     varchar(255) NOT NULL,
-  `enum_chron`   varchar(255) NULL,
-  `n_enum`       varchar(255) NULL,
-  `n_chron`      varchar(255) NULL,
-  `n_enum_chron` varchar(255) NULL,
-  `status`       enum('CH', 'LM', 'WD') NULL,
-  `condition`    enum('BRT', '') NULL,
-  `gov_doc_flag` tinyint(1),
-  `mono_multi_serial` enum('mix', 'mon', 'spm', 'mpm', 'ser') NOT NULL,
+  `local_id` varchar(255) NOT NULL,
+  `enum_chron` varchar(255) DEFAULT NULL,
+  `n_enum` varchar(255) DEFAULT NULL,
+  `n_chron` varchar(255) DEFAULT NULL,
+  `n_enum_chron` varchar(255) DEFAULT NULL,
+  `status` enum('CH','LM','WD') DEFAULT NULL,
+  `condition` enum('BRT','') DEFAULT NULL,
+  `gov_doc_flag` tinyint(1) DEFAULT NULL,
+  `mono_multi_serial` enum('mix','mon','spm','mpm','ser') NOT NULL,
   `date_received` date NOT NULL,
-  `uuid`         char(36) PRIMARY KEY NOT NULL,
-  `issn`         varchar(255) NULL,
-  `delete_flag`  tinyint(1) DEFAULT 0,
-  KEY (`ocn`),
-  KEY (`organization`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `uuid` char(36) NOT NULL,
+  `issn` varchar(255) DEFAULT NULL,
+  `delete_flag` tinyint(1) DEFAULT 0,
+  PRIMARY KEY (`uuid`),
+  KEY `holdings_ocn_index` (`ocn`),
+  KEY `organization` (`organization`),
+  KEY `delete_flag_index` (`delete_flag`),
+  KEY `status_index` (`status`),
+  KEY `condition_index` (`condition`),
+  KEY `holdings_format_flagged_idx` (`organization`,`mono_multi_serial`,`delete_flag`),
+  KEY `holdings_format_uuid_idx` (`organization`,`mono_multi_serial`,`uuid`),
+  KEY `holdings_org_uuid_idx` (`organization`,`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci `PAGE_COMPRESSED`=1;
 
 DROP TABLE IF EXISTS `oclc_concordance`;
 CREATE TABLE `oclc_concordance` (

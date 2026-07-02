@@ -251,7 +251,19 @@ module PHCTL
     # Only set force_holding_loader_cleanup_test to true in testing.
     option :force_holding_loader_cleanup_test, type: :boolean, default: false, desc: "For testing only"
     option :force, type: :boolean, default: false, desc: "Load holdings despite > 5% difference in count from previous holdings"
-    option :type_check, type: :boolean, default: true, desc: "Check whether holdings match previous loaded types."
+    option :type_check, type: :string, default: "check", desc: "check, delete, or append (see full description)."
+    long_desc <<~DESC, wrap: false
+      Download new files for ORG from DropBox and load them
+
+      The --type-check option controls policy for new holdings that do not match previous loaded types.
+      Possible values:
+        check  - Refuse to load any type (mpm, spm, ser, mon, mix) that is not in the DB.
+                 Does not generate an error if ORG has no previous holdings data.
+        delete - Back up and delete types that are not represented in the new files.
+        append - Add new holdings types without deleting any other types.
+                 Typically this would be used to correct a failed load for one file,
+                 in order to leave the other types intact.
+    DESC
     def scrub(org)
       Scrub::ScrubRunner.new(org, options).run
     end

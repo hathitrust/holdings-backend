@@ -41,31 +41,44 @@ module Scrub
       @force = options.fetch("force", false)
       # @force_holding_loader_cleanup_test: only set to true in testing.
       @force_holding_loader_cleanup_test = options.fetch("force_holding_loader_cleanup_test", false)
-      @type_check = options.fetch("type_check", true)
+      @type_check = options.fetch("type_check", "check")
       @file_transfer = Utils::FileTransfer.new
       validate
     end
 
+    # Entrypoint from `phctl scrub` command. Scrub and load.
     def run
       Services.logger.info "Running org #{organization}."
       new_files = check_new_files
+      deleted_types = []
       Services.logger.info "Found #{new_files.size} new files: #{new_files.join(", ")}."
-      if type_check
+      type_checker = Scrub::TypeChecker.new(
+        organization: organization,
+        new_types: new_types(new_files)
+      )
+      if type_check == "check"
+        # Only allow loading of previously seen types, or when nothing is currently loaded
         begin
-          check_new_types(new_files)
+          type_checker.validate
         rescue Scrub::TypeCheckError => err
           Utils::SlackNotifier.post(
             "Holdings scrub rejected for *#{organization}* — #{err.message}"
           )
           raise
         end
+      elsif type_check == "delete"
+        deleted_types = type_checker.deleted_types
       end
 
       new_files.each do |new_file|
         run_file(new_file)
       end
+      deleted_types.each do |deleted_type|
+        delete_type(deleted_type)
+      end
     end
 
+    # From `phctl scrub_file` command -- download and scrub without loading.
     def scrub_file(filename)
       Dir.mktmpdir do |tmp_dir|
         remote_file = File.join(remote_dir, filename)
@@ -75,6 +88,24 @@ module Scrub
         scrubber.run
         scrubber.out_files
       end
+    end
+
+    def delete_type(type)
+      Services.logger.info "Running deletion job for type #{type}"
+
+      # Create a backup file and mark old records for deletion
+      pre_load_backup = Scrub::PreLoadBackup.new(
+        organization: organization,
+        mono_multi_serial: type
+      )
+      pre_load_backup.write_backup_file
+      pre_load_backup.mark_for_deletion
+
+      cleanup_data = {
+        "organization" => organization,
+        "mono_multi_serial" => type
+      }
+      Jobs::Load::HoldingsDeletion.perform_async(cleanup_data)
     end
 
     def run_file(member_submitted_file)
@@ -215,16 +246,9 @@ module Scrub
 
     private
 
-    def check_new_types(files)
-      # Get the types of the files we are loading.
-      types = Set.new
-      files.each do |f|
-        member_holding_file = Scrub::MemberHoldingFile.new(f["Path"])
-        types << member_holding_file.item_type
-      end
-
-      # Alert & abort if the types are not a subset of types we have loaded for organization before.
-      Scrub::TypeChecker.new(organization: organization, new_types: types).validate
+    # Get the types of the files we are loading.
+    def new_types(files)
+      files.map { |file| Scrub::MemberHoldingFile.new(file["Path"]).item_type }.to_set
     end
 
     def remote_dir
@@ -256,6 +280,9 @@ module Scrub
       end
       unless [true, false].include?(force_holding_loader_cleanup_test)
         raise "Need @force_holding_loader_cleanup_test to be true/false"
+      end
+      unless ["check", "delete", "append"].include?(type_check)
+        raise "Need @type_check to be one of check/delete/append"
       end
     end
   end
