@@ -145,7 +145,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Scan image for vulnerabilities
-        uses: hathitrust/github_actions/scan-image@v1.7.0
+        uses: hathitrust/github_actions/scan-image@v1.8.0
         with:
           image-ref: ghcr.io/hathitrust/holdings:${{ needs.compute-tag.outputs.new_tag }}
 
