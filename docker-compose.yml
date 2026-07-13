@@ -69,7 +69,7 @@ services:
     command: bundle exec sidekiq -c 1 -r ./lib/sidekiq_jobs.rb
 
   mariadb:
-    image: mariadb:10.5
+    image: mariadb:12.3
     environment:
       MARIADB_ROOT_PASSWORD: holdings
     healthcheck:
