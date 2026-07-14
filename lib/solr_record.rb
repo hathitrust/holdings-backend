@@ -20,6 +20,8 @@ class SolrRecord
   end
 
   def parse_ht_items
+    return unless record["ht_json"]
+
     @ht_items = cluster.ht_items =
       JSON.parse(record["ht_json"]).map do |solr_htitem|
         htitem(solr_htitem)
@@ -56,8 +58,8 @@ class SolrRecord
   end
 
   def map_bib_fmt(solr_bib_fmt)
-    return "SE" if solr_bib_fmt.include?("Serial")
-    return "BK" if solr_bib_fmt.include?("Book")
+    return "SE" if solr_bib_fmt&.include?("Serial")
+    return "BK" if solr_bib_fmt&.include?("Book")
     # unknown / should be treated as 'book' for most purposes
     "XX"
   end
