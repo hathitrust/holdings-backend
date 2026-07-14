@@ -30,7 +30,7 @@ module Scrub
         "Previously loaded types: #{old_types.join(", ")}.",
         "Types being loaded now: #{new_types.join(", ")}.",
         "The diff is: #{diff_types.join(", ")}.",
-        "This *can* be loaded but requires manual intervention."
+        "Requires `--type-check delete` or `--type-check append`."
       ].join(" ")
     end
 

@@ -266,14 +266,15 @@ module PHCTL
     DESC
     def scrub(org)
       Scrub::ScrubRunner.new(org, options).run
+    rescue => err
+      Services.logger.error err.message
     end
 
     desc "scrub_file ORG FILENAME", "Download and scrub a specific file for ORG from Dropbox without loading"
     def scrub_file(org, filename)
       Scrub::ScrubRunner.new(org, options).scrub_file(filename)
     rescue => err
-      warn err.message
-      exit 1
+      Services.logger.error err.message
     end
 
     desc "convert-xml ORG", "Download ORG's Alma XML holdings, convert to TSV, and upload"
