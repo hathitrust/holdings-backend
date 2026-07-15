@@ -44,6 +44,11 @@ module Clusterable
       condition == "BRT" || status == "LM"
     end
 
+    # assumed current if nil
+    def current_holding?
+      status.nil? || status == "CH"
+    end
+
     # Convert a tsv line from a validated holding file into a record like hash
     #
     # @param holding_line, a tsv line

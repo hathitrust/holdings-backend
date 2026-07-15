@@ -33,4 +33,10 @@ RSpec.shared_context "with tables for holdings" do
       Services.hathifiles_ocn_table.insert(htid: htitem.item_id, value: ocn)
     end
   end
+
+  def holding_for(ht_item, **kwargs)
+    build(:holding,
+      ocn: ht_item.ocns.first,
+      **kwargs)
+  end
 end

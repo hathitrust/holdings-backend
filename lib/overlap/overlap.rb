@@ -31,6 +31,16 @@ module Overlap
       matching_count.zero? && @ht_item.billing_entity == @org
     end
 
+    def any_current_holdings_brittle?
+      matching_holdings.any? { |h| h.current_holding? && h.condition == "BRT" }
+    end
+
+    def all_current_holdings_brittle?
+      matching_holdings
+        .select { |h| h.current_holding? }
+        .all? { |h| h.condition == "BRT" }
+    end
+
     def matching_holdings
       @cluster.holdings_by_org[@org] || []
     end

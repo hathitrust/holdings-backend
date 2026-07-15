@@ -1,6 +1,5 @@
 require "workflows/solr"
-require "clusterable/ht_item"
-require "frequency_table"
+require "overlap/item_non_current_holdings"
 
 module Workflows
   module NonCurrentHoldingsAnalysis
@@ -43,63 +42,7 @@ module Workflows
       end
 
       def report_for(ht_item)
-        # TODO extract class -- serialize, deserialize, stuff for adding to tables
-        {
-          item_id: ht_item.item_id,
-          rights: ht_item.rights,
-          non_current_holdings: analyze(ht_item).to_h
-        }
-      end
-
-      def analyze(ht_item)
-        return enum_for(__method__, ht_item) unless block_given?
-        # TODO do we want this?
-        # return :no_ocn if ht_item.ocns.empty?
-
-        overlaps = Overlap::ClusterOverlap.new(ht_item.cluster).for_item(ht_item).to_a
-
-        overlaps_by_org = overlaps.group_by(&:org)
-
-        overlaps_by_org.each do |org, overlaps|
-          condition = analyze_overlap_records(overlaps)
-          yield [org, condition] if condition
-        end
-      end
-
-      private
-
-      def analyze_overlap_records(overlap_records)
-        conditions = Set.new
-
-        # not actually checking not held for this - this is for the case of an
-        # institution deposited the item but doesn't report holding it
-        # return :not_held if overlap_records.map(&:matching_count).all?(&:zero?)
-        return if overlap_records.map(&:matching_count).all?(&:zero?)
-
-        total_brt = overlap_records.sum(&:brt_count)
-        total_current = overlap_records.sum(&:current_holding_count)
-
-        # There are current holdings, but they're all brittle
-        conditions.add(:brittle) if total_brt.positive? && total_brt == total_current
-
-        # If no current holdings, or they're all brittle
-        if total_current.zero? || conditions.include?(:brittle)
-          conditions.add(:lost_missing) if overlap_records.sum(&:lm_count).positive?
-          conditions.add(:withdrawn) if overlap_records.sum(&:wd_count).positive?
-        end
-
-        single_condition(conditions)
-      end
-
-      def single_condition(conditions)
-        case conditions.size
-        when 0
-          nil
-        when 1
-          conditions.first
-        else
-          :multiple
-        end
+        Overlap::ItemNonCurrentHoldings.new(ht_item).to_h
       end
     end
 
@@ -125,30 +68,50 @@ module Workflows
         end
       end
 
-      def ic_or_pd(rights)
-        if Clusterable::HtItem::IC_RIGHTS_CODES.include?(rights)
-          :ic
-        #        elsif org is us and rights are icus then ic?
-        #        elsif org is non-us and rights are pdus then ic?
-        else
-          :pd
-        end
+      def run
+        compile_counts
+        output_counts
       end
 
-      def run
-        # TODO extract method
+      def header
+        [
+          "organization",
+          "pd: withdrawn",
+          "pd: lost/missing",
+          "pd: brittle",
+          "pd: multiple",
+          "ic: withdrawn",
+          "ic: lost/missing",
+          "ic: brittle",
+          "ic: multiple"
+        ].join("\t")
+      end
+
+      def report_filename
+        return @report_filename if @report_filename
+
+        @report_filename = "non_current_holdings_analysis_#{Date.today}.tsv"
+      end
+
+      private
+
+      attr_reader :report_path, :working_directory
+
+      def compile_counts
         Dir.glob(File.join(working_directory, "*.ndj")).each do |ndj|
           File.open(ndj).each_line do |line|
-            item_analysis = JSON.parse(line)
+            item_analysis = Overlap::ItemNonCurrentHoldings.from_json(line)
 
-            rights = ic_or_pd(item_analysis["rights"])
+            rights = item_analysis.ht_item.ic? ? :ic : :pd
 
-            item_analysis["non_current_holdings"].each do |organization, status|
-              @counts[organization][rights][status.to_sym] += 1
+            item_analysis.non_current_holdings.each do |organization, status|
+              @counts[organization][rights][status] += 1
             end
           end
         end
+      end
 
+      def output_counts
         File.open(report_full_path, "w") do |report|
           report.puts(header)
 
@@ -168,35 +131,8 @@ module Workflows
         end
       end
 
-      def header
-        [
-          "organization",
-          "pd: withdrawn",
-          "pd: lost/missing",
-          "pd: brittle",
-          "pd: multiple",
-          "ic: withdrawn",
-          "ic: lost/missing",
-          "ic: brittle:",
-          "ic: multiple"
-        ].join("\t")
-      end
-
-      def report_filename
-        return @report_filename if @report_filename
-
-        @report_filename = "non_current_holdings_analysis_#{Date.today}.tsv"
-      end
-
-      private
-
-      attr_reader :report_path, :working_directory
-
       def report_full_path
         File.join(report_path, report_filename)
-      end
-
-      def gzip_report
       end
     end
   end
