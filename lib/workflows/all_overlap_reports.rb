@@ -72,7 +72,6 @@ module Workflows
           end
         end
         holdings_matched
-        # TODO consider excluding non-current holdings?
       end
 
       def write_records_for_unmatched_holdings(cluster, holdings_matched)
@@ -82,7 +81,7 @@ module Workflows
           next if records_written.include? report_record.to_s
 
           records_written << report_record.to_s
-          write_record(report_record)
+          output.puts(report_record)
         end
       end
 
