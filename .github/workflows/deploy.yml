@@ -22,5 +22,6 @@ jobs:
     with:
       image: ghcr.io/holdings:${{ inputs.branch_hash || github.sha}}
       file: environments/hathitrust/holdings/${{inputs.environments}}/holdings-client-image.txt
+      CONFIG_REPO_RW_APP_ID: ${{ vars.CONFIG_REPO_RW_APP_ID }}
       CONFIG_REPO_FULL_NAME: ${{ vars.CONFIG_REPO_FULL_NAME }}
     secrets: inherit
