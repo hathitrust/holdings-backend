@@ -7,7 +7,7 @@ RSpec.describe Overlap::ReportRecord do
   let(:holding) { build(:holding, mono_multi_serial: "spm") }
   let(:ht_item) { build(:ht_item, :spm, rights: "ic") }
   let(:eo) do
-    described_class.new(holding: holding, ht_item: ht_item)
+    described_class.new(holdings: [holding], ht_item: ht_item, organization: holding.organization)
   end
 
   describe "#initialize" do
@@ -16,7 +16,7 @@ RSpec.describe Overlap::ReportRecord do
     end
 
     it "has an OCLC" do
-      expect(eo.ocn).to be_a(Numeric)
+      expect(eo.ocn).to eq(holding.ocn.to_s)
     end
 
     it "has an item_type" do
@@ -32,15 +32,37 @@ RSpec.describe Overlap::ReportRecord do
     end
 
     it "has a catalog_id" do
-      expect(eo.catalog_id).to be_a(Numeric)
+      expect(eo.catalog_id).to eq(ht_item.ht_bib_key)
     end
 
     it "has a volume_id" do
-      expect(eo.volume_id).to be_a(String)
+      expect(eo.volume_id).to eq(ht_item.item_id)
     end
 
     it "has an enum_chron" do
-      expect(eo.enum_chron).to be_a(String)
+      expect(eo.enum_chron).to eq(ht_item.enum_chron)
+    end
+  end
+
+  context "with multiple holdings" do
+    it "gathers unique ocns" do
+      report_record = described_class.new(holdings: [
+        build(:holding, ocn: 99, organization: "upenn"),
+        build(:holding, ocn: 99, organization: "upenn"),
+        build(:holding, ocn: 98, organization: "upenn")
+      ], organization: "upenn")
+
+      expect(report_record.ocn).to eq("98,99")
+    end
+
+    it "gathers unique local ids" do
+      report_record = described_class.new(holdings: [
+        build(:holding, local_id: "local_id_1", organization: "upenn"),
+        build(:holding, local_id: "local_id_2", organization: "upenn"),
+        build(:holding, local_id: "local_id_1", organization: "upenn")
+      ], organization: "upenn")
+
+      expect(report_record.local_id).to eq("local_id_1,local_id_2")
     end
   end
 

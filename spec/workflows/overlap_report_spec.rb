@@ -40,7 +40,7 @@ RSpec.describe Workflows::OverlapReport do
       writer.run
 
       persistent_file = File.join(Settings.overlap_reports_path,
-        writer.report_filename)
+        writer.report_filename("umich"))
       expect(File).to exist(persistent_file)
     end
 
@@ -49,12 +49,12 @@ RSpec.describe Workflows::OverlapReport do
       writer.run
 
       File.join(Settings.overlap_reports_remote_path,
-        writer.report_filename)
+        writer.report_filename("umich"))
       writer_for_org("umich").run
 
       remote_file = File.join(Settings.overlap_reports_remote_path,
         "umich-hathitrust-member-data", "analysis",
-        writer.report_filename)
+        writer.report_filename("umich"))
       expect(File).to exist(remote_file)
     end
 
@@ -113,7 +113,7 @@ RSpec.describe Workflows::OverlapReport do
         writer = writer_for_org("umich")
         stub = stub_slack_webhook(a_string_including("Overlap report complete")
           .and(a_string_including("umich"))
-          .and(a_string_including(writer.report_filename))
+          .and(a_string_including(writer.report_filename("umich")))
           .and(a_string_including("dropbox.com"))
           .and(a_string_including("umich-hathitrust-member-data/analysis")))
         writer.run
@@ -141,6 +141,27 @@ RSpec.describe Workflows::OverlapReport do
         reducer: workflow_component("Writer", org, **kwargs)
       }
       Workflows::MapReduce.new(test_mode: true, components: components)
+    end
+
+    it "collapses multiple OCNs and local IDs into a single output record per htid" do
+      item = build(:ht_item, ocns: [98, 99], access: "deny", billing_entity: "umich")
+
+      test_data = [
+        build(:holding, mono_multi_serial: "spm", ocn: 98, organization: "umich", local_id: "umich_local_id_1"),
+        build(:holding, mono_multi_serial: "spm", ocn: 98, organization: "umich", local_id: "umich_local_id_2"),
+        build(:holding, mono_multi_serial: "spm", ocn: 99, organization: "umich", local_id: "umich_local_id_1"),
+        build(:holding, mono_multi_serial: "spm", ocn: 99, organization: "umich", local_id: "umich_local_id_2"),
+        item
+      ]
+
+      load_test_data(*test_data)
+      mock_solr_oclc_search(solr_response_for(item))
+
+      workflow_for_org("umich").run
+      lines = open_gz_report("umich").to_a
+
+      # header plus one report line; if not collapsing should be 5 lines
+      expect(lines.size).to eq(2)
     end
 
     context "with two holdings and htitems" do
