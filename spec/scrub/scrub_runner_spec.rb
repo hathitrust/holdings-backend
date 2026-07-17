@@ -220,6 +220,26 @@ RSpec.describe Scrub::ScrubRunner do
       expect(Utils::LineCounter.new(preloader.backup_path).count_lines).to eq 6
     end
 
+    context "with failed preflight" do
+      context "with unexpected download error" do
+        it "does nothing (nothing to clean up)" do
+          remote_d.ensure!
+          FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
+          allow_any_instance_of(Utils::FileTransfer).to receive(:download).and_raise(RuntimeError, "disk full")
+          expect { sr.run }.to raise_error(RuntimeError)
+        end
+      end
+
+      context "with malformed header" do
+        it "uploads scrub log" do
+          remote_d.ensure!
+          FileUtils.cp(fixture("umich_mon_full_20220101_headerfail.tsv"), remote_d.holdings_current)
+          expect { sr.run }.to raise_error(Scrub::MalformedHeaderError)
+          expect(Dir.glob(File.join(remote_d.holdings_current, "*.log")).count).to eq 1
+        end
+      end
+    end
+
     it "posts a 'failed' Slack notification with error class on unexpected error" do
       remote_d.ensure!
       FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
@@ -230,10 +250,7 @@ RSpec.describe Scrub::ScrubRunner do
         .and(a_string_including("RuntimeError"))
         .and(a_string_including("disk full")))
 
-      begin
-        sr.run
-      rescue
-      end
+      expect { sr.run }.to raise_error(RuntimeError)
       expect(stub).to have_been_requested.once
     end
 

@@ -63,7 +63,10 @@ module Scrub
         deleted_types = type_checker.deleted_types
       end
 
-      # Preflight all files and make sure autoscrub succeeds
+      # Preflight all files and make sure autoscrub succeeds.
+      # Note: this will bail out at the first error, so only the first
+      # malformed file will be noted. Files not preflighted will not have
+      # scrub logs uploaded.
       new_files.each do |new_file|
         @preflights << Scrub::Preflight.new(
           force: force,
@@ -87,6 +90,7 @@ module Scrub
       end
     rescue => err
       handle_error(err)
+      raise
     end
 
     # From `phctl scrub_file` command -- download and scrub without loading.
@@ -219,9 +223,11 @@ module Scrub
       # Remove any scrubbed files we have sitting around and upload the logs.
       @preflights.each do |preflight|
         preflight.clean_up!
-        Utils::FileTransfer.new.upload(preflight.scrubber.logger_path, remote_dir)
+        # Make sure scrubber was created (download may have failed) and able to set up log.
+        if preflight.scrubber && File.exist?(preflight.scrubber.logger_path)
+          Utils::FileTransfer.new.upload(preflight.scrubber.logger_path, remote_dir)
+        end
       end
-      raise
     end
 
     # Get the types of the files we are loading.
