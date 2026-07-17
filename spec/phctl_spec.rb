@@ -16,7 +16,9 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
     %w[backup holdings --organization umich --mono_multi_serial mon] => Jobs::Backup::Holdings,
     %w[workflow costreport] => Jobs::MapReduceWorkflow,
     %w[workflow estimate somefile] => Jobs::MapReduceWorkflow,
-    %w[workflow overlap instid] => Jobs::MapReduceWorkflow
+    %w[workflow overlap instid] => Jobs::MapReduceWorkflow,
+    %w[workflow deposit_holdings_analysis] => Jobs::MapReduceWorkflow,
+    %w[workflow non_current_holdings_analysis] => Jobs::MapReduceWorkflow
 
     # Not covered by phctl
     # bin/cost_changes.sh

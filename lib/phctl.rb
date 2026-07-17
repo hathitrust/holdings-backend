@@ -194,6 +194,17 @@ module PHCTL
 
       run_workflow(components)
     end
+
+    desc "non_current_holdings_analysis", "Analyze when members report only report brittle, lost/missing, or withdrawn holdings for items"
+    def non_current_holdings_analysis
+      components = {
+        data_source: component(Workflows::NonCurrentHoldingsAnalysis::DataSource),
+        mapper: component(Workflows::NonCurrentHoldingsAnalysis::Analyzer),
+        reducer: component(Workflows::NonCurrentHoldingsAnalysis::Writer)
+      }
+
+      run_workflow(components)
+    end
   end
 
   class Holdings < JobCommand

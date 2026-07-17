@@ -13,6 +13,7 @@ require "workflows/cost_report"
 require "workflows/deposit_holdings_analysis"
 require "workflows/estimate"
 require "workflows/map_reduce"
+require "workflows/non_current_holdings_analysis"
 require "workflows/overlap_report"
 
 require_relative "../config/initializers/sidekiq"
