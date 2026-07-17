@@ -154,7 +154,7 @@ RSpec.describe Overlap::MultiPartOverlap do
       expect(mpo.copy_count).to be(0)
     end
 
-    it "returns 1 copy if billing_entity matches" do
+    it "returns 1 copy if billing_entity matches and there are no reported holdings" do
       mpo = described_class.new("upenn", htitem_with_enumchron)
       expect(mpo.copy_count).to be(1)
     end
@@ -230,6 +230,23 @@ RSpec.describe Overlap::MultiPartOverlap do
       holding_brittle_withdrawn.save
       mpo = described_class.new(holding_brittle_withdrawn.organization, htitem_with_enumchron)
       expect(mpo.access_count).to eq(2)
+    end
+  end
+
+  describe "#current_holding_count" do
+    it "only includes current holdings" do
+      holding_with_enumchron.save
+      holding_lost_missing.save
+      holding_brittle_withdrawn.save
+      mpo = described_class.new(holding_with_enumchron.organization, htitem_with_enumchron)
+      expect(mpo.current_holding_count).to eq(1)
+    end
+
+    it "is 0 if item is deposited but not held" do
+      mpo = described_class.new("upenn", htitem_with_enumchron)
+      expect(htitem_with_enumchron.billing_entity).to eq("upenn")
+      expect(htitem_with_enumchron.billing_entity).not_to eq(holding_with_enumchron.organization)
+      expect(mpo.current_holding_count).to eq(0)
     end
   end
 end
