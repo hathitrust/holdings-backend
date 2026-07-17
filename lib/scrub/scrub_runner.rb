@@ -68,12 +68,15 @@ module Scrub
       # malformed file will be noted. Files not preflighted will not have
       # scrub logs uploaded.
       new_files.each do |new_file|
-        @preflights << Scrub::Preflight.new(
+        preflight = Scrub::Preflight.new(
           force: force,
           organization: organization,
           remote_file: new_file["Path"]
         )
-        @preflights.last.run
+        # Make sure the new preflight is added before `#run` has a chance to raise.
+        # We want the failed preflight to be in the array so it can be cleaned up.
+        @preflights << preflight
+        preflight.run
       end
 
       # All files should be good at this point, so chunk and load each one

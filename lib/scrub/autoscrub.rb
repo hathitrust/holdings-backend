@@ -148,7 +148,7 @@ module Scrub
       Services.scrub_logger.info(
         "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
       )
-      # Move file and store new location in array.
+      # Move file and store new location.
       @scrubbed_file = File.join(@output_struct.member_ready_to_load, File.split(out_file_path).last)
     end
   end
