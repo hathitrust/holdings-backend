@@ -237,10 +237,20 @@ RSpec.describe "phctl integration" do
           .and(a_string_including("Diff too big"))
           .and(a_string_including("umich_mon_full_20220101.tsv"))
           .and(a_string_including("Line diff too great")))
-        phctl(*%w[scrub umich])
-
+        # phctl scrub calls `exit 1` in case of error
+        expect {
+          phctl(*%w[scrub umich])
+        }.to raise_error(SystemExit)
         expect(stub).to have_been_requested.once
       end
+    end
+  end
+
+  describe "Scrub File" do
+    it "exits with status 1 in case of error" do
+      expect {
+        phctl(*%w[scrub_file umich so_such_file])
+      }.to raise_error(SystemExit)
     end
   end
 end

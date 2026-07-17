@@ -268,6 +268,7 @@ module PHCTL
       Scrub::ScrubRunner.new(org, options).run
     rescue => err
       Services.logger.error err.message
+      exit 1
     end
 
     desc "scrub_file ORG FILENAME", "Download and scrub a specific file for ORG from Dropbox without loading"
@@ -275,6 +276,7 @@ module PHCTL
       Scrub::ScrubRunner.new(org, options).scrub_file(filename)
     rescue => err
       Services.logger.error err.message
+      exit 1
     end
 
     desc "convert-xml ORG", "Download ORG's Alma XML holdings, convert to TSV, and upload"
