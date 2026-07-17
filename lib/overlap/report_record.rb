@@ -68,4 +68,10 @@ module Overlap
       header_fields.join("\t")
     end
   end
+
+  class CombinedReportRecord < ReportRecord
+    def fields
+      [organization] + super
+    end
+  end
 end
