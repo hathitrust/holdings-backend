@@ -34,7 +34,7 @@ jobs:
         name: Build Image
         uses: hathitrust/github_actions/.github/workflows/build.yml@98a7b0f67c16b968bb1f357ac50224dbfa789f3f # v2.0.2
         with:
-            image: ghcr.io/${{ github.repository }}
+            image: ghcr.io/hathitrust/holdings
             dockerfile: Dockerfile
             img_tag: ${{ inputs.img_tag }}
             tag: ${{ inputs.ref }}

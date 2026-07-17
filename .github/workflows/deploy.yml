@@ -20,7 +20,7 @@ jobs:
     name: Deploy to ${{inputs.environments}}
     uses: hathitrust/github_actions/.github/workflows/deploy.yml@98a7b0f67c16b968bb1f357ac50224dbfa789f3f # v2.0.2
     with:
-      image: ghcr.io/${{ github.repository }}:${{ inputs.branch_hash || github.sha}}
-      file: environments/holdings/${{inputs.environments}}/holdings-client-image.txt
+      image: ghcr.io/holdings:${{ inputs.branch_hash || github.sha}}
+      file: environments/hathitrust/holdings/${{inputs.environments}}/holdings-client-image.txt
       CONFIG_REPO_FULL_NAME: ${{ vars.CONFIG_REPO_FULL_NAME }}
     secrets: inherit
