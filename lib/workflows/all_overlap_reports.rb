@@ -11,7 +11,6 @@ require "workflows/solr"
 module Workflows
   module AllOverlapReports
     class DataSource < Workflows::Solr::DataSource
-
       # single-org overlap iterates through holdings & queries solr by ocn,
       # then finds unmatched OCNs in that set. could do that same approach if a
       # second phase to find unmatched OCNs doesn't work
@@ -23,19 +22,41 @@ module Workflows
       # we gather up all the attested OCNs in both holdings & items and compare.
       #
       # but let's start with getting all the overlaps for matching OCNs
-      
+
       def dump_records(output_filename)
-        with_milemarked_output(output_filename) do |output_record|
-          cursorstream { |s| s.filters = ["deleted:false"] }.each do |record|
-            output_record.call(record)
+        # TODO: pass it in
+        @workdir = File.dirname(output_filename)
+        @catalog_ocns = File.join(@workdir, "catalog_ocns")
+
+        File.open(@catalog_ocns, "w") do |catalog_ocn_fh|
+          with_milemarked_output(output_filename) do |output_record|
+            cursorstream { |s| s.filters = ["deleted:false"] }.each do |record|
+              output_record.call(record)
+              record["oclc_search"].each { |ocn| catalog_ocn_fh.puts(ocn) }
+            end
           end
         end
 
-        # collect all OCNs from solr & sort
-        # get all OCNs from holdings (TBD - current dump from mariadb)
-        # run comm
-        # append these non-matching holdings to output_filename
+        gather_nonmatching_holding_ocns(output_filename)
+      end
 
+      private
+
+      def gather_nonmatching_holding_ocns(output_filename)
+        # TODO: tmp for now; later: dump via mariadb, need to add to dockerfile
+        # should be sorted in lexical order
+        all_holding_ocns = File.join(Settings.overlap_reports_path, "distinct_holdings_ocn.sort")
+        nonmatching_ocns = File.join(@workdir, "nonmatching_ocns")
+
+        # TODO check for errors
+        system("sort -T #{@workdir} #{@catalog_ocns} | uniq > #{@catalog_ocns}.sort")
+        system("comm -1 -3 #{@catalog_ocns}.sort #{all_holding_ocns} > #{nonmatching_ocns}")
+
+        File.open(output_filename, "a") do |output|
+          File.open(nonmatching_ocns).each_line do |line|
+            output.puts(%({ "format": "Unknown", "oclc_search": [#{line.strip}], "ht_json": "[]" }))
+          end
+        end
       end
     end
 
@@ -117,7 +138,7 @@ module Workflows
         # public access location
         @remote_report_path = Settings.overlap_reports_remote_path
 
-        @reports = Hash.new do |h,organization|
+        @reports = Hash.new do |h, organization|
           h[organization] = Zlib::GzipWriter.open(report_gz_path(organization)).tap do |gz|
             gz.puts(header)
             Services.logger.info("Opening report #{gz.path} for #{organization}")
@@ -134,7 +155,7 @@ module Workflows
       end
 
       def finalize_report
-        @reports.each do |organization,fh|
+        @reports.each do |organization, fh|
           fh.close
           Services.logger.info("Copying #{fh.path} to #{persistent_report_path}")
           FileUtils.cp(fh.path, persistent_report_path)
