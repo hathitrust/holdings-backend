@@ -1,12 +1,54 @@
 require "workflows/all_overlap_reports"
 
 RSpec.describe Workflows::AllOverlapReports do
+  include_context "with tables for holdings"
+
+  describe Workflows::AllOverlapReports::DataSource do
+    include_context "with mocked solr response"
+
+    before(:each) do
+      mock_solr_search_filtered(File.open(fixture("solr_response.json")), /deleted:false/)
+
+      # TEMPORARY until we get this via mariadb client
+      FileUtils.mkdir(Settings.overlap_reports_path) unless File.exist?(Settings.overlap_reports_path)
+      File.open(File.join(Settings.overlap_reports_path,"distinct_holdings_ocns.sort"),"w") do |fh|
+        # these two are not in solr response
+        fh.puts("12345")
+        fh.puts("34")
+        # this is in solr_reponse so shouldn't be in the output
+        fh.puts("75")
+      end
+    end
+
+    it "generates records for holdings OCNs w/o records in HT" do
+      # NOT loading from holdings for the time being
+      # load_test_data(
+      #   # these two are not in solr response
+      #   build(:holding, ocn: 12345),
+      #   build(:holding, ocn: 34),
+      #   # this is in solr_reponse so shouldn't be in the output
+      #   build(:holding, ocn: 75),
+      # )
+
+      Dir.mktmpdir do |tmpdir|
+        output = File.join(tmpdir,"allrecords.ndj")
+        described_class.new.dump_records(output)
+
+        records = File.readlines(output).map { |l| JSON.parse(l) }
+        itemless_records = records.select { |r| r["ht_json"] == '[]' }
+
+        expect(itemless_records).to contain_exactly(
+          { "format" => "Unknown", "oclc_search" => [12345], "ht_json" => "[]" },
+          { "format" => "Unknown", "oclc_search" => [34], "ht_json" => "[]" }
+        )
+      end
+
+    end
+  end
 
   # TODO test data source - should gather OCNs of holdings not matching items
 
   describe Workflows::AllOverlapReports::Analyzer do
-    include_context "with tables for holdings"
-
     it "can generate all overlaps from a solr record" do
       Dir.mktmpdir do |tmpdir|
         # solr record (id 000000001) has one michigan-deposited mpm (mdp.39015066356547, enumchron v.1) with ocn 2779601
@@ -89,6 +131,47 @@ RSpec.describe Workflows::AllOverlapReports do
         expect(outfile_lines.count).to eq(2)
         expect(outfile_lines).to include(['upenn','12345','test_local_id_upenn','spm','','','','',''].join("\t") + "\n")
         expect(outfile_lines).to include(['umich','12345','test_local_id_umich','spm','','','','',''].join("\t") + "\n")
+      end
+
+    end
+
+    describe Workflows::AllOverlapReports::Writer do
+
+      let(:orgs) { %w[umich smu upenn] }
+
+      def open_gz_report(org)
+        Zlib::GzipReader.open(Dir.glob("#{ENV["TEST_TMP"]}/overlap_reports/overlap_#{org}_*.gz").first)
+      end
+
+      before(:each) do 
+        FileUtils.copy(fixture("all_org_overlap_report_part.tsv"),File.join(ENV["TEST_TMP"],"records_00000.overlap.tsv"))
+      end
+
+      it "creates a gz for each represented org with the correct # of lines" do
+        described_class.new(working_directory: ENV["TEST_TMP"]).run
+
+        expect(open_gz_report("umich").readlines.count).to eq(2)
+        expect(open_gz_report("smu").readlines.count).to eq(2)
+        expect(open_gz_report("upenn").readlines.count).to eq(3)
+      end
+
+      it "removes the org from the line" do
+        described_class.new(working_directory: ENV["TEST_TMP"]).run
+
+        orgs.each do |org|
+          # i.e. line starts with oclc number, not org
+          expect(open_gz_report(org).readlines).to all match(/^(oclc|\d+)\t/)
+        end
+      end
+
+      # local IDs should be included; the fixture includes the org name in the local id
+      it "puts matching lines in the expected file" do
+        described_class.new(working_directory: ENV["TEST_TMP"]).run
+
+        orgs.each do |org|
+          # local IDs contain the organization name
+          expect(open_gz_report(org).readlines).to all match(/(local_id|#{org})/)
+        end
       end
 
     end

@@ -1,0 +1,4 @@
+upenn	12345	test_local_id_upenn	spm
+umich	12345	test_local_id_umich	spm
+upenn	2779601	test_local_id_upenn	mpm	ic	deny	1	mdp.39015066356547	v.1
+smu	2779601	test_local_id_smu	mpm	ic	deny	1	mdp.39015066356547	v.1

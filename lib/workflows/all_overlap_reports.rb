@@ -26,10 +26,16 @@ module Workflows
       
       def dump_records(output_filename)
         with_milemarked_output(output_filename) do |output_record|
-          cursorstream.each do |record|
+          cursorstream { |s| s.filters = ["deleted:false"] }.each do |record|
             output_record.call(record)
           end
         end
+
+        # collect all OCNs from solr & sort
+        # get all OCNs from holdings (TBD - current dump from mariadb)
+        # run comm
+        # append these non-matching holdings to output_filename
+
       end
     end
 
@@ -56,7 +62,6 @@ module Workflows
         end
       end
 
-      # TODO how does this handle clusters w/  no ht items
       def write_overlaps(cluster)
         holdings_matched = Set.new
         records_written = Set.new
@@ -64,9 +69,6 @@ module Workflows
           overlap.matching_holdings.each do |holding|
             holdings_matched << holding
             report_record = report_record_class.new(holding: holding, ht_item: overlap.ht_item)
-
-            # TODO: Under what circumstances could there be multiple matches
-            # from the same holding & ht item?
             output.puts(report_record) unless records_written.include? report_record.to_s
             records_written << report_record.to_s
           end
@@ -114,20 +116,34 @@ module Workflows
         Dir.mkdir(@persistent_report_path) unless File.exist?(@persistent_report_path)
         # public access location
         @remote_report_path = Settings.overlap_reports_remote_path
+
+        @reports = Hash.new do |h,organization|
+          h[organization] = Zlib::GzipWriter.open(report_gz_path(organization)).tap do |gz|
+            gz.puts(header)
+            Services.logger.info("Opening report #{gz.path} for #{organization}")
+          end
+        end
       end
 
       def run
         if Dir.glob(File.join(working_directory, "*.overlap.tsv")).empty?
           raise "No overlap report files found in #{working_directory}"
         end
-        gzip_report
-        FileUtils.cp(report_gz_path, persistent_report_path)
-        system(*rclone_move(report_gz_path, organization))
+        collate_report
+        finalize_report
+      end
+
+      def finalize_report
+        @reports.each do |organization,fh|
+          fh.close
+          Services.logger.info("Copying #{fh.path} to #{persistent_report_path}")
+          FileUtils.cp(fh.path, persistent_report_path)
+          system(*rclone_move(fh.path, organization))
+        end
       end
 
       def notify
-        message = "Overlap report complete for *#{organization}* — #{report_filename}"
-        message += "\n#{dropbox_url}" if Settings.overlap_reports_remote_path_url
+        message = "Overlap reports complete"
         Utils::SlackNotifier.post(message)
       end
 
@@ -135,9 +151,7 @@ module Workflows
         report_record_class.header
       end
 
-      def report_filename
-        return @report_filename if @report_filename
-
+      def report_filename(organization)
         nonus = (Services.ht_organizations[organization]&.country_code == "us") ? "" : "_nonus"
         @report_filename = "overlap_#{organization}_#{Date.today}#{nonus}.tsv.gz"
       end
@@ -146,19 +160,16 @@ module Workflows
 
       attr_reader :local_report_path, :persistent_report_path, :remote_report_path, :organization, :working_directory, :report_record_class
 
-      def report_gz_path
-        File.join(local_report_path, report_filename)
+      def report_gz_path(organization)
+        File.join(local_report_path, report_filename(organization))
       end
 
-      def gzip_report
-        Zlib::GzipWriter.open(report_gz_path) do |gz|
-          gz.puts(header)
-          Dir.glob(File.join(working_directory, "*.overlap.tsv")).each do |rpt|
-            File.open(rpt) do |file|
-              while (chunk = file.read(16 * 1024))
-                gz.write(chunk)
-              end
-            end
+      def collate_report
+        Dir.glob(File.join(working_directory, "*.overlap.tsv")).each do |rpt|
+          File.open(rpt).each_line do |line|
+            fields = line.strip.split("\t")
+            organization = fields.shift
+            @reports[organization].puts(fields.join("\t"))
           end
         end
       end
@@ -168,9 +179,9 @@ module Workflows
       end
 
       def rclone_move(file, org)
-        ["rclone", "--config", Settings.rclone_config_path, "move",
-          File.path(file),
-          "#{@remote_report_path}/#{org}-hathitrust-member-data/analysis"]
+        remote_path = "#{@remote_report_path}/#{org}-hathitrust-member-data/analysis"
+        Services.logger.info("Uploading #{file} to #{remote_path}")
+        ["rclone", "--config", Settings.rclone_config_path, "move", File.path(file), remote_path]
       end
     end
   end
