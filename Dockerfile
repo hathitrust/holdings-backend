@@ -4,16 +4,16 @@ RUN apt-get update -yqq && apt-get install -yqq --no-install-recommends \
   nodejs rclone uchardet sqlite3
 
 WORKDIR /usr/src/app
-ENV APP_HOME /usr/src/app
-ENV BUNDLE_PATH /gems
-ENV RUBYLIB /usr/src/app/lib
+ENV APP_HOME=/usr/src/app
+ENV BUNDLE_PATH=/gems
+ENV RUBYLIB=/usr/src/app/lib
 RUN gem install bundler
 
 FROM base AS dev
 RUN apt-get install -yqq --no-install-recommends less entr mariadb-client libmariadb-dev
 
 FROM base AS prod
-LABEL org.opencontainers.image.source https://github.com/hathitrust/holdings-backend
+LABEL org.opencontainers.image.source=https://github.com/hathitrust/holdings-backend
 
 ARG UNAME=holdings
 ARG UID=1000
