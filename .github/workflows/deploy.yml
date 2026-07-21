@@ -11,6 +11,7 @@ on:
         default: production
         options:
           - production
+          - staging
 
 jobs:
   deploy:
