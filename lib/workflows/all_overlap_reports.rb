@@ -43,6 +43,8 @@ module Workflows
       private
 
       def gather_nonmatching_holding_ocns(output_filename)
+        # TODO log progress
+
         # TODO: tmp for now; later: dump via mariadb, need to add to dockerfile
         # should be sorted in lexical order
         all_holding_ocns = File.join(Settings.overlap_reports_path, "distinct_holdings_ocn.sort")
@@ -187,6 +189,7 @@ module Workflows
 
       def collate_report
         Dir.glob(File.join(working_directory, "*.overlap.tsv")).each do |rpt|
+          Services.logger.info("Collating overlaps from #{rpt}")
           File.open(rpt).each_line do |line|
             fields = line.strip.split("\t")
             organization = fields.shift
