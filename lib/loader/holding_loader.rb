@@ -110,7 +110,7 @@ module Loader
       Utils::SlackNotifier.post(
         "#{operation} complete for *#{options["organization"]}* " \
         "(`#{options["mono_multi_serial"]}`) — " \
-        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records removed."
+        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records to be removed."
       )
     end
 
