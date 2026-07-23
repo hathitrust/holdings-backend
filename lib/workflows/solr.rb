@@ -54,7 +54,7 @@ module Workflows
         return to_enum(__method__, input) unless block_given?
 
         milemarker = Milemarker.new(batch_size: Settings.solr_analyzer.milemarker_batch_size,
-          name: "#{self.class}: analyze solr records")
+          name: "#{self.class}: analyze solr records from #{input}")
         milemarker.logger = Services.logger
 
         File.open(input).each_slice(Settings.solr_analyzer.solr_batch_size) do |lines|

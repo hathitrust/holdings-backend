@@ -78,9 +78,14 @@ module Workflows
           @output = output
 
           records_from_file(input).each do |record|
+            start = Time.now
             Services.logger.debug("Processing overlaps for #{record.cluster.ocns}")
             holdings_matched = write_overlaps(record.cluster)
             write_records_for_unmatched_holdings(record.cluster, holdings_matched)
+            elapsed = Time.now - start
+            if Time.now - start > 1
+              Services.logger.warn("Slow record: #{record.cluster.ocns}: #{elapsed} secs")
+            end
           end
         end
       end
