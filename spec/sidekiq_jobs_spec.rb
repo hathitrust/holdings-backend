@@ -13,7 +13,6 @@ class TestCallback
   end
 
   def on_success(status, options)
-    puts "Callback ran: #{status}, #{options}"
     self.class.set_run(true)
     Thread.exit
   end
@@ -28,7 +27,6 @@ class FakeJob
   end
 
   def run
-    puts "running FakeJob #{@required}: #{self}"
     {
       required: @required,
       optional: @optional,
@@ -76,7 +74,7 @@ RSpec.describe Jobs::Common do
 
       sidekiq = Thread.new do
         Sidekiq.configure_embed do |config|
-          config.logger.level = Logger::DEBUG
+          config.logger.level = Logger::WARN
           config.queues = %w[critical default low]
           config.concurrency = 1
         end.run

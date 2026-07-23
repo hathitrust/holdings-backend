@@ -15,13 +15,10 @@ module Scrub
   # bundle exec ruby lib/autoscrub.rb <file_path_1...n>
   # Location of output and log files determined by ScrubOutputStructure.
   class AutoScrub
-    # Won't put in accessors unless we find a solid case for running this
-    # by another ruby class.
-    attr_reader :output_struct, :out_files, :logger_path, :item_type
+    attr_reader :output_struct, :logger_path, :item_type, :scrubbed_file
 
-    def initialize(path, force = false)
+    def initialize(path)
       @path = path
-      @force = force
 
       # @member_id and @item_type are used in the path to scrub_logger, but we
       # also need somewhere to log to before we know @member_id and @item_type
@@ -40,7 +37,8 @@ module Scrub
       @item_type = @member_holding_file.item_type_from_filename
       @output_dir = @output_struct.date_subdir!("output")
       @log_dir = @output_struct.date_subdir!("log")
-      @out_files = []
+      # Output .ndj file
+      @scrubbed_file = nil
 
       register_logger
     end
@@ -49,7 +47,7 @@ module Scrub
       @encoding = Utils::Encoding.new(@path)
       convert_to_utf8 unless @encoding.ascii_or_utf8?
 
-      Services.scrub_logger.info("Started scrubbing #{@path}, --force=#{@force}")
+      Services.scrub_logger.info("Started scrubbing #{@path}")
       write_to do |out_file|
         @member_holding_file.parse do |holding|
           out_file.puts(holding.to_json)
@@ -150,8 +148,8 @@ module Scrub
       Services.scrub_logger.info(
         "Output file moved to #{@output_struct.member_ready_to_load.to_path}"
       )
-      # Move file and store new location in array.
-      @out_files << File.join(@output_struct.member_ready_to_load, File.split(out_file_path).last)
+      # Move file and store new location.
+      @scrubbed_file = File.join(@output_struct.member_ready_to_load, File.split(out_file_path).last)
     end
   end
 end
