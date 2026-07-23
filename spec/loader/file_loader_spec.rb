@@ -81,6 +81,22 @@ RSpec.describe Loader::FileLoader do
     end
   end
 
+  describe "#load an empty file" do
+    context "with an expected header" do
+      it "loads nothing without complaint" do
+        file_loader.load("fakefile", filehandle: StringIO.new, skip_header_match: /header/)
+        expect(batch_loader.loaded.count).to eq(0)
+      end
+    end
+
+    context "without a header" do
+      it "loads nothing without complaint" do
+        file_loader.load("fakefile", filehandle: StringIO.new)
+        expect(batch_loader.loaded.count).to eq(0)
+      end
+    end
+  end
+
   describe "#load_deletes" do
     before(:each) { file_loader.load_deletes("fakefile", filehandle: fh) }
 

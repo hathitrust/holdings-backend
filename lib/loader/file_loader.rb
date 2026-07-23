@@ -27,6 +27,8 @@ module Loader
         unless skip_match.match(nextline)
           f.rewind
         end
+      # Empty file raises on `f.next`
+      rescue StopIteration
       end
     end
 
