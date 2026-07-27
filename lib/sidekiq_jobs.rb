@@ -132,6 +132,15 @@ module Jobs
         Services.logger.info "Finished Adding Print Holdings from #{filename}."
       end
     end
+
+    class HoldingsDeletion
+      include Sidekiq::Job
+
+      def perform(cleanup_data)
+        Services.logger.info "HoldingsDeletion calling DeletionCleanup with #{cleanup_data}"
+        Loader::HoldingLoader::DeletionCleanup.new.on_success(:success, cleanup_data)
+      end
+    end
   end
 
   module Concordance

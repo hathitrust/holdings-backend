@@ -69,8 +69,7 @@ RSpec.describe Scrub::AutoScrub do
   it "ok with enum_chron in the header line" do
     mpm_scrubber = described_class.new(fixture("umich_mpm_full_20221118.tsv"))
     expect { mpm_scrubber.run }.not_to raise_error
-    expect(mpm_scrubber.out_files.size).to eq 1
-    expect(Utils::LineCounter.new(mpm_scrubber.out_files.first).count_lines).to eq 3
+    expect(Utils::LineCounter.new(mpm_scrubber.scrubbed_file).count_lines).to eq 3
   end
 
   it "converts a file with illegal utf sequence to valid utf8" do
@@ -79,8 +78,7 @@ RSpec.describe Scrub::AutoScrub do
     scrubber = described_class.new(path)
     expect { scrubber.run }.not_to raise_error
     # output should be valid utf8, or we messed something up along the way
-    scrubbed = scrubber.out_files.first
-    scrubbed_enc = Utils::Encoding.new(scrubbed)
+    scrubbed_enc = Utils::Encoding.new(scrubber.scrubbed_file)
     expect(scrubbed_enc.ascii_or_utf8?).to be true
   end
 
@@ -91,7 +89,7 @@ RSpec.describe Scrub::AutoScrub do
     FileUtils.cp(fixture(fn), fixture_tmp)
     scrubber = described_class.new(fixture_tmp)
     expect { scrubber.run }.not_to raise_error
-    expect(scrubber.out_files.size).to eq 1
+    expect(scrubber.scrubbed_file).not_to eq nil
     FileUtils.rm(fixture_tmp)
   end
 end

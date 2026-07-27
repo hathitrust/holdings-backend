@@ -104,7 +104,7 @@ RSpec.describe Scrub::MemberHoldingFile do
   end
 
   it "rejects file with disallowed header cols" do
-    expect { fail_header_mhf.parse }.to raise_error Scrub::MalFormedHeaderError
+    expect { fail_header_mhf.parse }.to raise_error Scrub::MalformedHeaderError
   end
 
   it "handles a file with a BOM correctly" do

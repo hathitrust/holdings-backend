@@ -39,6 +39,8 @@ SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new([
 ])
 Sidekiq.strict_args!
 Sidekiq::Testing.inline!
+# Suppress "Sidekiq 8.1.6 connecting to Redis with options..." INFO line
+Sidekiq.default_configuration.logger.level = Logger::WARN
 
 RSpec.configure do |config|
   config.exclude_pattern = "disabled/**/*_spec.rb"
@@ -115,7 +117,8 @@ RSpec.configure do |config|
 
   config.around(:each) do |example|
     Dir.mktmpdir("holdings-testing") do |tmpdir|
-      ClimateControl.modify(TEST_TMP: tmpdir) do
+      # Use RCLONE_LOG_FILE to suppress STDERR "ERROR : : error listing: directory not found" noise.
+      ClimateControl.modify(TEST_TMP: tmpdir, RCLONE_LOG_FILE: File.join(tmpdir, "rclone.log")) do
         Settings.reload!
         FileUtils.touch(Settings.rclone_config_path)
         example.run

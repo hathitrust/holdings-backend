@@ -93,6 +93,12 @@ module Loader
         mono_multi_serial: options["mono_multi_serial"]
       )
 
+      post_notification(options: options, pre_load_backup: pre_load_backup)
+      delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
+      Services.logger.info "cleanup done for #{options["organization"]}/#{options["mono_multi_serial"]}"
+    end
+
+    def post_notification(options:, pre_load_backup:, operation: "Holdings load")
       # Count newly loaded records by subtracting old (delete_flag=1) from total;
       # must run before delete_marked! clears the old ones.
       total_count = Clusterable::Holding.table
@@ -102,17 +108,33 @@ module Loader
       new_count = total_count - pre_load_backup.marked_count
 
       Utils::SlackNotifier.post(
-        "Holdings load complete for *#{options["organization"]}* " \
+        "#{operation} complete for *#{options["organization"]}* " \
         "(`#{options["mono_multi_serial"]}`) — " \
-        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records removed."
+        "#{new_count} records loaded, #{pre_load_backup.marked_count} old records to be removed."
       )
+    end
 
+    def delete_old_holdings!(options:, pre_load_backup:)
       if pre_load_backup.marked_count > 0
-        Services.logger.info "deleting old #{options["mono_multi_serial"]} records for #{options["organization"]}"
+        Services.logger.info "deleting old records for #{options["organization"]}/#{options["mono_multi_serial"]}"
         pre_load_backup.delete_marked!
       end
+    end
+  end
 
-      Services.logger.info "cleanup done"
+  # A class that cleans up by deleting holdings of type that has not been replaced.
+  # e.g. when mon and ser are replaced by mix, there are no files to postprocess, just database deletion
+  class HoldingLoader::DeletionCleanup < HoldingLoader::Cleanup
+    def on_success(_status, options)
+      # Check if there are records marked for deletion, delete if so.
+      pre_load_backup = Scrub::PreLoadBackup.new(
+        organization: options["organization"],
+        mono_multi_serial: options["mono_multi_serial"]
+      )
+
+      post_notification(options: options, pre_load_backup: pre_load_backup, operation: "Holdings deletion")
+      delete_old_holdings!(options: options, pre_load_backup: pre_load_backup)
+      Services.logger.info "cleanup done for #{options["organization"]}/#{options["mono_multi_serial"]}"
     end
   end
 end

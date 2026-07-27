@@ -67,13 +67,13 @@ module Scrub
         if possible_cols.include?(col)
           col_map[col] = i
         else
-          raise Scrub::MalFormedHeaderError,
+          raise Scrub::MalformedHeaderError,
             "Column #{col} is not allowed. Possible columns are: #{possible_cols.join(", ")}"
         end
       end
 
       if col_map.empty?
-        raise Scrub::MalFormedHeaderError,
+        raise Scrub::MalformedHeaderError,
           "Found no usable column headers among #{@cols}"
       end
 

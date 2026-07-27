@@ -13,17 +13,16 @@ require "data_sources/ht_organizations"
 require "fileutils"
 require "loader/file_loader"
 require "loader/holding_loader"
-require "scrub/autoscrub"
 require "scrub/chunker"
 require "scrub/malformed_file_error"
+require "scrub/malformed_header_error"
 require "scrub/member_holding_file"
 require "scrub/pre_load_backup"
-require "scrub/record_counter"
+require "scrub/preflight"
 require "scrub/type_checker"
 require "sidekiq_jobs"
 require "sidekiq/batch"
 require "utils/file_transfer"
-require "utils/line_counter"
 require "utils/slack_notifier"
 
 # Example:
@@ -41,83 +40,85 @@ module Scrub
       @force = options.fetch("force", false)
       # @force_holding_loader_cleanup_test: only set to true in testing.
       @force_holding_loader_cleanup_test = options.fetch("force_holding_loader_cleanup_test", false)
-      @type_check = options.fetch("type_check", true)
+      @type_check = options.fetch("type_check", "check")
       @file_transfer = Utils::FileTransfer.new
+      @preflights = []
       validate
     end
 
+    # Entrypoint from `phctl scrub` command. Scrub and load.
     def run
       Services.logger.info "Running org #{organization}."
       new_files = check_new_files
+      deleted_types = []
       Services.logger.info "Found #{new_files.size} new files: #{new_files.join(", ")}."
-      if type_check
-        begin
-          check_new_types(new_files)
-        rescue Scrub::TypeCheckError => err
-          Utils::SlackNotifier.post(
-            "Holdings scrub rejected for *#{organization}* — #{err.message}"
-          )
-          raise
-        end
+      type_checker = Scrub::TypeChecker.new(
+        organization: organization,
+        new_types: new_types(new_files)
+      )
+      if type_check == "check"
+        # Only allow loading of previously seen types, or when nothing is currently loaded
+        type_checker.validate
+      elsif type_check == "delete"
+        deleted_types = type_checker.deleted_types
       end
 
+      # Preflight all files and make sure autoscrub succeeds.
+      # Note: this will bail out at the first error, so only the first
+      # malformed file will be noted. Files not preflighted will not have
+      # scrub logs uploaded.
       new_files.each do |new_file|
-        run_file(new_file)
-      end
-    end
-
-    def scrub_file(filename)
-      Dir.mktmpdir do |tmp_dir|
-        remote_file = File.join(remote_dir, filename)
-        file_transfer.download(remote_file, tmp_dir)
-        downloaded_file = File.join(tmp_dir, File.basename(filename))
-        scrubber = Scrub::AutoScrub.new(downloaded_file, force)
-        scrubber.run
-        scrubber.out_files
-      end
-    end
-
-    def run_file(member_submitted_file)
-      Services.logger.info "Running member_submitted_file #{member_submitted_file}"
-      downloaded_file = download_to_work_dir(member_submitted_file)
-      scrubber = Scrub::AutoScrub.new(downloaded_file, force)
-      scrubber.run
-
-      record_counter = Scrub::RecordCounter.new(organization, scrubber.item_type)
-      unless record_counter.acceptable_diff? || force
-        raise MalformedFileError, [
-          "Diff too big for #{organization} when scrubbing #{member_submitted_file["Name"]}.",
-          record_counter.message.join("\n"),
-          "This file will not be loaded."
-        ].join("\n")
-        # Run again with --force to load anyways.
+        preflight = Scrub::Preflight.new(
+          force: force,
+          organization: organization,
+          remote_file: new_file["Path"]
+        )
+        # Make sure the new preflight is added before `#run` has a chance to raise.
+        # We want the failed preflight to be in the array so it can be cleaned up.
+        @preflights << preflight
+        preflight.run
       end
 
-      scrubber.out_files.each do |scrubber_out_file|
+      # All files should be good at this point, so chunk and load each one
+      @preflights.each do |preflight|
         chunk_and_load(
-          member_submitted_file: member_submitted_file,
-          scrubber: scrubber,
-          scrubber_out_file: scrubber_out_file
+          member_submitted_file: preflight.remote_file,
+          scrubber: preflight.scrubber,
+          scrubber_out_file: preflight.scrubber.scrubbed_file
         )
       end
-    rescue => err
-      Services.logger.error err
-      Services.scrub_logger.error "Unexpected error. Please contact HathiTrust."
-      Services.scrub_logger.error err.message
 
-      # MalformedFileError message already contains the filename and diff details; other errors need err.class for triage.
-      # TODO: Consider adding err.class to MalformedFileError's Slack message for consistency with other error types.
-      slack_msg = if err.is_a?(MalformedFileError)
-        "Holdings scrub rejected for *#{organization}* — #{err.message}"
-      else
-        "Holdings scrub failed for *#{organization}* — " \
-        "`#{member_submitted_file["Name"]}` (#{err.class}): #{err.message}"
+      deleted_types.each do |deleted_type|
+        delete_type(deleted_type)
       end
-      Utils::SlackNotifier.post(slack_msg)
+    rescue => err
+      handle_error(err)
+      raise
+    end
 
-      # Do things Loader::HoldingLoader::Cleanup normally does
-      FileUtils.rm(downloaded_file)
-      Utils::FileTransfer.new.upload(scrubber.logger_path, remote_dir)
+    # From `phctl scrub_file` command -- download and scrub without loading.
+    def scrub_file(filename)
+      Dir.mktmpdir do |tmp_dir|
+        Scrub::Preflight.new(organization: organization, remote_file: filename, local_dir: tmp_dir).run
+      end
+    end
+
+    def delete_type(type)
+      Services.logger.info "Running deletion job for type #{type}"
+
+      # Create a backup file and mark old records for deletion
+      pre_load_backup = Scrub::PreLoadBackup.new(
+        organization: organization,
+        mono_multi_serial: type
+      )
+      pre_load_backup.write_backup_file
+      pre_load_backup.mark_for_deletion
+
+      cleanup_data = {
+        "organization" => organization,
+        "mono_multi_serial" => type
+      }
+      Jobs::Load::HoldingsDeletion.perform_async(cleanup_data)
     end
 
     def chunk_and_load(member_submitted_file:, scrubber:, scrubber_out_file:)
@@ -139,7 +140,7 @@ module Scrub
 
       # Prepare data for Loader::HoldingLoader::Cleanup's on-success hook
       cleanup_data = {
-        "raw_file" => member_submitted_file["Name"],
+        "raw_file" => member_submitted_file,
         "tmp_chunk_dir" => chunker.tmp_chunk_dir,
         "organization" => organization,
         "scrub_log" => scrubber.logger_path,
@@ -203,28 +204,38 @@ module Scrub
       file_transfer.lsjson(local_dir)
     end
 
-    # "file" here is annoyingly a RClone.lsjson output hash
-    # with format {"Path": x, "Name": y, ...}
-    def download_to_work_dir(file)
-      remote_file = File.join(remote_dir, file["Path"])
-      file_transfer.download(remote_file, local_dir)
-
-      # Return the path to the downloaded file
-      File.join(local_dir, File.split(remote_file).last)
-    end
-
     private
 
-    def check_new_types(files)
-      # Get the types of the files we are loading.
-      types = Set.new
-      files.each do |f|
-        member_holding_file = Scrub::MemberHoldingFile.new(f["Path"])
-        types << member_holding_file.item_type
-      end
+    def handle_error(err)
+      Services.logger.error err
+      Services.scrub_logger.error "Unexpected error. Please contact HathiTrust."
+      Services.scrub_logger.error err.message
 
-      # Alert & abort if the types are not a subset of types we have loaded for organization before.
-      Scrub::TypeChecker.new(organization: organization, new_types: types).validate
+      # MalformedFileError message already contains the filename and diff details; other errors need err.class for triage.
+      # TODO: Consider adding err.class to MalformedFileError's Slack message for consistency with other error types.
+      slack_msg = case err
+      when MalformedFileError, MalformedHeaderError, TypeCheckError
+        "Holdings scrub rejected for *#{organization}* — #{err.message}"
+      else
+        "Holdings scrub failed for *#{organization}* — " \
+        "#{err.class}: #{err.message}"
+      end
+      Utils::SlackNotifier.post(slack_msg)
+
+      # Do things Loader::HoldingLoader::Cleanup normally does:
+      # Remove any scrubbed files we have sitting around and upload the logs.
+      @preflights.each do |preflight|
+        preflight.clean_up!
+        # Make sure scrubber was created (download may have failed) and able to set up log.
+        if preflight.scrubber && File.exist?(preflight.scrubber.logger_path)
+          Utils::FileTransfer.new.upload(preflight.scrubber.logger_path, remote_dir)
+        end
+      end
+    end
+
+    # Get the types of the files we are loading.
+    def new_types(files)
+      files.map { |file| Scrub::MemberHoldingFile.new(file["Path"]).item_type }.to_set
     end
 
     def remote_dir
@@ -256,6 +267,9 @@ module Scrub
       end
       unless [true, false].include?(force_holding_loader_cleanup_test)
         raise "Need @force_holding_loader_cleanup_test to be true/false"
+      end
+      unless ["check", "delete", "append"].include?(type_check)
+        raise "Need @type_check to be one of check/delete/append"
       end
     end
   end
