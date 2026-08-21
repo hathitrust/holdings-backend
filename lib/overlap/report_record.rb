@@ -13,11 +13,13 @@ module Overlap
     attr_reader :organization, :ocn, :local_id, :item_type, :rights, :access,
       :catalog_id, :volume_id, :enum_chron
 
-    def initialize(holding: nil, ht_item: nil)
-      @organization = holding.organization
-      @ocn = holding.ocn
-      @local_id = holding.local_id
-      @item_type = holding&.mono_multi_serial
+    def initialize(holdings:, organization:, ht_item: nil)
+      @organization = organization
+
+      @ocn = holdings.map(&:ocn).uniq.sort.join(",")
+      @local_id = holdings.map(&:local_id).uniq.sort.join(",")
+      @item_type = holdings.map(&:mono_multi_serial).uniq.sort.join(",")
+
       @rights = ht_item&.rights || ""
       @access = convert_access(rights, ht_item&.access, organization) || ""
       @catalog_id = ht_item&.ht_bib_key || ""
@@ -66,6 +68,12 @@ module Overlap
 
     def self.header
       header_fields.join("\t")
+    end
+  end
+
+  class CombinedReportRecord < ReportRecord
+    def fields
+      [organization] + super
     end
   end
 end

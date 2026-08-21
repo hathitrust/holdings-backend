@@ -14,7 +14,7 @@ RSpec.describe SolrRecord do
     end
 
     it "gets cluster" do
-      expect(record.cluster.ocns).to contain_exactly(2779601)
+      expect(record.cluster.ocns).to contain_exactly(2779601, 9999999)
     end
 
     it "adds cluster to htitem" do

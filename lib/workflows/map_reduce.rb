@@ -122,7 +122,7 @@ module Workflows
     end
 
     def split_records
-      system("split -d -a 5 --additional-suffix=.split -l #{records_per_job} #{allrecords} #{working_directory}/records_")
+      system("split -d -a 5 --additional-suffix=.split -l #{records_per_job} #{allrecords} #{working_directory}/records_", exception: true)
     end
 
     def inline_reduce

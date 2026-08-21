@@ -6,7 +6,7 @@ module Overlap
   class ReportRecord::MatchingMembersCount < ReportRecord
     attr_reader :matching_members_count
 
-    def initialize(holding: nil, ht_item: nil)
+    def initialize(holdings:, organization:, ht_item: nil)
       super
 
       @matching_members_count = if ht_item
