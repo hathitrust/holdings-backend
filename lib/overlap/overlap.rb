@@ -27,6 +27,14 @@ module Overlap
       end
     end
 
+    def copy_count_current_non_brittle_or_deposited
+      if deposited_only?
+        1
+      else
+        current_nonbrittle_holding_count
+      end
+    end
+
     def deposited_only?
       matching_count.zero? && @ht_item.billing_entity == @org
     end

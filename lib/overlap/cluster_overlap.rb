@@ -18,20 +18,20 @@ module Overlap
       @orgs = orgs.nil? ? @cluster.organizations_in_cluster : [orgs].flatten
     end
 
-    def each
-      return enum_for(__method__) unless block_given?
+    def each(count_method: :copy_count)
+      return enum_for(__method__, count_method: count_method) unless block_given?
 
       @cluster.ht_items.each do |ht_item|
-        for_item(ht_item) { |overlap| yield overlap }
+        for_item(ht_item, count_method: count_method) { |overlap| yield overlap }
       end
     end
 
-    def for_item(ht_item)
-      return enum_for(__method__, ht_item) unless block_given?
+    def for_item(ht_item, count_method: :copy_count)
+      return enum_for(__method__, ht_item, count_method: count_method) unless block_given?
 
       @orgs.each do |org|
         overlap = self.class.overlap_record(org, ht_item)
-        if overlap.copy_count.nonzero?
+        if overlap.public_send(count_method).nonzero?
           yield overlap
         end
       end
