@@ -8,10 +8,10 @@ module Overlap
   class HtItemOverlap
     attr_reader :ht_item, :matching_orgs, :matching_members
 
-    def initialize(ht_item)
+    def initialize(ht_item, count_method: :copy_count)
       @ht_item = ht_item
 
-      overlap = ClusterOverlap.new(ht_item.cluster).for_item(ht_item)
+      overlap = ClusterOverlap.new(ht_item.cluster).for_item(ht_item, count_method: count_method)
       # Find all organization with holdings that match the given ht_item
       @matching_orgs = overlap.map(&:org)
       # Find all *members* with holdings that match the given ht_item
