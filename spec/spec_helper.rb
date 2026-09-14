@@ -17,6 +17,7 @@ require "rspec-sidekiq"
 require "sidekiq/batch"
 require "simplecov"
 require "simplecov-lcov"
+SimpleCov.start
 require "webmock/rspec"
 
 require "services"

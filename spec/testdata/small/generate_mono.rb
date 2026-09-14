@@ -88,7 +88,7 @@ schools.each do |s|
   File.open("HT003_#{s}.spm.tsv", "w:utf-8") do |f|
     f.puts header.join("\t")
     holdings[s].each do |line|
-      f.puts line.map(&:to_s).join("\t")
+      f.puts line.join("\t")
     end
   end
 end
