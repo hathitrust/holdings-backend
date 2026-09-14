@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 SimpleCov.configure do
-  add_filter "/.binstubs"
-  add_filter "/.bundle/"
-  add_filter "/.git/"
-  add_filter "/spec/"
-  add_filter "/test/"
+  skip "/.binstubs"
+  skip "/.bundle/"
+  skip "/.git/"
+  skip "/spec/"
+  skip "/test/"
 end
-
-SimpleCov.start
