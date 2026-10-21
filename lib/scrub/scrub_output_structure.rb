@@ -65,7 +65,7 @@ module Scrub
     # ScrubOutputStructure.new("xyz").date_subdir!("log")
     # ... on 2020-12-30 makes the dir
     # /usr/src/app/data/member_data/xyz/log/2020-12-30/
-    def date_subdir!(subdir, date_str = Time.new.strftime("%F"))
+    def date_subdir!(subdir, date_str = Time.now.strftime("%F"))
       mkdir!(
         validate_subdir(subdir),
         validate_date_str(date_str)

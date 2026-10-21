@@ -16,7 +16,7 @@ RSpec.describe Scrub::AutoScrub do
     test_file_path
   end
 
-  let(:today_ymd) { Time.new.strftime("%F") }
+  let(:today_ymd) { Time.now.strftime("%F") }
   let(:scrubber) { described_class.new(test_file) }
   let(:out_struct) { scrubber.output_struct }
 

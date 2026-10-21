@@ -19,7 +19,7 @@ module Scrub
       @col_map = col_map
       @scrubfields = ScrubFields.new
       @violations = []
-      @date_received = Time.new.strftime("%Y-%m-%d")
+      @date_received = Time.now.strftime("%Y-%m-%d")
       @uuid = SecureRandom.uuid
     end
 

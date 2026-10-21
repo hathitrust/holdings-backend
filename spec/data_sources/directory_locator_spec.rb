@@ -11,7 +11,7 @@ RSpec.describe DataSources::DirectoryLocator do
   let(:org) { "test" }
   let(:root) { ENV["TEST_TMP"] }
   let(:dl) { described_class.new(root, org) }
-  let(:year) { Time.new.year.to_s }
+  let(:year) { Time.now.year.to_s }
   let(:base_x) { "#{root}/test-hathitrust-member-data" }
   let(:holdings_x) { "#{root}/test-hathitrust-member-data/print holdings" }
   let(:analysis_x) { "#{root}/test-hathitrust-member-data/analysis" }
