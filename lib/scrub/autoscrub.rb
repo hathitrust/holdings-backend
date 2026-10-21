@@ -69,7 +69,7 @@ module Scrub
       Services.register(:scrub_stats) { {} }
       # Once we have @member_id and @item_type,
       # build a new log path and re-register the service logger to that path
-      ymd = Time.new.strftime("%Y%m%d")
+      ymd = Time.now.strftime("%Y%m%d")
       @logger_path = File.join(@log_dir, "#{@member_id}_#{@item_type}_#{ymd}.log")
       Services.logger.info "autoscrub logging to #{@logger_path}"
       Services.register(:scrub_logger) do
@@ -131,7 +131,7 @@ module Scrub
     # Manage output
     def write_to
       # set up output file path
-      datetime = Time.new.strftime("%F-%T").delete(":")
+      datetime = Time.now.strftime("%F-%T").delete(":")
       out_file_path = File.join(
         @output_dir,
         "#{@member_id}_#{@item_type}_#{datetime}.ndj"

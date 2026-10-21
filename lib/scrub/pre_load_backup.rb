@@ -80,7 +80,7 @@ module Scrub
     end
 
     def file_name
-      date = Time.new.strftime("%Y%m%d")
+      date = Time.now.strftime("%Y%m%d")
       "#{organization}_#{mono_multi_serial}_full_#{date}_backup.ndj"
     end
 

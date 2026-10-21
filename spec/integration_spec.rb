@@ -92,7 +92,7 @@ RSpec.describe "phctl integration" do
     it "cost report workflow produces output" do
       # item counts match what we specify
       phctl(*%w[workflow costreport --ht-item-count 999 --ht-item-pd-count 123 --test-mode])
-      year = Time.new.year.to_s
+      year = Time.now.year.to_s
 
       costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
       expect(costreport).to match(/Num volumes: 999/)
@@ -105,7 +105,7 @@ RSpec.describe "phctl integration" do
       4.times { insert_htitem(build(:ht_item, rights: "pd")) }
 
       phctl(*%w[workflow costreport --test-mode])
-      year = Time.new.year.to_s
+      year = Time.now.year.to_s
 
       costreport = File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first)
       # item counts match what we put in hathifiles table
@@ -174,7 +174,7 @@ RSpec.describe "phctl integration" do
       end
 
       # Set up expected output file and expect it to not exist initially
-      date = Time.new.strftime("%Y%m%d")
+      date = Time.now.strftime("%Y%m%d")
       expected_output_path = File.join(Settings.backup_dir, "umich_mon_full_#{date}_backup.ndj")
       expect(File.exist?(expected_output_path)).to be false
 
@@ -191,9 +191,9 @@ RSpec.describe "phctl integration" do
   describe "Scrub" do
     it "'scrub x' loads records and produces output for org x" do
       # Needs a bit of setup.
-      local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
-      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
-      logfile = File.join(remote_d, "umich_mon_#{Time.new.strftime("%Y%m%d")}.log")
+      local_d = "#{ENV["TEST_TMP"]}/local_member_data/umich-hathitrust-member-data/print holdings/#{Time.now.year}/"
+      remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.now.year}/"
+      logfile = File.join(remote_d, "umich_mon_#{Time.now.strftime("%Y%m%d")}.log")
       FileUtils.mkdir_p(remote_d)
       FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
       # Verify precondition:
@@ -210,7 +210,7 @@ RSpec.describe "phctl integration" do
       include_context "with mocked slack API endpoint"
 
       it "posts a Slack notification on successful load" do
-        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.now.year}/"
         FileUtils.mkdir_p(remote_d)
         FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
 
@@ -224,7 +224,7 @@ RSpec.describe "phctl integration" do
       end
 
       it "posts a Slack notification when a file is rejected by the diff check" do
-        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.new.year}/"
+        remote_d = "#{ENV["TEST_TMP"]}/remote_member_data/umich-hathitrust-member-data/print holdings/#{Time.now.year}/"
         FileUtils.mkdir_p(remote_d)
         FileUtils.cp("spec/fixtures/umich_mon_full_20220101.tsv", remote_d)
 

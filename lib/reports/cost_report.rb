@@ -50,7 +50,7 @@ module Reports
       end
 
       # Dump freq table to file
-      ymd = Time.new.strftime("%F")
+      ymd = Time.now.strftime("%F")
       dump_frequency_table("frequency_#{ymd}.json")
       logger.info "Done"
 

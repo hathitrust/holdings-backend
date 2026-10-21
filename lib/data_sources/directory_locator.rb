@@ -41,7 +41,7 @@ module DataSources
       @organization = organization
       # In the off chance the object is created 1s before jan 1st,
       # at least we'll be consistent across the life of this object.
-      @year = Time.new.year.to_s
+      @year = Time.now.year.to_s
     end
 
     # The base directory for the organization.

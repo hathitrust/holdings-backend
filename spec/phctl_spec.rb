@@ -230,7 +230,7 @@ RSpec.describe "PHCTL::PHCTL", type: :sidekiq_fake do
 
       it "generates a cost report" do
         PHCTL::PHCTL.start(args)
-        year = Time.new.year.to_s
+        year = Time.now.year.to_s
         expect(File.read(Dir.glob("#{ENV["TEST_TMP"]}/cost_reports/#{year}/*").first))
           .to match(/Target cost: 9999/)
       end

@@ -145,7 +145,7 @@ RSpec.describe Scrub::ScrubRunner do
       # Copy fixture to "dropbox" so there is a "new file" to "download",
       FileUtils.cp(mon_fixture_file, remote_d.holdings_current)
       expect { sr.run }.to change { Clusterable::Holding.count }.by(6)
-      log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
+      log = "umich_mon_#{Time.now.strftime("%Y%m%d")}.log"
       expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
       # expect to see a row in holdings_loaded_files with filename=mon_fixture_file_name
       expect(count_loaded_files).to eq(1)
@@ -185,7 +185,7 @@ RSpec.describe Scrub::ScrubRunner do
             .and change { Clusterable::Holding.count }.by(0)
           expect(stub).to have_been_requested.once
           # Log should have been uploaded.
-          log = "umich_mon_#{Time.new.strftime("%Y%m%d")}.log"
+          log = "umich_mon_#{Time.now.strftime("%Y%m%d")}.log"
           expect(File.exist?(File.join(remote_d.holdings_current, log))).to be true
         end
       end
