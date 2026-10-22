@@ -14,5 +14,9 @@ module Overlap
     def current_holding_count
       matching_count
     end
+
+    def current_nonbrittle_holding_count
+      matching_count
+    end
   end
 end

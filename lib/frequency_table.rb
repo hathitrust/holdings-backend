@@ -8,7 +8,9 @@ require "overlap/ht_item_overlap"
 class FrequencyTable
   protected attr_reader :table
 
-  def initialize(data: nil)
+  def initialize(data: nil, count_method: :copy_count)
+    @count_method = count_method
+
     @table = case data
     when String
       JSON.parse(data, symbolize_names: true)
@@ -87,7 +89,7 @@ class FrequencyTable
 
   def add_ht_item(ht_item)
     item_format = CalculateFormat.new(ht_item.cluster).item_format(ht_item).to_sym
-    item_overlap = Overlap::HtItemOverlap.new(ht_item)
+    item_overlap = Overlap::HtItemOverlap.new(ht_item, count_method: @count_method)
     member_count = item_overlap.matching_members.count
     item_overlap.matching_members.each do |org|
       increment(organization: org, format: item_format, bucket: member_count)

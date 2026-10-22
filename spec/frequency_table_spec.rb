@@ -47,6 +47,7 @@ RSpec.describe FrequencyTable do
   describe "#frequencies" do
     let(:ft1) { described_class.new(data: umich_data) }
     let(:freqs) { ft1.frequencies(organization: :umich, format: :spm) }
+    let(:ht_item) { build(:ht_item, :spm, access: "deny", rights: "ic", billing_entity: "upenn") }
 
     it "returns an Array of Frequency" do
       expect(freqs).to be_a(Array)
@@ -76,25 +77,71 @@ RSpec.describe FrequencyTable do
       expect(ft.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
     end
 
+    describe "When not counting withdrawn/brittle/lost/missing holdings" do
+      let(:ft) { described_class.new(count_method: :copy_count_current_non_brittle_or_deposited) }
+      let(:holdings_params) do
+        {
+          ocn: ht_item.ocns.first,
+          organization: "umich",
+          mono_multi_serial: "spm"
+        }
+      end
+
+      [{status: "WD"}, {status: "LM"}, {condition: "BRT"}].each do |status_condition|
+        it "does not count non-current holdings with #{status_condition}" do
+          non_current_holding = build(:holding, **holdings_params.merge(status_condition))
+          load_test_data(ht_item, non_current_holding)
+
+          ft.add_ht_item(ht_item)
+          expect(ft.frequencies(organization: :umich, format: :spm)).to eq([])
+        end
+      end
+
+      it "counts deposited-only items with no holdings" do
+        load_test_data(ht_item)
+
+        ft.add_ht_item(ht_item)
+        # held by depositor
+        expect(ft.frequencies(organization: :upenn, format: :spm)).to eq([frequency_1_1])
+      end
+
+      it "counts items with a mix of withdrawn and current holdings" do
+        current_holding = build(:holding, **holdings_params.merge(local_id: "current_holding", status: "CH"))
+        withdrawn_holding = build(:holding, **holdings_params.merge(status: "WD"))
+
+        load_test_data(ht_item, withdrawn_holding, current_holding)
+        ft.add_ht_item(ht_item)
+        # held by umich and depositor
+        expect(ft.frequencies(organization: :umich, format: :spm)).to eq([frequency_2_1])
+      end
+
+      it "does not count deposited items with only withdrawn holdings" do
+        # upenn deposited and reports a withdrawn holding
+        withdrawn_holding = build(:holding, **holdings_params.merge(status: "WD", organization: "upenn"))
+
+        load_test_data(ht_item, withdrawn_holding)
+        ft.add_ht_item(ht_item)
+        expect(ft.frequencies(organization: :upenn, format: :spm)).to eq([])
+      end
+    end
+
     describe "Non-member holdings" do
-      let(:c) { build(:cluster) }
-      let(:spm) { build(:ht_item, :spm, ocns: c.ocns, access: "deny", rights: "ic", billing_entity: "upenn") }
-      let(:holding) { build(:holding, ocn: c.ocns.first, organization: "umich") }
-      let(:holding2) { build(:holding, ocn: c.ocns.first, organization: "upenn") }
+      let(:holding) { build(:holding, ocn: ht_item.ocns.first, organization: "umich") }
+      let(:holding2) { build(:holding, ocn: ht_item.ocns.first, organization: "upenn") }
       let(:non_member_holding) do
         Services.ht_organizations.add_temp(
           DataSources::HTOrganization.new(inst_id: "non_member", country_code: "xx",
             weight: 1.0, status: false)
         )
         build(:holding,
-          ocn: spm.ocns.first,
+          ocn: ht_item.ocns.first,
           organization: "non_member")
       end
 
       it "includes only member holdings" do
-        load_test_data(spm, holding, holding2, non_member_holding)
+        load_test_data(ht_item, holding, holding2, non_member_holding)
         ft = described_class.new
-        ft.add_ht_item(spm)
+        ft.add_ht_item(ht_item)
         expect(ft.frequencies(organization: :umich, format: :spm)).to eq([frequency_2_1])
         expect(ft.frequencies(organization: :upenn, format: :spm)).to eq([frequency_2_1])
         expect(ft.keys).not_to include(:non_member)

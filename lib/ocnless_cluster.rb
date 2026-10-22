@@ -60,6 +60,14 @@ class OCNLessCluster
     []
   end
 
+  def current_holding_counts
+    Hash.new(0)
+  end
+
+  def current_nonbrittle_holding_counts
+    Hash.new(0)
+  end
+
   def copy_counts
     Hash.new(0)
   end
