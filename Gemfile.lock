@@ -33,7 +33,7 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (8.1.4)
+    activesupport (8.1.4.1)
       base64
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.3.1)
@@ -117,9 +117,9 @@ GEM
     method_source (1.1.0)
     milemarker (1.0.2)
       logger
-    minitest (6.0.6)
+    minitest (6.1.0)
       drb (~> 2.0)
-      prism (~> 1.5)
+      prism (>= 1.5, < 3)
     mustermann (3.1.1)
     mysql2 (0.5.7)
       bigdecimal
