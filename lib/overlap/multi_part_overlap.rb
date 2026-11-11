@@ -3,9 +3,12 @@ require "overlap/overlap"
 module Overlap
   # Overlap record for items in MPM clusters
   class MultiPartOverlap < Overlap
+    def current_nonbrittle_holding_count
+      matching_holdings.count { |h| h.current_nonbrittle_holding? }
+    end
+
     def current_holding_count
-      # holding is assumed current if status is nil
-      matching_holdings.count { |h| h.status == "CH" || h.status.nil? }
+      matching_holdings.count { |h| h.current_holding? }
     end
 
     def brt_count

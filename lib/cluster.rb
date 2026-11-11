@@ -110,6 +110,13 @@ class Cluster
     @ch_counts
   end
 
+  def current_nonbrittle_holding_counts
+    @ch_non_brt_counts ||= holdings_by_org
+      .transform_values { |hs| hs.select { |holding| holding.current_nonbrittle_holding? }.size }
+    @ch_non_brt_counts.default = 0
+    @ch_non_brt_counts
+  end
+
   # These counts will be incorrect if set prior to holdings/ht_items changes
   def copy_counts
     @copy_counts ||= holdings.group_by(&:organization).transform_values(&:size)

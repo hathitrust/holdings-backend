@@ -130,9 +130,11 @@ module PHCTL
     desc "costreport [--ht-item-count NUM --ht-item-pd-count NUM] (--chunk-size SIZE)", "Dump records from solr, split into chunks of chunk-size records, generate frequency tables for each chunk, sum the resulting frequency tables, and generate a cost report based on that table."
     option :ht_item_count, type: :numeric
     option :ht_item_pd_count, type: :numeric
+    option :count_method, type: :string
     def costreport_workflow
       ht_item_count = options[:ht_item_count]
       ht_item_pd_count = options[:ht_item_pd_count]
+      count_method = options[:count_method] || "copy_count"
 
       if !ht_item_count || !ht_item_pd_count
         Services.logger.info("Getting item counts...")
@@ -145,7 +147,7 @@ module PHCTL
 
       components = {
         data_source: component(Workflows::CostReport::DataSource),
-        mapper: component(Workflows::CostReport::Analyzer),
+        mapper: component(Workflows::CostReport::Analyzer, {count_method: count_method}),
         reducer: component(Reports::CostReport,
           {
             ht_item_count: ht_item_count,

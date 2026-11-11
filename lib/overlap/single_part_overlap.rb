@@ -9,6 +9,10 @@ module Overlap
       @cluster.current_holding_counts[@org]
     end
 
+    def current_nonbrittle_holding_count
+      @cluster.current_nonbrittle_holding_counts[@org]
+    end
+
     def brt_count
       @cluster.brt_counts[@org]
     end

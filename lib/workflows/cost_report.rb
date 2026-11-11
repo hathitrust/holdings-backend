@@ -22,16 +22,18 @@ module Workflows
     end
 
     class Analyzer < Workflows::Solr::Analyzer
-      attr_reader :solr_records, :output_file
+      attr_reader :solr_records, :output_file, :count_method
 
       def initialize(solr_records,
-        output: solr_records + ".freqtable.json")
+        output: solr_records + ".freqtable.json",
+        count_method: :copy_count)
         @solr_records = solr_records
         @output_file = output
+        @count_method = count_method.to_sym
       end
 
       def run
-        freqtable = FrequencyTable.new
+        freqtable = FrequencyTable.new(count_method: count_method)
         log = Services.logger
 
         # Services.holdings_db.loggers << Logger.new($stdout)
